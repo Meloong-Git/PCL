@@ -1,0 +1,76 @@
+﻿<local:MyPageRight
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    mc:Ignorable="d" x:Class="PageSetupCustom"
+    PanScroll="{Binding ElementName=PanBack}">
+    <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <StackPanel x:Name="PanMain" Margin="25,10">
+            <local:MyCard Margin="0,0,0,15" Title="主页" x:Name="CardCustom">
+                <StackPanel Margin="25,40,25,15">
+                    <Grid Margin="-1,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="0.2*" />
+                        </Grid.ColumnDefinitions>
+                        <local:MyRadioBox Text="空白" x:Name="RadioCustomType0" Height="22" Tag="UiCustomType/0" Grid.Column="0" />
+                        <local:MyRadioBox Text="预设" x:Name="RadioCustomType3" Height="22" Tag="UiCustomType/3" Grid.Column="1" />
+                        <local:MyRadioBox Text="读取本地文件" x:Name="RadioCustomType1" Height="22" Tag="UiCustomType/1" Grid.Column="2" />
+                        <local:MyRadioBox Text="联网更新" x:Name="RadioCustomType2" Height="22" Tag="UiCustomType/2" Grid.Column="3" />
+                    </Grid>
+                    <local:MyHint Margin="0,15,0,-4" Text="内容见 ModSetup" Theme="Blue" x:Name="HintCustom" />
+                    <local:MyHint Margin="0,15,0,6" Text="请谨慎使用陌生人提供的主页，恶意代码可能会造成损害！" Theme="Yellow" x:Name="HintCustomWarn" 
+                                  CanClose="True" RelativeSetup="HintCustomWarn" />
+                    <Grid Height="35" x:Name="PanCustomLocal" Visibility="Collapsed" Margin="0,10,0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
+                        </Grid.ColumnDefinitions>
+                        <local:MyButton x:Name="BtnCustomRefresh" Grid.Column="0" MinWidth="140" Text="刷新主页" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
+                        <local:MyButton x:Name="BtnCustomFile" Grid.Column="1" MinWidth="140" Text="生成教学文件" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnCustomTutorial" Grid.Column="2" MinWidth="140" Text="查看教程" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                    </Grid>
+                    <Grid x:Name="PanCustomNet" Visibility="Collapsed" Margin="0,10,0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="下载地址" Margin="0,0,25,0" />
+                        <local:MyTextBox x:Name="TextCustomNet" Tag="UiCustomNet" Grid.Column="1" MaxHeight="28">
+                            <local:MyTextBox.ValidateRules>
+                                <local:ValidateNullable />
+                                <local:ValidateHttp />
+                            </local:MyTextBox.ValidateRules>
+                        </local:MyTextBox>
+                    </Grid>
+                    <Grid x:Name="PanCustomPreset" Visibility="Collapsed" Margin="0,12,10,5" Height="28">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="主页预设" Margin="0,0,25,0" />
+                        <local:MyComboBox x:Name="ComboCustomPreset" Grid.ColumnSpan="2" Tag="UiCustomPreset" Grid.Column="1">
+                            <local:MyComboBoxItem Content="你知道吗？" IsSelected="True" />
+                            <local:MyComboBoxItem Content="回声洞" />
+                            <local:MyComboBoxItem Content="Minecraft 新闻（作者：最亮的信标）" />
+                            <local:MyComboBoxItem Content="简单主页（作者：MFn233）" />
+                            <local:MyComboBoxItem Content="每日整合包推荐（作者：wkea）" />
+                            <local:MyComboBoxItem Content="Minecraft 皮肤推荐（作者：wkea）" />
+                            <local:MyComboBoxItem Content="OpenBMCLAPI 仪表盘 Lite（作者：Silverteal、Mxmilu666）" />
+                            <local:MyComboBoxItem Content="PCL 主页市场（作者：凌云）" />
+                            <local:MyComboBoxItem Content="PCL 新闻速报（作者：Joker2184）" />
+                            <local:MyComboBoxItem Content="PCL 新功能说明书（作者：WForst-Breeze）" />
+                            <local:MyComboBoxItem Content="OpenMCIM 仪表盘（作者：SALTWOOD）" Visibility="Collapsed" />
+                            <local:MyComboBoxItem Content="杂志主页（作者：CreeperIsASpy）" />
+                            <local:MyComboBoxItem Content="PCL GitHub 仪表盘（作者：Deep-Dark-Forest）" />
+                        </local:MyComboBox>
+                    </Grid>
+                </StackPanel>
+            </local:MyCard>
+        </StackPanel>
+    </local:MyScrollViewer>
+</local:MyPageRight>

@@ -168,6 +168,7 @@
         {"UiHiddenSetupUi", New SetupEntry(False)},
         {"UiHiddenSetupLink", New SetupEntry(False)},
         {"UiHiddenSetupSystem", New SetupEntry(False)},
+        {"UiHiddenSetupCustom", New SetupEntry(False)},
         {"UiHiddenOtherHelp", New SetupEntry(False)},
         {"UiHiddenOtherFeedback", New SetupEntry(False)},
         {"UiHiddenOtherVote", New SetupEntry(False)},
@@ -710,6 +711,9 @@
         PageSetupUI.HiddenRefresh()
     End Sub
     Public Sub UiHiddenSetupSystem(Value As Boolean)
+        PageSetupUI.HiddenRefresh()
+    End Sub
+    Public Sub UiHiddenSetupCustom(Value As Boolean)
         PageSetupUI.HiddenRefresh()
     End Sub
     Public Sub UiHiddenOtherHelp(Value As Boolean)

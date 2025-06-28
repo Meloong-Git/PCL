@@ -104,6 +104,7 @@
             CheckHiddenSetupUI.Checked = Setup.Get("UiHiddenSetupUi")
             CheckHiddenSetupLink.Checked = Setup.Get("UiHiddenSetupLink")
             CheckHiddenSetupSystem.Checked = Setup.Get("UiHiddenSetupSystem")
+            CheckHiddenSetupCustom.Checked = Setup.Get("UiHiddenSetupCustom")
             CheckHiddenOtherAbout.Checked = Setup.Get("UiHiddenOtherAbout")
             CheckHiddenOtherFeedback.Checked = Setup.Get("UiHiddenOtherFeedback")
             CheckHiddenOtherVote.Checked = Setup.Get("UiHiddenOtherVote")
@@ -155,6 +156,7 @@
             Setup.Reset("UiHiddenSetupUi")
             Setup.Reset("UiHiddenSetupLink")
             Setup.Reset("UiHiddenSetupSystem")
+            Setup.Reset("UiHiddenSetupCustom")
             Setup.Reset("UiHiddenOtherAbout")
             Setup.Reset("UiHiddenOtherFeedback")
             Setup.Reset("UiHiddenOtherVote")
@@ -514,7 +516,7 @@ Refresh:
         If FrmMain.PanTitleSelect Is Nothing OrElse Not FrmMain.PanTitleSelect.IsLoaded Then Return
         Try
             '顶部栏
-            If Not HiddenForceShow AndAlso Setup.Get("UiHiddenPageDownload") AndAlso Setup.Get("UiHiddenPageLink") AndAlso Setup.Get("UiHiddenPageSetup") AndAlso Setup.Get("UiHiddenPageOther") Then
+            If Not HiddenForceShow AndAlso Setup.Get("UiHiddenPageDownload") AndAlso Setup.Get("UiHiddenPageLink") AndAlso Setup.Get("UiHiddenPageSetup") AndAlso Setup.Get("UiHiddenPageCustom") AndAlso Setup.Get("UiHiddenPageOther") Then
                 '顶部栏已被全部隐藏
                 FrmMain.PanTitleSelect.Visibility = Visibility.Collapsed
             Else
@@ -536,12 +538,14 @@ Refresh:
                 FrmSetupLeft.ItemUI.Visibility = If(Not HiddenForceShow AndAlso Setup.Get("UiHiddenSetupUi"), Visibility.Collapsed, Visibility.Visible)
                 FrmSetupLeft.ItemLink.Visibility = Visibility.Collapsed 'If(Not HiddenForceShow AndAlso Setup.Get("UiHiddenSetupLink"), Visibility.Collapsed, Visibility.Visible)
                 FrmSetupLeft.ItemSystem.Visibility = If(Not HiddenForceShow AndAlso Setup.Get("UiHiddenSetupSystem"), Visibility.Collapsed, Visibility.Visible)
+                FrmSetupLeft.ItemCustom.Visibility = If(Not HiddenForceShow AndAlso Setup.Get("UiHiddenSetupCustom"), Visibility.Collapsed, Visibility.Visible)
                 '隐藏左边选择卡
                 Dim AvaliableCount As Integer = 0
                 If Not Setup.Get("UiHiddenSetupLaunch") Then AvaliableCount += 1
                 If Not Setup.Get("UiHiddenSetupUi") Then AvaliableCount += 1
                 If Not Setup.Get("UiHiddenSetupLink") Then AvaliableCount += 1
                 If Not Setup.Get("UiHiddenSetupSystem") Then AvaliableCount += 1
+                If Not Setup.Get("UiHiddenSetupCustom") Then AvaliableCount += 1
                 FrmSetupLeft.PanItem.Visibility = If(AvaliableCount < 2 AndAlso Not HiddenForceShow, Visibility.Collapsed, Visibility.Visible)
             End If
             '更多子页面
@@ -591,19 +595,21 @@ Refresh:
             CheckHiddenSetupSystem.Checked = True
             CheckHiddenSetupLink.Checked = True
             CheckHiddenSetupUI.Checked = True
+            CheckHiddenSetupCustom.Checked = True
         Else
             '关闭
-            If Setup.Get("UiHiddenSetupLaunch") AndAlso Setup.Get("UiHiddenSetupUi") AndAlso Setup.Get("UiHiddenSetupSystem") AndAlso Setup.Get("UiHiddenSetupLink") Then
+            If Setup.Get("UiHiddenSetupLaunch") AndAlso Setup.Get("UiHiddenSetupUi") AndAlso Setup.Get("UiHiddenSetupSystem") AndAlso Setup.Get("UiHiddenSetupCustom") AndAlso Setup.Get("UiHiddenSetupLink") Then
                 CheckHiddenSetupLaunch.Checked = False
                 CheckHiddenSetupSystem.Checked = False
                 CheckHiddenSetupLink.Checked = False
+                CheckHiddenSetupCustom.Checked = False
                 CheckHiddenSetupUI.Checked = False
             End If
         End If
     End Sub
-    Private Sub HiddenSetupSub() Handles CheckHiddenSetupLaunch.Change, CheckHiddenSetupSystem.Change, CheckHiddenSetupLink.Change, CheckHiddenSetupUI.Change
+    Private Sub HiddenSetupSub() Handles CheckHiddenSetupLaunch.Change, CheckHiddenSetupSystem.Change, CheckHiddenSetupLink.Change, CheckHiddenSetupUI.Change, CheckHiddenSetupCustom.Change
         '设置子页面
-        If Setup.Get("UiHiddenSetupLaunch") AndAlso Setup.Get("UiHiddenSetupUi") AndAlso Setup.Get("UiHiddenSetupSystem") AndAlso Setup.Get("UiHiddenSetupLink") Then
+        If Setup.Get("UiHiddenSetupLaunch") AndAlso Setup.Get("UiHiddenSetupUi") AndAlso Setup.Get("UiHiddenSetupSystem") AndAlso Setup.Get("UiHiddenSetupCustom") AndAlso Setup.Get("UiHiddenSetupLink") Then
             '已被全部隐藏
             CheckHiddenPageSetup.Checked = True
         Else
