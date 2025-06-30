@@ -584,44 +584,6 @@
         End Select
     End Sub
 
-    '主页
-    Public Sub UiCustomType(Value As Integer)
-        If FrmSetupUI Is Nothing Then Return
-        Select Case Value
-            Case 0 '无
-                FrmSetupUI.PanCustomPreset.Visibility = Visibility.Collapsed
-                FrmSetupUI.PanCustomLocal.Visibility = Visibility.Collapsed
-                FrmSetupUI.PanCustomNet.Visibility = Visibility.Collapsed
-                FrmSetupUI.HintCustom.Visibility = Visibility.Collapsed
-                FrmSetupUI.HintCustomWarn.Visibility = Visibility.Collapsed
-            Case 1 '本地
-                FrmSetupUI.PanCustomPreset.Visibility = Visibility.Collapsed
-                FrmSetupUI.PanCustomLocal.Visibility = Visibility.Visible
-                FrmSetupUI.PanCustomNet.Visibility = Visibility.Collapsed
-                FrmSetupUI.HintCustom.Visibility = Visibility.Visible
-                FrmSetupUI.HintCustomWarn.Visibility = If(Setup.Get("HintCustomWarn"), Visibility.Collapsed, Visibility.Visible)
-                FrmSetupUI.HintCustom.Text = $"从 PCL 文件夹下的 Custom.xaml 读取主页内容。{vbCrLf}你可以手动编辑该文件，向主页添加文本、图片、常用网站、快捷启动等功能。"
-                FrmSetupUI.HintCustom.EventType = ""
-                FrmSetupUI.HintCustom.EventData = ""
-            Case 2 '联网
-                FrmSetupUI.PanCustomPreset.Visibility = Visibility.Collapsed
-                FrmSetupUI.PanCustomLocal.Visibility = Visibility.Collapsed
-                FrmSetupUI.PanCustomNet.Visibility = Visibility.Visible
-                FrmSetupUI.HintCustom.Visibility = Visibility.Visible
-                FrmSetupUI.HintCustomWarn.Visibility = If(Setup.Get("HintCustomWarn"), Visibility.Collapsed, Visibility.Visible)
-                FrmSetupUI.HintCustom.Text = $"从指定网址联网获取主页内容。服主也可以用于动态更新服务器公告。{vbCrLf}如果你制作了稳定运行的联网主页，可以点击这条提示投稿，若合格即可加入预设！"
-                FrmSetupUI.HintCustom.EventType = "打开网页"
-                FrmSetupUI.HintCustom.EventData = "https://github.com/Hex-Dragon/PCL2/discussions/2528"
-            Case 3 '预设
-                FrmSetupUI.PanCustomPreset.Visibility = Visibility.Visible
-                FrmSetupUI.PanCustomLocal.Visibility = Visibility.Collapsed
-                FrmSetupUI.PanCustomNet.Visibility = Visibility.Collapsed
-                FrmSetupUI.HintCustom.Visibility = Visibility.Collapsed
-                FrmSetupUI.HintCustomWarn.Visibility = Visibility.Collapsed
-        End Select
-        FrmSetupUI.CardCustom.TriggerForceResize()
-    End Sub
-
     '顶部栏
     Public Sub UiLogoType(Value As Integer)
         Select Case Value

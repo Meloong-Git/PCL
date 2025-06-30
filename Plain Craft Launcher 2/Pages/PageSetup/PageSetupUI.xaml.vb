@@ -83,14 +83,6 @@
             SliderMusicVolume.Value = Setup.Get("UiMusicVolume")
             MusicRefreshUI()
 
-            '主页
-            Try
-                ComboCustomPreset.SelectedIndex = Setup.Get("UiCustomPreset")
-            Catch
-                Setup.Reset("UiCustomPreset")
-            End Try
-            CType(FindName("RadioCustomType" & Setup.Load("UiCustomType", ForceReload:=True)), MyRadioBox).Checked = True
-            TextCustomNet.Text = Setup.Get("UiCustomNet")
 
             '功能隐藏
             CheckHiddenPageDownload.Checked = Setup.Get("UiHiddenPageDownload")
@@ -142,9 +134,6 @@
             Setup.Reset("UiMusicStart")
             Setup.Reset("UiMusicRandom")
             Setup.Reset("UiMusicAuto")
-            Setup.Reset("UiCustomType")
-            Setup.Reset("UiCustomPreset")
-            Setup.Reset("UiCustomNet")
             Setup.Reset("UiHiddenPageDownload")
             Setup.Reset("UiHiddenPageLink")
             Setup.Reset("UiHiddenPageSetup")
@@ -176,16 +165,16 @@
     Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderBackgroundOpacity.Change, SliderBackgroundBlur.Change, SliderLauncherOpacity.Change, SliderMusicVolume.Change, SliderLauncherHue.Change, SliderLauncherLight.Change, SliderLauncherSat.Change, SliderLauncherDelta.Change
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value)
     End Sub
-    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboBackgroundSuit.SelectionChanged, ComboCustomPreset.SelectionChanged
+    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboBackgroundSuit.SelectionChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex)
     End Sub
     Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckMusicStop.Change, CheckMusicRandom.Change, CheckMusicAuto.Change, CheckBackgroundColorful.Change, CheckLogoLeft.Change, CheckLauncherLogo.Change, CheckHiddenFunctionHidden.Change, CheckHiddenFunctionSelect.Change, CheckHiddenFunctionModUpdate.Change, CheckHiddenPageDownload.Change, CheckHiddenPageLink.Change, CheckHiddenPageOther.Change, CheckHiddenPageSetup.Change, CheckHiddenSetupLaunch.Change, CheckHiddenSetupSystem.Change, CheckHiddenSetupLink.Change, CheckHiddenSetupUI.Change, CheckHiddenOtherAbout.Change, CheckHiddenOtherFeedback.Change, CheckHiddenOtherVote.Change, CheckHiddenOtherHelp.Change, CheckHiddenOtherTest.Change, CheckMusicStart.Change, CheckLauncherEmail.Change
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Checked)
     End Sub
-    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextLogoText.ValidatedTextChanged, TextCustomNet.ValidatedTextChanged
+    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextLogoText.ValidatedTextChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Text)
     End Sub
-    Private Shared Sub RadioBoxChange(sender As MyRadioBox, e As Object) Handles RadioLogoType0.Check, RadioLogoType1.Check, RadioLogoType2.Check, RadioLogoType3.Check, RadioLauncherTheme0.Check, RadioLauncherTheme1.Check, RadioLauncherTheme2.Check, RadioLauncherTheme3.Check, RadioLauncherTheme4.Check, RadioLauncherTheme5.Check, RadioLauncherTheme6.Check, RadioLauncherTheme7.Check, RadioLauncherTheme8.Check, RadioLauncherTheme9.Check, RadioLauncherTheme10.Check, RadioLauncherTheme11.Check, RadioLauncherTheme12.Check, RadioLauncherTheme13.Check, RadioLauncherTheme14.Check, RadioCustomType0.Check, RadioCustomType1.Check, RadioCustomType2.Check, RadioCustomType3.Check
+    Private Shared Sub RadioBoxChange(sender As MyRadioBox, e As Object) Handles RadioLogoType0.Check, RadioLogoType1.Check, RadioLogoType2.Check, RadioLogoType3.Check, RadioLauncherTheme0.Check, RadioLauncherTheme1.Check, RadioLauncherTheme2.Check, RadioLauncherTheme3.Check, RadioLauncherTheme4.Check, RadioLauncherTheme5.Check, RadioLauncherTheme6.Check, RadioLauncherTheme7.Check, RadioLauncherTheme8.Check, RadioLauncherTheme9.Check, RadioLauncherTheme10.Check, RadioLauncherTheme11.Check, RadioLauncherTheme12.Check, RadioLauncherTheme13.Check, RadioLauncherTheme14.Check
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag.ToString.Split("/")(0), Val(sender.Tag.ToString.Split("/")(1)))
     End Sub
 
@@ -401,32 +390,6 @@ Refresh:
     Private Sub CheckMusicStop_Change() Handles CheckMusicStop.Change
         If AniControlEnabled <> 0 Then Return
         If CheckMusicStop.Checked Then CheckMusicStart.Checked = False
-    End Sub
-
-    '主页
-    Private Sub BtnCustomFile_Click(sender As Object, e As EventArgs) Handles BtnCustomFile.Click
-        Try
-            If File.Exists(Path & "PCL\Custom.xaml") Then
-                If MyMsgBox("当前已存在布局文件，继续生成教学文件将会覆盖现有布局文件！", "覆盖确认", "继续", "取消", IsWarn:=True) = 2 Then Return
-            End If
-            WriteFile(Path & "PCL\Custom.xaml", GetResources("Custom"))
-            Hint("教学文件已生成！", HintType.Finish)
-            OpenExplorer(Path & "PCL\Custom.xaml")
-        Catch ex As Exception
-            Log(ex, "生成教学文件失败", LogLevel.Feedback)
-        End Try
-    End Sub
-    Private Sub BtnCustomRefresh_Click() Handles BtnCustomRefresh.Click
-        FrmLaunchRight.ForceRefresh()
-        Hint("已刷新主页！", HintType.Finish)
-    End Sub
-    Private Sub BtnCustomTutorial_Click(sender As Object, e As EventArgs) Handles BtnCustomTutorial.Click
-        MyMsgBox("1. 点击 生成教学文件 按钮，这会在 PCL 文件夹下生成 Custom.xaml 布局文件。" & vbCrLf &
-                 "2. 使用记事本等工具打开这个文件并进行修改，修改完记得保存。" & vbCrLf &
-                 "3. 点击 刷新主页 按钮，查看主页现在长啥样了。" & vbCrLf &
-                 vbCrLf &
-                 "你可以在生成教学文件后直接刷新主页，对照着进行修改，更有助于理解。" & vbCrLf &
-                 "直接将主页文件拖进 PCL 窗口也可以快捷加载。", "主页自定义教程")
     End Sub
 
     '主题
