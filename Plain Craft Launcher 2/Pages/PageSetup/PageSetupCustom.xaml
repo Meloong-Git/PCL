@@ -21,7 +21,7 @@
                         <local:MyRadioBox Text="读取本地文件" x:Name="RadioCustomType1" Height="22" Tag="UiCustomType/1" Grid.Column="2" />
                         <local:MyRadioBox Text="联网更新" x:Name="RadioCustomType2" Height="22" Tag="UiCustomType/2" Grid.Column="3" />
                     </Grid>
-                    <local:MyHint Margin="0,15,0,-4" Text="内容见 ModSetup" Theme="Blue" x:Name="HintCustom" />
+                    <local:MyHint Margin="0,15,0,-4" Text="内容见 ModSetup" Theme="Blue" x:Name="HintCustom" Visibility="Collapsed"/>
                     <local:MyHint Margin="0,15,0,6" Text="请谨慎使用陌生人提供的主页，恶意代码可能会造成损害！" Theme="Yellow" x:Name="HintCustomWarn" 
                                   CanClose="True" RelativeSetup="HintCustomWarn" />
                     <Grid Height="35" x:Name="PanCustomLocal" Visibility="Collapsed" Margin="0,10,0,5">
@@ -70,6 +70,33 @@
                         </local:MyComboBox>
                     </Grid>
                 </StackPanel>
+            </local:MyCard>
+            <local:MyCard Title="" Margin="0,0,0,15" CanSwap="False" IsSwaped="false" x:Name="CardCustom1">
+                <Image Height="75" HorizontalAlignment="Left" Margin="8,8,5,8" Source="http://pclhomeplazaoss.lingyunawa.top:26995/d/Homepages/Ext1nguisher/image.png"/>
+                <TextBlock FontSize="18" FontWeight="Bold" FontFamily="微软雅黑" Margin="136,8,5,4" Text="杂志主页" />
+                <TextBlock Text="杂志主页！ 用于PCL2启动器的自定义主页。 美观、时尚、的优雅外观；简介，实用的设计理念；内容丰富的各个板块；启动器内主页预设的官方认可！ 内容和板块名： 中文 Minecraft Wiki 摘录板块：来自 Wiki 的有趣内容，介绍方块、生物或结构， 每周更新。 Minecraft 官方博文：手工翻译后的 Minecraft 官网博文，内容翔实，生动有趣。 最新版本：新闻主页API的版本介绍。"
+       FontSize="11" 
+       FontFamily="微软雅黑" 
+       Margin="136,13,0,0" 
+       TextWrapping="Wrap" 
+       Height="36" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="132,66,0,0">
+                    <local:MyTextButton FontWeight="Bold" HorizontalAlignment="Left"
+            Text="[查看预览]" Margin="3,0,0,0" EventType="打开帮助" EventData="http://pclhomeplazaoss.lingyunawa.top:26995/d/Homepages/Ext1nguisher/Custom.json" />
+                    <local:MyTextButton FontWeight="Bold" HorizontalAlignment="Left"
+            Text="[前往仓库]" Margin="3,0,0,0" EventType="打开网页" EventData="https://gitee.com/planet_of_daniel/pcl2-homepage-fhg" />
+                    <local:MyTextButton FontWeight="Bold" HorizontalAlignment="Left" x:Name="CustomPreset1"
+            Text="[选择该预设]" Margin="3,0,0,0" Tag="11/杂志主页"/>
+                </StackPanel>
+                <Rectangle Width="249" Height="2" Margin="136,70,0,0" HorizontalAlignment="Left">
+
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#A37CFF" Offset="0.0"/>
+                            <GradientStop Color="#6AFFF9" Offset="0.5"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
             </local:MyCard>
         </StackPanel>
     </local:MyScrollViewer>

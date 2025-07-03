@@ -1,6 +1,6 @@
 ﻿Public Class PageSetupCustom
 
-    Public Shadows IsLoaded As Boolean = False
+    Private Shadows IsLoaded As Boolean = False
 
     Private Sub PageSetupCustom_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
 
@@ -18,7 +18,7 @@
 
 
     End Sub
-    Public Sub Reload()
+    Private Sub Reload()
         Try
 
             '主页
@@ -59,18 +59,23 @@
     'Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles Nothing
     '   If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value)
     'End Sub
-    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboCustomPreset.SelectionChanged
+    Private Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboCustomPreset.SelectionChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex)
     End Sub
     'Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles Nothing
     '   If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Checked)
     'End Sub
-    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextCustomNet.ValidatedTextChanged
+    Private Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextCustomNet.ValidatedTextChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Text)
     End Sub
-    Private Shared Sub RadioBoxChange(sender As MyRadioBox, e As Object) Handles RadioCustomType0.Check, RadioCustomType1.Check, RadioCustomType2.Check, RadioCustomType3.Check
+    Private Sub RadioBoxChange(sender As MyRadioBox, e As Object) Handles RadioCustomType0.Check, RadioCustomType1.Check, RadioCustomType2.Check, RadioCustomType3.Check
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag.ToString.Split("/")(0), Val(sender.Tag.ToString.Split("/")(1)))
         UiCustomType(Val(sender.Tag.ToString.Split("/")(1)))
+    End Sub
+    Private Sub PresetSelectedFromCard(sender As MyTextButton, e As Object) Handles CustomPreset1.Click
+        RadioCustomType3.SetChecked(True, True)
+        If AniControlEnabled = 0 Then Setup.Set("UiCustomPreset", Val(sender.Tag.ToString.Split("/")(0)))
+        ComboCustomPreset.SelectedItem = ComboCustomPreset.Items(Val(sender.Tag.ToString.Split("/")(0)))
     End Sub
 
 
@@ -101,7 +106,7 @@
     End Sub
 
     '主页
-    Public Shared Sub UiCustomType(Value As Integer)
+    Private Shared Sub UiCustomType(Value As Integer)
         Select Case Value
             Case 0 '无
                 FrmSetupCustom.PanCustomPreset.Visibility = Visibility.Collapsed
