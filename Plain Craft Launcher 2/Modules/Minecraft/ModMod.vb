@@ -1042,11 +1042,11 @@ Finished:
                 Log($"[Mod] 需要从 CurseForge 获取 {CurseForgeMapping.Count} 个本地 Mod 的工程信息")
                 '步骤 3：获取工程信息
                 If Not CurseForgeMapping.Any() Then Return
-                Dim CurseForgeProject = CType(GetJson(DlModRequest("https://api.curseforge.com/v1/mods", "POST",
-                    New JObject From {{"modIds", New JArray(CurseForgeMapping.Keys)}}, "application/json")), JObject)("data")
+                Dim CurseForgeProject As JObject = DlModRequest("https://api.curseforge.com/v1/mods", "POST",
+                    New JObject From {{"modIds", New JArray(CurseForgeMapping.Keys)}}, "application/json", True)
                 Dim UpdateFileIds As New Dictionary(Of Integer, List(Of McMod)) 'FileId -> 本地 Mod 文件列表
                 Dim FileIdToProjectSlug As New Dictionary(Of Integer, String)
-                For Each ProjectJson In CurseForgeProject
+                For Each ProjectJson In CurseForgeProject("data")
                     If ProjectJson("isAvailable") IsNot Nothing AndAlso Not ProjectJson("isAvailable").ToObject(Of Boolean) Then Continue For
                     '设置 Entry 中的工程信息
                     Dim Project As New CompProject(ProjectJson)
