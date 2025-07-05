@@ -1,4 +1,5 @@
 ﻿Imports System.IO.Compression
+Imports Newtonsoft.Json.Serialization
 
 Public Module ModMod
     Private Const LocalModCacheVersion As Integer = 7
@@ -946,8 +947,11 @@ Finished:
             Try
                 '步骤 1：获取 Hash 与对应的工程 ID
                 Dim ModrinthHashes = Mods.Select(Function(m) m.ModrinthHash).ToList()
-                Dim ModrinthVersion = CType(GetJson(DlModRequest("https://api.modrinth.com/v2/version_files", "POST",
-                    $"{{""hashes"": [""{ModrinthHashes.Join(""",""")}""], ""algorithm"": ""sha1""}}", "application/json")), JObject)
+                Dim RequestData As New JObject From {
+                        {"hashes", New JArray(ModrinthHashes)},
+                        {"algorithm", "sha1"}
+                        }
+                Dim ModrinthVersion As JObject = DlModRequest("https://api.modrinth.com/v2/version_files", "POST", RequestData.ToString, "application/json", True)
                 Log($"[Mod] 从 Modrinth 获取到 {ModrinthVersion.Count} 个本地 Mod 的对应信息")
                 '步骤 2：尝试读取工程信息缓存，构建其他 Mod 的对应关系
                 If ModrinthVersion.Count = 0 Then Return
@@ -1039,7 +1043,7 @@ Finished:
                 '步骤 3：获取工程信息
                 If Not CurseForgeMapping.Any() Then Return
                 Dim CurseForgeProject = CType(GetJson(DlModRequest("https://api.curseforge.com/v1/mods", "POST",
-                    $"{{""modIds"": [{CurseForgeMapping.Keys.Join(",")}]}}", "application/json")), JObject)("data")
+                    New JObject From {{"modIds", New JArray(CurseForgeMapping.Keys)}}, "application/json")), JObject)("data")
                 Dim UpdateFileIds As New Dictionary(Of Integer, List(Of McMod)) 'FileId -> 本地 Mod 文件列表
                 Dim FileIdToProjectSlug As New Dictionary(Of Integer, String)
                 For Each ProjectJson In CurseForgeProject

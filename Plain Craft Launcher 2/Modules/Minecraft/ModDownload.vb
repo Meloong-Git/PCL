@@ -594,7 +594,7 @@
             VersionName = Version
             Me.Version = New Version(Version)
             Me.Inherit = Inherit
-            FileVersion = Version & If(Branch Is Nothing, ""， "-" & Branch)
+            FileVersion = Version & If(Branch Is Nothing, "", "-" & Branch)
         End Sub
     End Class
 
@@ -1108,24 +1108,24 @@
         Dim Urls As New List(Of KeyValuePair(Of String, Integer))
         Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
         Urls.Add(New KeyValuePair(Of String, Integer)(Url, 20))
-        'Dim McimUrl As String = DlSourceModGet(Url)
-        'If McimUrl <> Url Then
-        '    Select Case Setup.Get("ToolDownloadMod")
-        '        Case 0
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 5))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
-        '        Case 1
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 5))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
-        '        Case Else
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
-        '    End Select
-        'End If
+        Dim McimUrl As String = DlSourceModGet(Url)
+        If McimUrl <> Url Then
+            Select Case Setup.Get("ToolDownloadMod")
+                Case 0
+                    Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 5))
+                    Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
+                    Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
+                Case 1
+                    Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
+                    Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 5))
+                    Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
+                    Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
+                Case Else
+                    Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
+                    Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
+                    Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
+            End Select
+        End If
         Dim Exs As String = ""
         For Each Source In Urls
             Try
@@ -1141,7 +1141,7 @@
     ''' 对可能涉及 Mod 镜像源的请求进行处理。
     ''' 调用 NetRequest，会进行重试。
     ''' </summary>
-    Public Function DlModRequest(Url As String, Method As String, Data As String, ContentType As String) As String
+    Public Function DlModRequest(Url As String, Method As String, Data As String, ContentType As String,Optional IsJson As Boolean = False)
         Dim Urls As New List(Of KeyValuePair(Of String, Integer))
         Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
         Urls.Add(New KeyValuePair(Of String, Integer)(Url, 20))
@@ -1166,7 +1166,8 @@
         Dim Exs As String = ""
         For Each Source In Urls
             Try
-                Return NetRequestOnce(Source.Key, Method, Data, ContentType, Timeout:=Source.Value * 1000)
+                Dim Result As String = NetRequestOnce(Source.Key, Method, Data, ContentType, Timeout:=Source.Value * 1000)
+                Return If(IsJson,GetJson(Result),Result)
             Catch ex As Exception
                 Exs += ex.Message + vbCrLf
             End Try
@@ -1269,7 +1270,12 @@
 
     'Mod 下载源
     Public Function DlSourceModGet(Original As String) As String
-        Return Original
+        Return Original.Replace("cdn.modrinth.com","mcim-files.pysio.online").
+            Replace("media.forgecdn.net","mcim-files.pysio.online").
+            Replace("mediafilez.forgecdn.net","mcim-files.pysio.online").
+            Replace("edge.forgecdn.net","mcim-files.pysio.online").
+            Replace("api.curseforge.net","mod.mcimirror.top/curseforge").
+            Replace("api.modrinth.com","mod.mcimirror.top/modrinth")
     End Function
 
     'Loader 自动切换
