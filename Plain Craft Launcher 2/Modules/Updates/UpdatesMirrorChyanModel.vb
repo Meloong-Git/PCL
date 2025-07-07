@@ -11,17 +11,21 @@ Public Class UpdatesMirrorChyanModel 'Mirror 酱的更新格式
         Return Not String.IsNullOrWhiteSpace(Setup.Get("SystemMirrorChyanKey"))
     End Function
     Public Function GetLatestVersion(channel As UpdateChannel, arch As UpdateArch) As VersionDataModel Implements IUpdateSource.GetLatestVersion
-        Dim ret As JObject = NetGetCodeByRequestRetry(GetUrl(channel, arch), IsJson:=True)
-        If CType(ret("code"), Integer) <> 0 Then Throw New Exception("Mirror 酱获取数据不成功")
-        Dim data = ret("data")
-        Dim upd_url = data("url")?.ToString()
-        If data IsNot Nothing AndAlso String.IsNullOrWhiteSpace(upd_url) Then Throw New Exception("无效 CDK")
-        Return New VersionDataModel() With {
-            .Source = SourceName,
-            .VersionCode = data("version_number"),
-            .VersionName = data("version_name"),
-            .SHA256 = data("sha256"),
-            .Changelog = data("release_note")}
+        Return Task.Run(
+            Function()
+                Dim ret As JObject = NetGetCodeByRequestRetry(GetUrl(channel, arch), IsJson:=True)
+                If CType(ret("code"), Integer) <> 0 Then Throw New Exception("Mirror 酱获取数据不成功")
+                Dim data = ret("data")
+                Dim upd_url = data("url")?.ToString()
+                If data IsNot Nothing AndAlso String.IsNullOrWhiteSpace(upd_url) Then Throw New Exception("无效 CDK")
+                Return New VersionDataModel() With {
+                    .Source = SourceName,
+                    .VersionCode = data("version_number"),
+                    .VersionName = data("version_name"),
+                    .SHA256 = data("sha256"),
+                    .Changelog = data("release_note")}
+            End Function
+            ).GetAwaiter().GetResult()
     End Function
 
     Public Function RefreshCache() As Boolean Implements IUpdateSource.RefreshCache
