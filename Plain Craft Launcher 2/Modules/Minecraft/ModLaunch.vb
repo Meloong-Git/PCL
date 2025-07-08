@@ -683,7 +683,7 @@ LoginFinish:
         Dim Name As String = Setup.Get("Cache" & Data.Input.Token & "Name")
         '发送登录请求
         Dim RequestData As New JObject(
-            New JProperty("accessToken", AccessToken), New JProperty("clientToken", ClientToken), New JProperty("requestUser", True))
+            New JProperty("accessToken", AccessToken))
         NetRequestRetry(
             Url:=Data.Input.BaseUrl & "/validate",
             Method:="POST",
