@@ -455,7 +455,8 @@ VersionSearchFinish:
                     Dim JsonPath As String = Path & Name & ".json"
                     If Not File.Exists(JsonPath) Then
                         '如果文件夹下只有一个 JSON 文件，则将其作为版本 JSON
-                        Dim JsonFiles As String() = Directory.GetFiles(Path, "*.json")
+                        Dim IgnoreNames As String() = {"rpc-data.json", "checkbox_states.json", "realms_persistence.json", "emi.json", "patchouli_data.json", "usercache.json", "irisUpdateInfo.json"}
+                        Dim JsonFiles As String() = Directory.GetFiles(Path, "*.json").Where(Function(n) Not IgnoreNames.Contains(n.AfterLast("\"))).ToArray()
                         If JsonFiles.Count = 1 Then
                             JsonPath = JsonFiles(0)
                             Log("[Minecraft] 未找到同名版本 JSON，自动换用 " & JsonPath, LogLevel.Debug)
