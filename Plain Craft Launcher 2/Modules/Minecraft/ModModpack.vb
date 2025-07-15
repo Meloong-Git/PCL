@@ -261,8 +261,8 @@ Retry:
                     Dim missTip As String = "缺失的 Mod 列表" & vbCrLf
                     Dim realModList As New Dictionary(Of Integer,Integer)
                     For Each Id In Task.Output
-                        Dim modId = Integer.Parse(Id("data")?("modId").ToString)
-                        Dim fileId = Integer.Parse(Id("data")?("id").ToString)
+                        Dim modId = Integer.Parse(If(Id("data")?("modId"),-1).ToString)
+                        Dim fileId = Integer.Parse(If(Id("data")?("id"),-1).ToString)
                         realModList.Add(fileId,modId)
                     Next
                     missTip += String.Join(vbCrLf,ModList.Keys.ToList.Except(realModList.Keys.ToList).Select(Of String)(
