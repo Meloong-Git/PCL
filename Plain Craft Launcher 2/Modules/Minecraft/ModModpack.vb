@@ -273,7 +273,7 @@ Retry:
                     '跳过重复的 Mod（疑似 CurseForge Bug）
                     If FileList.ContainsKey(Id) Then Continue For
                     '可选 Mod 提示
-                    If ModOptionalList.Contains(Id) Then
+                    If ModOptionalList.ContainsKey(Id) Then
                         If MyMsgBox("是否要下载整合包中的可选文件 " & ModJson("displayName").ToString & "？", "下载可选文件", "是", "否") = 2 Then
                             Continue For
                         End If
