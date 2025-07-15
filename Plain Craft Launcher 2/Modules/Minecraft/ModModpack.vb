@@ -1,4 +1,4 @@
-﻿Imports System.IO.Compression
+﻿﻿Imports System.IO.Compression
 
 Public Module ModModpack
 
@@ -166,7 +166,9 @@ Retry:
         IniClearCache(VersionIni) '重置缓存，避免被安装过程中写入的 ini 覆盖
     End Sub
 
-#Region "CurseForge"
+#Region "不同类型整合包的安装方法"
+
+    'CurseForge
     Private Function InstallPackCurseForge(FileAddress As String, Archive As Compression.ZipArchive, ArchiveBaseFolder As String,
                                            Optional VersionName As String = Nothing, Optional Logo As String = Nothing) As LoaderCombo(Of String)
 
@@ -192,7 +194,6 @@ Retry:
         Dim ForgeVersion As String = Nothing
         Dim NeoForgeVersion As String = Nothing
         Dim FabricVersion As String = Nothing
-        Dim QuiltVersion As String = Nothing
         For Each Entry In If(Json("minecraft")("modLoaders"), {})
             Dim Id As String = If(Entry("id"), "").ToString.ToLower
             If Id.StartsWithF("forge-") Then
@@ -206,22 +207,10 @@ Retry:
                 NeoForgeVersion = Id.Replace("neoforge-", "")
             ElseIf Id.StartsWithF("fabric-") Then
                 'Fabric 指定
-                Try
-                    Log("[ModPack] 整合包 Fabric 版本：" & Id)
-                    FabricVersion = Id.Replace("fabric-", "")
-                    Exit For
-                Catch ex As Exception
-                    Log(ex, "读取整合包 Fabric 版本失败：" & Id)
-                End Try
-            ElseIf Id.StartsWithF("quilt-") Then
-                'Quilt 指定
-                Try
-                    Log("[ModPack] 整合包 Quilt 版本：" & Id)
-                    QuiltVersion = Id.Replace("quilt-", "")
-                    Exit For
-                Catch ex As Exception
-                    Log(ex, "读取整合包 Quilt 版本失败：" & Id)
-                End Try
+                Log("[ModPack] 整合包 Fabric 版本：" & Id)
+                FabricVersion = Id.Replace("fabric-", "")
+            Else
+                Log("[ModPack] 未知 Mod 加载器：" & Id)
             End If
         Next
         '解压
@@ -239,7 +228,6 @@ Retry:
             End Sub) With {
             .ProgressWeight = New FileInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False}) '每 6M 需要 1s
         End If
-        '获取 Mod 列表
         Dim ModList As New Dictionary(Of Integer,Integer)
         Dim ModOptionalList As New Dictionary(Of Integer,Integer)
         For Each ModEntry In If(Json("files"), {})
@@ -285,9 +273,8 @@ Retry:
                     '跳过重复的 Mod（疑似 CurseForge Bug）
                     If FileList.ContainsKey(Id) Then Continue For
                     '可选 Mod 提示
-                    If ModOptionalList.ContainsKey(Id) Then
-                        If MyMsgBox("是否要下载整合包中的可选文件 " & ModJson("displayName").ToString & "？",
-                                        "下载可选文件", "是", "否") = 2 Then
+                    If ModOptionalList.Contains(Id) Then
+                        If MyMsgBox("是否要下载整合包中的可选文件 " & ModJson("displayName").ToString & "？", "下载可选文件", "是", "否") = 2 Then
                             Continue For
                         End If
                     End If
@@ -329,8 +316,7 @@ Retry:
             .MinecraftName = Json("minecraft")("version").ToString,
             .ForgeVersion = ForgeVersion,
             .NeoForgeVersion = NeoForgeVersion,
-            .FabricVersion = FabricVersion,
-            .QuiltVersion = QuiltVersion
+            .FabricVersion = FabricVersion
         }
         Dim MergeLoaders As List(Of LoaderBase) = McInstallLoader(Request)
         '构造总加载器
@@ -375,9 +361,8 @@ Retry:
         RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.DownloadManager))
         Return Loader
     End Function
-#End Region
 
-#Region "Modrinth"
+    'Modrinth
     Private Function InstallPackModrinth(FileAddress As String, Archive As Compression.ZipArchive, ArchiveBaseFolder As String, Optional VersionName As String = Nothing, Optional Logo As String = Nothing) As LoaderCombo(Of String)
 
         '读取 Json 文件
@@ -393,7 +378,6 @@ Retry:
         Dim ForgeVersion As String = Nothing
         Dim NeoForgeVersion As String = Nothing
         Dim FabricVersion As String = Nothing
-        Dim QuiltVersion As String = Nothing
         For Each Entry As JProperty In If(Json("dependencies"), {})
             Select Case Entry.Name.ToLower
                 Case "minecraft"
@@ -407,11 +391,12 @@ Retry:
                 Case "fabric-loader" 'eg. 0.14.14
                     FabricVersion = Entry.Value.ToString
                     Log("[ModPack] 整合包 Fabric 版本：" & FabricVersion)
-                Case "quilt-loader" 'eg. 0.26.0
-                    QuiltVersion = Entry.Value.ToString
-                    Log("[ModPack] 整合包 Quilt 版本：" & QuiltVersion)
+                Case "quilt-loader" 'eg. 1.0.0
+                    Hint("PCL 暂不支持安装需要 Quilt 的整合包！", HintType.Critical)
+                    Throw New CancelledException
                 Case Else
-                    Hint($"无法安装整合包，其中出现了未知的 Mod 加载器 {Entry.Name}（版本为 {Entry.Value.ToString}）！", HintType.Critical)
+                    Hint($"无法安装整合包，其中出现了未知的 Mod 加载器 {Entry.Value}！", HintType.Critical)
+                    Throw New CancelledException
             End Select
         Next
         '获取版本名
@@ -453,7 +438,7 @@ Retry:
                 End Select
             End If
             '添加下载文件
-            Dim Urls = File("downloads").SelectMany(Function(x) CompFile.HandleCurseForgeDownloadUrls(x.ToString())).ToList()
+            Dim Urls = File("downloads").SelectMany(Function(t) CompFile.HandleCurseForgeDownloadUrls(t.ToString)).ToList
             Urls.AddRange(Urls.Select(Function(u) DlSourceModGet(u)).ToList)
             Urls = Urls.Distinct.ToList()
             Dim TargetPath As String = $"{PathMcFolder}versions\{VersionName}\{File("path")}"
@@ -475,8 +460,7 @@ Retry:
             .MinecraftName = MinecraftVersion,
             .ForgeVersion = ForgeVersion,
             .NeoForgeVersion = NeoForgeVersion,
-            .FabricVersion = FabricVersion,
-            .QuiltVersion = QuiltVersion
+            .FabricVersion = FabricVersion
         }
         Dim MergeLoaders As List(Of LoaderBase) = McInstallLoader(Request)
         '构造总加载器
@@ -521,9 +505,8 @@ Retry:
         RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.DownloadManager))
         Return Loader
     End Function
-#End Region
 
-#Region "HMCL"
+    'HMCL
     Private Function InstallPackHMCL(FileAddress As String, Archive As Compression.ZipArchive, ArchiveBaseFolder As String) As LoaderCombo(Of String)
         '读取 Json 文件
         Dim Json As JObject
@@ -576,203 +559,14 @@ Retry:
         RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.DownloadManager))
         Return Loader
     End Function
-#End Region
 
-#Region "MultiMC"
-    Public Class MMCPackInfo
-        Public OverridedJson As New JObject
-        Public AdditionalJson As New JObject
-        Public Tweakers As String = Nothing
-        Public JvmArgs As New JArray
-        Public Libraries As New JArray
-        Public IsMinecraftOverrided As Boolean = False
-        Public IsForgeOverrided As Boolean = False
-        Public IsNeoForgeOverrided As Boolean = False
-        Public IsCleanroomOverrided As Boolean = False
-        Public IsFabricOverrided As Boolean = False
-        Public IsQuiltOverrided As Boolean = False
-        Public IsMcArgsEdited As Boolean = False
-    End Class
+    'MMC
     Private Function InstallPackMMC(FileAddress As String, Archive As Compression.ZipArchive, ArchiveBaseFolder As String) As LoaderCombo(Of String)
         '读取 Json 文件
         Dim PackJson As JObject, PackInstance As String
-        Dim PackInfo As MMCPackInfo = Nothing
         Try
             PackJson = GetJson(ReadFile(Archive.GetEntry(ArchiveBaseFolder & "mmc-pack.json").Open, Encoding.UTF8))
             PackInstance = ReadFile(Archive.GetEntry(ArchiveBaseFolder & "instance.cfg").Open, Encoding.UTF8)
-
-#Region "JSON Patches"
-            '参考 https://github.com/MultiMC/Launcher/wiki/JSON-Patches
-            Try
-                If Not Archive.Entries.Any(Function(e) e.FullName.Equals(ArchiveBaseFolder & "patches/", StringComparison.OrdinalIgnoreCase)) Then Exit Try
-                Log("[ModPack] 安装的 MultiMC 整合包存在 JSON Patches")
-                '排序预处理
-                Dim Patches As New List(Of KeyValuePair(Of JObject, Integer))
-                For Each entry In Archive.Entries
-                    If Not entry.FullName.EndsWith("/") AndAlso entry.FullName.StartsWith(ArchiveBaseFolder & "patches/") Then
-                        Dim Patch As JObject = GetJson(ReadFile(Archive.GetEntry(ArchiveBaseFolder & "patches/" & entry.Name).Open, Encoding.UTF8))
-                        Patches.Add(New KeyValuePair(Of JObject, Integer)(Patch, If(Patch("order") IsNot Nothing, Patch("order"), 0)))
-                    End If
-                Next
-                Dim Components As JArray = PackJson("components")
-                For Each Patch In Patches
-                    '检查 Patch 是否在 mmc-pack.json 中
-                    Dim IsContainedInPackJson As Boolean = False
-                    For Each Component In Components
-                        If Component("uid").ToString() = Patch.Key("uid").ToString() Then
-                            IsContainedInPackJson = True
-                            Exit For
-                        End If
-                    Next
-                    If Not IsContainedInPackJson Then
-                        Log($"[ModPack] JSON-Patch {Patch.Key("uid")} 未包含于 mmc-pack.json, 跳过该 Patch")
-                        Patches.Remove(Patch)
-                        Continue For
-                    End If
-                Next
-                Patches.Sort(Function(x, y) x.Value.CompareTo(y.Value))
-                '应用 Patches
-                PackInfo = New MMCPackInfo
-
-                Dim Tweakers As String = Nothing
-                Dim AssetIndex As JObject = Nothing
-                Dim JavaVerJson As JObject = Nothing
-                Dim MainClass As String = Nothing
-                Dim GameArguments As New JArray
-                Dim JvmArguments As New JArray
-                Dim LibJson As New JArray
-                Dim AddLibJson As New JArray
-                For Each Patch In Patches
-                    Dim PatchJson As JObject = Patch.Key
-                    If PatchJson("uid") = "net.minecraft" Then
-                        PackInfo.IsMinecraftOverrided = True
-                    ElseIf PatchJson("uid") = "net.minecraftforge" Then
-                        If PatchJson("version").ToString.StartsWithF("0.") Then
-                            PackInfo.IsCleanroomOverrided = True
-                        Else
-                            PackInfo.IsForgeOverrided = True
-                        End If
-                    ElseIf PatchJson("uid") = "net.neoforged" Then
-                        PackInfo.IsNeoForgeOverrided = True
-                    ElseIf PatchJson("uid") = "net.fabricmc.fabric-loader" Then
-                        PackInfo.IsFabricOverrided = True
-                    ElseIf PatchJson("uid") = "org.quiltmc.quilt-loader" Then
-                        PackInfo.IsQuiltOverrided = True
-                    End If
-                    'JVM 参数
-                    If PatchJson("+jvmArgs") IsNot Nothing Then
-                        JvmArguments.Merge(PatchJson("+jvmArgs"))
-                        Log($"[ModPack] 已应用 JSON-Patch {PatchJson("uid")} 的 JVM 参数")
-                    End If
-                    'Libraries
-                    If PatchJson("libraries") IsNot Nothing OrElse PatchJson("+libraries") IsNot Nothing Then
-                        Dim Libs As New JArray
-                        If PatchJson("libraries") IsNot Nothing Then
-                            For Each Library In PatchJson("libraries")
-                                Dim LibJobj = CType(Library, JObject)
-                                If LibJobj("MMC-hint") IsNot Nothing Then
-                                    LibJobj.Add("hint", LibJobj("MMC-hint"))
-                                    LibJobj.Remove("MMC-hint")
-                                End If
-                                Libs.Add(LibJobj)
-                            Next
-                        End If
-                        If PatchJson("+libraries") IsNot Nothing Then
-                            For Each Library In PatchJson("+libraries") 'TODO: 此处处理不严谨，但也能用吧
-                                Dim LibJobj = CType(Library, JObject)
-                                If LibJobj("MMC-hint") IsNot Nothing Then
-                                    LibJobj.Add("hint", LibJobj("MMC-hint"))
-                                    LibJobj.Remove("MMC-hint")
-                                End If
-                                Libs.Add(LibJobj)
-                            Next
-                        End If
-                        LibJson.Merge(Libs)
-                        Log($"[ModPack] 已应用 JSON-Patch {PatchJson("uid")} 的 Libraries")
-                    End If
-                    'Tweakers
-                    If PatchJson("+tweakers") IsNot Nothing Then
-                        Tweakers = PatchJson("+tweakers")(0)
-                        Log($"[ModPack] 已应用 JSON-Patch {PatchJson("uid")} 的 Tweakers")
-                    End If
-                    'AssetIndex
-                    If PatchJson("assetIndex") IsNot Nothing Then
-                        AssetIndex = PatchJson("assetIndex")
-                        Log($"[ModPack] 已应用 JSON-Patch {PatchJson("uid")} 的 AssetIndex")
-                    End If
-                    'minecraftArguments -> arguments.game
-                    If PatchJson("minecraftArguments") IsNot Nothing Then
-                        For Each Arg In PatchJson("minecraftArguments").ToString().Split(" ")
-                            GameArguments.Add(Arg)
-                        Next
-                        PackInfo.IsMcArgsEdited = True
-                        Log($"[ModPack] 已应用 JSON-Patch {PatchJson("uid")} 的 minecraftArguments 至 arguments.game")
-                    End If
-                    'mainClass
-                    If PatchJson("mainClass") IsNot Nothing Then
-                        MainClass = PatchJson("mainClass")
-                        Log($"[ModPack] 已应用 JSON-Patch {PatchJson("uid")} 的 mainClass")
-                    End If
-                    'Java 版本要求
-                    If PatchJson("compatibleJavaMajors") IsNot Nothing Then
-                        Dim JavaVersion As Integer = 0
-                        Dim JavaComponent As String = Nothing
-                        Dim JavaMajors As JArray = PatchJson("compatibleJavaMajors")
-                        For Each Java In JavaMajors
-                            If JavaVersion > Val(Java) Then Continue For
-                            '优先选择主要的版本
-                            If Val(Java) = 21 Then
-                                JavaVersion = 21
-                                JavaComponent = "java-runtime-delta"
-                            ElseIf Val(Java) = 17 Then
-                                JavaVersion = 17
-                                JavaComponent = "java-runtime-gamma"
-                            ElseIf Val(Java) = 11 Then
-                                JavaVersion = 11
-                                JavaComponent = Nothing
-                            ElseIf Val(Java) = 8 Then
-                                JavaVersion = 8
-                                JavaComponent = "jre-legacy"
-                            End If
-                        Next
-                        If JavaVersion = 0 Then
-                            JavaVersion = JavaMajors(0)
-                            JavaComponent = Nothing
-                        End If
-                        JavaVerJson = New JObject From {{"majorVersion", JavaVersion}}
-                        If JavaComponent IsNot Nothing Then
-                            JavaVerJson.Add("component", JavaComponent)
-                        End If
-                        Log($"[ModPack] JSON-Patch {PatchJson("uid")} 要求 Java 版本: " & JavaVersion)
-                    End If
-                Next
-                Dim JsonArguments As JObject = Nothing
-                If Not String.IsNullOrWhiteSpace(Tweakers) Then
-                    GameArguments.Add("--tweakClass")
-                    GameArguments.Add(Tweakers)
-                End If
-                If GameArguments IsNot Nothing OrElse JvmArguments IsNot Nothing Then
-                    JvmArguments.Insert(0, "-Djava.library.path=${natives_directory}")
-                    JvmArguments.Insert(1, "-Dminecraft.launcher.brand=${launcher_name}")
-                    JvmArguments.Insert(2, "-Dminecraft.launcher.version=${launcher_version}")
-                    JvmArguments.Insert(3, "-cp")
-                    JvmArguments.Insert(4, "${classpath}")
-                    JsonArguments = New JObject From {
-                        {"game", GameArguments},
-                        {"jvm", JvmArguments}
-                    }
-                End If
-                PackInfo.OverridedJson = New JObject
-                If JsonArguments IsNot Nothing Then PackInfo.OverridedJson.Add("arguments", JsonArguments)
-                If MainClass IsNot Nothing Then PackInfo.OverridedJson.Add("mainClass", MainClass)
-                If AssetIndex IsNot Nothing Then PackInfo.OverridedJson.Add("assetIndex", AssetIndex)
-                If JavaVerJson IsNot Nothing Then PackInfo.OverridedJson.Add("javaVersion", JavaVerJson)
-                If LibJson IsNot Nothing Then PackInfo.OverridedJson.Add("libraries", LibJson)
-            Catch ex As Exception
-                Log(ex, $"应用 MMC JSON-Patches 失败")
-            End Try
-#End Region
-
         Catch ex As Exception
             Throw New Exception("MMC 整合包安装信息存在问题", ex)
         End Try
@@ -790,15 +584,9 @@ Retry:
         Sub(Task As LoaderTask(Of String, Integer))
             ExtractModpackFiles(InstallTemp, FileAddress, Task, 0.55)
             CopyOverrideDirectory(
-                InstallTemp & ArchiveBaseFolder & "libraries",
-                PathMcFolder & "versions\" & VersionName & "\libraries",
-                Task, 0.2)
-            CopyOverrideDirectory(
                 InstallTemp & ArchiveBaseFolder & ".minecraft",
                 PathMcFolder & "versions\" & VersionName,
-                Task, 0.2)
-
-#Region "instance.cfg"
+                Task, 0.4)
             '读取 MMC 设置文件（#2655）
             Try
                 Dim MMCSetupFile As String = InstallTemp & ArchiveBaseFolder & "instance.cfg"
@@ -855,8 +643,6 @@ Retry:
             Catch ex As Exception
                 Log(ex, $"读取 MMC 配置文件失败（{InstallTemp}{ArchiveBaseFolder}instance.cfg）")
             End Try
-#End Region
-
         End Sub) With {.ProgressWeight = New FileInfo(FileAddress).Length / 1024 / 1024 / 6, .Block = False}) '每 6M 需要 1s
         '构造版本安装请求
         If PackJson("components") Is Nothing Then Throw New Exception("该 MMC 整合包未提供游戏版本信息，无法安装！")
@@ -868,20 +654,16 @@ Retry:
                 Case "net.minecraft"
                     Request.MinecraftName = Component("version")
                 Case "net.minecraftforge"
-                    If Component("version").ToString().StartsWithF("0.") Then
-                        Request.CleanroomVersion = Component("version")
-                    Else
-                        Request.ForgeVersion = Component("version")
-                    End If
+                    Request.ForgeVersion = Component("version")
                 Case "net.neoforged"
                     Request.NeoForgeVersion = Component("version")
                 Case "net.fabricmc.fabric-loader"
                     Request.FabricVersion = Component("version")
-                Case "org.quiltmc.quilt-loader"
-                    Request.QuiltVersion = Component("version")
+                Case "org.quiltmc.quilt-loader" 'eg. 1.0.0
+                    Hint("PCL 暂不支持安装需要 Quilt 的整合包！", HintType.Critical)
+                    Throw New CancelledException
             End Select
         Next
-        If PackInfo IsNot Nothing Then Request.MMCPackInfo = PackInfo
         '构造加载器
         Dim MergeLoaders As List(Of LoaderBase) = McInstallLoader(Request)
         '构造总加载器
@@ -904,9 +686,8 @@ Retry:
         RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.DownloadManager))
         Return Loader
     End Function
-#End Region
 
-#Region "MCBBS"
+    'MCBBS
     Private Function InstallPackMCBBS(FileAddress As String, Archive As Compression.ZipArchive, ArchiveBaseFolder As String,
                                       Optional VersionName As String = Nothing) As LoaderCombo(Of String)
         '读取 Json 文件
@@ -949,9 +730,10 @@ Retry:
         For Each Entry In Json("addons")
             Addons.Add(Entry("id"), Entry("version"))
         Next
-        If Not Addons.ContainsKey("game") Then
-            Hint("该整合包未提供游戏版本信息，无法安装！", HintType.Critical)
-            Return Nothing
+        If Not Addons.ContainsKey("game") Then Throw New Exception("该 MCBBS 整合包未提供游戏版本信息，无法安装！")
+        If Addons.ContainsKey("quilt") Then
+            Hint("PCL 暂不支持安装需要 Quilt 的整合包！", HintType.Critical)
+            Throw New CancelledException
         End If
         Dim Request As New McInstallRequest With {
             .TargetVersionName = VersionName,
@@ -960,8 +742,7 @@ Retry:
             .OptiFineVersion = If(Addons.ContainsKey("optifine"), Addons("optifine"), Nothing),
             .ForgeVersion = If(Addons.ContainsKey("forge"), Addons("forge"), Nothing),
             .NeoForgeVersion = If(Addons.ContainsKey("neoforge"), Addons("neoforge"), Nothing),
-            .FabricVersion = If(Addons.ContainsKey("fabric"), Addons("fabric"), Nothing),
-            .QuiltVersion = If(Addons.ContainsKey("quilt"), Addons("quilt"), Nothing)
+            .FabricVersion = If(Addons.ContainsKey("fabric"), Addons("fabric"), Nothing)
         }
         Dim MergeLoaders As List(Of LoaderBase) = McInstallLoader(Request)
         '构造总加载器
@@ -985,9 +766,8 @@ Retry:
         RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.DownloadManager))
         Return Loader
     End Function
-#End Region
 
-#Region "带启动器的压缩包"
+    '带启动器的压缩包
     Private Function InstallPackLauncherPack(FileAddress As String, Archive As Compression.ZipArchive, ArchiveBaseFolder As String) As LoaderCombo(Of String)
         '获取解压路径
         MyMsgBox("接下来请选择一个空文件夹，它会被安装到这个文件夹里。", "安装", "继续", ForceWait:=True)
@@ -1049,9 +829,8 @@ Retry:
         FrmMain.BtnExtraDownload.Ribble()
         Return Loader
     End Function
-#End Region
 
-#Region "普通压缩包"
+    '普通压缩包
     Private Function InstallPackCompress(FileAddress As String, Archive As Compression.ZipArchive) As LoaderCombo(Of String)
         '尝试定位 .minecraft 文件夹：寻找形如 “/versions/XXX/XXX.json” 的路径
         Dim Match As RegularExpressions.Match = Nothing
