@@ -4,7 +4,7 @@
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:System="clr-namespace:System;assembly=mscorlib" 
     mc:Ignorable="d" x:Class="PageVersionOverall"
-    PanScroll="{Binding ElementName=PanBack}" Grid.IsSharedSizeScope="True">
+    PanScroll="PanBack" Grid.IsSharedSizeScope="True">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel x:Name="PanMain" Margin="25,10">
             <local:MyCard Margin="0,15" Title="">

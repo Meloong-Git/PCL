@@ -4,7 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:PCL"
-      mc:Ignorable="d" AnimatedControl="{Binding ElementName=PanItem}" MinWidth="150">
+      mc:Ignorable="d" AnimatedControl="PanItem" MinWidth="150">
     <StackPanel Orientation="Vertical" x:Name="PanItem" Margin="0,12,0,0">
         <TextBlock Text="联机方式" Margin="13,6,5,4" Opacity="0.6" FontSize="12" />
         <local:MyListItem x:Name="ItemHiper" IsScaleAnimationEnabled="False" Type="RadioBox" Tag="1" MinPaddingRight="35" Height="36" VerticalAlignment="Top" Title="HiPer"

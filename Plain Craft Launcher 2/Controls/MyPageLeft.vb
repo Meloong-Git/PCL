@@ -3,15 +3,28 @@
     Private Uuid As Integer = GetUuid()
 
     '执行逐个进入动画的控件
-    Public Property AnimatedControl As FrameworkElement
-        Get
-            Return GetValue(AnimatedControlProperty)
-        End Get
-        Set(value As FrameworkElement)
-            SetValue(AnimatedControlProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly AnimatedControlProperty As DependencyProperty = DependencyProperty.Register("AnimatedControl", GetType(FrameworkElement), GetType(MyPageLeft), New PropertyMetadata(Nothing))
+    Public AnimatedControl As FrameworkElement
+    Public Shared ReadOnly AnimatedControlProperty As DependencyProperty = DependencyProperty.RegisterAttached("AnimatedControl", GetType(String), GetType(MyPageLeft), New PropertyMetadata(Nothing, AddressOf OnAnimatedControlChanged))
+
+    Public Shared Sub SetAnimatedControl(obj As DependencyObject, value As String)
+        obj.SetValue(AnimatedControlProperty, value)
+    End Sub
+
+    Private Shared Sub OnAnimatedControlChanged(d As DependencyObject, e As DependencyPropertyChangedEventArgs)
+        Dim control = TryCast(d, MyPageLeft)
+        If control IsNot Nothing Then
+            Dim handler As RoutedEventHandler
+            handler = Sub(sender, args)
+                          Dim targetName = CStr(e.NewValue)
+                          Dim target = TryCast(control.FindName(targetName), FrameworkElement)
+                          If target IsNot Nothing Then
+                              control.AnimatedControl = target
+                          End If
+                          RemoveHandler control.Loaded, handler
+                      End Sub
+            AddHandler control.Loaded, handler
+        End If
+    End Sub
 
     Public Sub TriggerShowAnimation()
         If AnimatedControl Is Nothing Then

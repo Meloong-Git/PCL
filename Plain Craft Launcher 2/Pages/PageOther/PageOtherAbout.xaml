@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageOtherAbout"
-    PanScroll="{Binding ElementName=PanBack}" RenderOptions.BitmapScalingMode="LowQuality">
+    PanScroll="PanBack" RenderOptions.BitmapScalingMode="LowQuality">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel x:Name="PanMain" Margin="25,10" Grid.IsSharedSizeScope="True">
             <local:MyCard Margin="0,15" Title="关于">
@@ -105,7 +105,8 @@
             <local:MyCard Margin="0,0,0,15" Title="赞助者">
                 <StackPanel Margin="25,40,10,20">
                     <TextBlock HorizontalAlignment="Left" Text="以下是 2025 年 5 月的高级赞助者们！感谢各位对 PCL 和伟大的咕咕咕事业的支持！" Margin="0,0,25,5.5" TextTrimming="None" TextWrapping="WrapWithOverflow" />
-                    <WrapPanel Margin="0,0,0,10">                        <TextBlock Width="120" Margin="0,1.5" Text="Alliance" />
+                    <WrapPanel Margin="0,0,0,10">
+                        <TextBlock Width="120" Margin="0,1.5" Text="Alliance" />
                         <TextBlock Width="120" Margin="0,1.5" Text="风之轻语" />
                         <TextBlock Width="120" Margin="0,1.5" Text="大博文" />
                         <TextBlock Width="120" Margin="0,1.5" Text="狐狸不吃酸葡萄" />

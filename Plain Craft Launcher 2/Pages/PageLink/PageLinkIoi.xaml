@@ -4,7 +4,7 @@
     xmlns:System="clr-namespace:System;assembly=mscorlib" 
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageLinkIoi"
-    PanScroll="{Binding ElementName=PanBack}">
+    PanScroll="PanBack">
     <Grid>
         <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
             <StackPanel Orientation="Vertical" Margin="25,10">

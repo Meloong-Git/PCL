@@ -4,7 +4,7 @@
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:System="clr-namespace:System;assembly=mscorlib" 
     mc:Ignorable="d" x:Class="PageVersionSetup"
-    PanScroll="{Binding ElementName=PanBack}">
+    PanScroll="PanBack">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel x:Name="PanMain" Margin="25,25,25,25">
             <local:MyHint Text="这些设置只对该游戏版本生效，不影响其他版本。" Theme="Blue" Margin="0,0,0,15"

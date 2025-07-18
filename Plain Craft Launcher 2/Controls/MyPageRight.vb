@@ -3,16 +3,29 @@
     Public PageUuid As Integer = GetUuid()
 
     '“返回顶部” 按钮检测的滚动区域
-    Public Property PanScroll As MyScrollViewer
-        Get
-            Return GetValue(PanScrollProperty)
-        End Get
-        Set(value As MyScrollViewer)
-            SetValue(PanScrollProperty, value)
-        End Set
-    End Property
+    Public PanScroll As MyScrollViewer
     Private Shared ReadOnly PanScrollProperty =
-        DependencyProperty.Register("PanScroll", GetType(MyScrollViewer), GetType(MyPageRight), New PropertyMetadata(Nothing))
+        DependencyProperty.RegisterAttached("PanScroll", GetType(String), GetType(MyPageRight), New PropertyMetadata(Nothing, AddressOf OnPanScrollChanged))
+
+    Public Shared Sub SetPanScroll(obj As DependencyObject, value As String)
+        obj.SetValue(PanScrollProperty, value)
+    End Sub
+
+    Private Shared Sub OnPanScrollChanged(d As DependencyObject, e As DependencyPropertyChangedEventArgs)
+        Dim control = TryCast(d, MyPageRight)
+        If control IsNot Nothing Then
+            Dim handler As RoutedEventHandler
+            handler = Sub(sender, args)
+                          Dim targetName = CStr(e.NewValue)
+                          Dim target = TryCast(control.FindName(targetName), FrameworkElement)
+                          If target IsNot Nothing Then
+                              control.PanScroll = target
+                          End If
+                          RemoveHandler control.Loaded, handler
+                      End Sub
+            AddHandler control.Loaded, handler
+        End If
+    End Sub
 
     '当前状态
     Public Enum PageStates

@@ -1,7 +1,7 @@
 ﻿<local:MyPageLeft x:Class="PageVersionLeft"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:PCL" AnimatedControl="{Binding ElementName=PanItem, Mode=OneWay}">
+             xmlns:local="clr-namespace:PCL" AnimatedControl="PanItem">
     <StackPanel Margin="0,12,0,0" Name="PanItem">
         <local:MyListItem x:Name="ItemOverall" IsScaleAnimationEnabled="False" Checked="True" Type="RadioBox" Tag="0" MinPaddingRight="35" Height="36" VerticalAlignment="Top" Title="概览"
                           Logo="M12 0l-11 6v12.131l11 5.869 11-5.869v-12.066l-11-6.065zm-1 21.2l-6.664-3.555 4.201-2.801c1.08-.719-.066-2.359-1.243-1.575l-4.294 2.862v-7.901l8 4.363v8.607zm-6.867-14.63l6.867-3.746v4.426c0 1.323 2 1.324 2 0v-4.415l6.91 3.811-7.905 4.218-7.872-4.294zm8.867 6.03l8-4.269v7.8l-4.263-2.842c-1.181-.785-2.323.855-1.245 1.574l4.172 2.781-6.664 3.556v-8.6z" />

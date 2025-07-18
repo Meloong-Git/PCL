@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageDownloadPack"
-    PanScroll="{Binding ElementName=Content}">
+    PanScroll="Content">
     <local:PageComp x:Name="Content" PageType="ModPack" TypeName="整合包" TypeNameSpaced="整合包">
         <local:MyComboBoxItem Tag="" Content="全部" IsSelected="True" />
         <local:MyComboBoxItem Tag="4484/" Content="多人" />
