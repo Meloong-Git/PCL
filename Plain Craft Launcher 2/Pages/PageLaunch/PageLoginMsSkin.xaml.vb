@@ -133,6 +133,61 @@ Retry:
         End Sub, "Ms Skin Upload")
     End Sub
 
+    '重置皮肤
+    Public Sub BtnSkinReset_Click(sender As Object, e As RoutedEventArgs)
+        If IsChanging Then
+            Hint("正在更改皮肤中，请稍候！")
+            Return
+        End If
+        If McLoginLoader.State = LoadState.Failed Then
+            Hint("登录失败，无法重置皮肤！", HintType.Critical)
+            Return
+        End If
+        IsChanging = True
+        RunInNewThread(
+        Async Sub()
+            Try
+Retry:
+                If McLoginMsLoader.State = LoadState.Loading Then McLoginMsLoader.WaitForExit() '等待登录结束
+                Dim AccessToken As String = Setup.Get("CacheMsV2Access")
+                Dim Uuid As String = Setup.Get("CacheMsV2Uuid")
+
+                Dim Client As New Net.Http.HttpClient With {.Timeout = New TimeSpan(0, 0, 30)}
+                Client.DefaultRequestHeaders.Authorization = New Net.Http.Headers.AuthenticationHeaderValue("Bearer", AccessToken)
+                Client.DefaultRequestHeaders.Accept.Add(New Net.Http.Headers.MediaTypeWithQualityHeaderValue("*/*"))
+                Client.DefaultRequestHeaders.UserAgent.Add(New Net.Http.Headers.ProductInfoHeaderValue("MojangSharp", "0.1"))
+                Dim Result As String = Await (Await Client.DeleteAsync(New Uri("https://api.minecraftservices.com/minecraft/profile/skins/active"))).Content.ReadAsStringAsync
+                If Result.Contains("request requires user authentication") Then
+                    Hint("正在登录，将在登录完成后继续重置皮肤……")
+                    McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
+                    GoTo Retry
+                ElseIf Result.Contains("""error""") Then
+                    Hint("重置皮肤失败：" & GetJson(Result)("error"), HintType.Critical)
+                    Return
+                End If
+                '获取新皮肤地址
+                Log("[Skin] 皮肤重置返回值：" & vbCrLf & Result)
+                Dim ResultJson As JObject = GetJson(Result)
+                If ResultJson.ContainsKey("errorMessage") Then Throw New Exception(ResultJson("errorMessage").ToString) '#5309
+                For Each Skin As JObject In ResultJson("skins")
+                    If Skin("state").ToString = "ACTIVE" Then
+                        MySkin.ReloadCache(Skin("url"))
+                        Return
+                    End If
+                Next
+                Throw New Exception("未知错误（" & Result & "）")
+            Catch ex As Exception
+                If ex.GetType.Equals(GetType(Tasks.TaskCanceledException)) Then
+                    Hint("重置皮肤失败：与 Mojang 皮肤服务器的连接超时，请检查你的网络是否通畅！", HintType.Critical)
+                Else
+                    Log(ex, "重置皮肤失败", LogLevel.Hint)
+                End If
+            Finally
+                IsChanging = False
+            End Try
+        End Sub, "Ms Skin Reset")
+    End Sub
+    
     '保存皮肤
     Public Sub BtnSkinSave_Click(sender As Object, e As RoutedEventArgs)
         Skin.BtnSkinSave_Click()
