@@ -807,8 +807,8 @@ NoSubtitle:
         ''' </summary>
         Public ReadOnly Property CanContinue As Boolean
             Get
-                If Tag.StartsWithF("/") OrElse Not Source.HasFlag(CompSourceType.CurseForge) Then Storage.CurseForgeTotal = 0
-                If Tag.EndsWithF("/") OrElse Not Source.HasFlag(CompSourceType.Modrinth) Then Storage.ModrinthTotal = 0
+                If Tag.NotSupportCf OrElse Not Source.HasFlag(CompSourceType.CurseForge) Then Storage.CurseForgeTotal = 0
+                If Tag.NotSupportMr OrElse Not Source.HasFlag(CompSourceType.Modrinth) Then Storage.ModrinthTotal = 0
                 If Storage.CurseForgeTotal = -1 OrElse Storage.ModrinthTotal = -1 Then Return True
                 Return Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse Storage.ModrinthOffset < Storage.ModrinthTotal
             End Get
@@ -821,9 +821,9 @@ NoSubtitle:
         ''' </summary>
         Public Type As CompType
         ''' <summary>
-        ''' 筛选资源标签。空字符串代表不限制。格式例如 "406/worldgen"，分别是 CurseForge 和 Modrinth 的 ID。
+        ''' 筛选资源标签。
         ''' </summary>
-        Public Tag As String = ""
+        Public Tag As PageComp.FilterTag
         ''' <summary>
         ''' 筛选 Mod 加载器类别。
         ''' </summary>
@@ -856,7 +856,7 @@ NoSubtitle:
         ''' </summary>
         Public Function GetCurseForgeAddress() As String
             If Not Source.HasFlag(CompSourceType.CurseForge) Then Return Nothing
-            If Tag.StartsWithF("/") Then Storage.CurseForgeTotal = 0
+            If Tag.NotSupportCf Then Storage.CurseForgeTotal = 0
             If Storage.CurseForgeTotal > -1 AndAlso Storage.CurseForgeTotal <= Storage.CurseForgeOffset Then Return Nothing
             '应用筛选参数
             Dim Address As String = $"https://api.curseforge.com/v1/mods/search?gameId=432&sortField=2&sortOrder=desc&pageSize={CompPageSize}"
@@ -872,7 +872,7 @@ NoSubtitle:
                 Case CompType.ResourcePack
                     Address += "&classId=12"
             End Select
-            Address += "&categoryId=" & If(Tag = "", "0", Tag.BeforeFirst("/"))
+            Address += "&categoryId=" & If(Not Tag.HasFilter, "0", Tag.CfValue)
             If ModLoader <> CompModLoaderType.Any Then Address += "&modLoaderType=" & CType(ModLoader, Integer)
             If Not String.IsNullOrEmpty(GameVersion) Then Address += "&gameVersion=" & GameVersion
             If Not String.IsNullOrEmpty(SearchText) Then Address += "&searchFilter=" & Net.WebUtility.UrlEncode(SearchText)
@@ -884,7 +884,7 @@ NoSubtitle:
         ''' </summary>
         Public Function GetModrinthAddress() As String
             If Not Source.HasFlag(CompSourceType.Modrinth) Then Return Nothing
-            If Tag.EndsWithF("/") Then Storage.ModrinthTotal = 0
+            If Tag.NotSupportMr Then Storage.ModrinthTotal = 0
             If Storage.ModrinthTotal > -1 AndAlso Storage.ModrinthTotal <= Storage.ModrinthOffset Then Return Nothing
             '应用筛选参数
             Dim Address As String = $"https://api.modrinth.com/v2/search?limit={CompPageSize}&index=relevance"
@@ -893,7 +893,7 @@ NoSubtitle:
             'facets=[["categories:'game-mechanics'"],["categories:'forge'"],["versions:1.19.3"],["project_type:mod"]]
             Dim Facets As New List(Of String)
             Facets.Add($"[""project_type:{GetStringFromEnum(Type).ToLower}""]")
-            If Not String.IsNullOrEmpty(Tag) Then Facets.Add($"[""categories:'{Tag.AfterLast("/")}'""]")
+            If Tag.HasFilter Then Facets.Add($"[""categories:'{Tag.MrValue}'""]")
             If ModLoader <> CompModLoaderType.Any Then Facets.Add($"[""categories:'{GetStringFromEnum(ModLoader).ToLower}'""]")
             If Not String.IsNullOrEmpty(GameVersion) Then Facets.Add($"[""versions:'{GameVersion}'""]")
             Address += "&facets=[" & String.Join(",", Facets) & "]"
@@ -905,7 +905,7 @@ NoSubtitle:
             Dim request = TryCast(obj, CompProjectRequest)
             Return request IsNot Nothing AndAlso
                 Type = request.Type AndAlso TargetResultCount = request.TargetResultCount AndAlso
-                Tag = request.Tag AndAlso ModLoader = request.ModLoader AndAlso Source = request.Source AndAlso
+                Tag.Equals(request.Tag) AndAlso ModLoader = request.ModLoader AndAlso Source = request.Source AndAlso
                 GameVersion = request.GameVersion AndAlso SearchText = request.SearchText
         End Function
         Public Shared Operator =(left As CompProjectRequest, right As CompProjectRequest) As Boolean
@@ -1145,9 +1145,9 @@ Retry:
                 Else
                     If IsChineseSearch AndAlso Not (Request.Type = CompType.Mod OrElse Request.Type = CompType.DataPack) Then
                         Throw New Exception("没有搜索结果，请尝试使用英文搜索")
-                    ElseIf Request.Source = CompSourceType.CurseForge AndAlso Request.Tag.StartsWithF("/") Then
+                    ElseIf Request.Source = CompSourceType.CurseForge AndAlso Request.Tag.NotSupportCf Then
                         Throw New Exception("CurseForge 不兼容所选的类型")
-                    ElseIf Request.Source = CompSourceType.Modrinth AndAlso Request.Tag.EndsWithF("/") Then
+                    ElseIf Request.Source = CompSourceType.Modrinth AndAlso Request.Tag.NotSupportMr Then
                         Throw New Exception("Modrinth 不兼容所选的类型")
                     Else
                         Throw New Exception("没有搜索结果")

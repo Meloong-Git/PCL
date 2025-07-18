@@ -5,22 +5,22 @@
     mc:Ignorable="d" x:Class="PageDownloadDataPack"
     PanScroll="{Binding ElementName=Content}">
     <local:PageComp x:Name="Content" PageType="DataPack" TypeName="数据包" TypeNameSpaced="数据包">
-        <local:MyComboBoxItem Tag="" Content="全部" IsSelected="True" />
-        <local:MyComboBoxItem Content="世界元素" Tag="/worldgen" />
-        <local:MyComboBoxItem Content="科技" Tag="6951/technology" />
-        <local:MyComboBoxItem Content="游戏机制" Tag="/game-mechanics" />
-        <local:MyComboBoxItem Content="运输" Tag="/transportation" />
-        <local:MyComboBoxItem Content="仓储" Tag="/storage" />
-        <local:MyComboBoxItem Content="魔法" Tag="6952/magic" />
-        <local:MyComboBoxItem Content="冒险" Tag="6948/adventure" />
-        <local:MyComboBoxItem Content="幻想" Tag="6949/" />
-        <local:MyComboBoxItem Content="装饰" Tag="/decoration" />
-        <local:MyComboBoxItem Content="生物" Tag="/mobs" />
-        <local:MyComboBoxItem Content="实用" Tag="6953/utility" />
-        <local:MyComboBoxItem Content="装备与工具" Tag="/equipment" />
-        <local:MyComboBoxItem Content="性能优化" Tag="/optimization" />
-        <local:MyComboBoxItem Content="服务器" Tag="/social" />
-        <local:MyComboBoxItem Content="支持库" Tag="6950/library" />
-        <local:MyComboBoxItem Content="Mod 相关" Tag="6946/" />
+        <local:MyComboBoxItem Content="全部" IsSelected="True" />
+        <local:MyComboBoxItem Content="世界元素" local:PageComp.FilterTag="/worldgen" />
+        <local:MyComboBoxItem Content="科技" local:PageComp.FilterTag="6951/technology" />
+        <local:MyComboBoxItem Content="游戏机制" local:PageComp.FilterTag="/game-mechanics" />
+        <local:MyComboBoxItem Content="运输" local:PageComp.FilterTag="/transportation" />
+        <local:MyComboBoxItem Content="仓储" local:PageComp.FilterTag="/storage" />
+        <local:MyComboBoxItem Content="魔法" local:PageComp.FilterTag="6952/magic" />
+        <local:MyComboBoxItem Content="冒险" local:PageComp.FilterTag="6948/adventure" />
+        <local:MyComboBoxItem Content="幻想" local:PageComp.FilterTag="6949/" />
+        <local:MyComboBoxItem Content="装饰" local:PageComp.FilterTag="/decoration" />
+        <local:MyComboBoxItem Content="生物" local:PageComp.FilterTag="/mobs" />
+        <local:MyComboBoxItem Content="实用" local:PageComp.FilterTag="6953/utility" />
+        <local:MyComboBoxItem Content="装备与工具" local:PageComp.FilterTag="/equipment" />
+        <local:MyComboBoxItem Content="性能优化" local:PageComp.FilterTag="/optimization" />
+        <local:MyComboBoxItem Content="服务器" local:PageComp.FilterTag="/social" />
+        <local:MyComboBoxItem Content="支持库" local:PageComp.FilterTag="6950/library" />
+        <local:MyComboBoxItem Content="Mod 相关" local:PageComp.FilterTag="6946/" />
     </local:PageComp>
 </local:MyPageRight>
