@@ -24,13 +24,17 @@
         <Grid Grid.Row="4" Grid.ColumnSpan="2" Opacity="0.3" Margin="2,30,2,0" HorizontalAlignment="Center">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="30" />
+                <ColumnDefinition Width="20" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="20" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <local:MyTextButton Text="»  购买正版" EventType="打开网页" EventData="https://www.xbox.com/zh-cn/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj"
                             Grid.Column="0" />
             <local:MyTextButton Text="»  前往官网" EventType="打开网页" EventData="https://www.minecraft.net/zh-hans"
                             Grid.Column="2" />
+            <local:MyTextButton Text="»  兑换 CDK" EventType="打开网页" EventData="https://www.minecraft.net/zh-hans/redeem"
+                            Grid.Column="4" />
         </Grid>
     </Grid>
 </StackPanel>

@@ -277,4 +277,8 @@ Retry:
         End Sub, "Cape Change")
     End Sub
 
+    Public Sub BtnSkinRedeem_Click() Handles BtnSkinCape.Click
+        OpenWebsite("https://www.minecraft.net/zh-hans/redeem")
+    End Sub
+
 End Class

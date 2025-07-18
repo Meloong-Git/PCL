@@ -148,6 +148,11 @@ Retry:
         Skin.BtnSkinCape_Click()
     End Sub
 
+    '兑换披风
+    Public Sub BtnSkinRedeem_Click(sender As Object, e As RoutedEventArgs)
+        Skin.BtnSkinRedeem_Click()
+    End Sub
+
 #End Region
 
 End Class
