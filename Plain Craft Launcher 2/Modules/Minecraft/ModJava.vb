@@ -117,6 +117,7 @@
                 If Output = "" Then Throw New ApplicationException("尝试运行该 Java 失败")
                 If ModeDebug Then Log("[Java] Java 检查输出：" & PathFolder & "java.exe" & vbCrLf & Output)
                 If Output.Contains("/lib/ext exists") Then Throw New ApplicationException("无法运行该 Java，请在删除 Java 文件夹中的 /lib/ext 文件夹后再试")
+                If Output.Contains("a fatal error") Then Throw New ApplicationException("由于操作系统或 JVM 存在问题，无法运行该 Java。")
                 '获取详细信息
                 Dim VersionString = If(RegexSeek(Output, "(?<=version "")[^""]+"), If(RegexSeek(Output, "(?<=openjdk )[0-9]+"), "")).Replace("_", ".").Split("-").First
                 If VersionString.Split(".").Count > 4 Then VersionString = VersionString.Replace(".0.", ".") '#3493，VersionString = "21.0.2.0.2"

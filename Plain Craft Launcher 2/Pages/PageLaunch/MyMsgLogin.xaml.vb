@@ -125,6 +125,9 @@
                 ElseIf ex.Message.Contains("expired_token") Then
                     Finished(New Exception("$登录用时太长啦，重新试试吧！"))
                     Return
+                Else If ex.Message.Contains("Account security interrupt") Then
+                    Finished(New Exception("$非常抱歉，该账号由于安全问题无法登陆，请前往 Microsoft 账户页获取更多信息。"))
+                    Return
                 ElseIf ex.Message.Contains("service abuse") Then
                     Finished(New Exception("$非常抱歉，该账号已被微软封禁，无法登录。"))
                     Return

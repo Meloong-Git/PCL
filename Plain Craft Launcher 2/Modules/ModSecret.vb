@@ -1,5 +1,6 @@
 ﻿'由于包含加解密等安全信息，本文件中的部分代码已被删除
 
+Imports System.Net.Http
 Imports System.Security.Cryptography
 
 Friend Module ModSecret
@@ -9,9 +10,10 @@ Friend Module ModSecret
     '在开源版的注册表与常规版的注册表隔离，以防数据冲突
     Public Const RegFolder As String = "PCLDebug"
     '用于微软登录的 ClientId
-    Public Const OAuthClientId As String = ""
+    Public OAuthClientId As String = If(Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID"), "")
     'CurseForge API Key
-    Public Const CurseForgeAPIKey As String = ""
+    Public CurseForgeAPIKey As String = If(Environment.GetEnvironmentVariable("PCL_CURSEFORGE_API_KEY"), "")
+
 
     Friend Sub SecretOnApplicationStart()
         '提升 UI 线程优先级
@@ -78,31 +80,18 @@ Friend Module ModSecret
     ''' <summary>
     ''' 设置 Headers 的 UA、Referer。
     ''' </summary>
-    Friend Sub SecretHeadersSign(Url As String, ByRef Client As WebClient, Optional UseBrowserUserAgent As Boolean = False)
+    Friend Sub SecretHeadersSign(Url As String, ByRef Req As HttpRequestMessage, Optional UseBrowserUserAgent As Boolean = False)
         If Url.Contains("baidupcs.com") OrElse Url.Contains("baidu.com") Then
-            Client.Headers("User-Agent") = "LogStatistic" '#4951
+            Req.Headers.Add("User-Agent", "LogStatistic")  '#4951
         ElseIf UseBrowserUserAgent Then
-            Client.Headers("User-Agent") = "PCL2/" & VersionStandardCode & " Mozilla/5.0 AppleWebKit/537.36 Chrome/63.0.3239.132 Safari/537.36"
+            Req.Headers.Add("User-Agent", $"PCL2/{VersionStandardCode} Mozilla/5.0 AppleWebKit/537.36 Chrome/63.0.3239.132 Safari/537.36")
         Else
-            Client.Headers("User-Agent") = "PCL2/" & VersionStandardCode
+            Req.Headers.Add("User-Agent", $"PCL2/{VersionStandardCode}")
         End If
-        Client.Headers("Referer") = "http://" & VersionCode & ".open.pcl2.server/"
-        If Url.Contains("api.curseforge.com") Then Client.Headers("x-api-key") = CurseForgeAPIKey
+        Req.Headers.Add("Referer", $"http://{VersionCode}.open.pcl2.server/")
+        If Url.Contains("api.curseforge.com") Then Req.Headers.Add("x-api-key", CurseForgeAPIKey)
     End Sub
-    ''' <summary>
-    ''' 设置 Headers 的 UA、Referer。
-    ''' </summary>
-    Friend Sub SecretHeadersSign(Url As String, ByRef Request As HttpWebRequest, Optional UseBrowserUserAgent As Boolean = False)
-        If Url.Contains("baidupcs.com") OrElse Url.Contains("baidu.com") Then
-            Request.UserAgent = "LogStatistic" '#4951
-        ElseIf UseBrowserUserAgent Then
-            Request.UserAgent = "PCL2/" & VersionStandardCode & " Mozilla/5.0 AppleWebKit/537.36 Chrome/63.0.3239.132 Safari/537.36"
-        Else
-            Request.UserAgent = "PCL2/" & VersionStandardCode
-        End If
-        Request.Referer = "http://" & VersionCode & ".open.pcl2.server/"
-        If Url.Contains("api.curseforge.com") Then Request.Headers("x-api-key") = CurseForgeAPIKey
-    End Sub
+
 
 #End Region
 
