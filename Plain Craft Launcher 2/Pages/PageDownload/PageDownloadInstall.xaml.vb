@@ -369,25 +369,20 @@
             LabForge.Foreground = ColorGray1
         End If
         'NeoForge
-        If Not SelectedMinecraftId.Contains("1.") OrElse Val(SelectedMinecraftId.Split(".")(1)) <= 19 Then
-            CardNeoForge.Visibility = Visibility.Collapsed
+        Dim NeoForgeError As String = LoadNeoForgeGetError()
+        CardNeoForge.MainSwap.Visibility = If(NeoForgeError Is Nothing, Visibility.Visible, Visibility.Collapsed)
+        If NeoForgeError IsNot Nothing Then CardNeoForge.IsSwaped = True
+        SetNeoForgeInfoShow(CardNeoForge.IsSwaped)
+        If SelectedNeoForge Is Nothing Then
+            BtnNeoForgeClear.Visibility = Visibility.Collapsed
+            ImgNeoForge.Visibility = Visibility.Collapsed
+            LabNeoForge.Text = If(NeoForgeError, "可以添加")
+            LabNeoForge.Foreground = ColorGray4
         Else
-            CardNeoForge.Visibility = Visibility.Visible
-            Dim NeoForgeError As String = LoadNeoForgeGetError()
-            CardNeoForge.MainSwap.Visibility = If(NeoForgeError Is Nothing, Visibility.Visible, Visibility.Collapsed)
-            If NeoForgeError IsNot Nothing Then CardNeoForge.IsSwaped = True
-            SetNeoForgeInfoShow(CardNeoForge.IsSwaped)
-            If SelectedNeoForge Is Nothing Then
-                BtnNeoForgeClear.Visibility = Visibility.Collapsed
-                ImgNeoForge.Visibility = Visibility.Collapsed
-                LabNeoForge.Text = If(NeoForgeError, "可以添加")
-                LabNeoForge.Foreground = ColorGray4
-            Else
-                BtnNeoForgeClear.Visibility = Visibility.Visible
-                ImgNeoForge.Visibility = Visibility.Visible
-                LabNeoForge.Text = SelectedNeoForge.VersionName
-                LabNeoForge.Foreground = ColorGray1
-            End If
+            BtnNeoForgeClear.Visibility = Visibility.Visible
+            ImgNeoForge.Visibility = Visibility.Visible
+            LabNeoForge.Text = SelectedNeoForge.VersionName
+            LabNeoForge.Foreground = ColorGray1
         End If
         'Fabric
         If SelectedMinecraftId.Contains("1.") AndAlso Val(SelectedMinecraftId.Split(".")(1)) <= 13 Then
@@ -918,7 +913,6 @@
     ''' 获取 NeoForge 的加载异常信息。若正常则返回 Nothing。
     ''' </summary>
     Private Function LoadNeoForgeGetError() As String
-        If Not SelectedMinecraftId.StartsWith("1.") Then Return "不可用"
         If SelectedOptiFine IsNot Nothing Then Return "与 OptiFine 不兼容"
         If SelectedForge IsNot Nothing Then Return "与 Forge 不兼容"
         If SelectedFabric IsNot Nothing Then Return "与 Fabric 不兼容"

@@ -798,6 +798,10 @@
                 VersionName = ApiName.Replace("1.20.1-", "")
                 Version = New Version("19." & VersionName)
                 Inherit = "1.20.1"
+            ElseIf ApiName.StartsWith("0.") Then '0.25w14craftmine.3-beta
+                VersionName = ApiName
+                Version = New Version("0.0." & ApiName.BeforeFirst("-").AfterFirst(".").AfterFirst(".") & ".0") 'Minor 里有字母，但 Version 类的 Minor 是 Int 类型，只能这样写了
+                Inherit = ApiName.BeforeFirst("-").AfterFirst(".").BeforeFirst(".")
             Else '20.4.30-beta
                 VersionName = ApiName
                 Version = New Version(ApiName.BeforeFirst("-"))
@@ -868,7 +872,7 @@
 
     Private Function GetNeoForgeEntries(LatestJson As String, LatestLegacyJson As String) As List(Of DlNeoForgeListEntry)
         Dim VersionNames = RegexSearch(LatestLegacyJson & LatestJson,
-            "(?<="")(1\.20\.1-)?\d+\.\d+\.\d+(-beta)?(?="")") '我寻思直接正则就行.jpg
+            "(?<="")(?:(1\.20\.1-)?\d+\.\d+\.\d+|0\.[^.]+\.\d+)(-beta)?(?="")") '我寻思直接正则就行.jpg
         Dim Versions = VersionNames.
             Where(Function(name) name <> "47.1.82"). '这个版本虽然在版本列表中，但不能下载
             Select(Function(name) New DlNeoForgeListEntry(name)).ToList
