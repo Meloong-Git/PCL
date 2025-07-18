@@ -996,6 +996,7 @@ Public Class FormMain
         SetupUI = 1
         SetupSystem = 2
         SetupLink = 3
+        SetupCustom = 4
         LinkHiper = 1
         LinkIoi = 2
         LinkSetup = 4
