@@ -1,3 +1,4 @@
+Imports System.ComponentModel
 Imports System.Globalization
 Imports System.IO.Compression
 Imports System.Reflection
@@ -5,6 +6,7 @@ Imports System.Runtime.CompilerServices
 Imports System.Security.Cryptography
 Imports System.Security.Principal
 Imports System.Text.RegularExpressions
+Imports System.Threading.Tasks
 Imports System.Xaml
 Imports Newtonsoft.Json
 
@@ -3204,6 +3206,260 @@ Public Class InverseBooleanConverter
         If value Is Nothing Then Return False
         Return If(Boolean.TryParse(value.ToString(), value), Not value, False)
     End Function
+End Class
+
+''' <summary>
+''' 异步加载的网络图片源，需传入 Url，最终内容使用 MyBitmap 解析。<br/>
+''' Source - 源 Url，必须指定。<br/>
+''' FallbackSource - 备用 Url；在设计理念上，返回的内容应当与主 Url 相同。<br/>
+''' LoadingSource - 加载时显示的图片，合法值为 空 / 可被 MyBitmap 解析的字符串 / ImageSource。<br/>
+''' EnableCache - 是否启用缓存（默认启用），不启用的话每次都会联网获取图片。<br/>
+''' FileCacheExpiredTime - 缓存到期时间，默认为七天，遵循 TimeSpan 的格式解析。<br/>
+''' Result - 可绑定，用于存储输出的 ImageSource。<br/>
+''' XamlReferenceType - 设置为 Instance 即可拿到 AsyncImageSourceImpl 而非 Binding 对象。<br/><br/>
+''' 在 xaml 中引用的语法为：Source="{local:AsyncImageSource https://example.com/example.png}"，<br/>
+''' 此时效果相当于将 Source 属性绑定到了一个动态改变的值上。
+''' </summary>
+Public Class AsyncImageSourceExtension
+    Inherits Markup.MarkupExtension
+    Private Shared ReadOnly _TimeSpanConverter As New TimeSpanConverter
+    Private Shared ReadOnly _LoadingSourceDefault As ImageSource = New MyBitmap("pack://application:,,,/images/Icons/NoIcon.png")
+
+    Private _LoadingSource As ImageSource = _LoadingSourceDefault
+    Private _FileCacheExpiredTime As TimeSpan = TimeSpan.FromDays(7)
+
+    Public Property Source As String
+
+    Public Property FallbackSource As String
+
+    Public WriteOnly Property LoadingSource As Object
+        Set(value As Object)
+            If value Is Nothing Then
+                _LoadingSource = Nothing
+            ElseIf TypeOf value Is String Then
+                _LoadingSource = New MyBitmap(DirectCast(value, String))
+            Else
+                _LoadingSource = CType(value, ImageSource)
+            End If
+        End Set
+    End Property
+
+    Public Property EnableCache As Boolean = True
+
+    Public WriteOnly Property FileCacheExpiredTime As Object
+        Set(value As Object)
+            _FileCacheExpiredTime = _TimeSpanConverter.ConvertFrom(value)
+        End Set
+    End Property
+
+    Public Property XamlReferenceType As XamlReferenceTypeEnum = XamlReferenceTypeEnum.Binding
+    Public Enum XamlReferenceTypeEnum
+        Binding
+        Instance
+    End Enum
+
+    Shared Sub New()
+        _LoadingSourceDefault.Freeze()
+    End Sub
+
+    Public Sub New()
+    End Sub
+
+    Public Sub New(Source As String)
+        Me.Source = Source
+    End Sub
+
+    Public Overrides Function ProvideValue(serviceProvider As IServiceProvider) As Object
+        If Source Is Nothing Then Throw New InvalidOperationException("AsyncImageSource.Source 未被设置。")
+        Dim Result As New AsyncImageSourceImpl(Source) With {
+            .FallbackSource = FallbackSource,
+            .LoadingSource = _LoadingSource,
+            .EnableCache = EnableCache,
+            .FileCacheExpiredTime = _FileCacheExpiredTime
+        }
+        Select Case XamlReferenceType
+            Case XamlReferenceTypeEnum.Binding
+                ProvideValue = New Binding("Result") With {.Source = Result}.ProvideValue(serviceProvider)
+            Case XamlReferenceTypeEnum.Instance
+                ProvideValue = Result
+            Case Else
+                Throw New InvalidOperationException("不具意义的 AsyncImageSource.XamlReferenceType。")
+        End Select
+        Result.StartLoad()
+    End Function
+End Class
+
+Public Class AsyncImageSourceImpl
+    Implements INotifyPropertyChanged
+    ''' <summary>
+    ''' 工具类，接受同样的标识符时始终返回同一个对象，除非该对象已被回收。
+    ''' </summary>
+    Private Class InstanceProvider(Of T As Class)
+        Private ReadOnly _InstanceSupplier As Func(Of T)
+        Private ReadOnly _ExistingInstances As New Concurrent.ConcurrentDictionary(Of Object, WeakReference(Of T))
+        Private ReadOnly _CleanupTimer As New Timer(AddressOf CleanupGoneInstances, Nothing, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1))
+
+        Public Sub New(InstanceSupplier As Func(Of T))
+            If InstanceSupplier Is Nothing Then Throw New ArgumentNullException("InstanceSupplier")
+            _InstanceSupplier = InstanceSupplier
+        End Sub
+
+        Public Function GetFrom(Key As Object) As T
+            If Key Is Nothing Then Throw New ArgumentNullException("Key")
+            GetFrom = Nothing
+            While True
+                Dim Wr As WeakReference(Of T) = Nothing
+                If _ExistingInstances.TryGetValue(Key, Wr) Then
+                    If Wr.TryGetTarget(GetFrom) Then
+                        Exit While
+                    Else
+                        GetFrom = _InstanceSupplier.Invoke()
+                        If _ExistingInstances.TryUpdate(Key, New WeakReference(Of T)(GetFrom), Wr) Then
+                            Exit While
+                        End If
+                    End If
+                Else
+                    GetFrom = _InstanceSupplier.Invoke()
+                    If _ExistingInstances.TryAdd(Key, New WeakReference(Of T)(GetFrom)) Then
+                        Exit While
+                    End If
+                End If
+            End While
+            If GetFrom Is Nothing Then Throw New Exception("获取实例意外失败。")
+        End Function
+
+        Private Sub CleanupGoneInstances()
+            Try
+                _ExistingInstances _
+                    .Where(Function(e) Not e.Value.TryGetTarget(Nothing)) _
+                    .Select(Function(e) e.Key) _
+                    .ToList() _
+                    .ForEach(AddressOf AttemptRemoveGoneInstance)
+            Catch ex As Exception
+                Log(ex, $"清理失效 {GetType(T).Name} 实例意外失败")
+            End Try
+        End Sub
+
+        Private Function AttemptRemoveGoneInstance(Key As Object) As Boolean
+            Dim Wr As WeakReference(Of T) = Nothing
+            If Not _ExistingInstances.TryGetValue(Key, Wr) Then Return False
+            If Wr.TryGetTarget(Nothing) Then Return False
+            Return CType(_ExistingInstances, ICollection(Of KeyValuePair(Of Object, WeakReference(Of T)))) _
+                .Remove(New KeyValuePair(Of Object, WeakReference(Of T))(Key, Wr))
+        End Function
+    End Class
+
+    Private Shared ReadOnly FileCacheDirectory As String = $"{PathTemp}MyImage\"
+    Private Shared ReadOnly SemaphoreProvider As New InstanceProvider(Of SemaphoreSlim)(Function() New SemaphoreSlim(1, 1))
+
+    Public ReadOnly Source As String
+    Public ReadOnly TempDownloadingPath As String
+    Public FallbackSource As String
+    Public LoadingSource As ImageSource
+    Public EnableCache As Boolean
+    Public FileCacheExpiredTime As TimeSpan
+
+    Private _Result As ImageSource
+    Public Property Result As ImageSource
+        Get
+            Return _Result
+        End Get
+        Set(value As ImageSource)
+            _Result = value
+            RaiseEvent PropertyChanged(Me, New PropertyChangedEventArgs("Result"))
+        End Set
+    End Property
+
+    Public Event PropertyChanged As PropertyChangedEventHandler Implements INotifyPropertyChanged.PropertyChanged
+
+    Public Sub New(Source As String)
+        Me.Source = Source
+        TempDownloadingPath = $"{FileCacheDirectory}_{GetHash(Source)}.png"
+    End Sub
+
+    Public Sub StartLoad()
+        Windows.Application.Current.Dispatcher.InvokeAsync(AddressOf LoadAsync)
+    End Sub
+
+    Private Async Function LoadAsync() As Task
+        Try
+            Result = LoadingSource '加载中占位符
+            Dim LoadSemaphore = Await Task.Run(Function() SemaphoreProvider.GetFrom(TempDownloadingPath))
+            Await LoadSemaphore.WaitAsync() '保证使用同样文件缓存路径的实例串行加载
+            Try
+                '尝试使用缓存
+                Dim ResultFromCache = Await Task.Run(AddressOf TryLoadCache)
+                If ResultFromCache IsNot Nothing Then
+                    Result = ResultFromCache
+                    Exit Function
+                End If
+                '缓存无效
+                Await Task.Run(AddressOf DownloadImage) '从网络下载图片
+                Result = Await Task.Run(Function() LoadFileViaMyBitmap(TempDownloadingPath)) '加载图片
+            Finally
+                LoadSemaphore.Release()
+            End Try
+        Catch ex As Exception
+            Log(ex, $"异步网络图片加载失败（图片源：{Source}，备用源：{If(FallbackSource, "无")}）", LogLevel.Hint)
+            Result = Nothing
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' 从缓存获取 ImageSource，缓存未启用/不存在/过期/损坏或运行失败返回 Nothing，不会抛出异常。
+    ''' </summary>
+    Private Function TryLoadCache() As ImageSource
+        Try
+            If Not EnableCache Then Return Nothing '未启用缓存
+            '判断缓存是否有效
+            Dim CacheAvailable As Boolean
+            With New FileInfo(TempDownloadingPath)
+                CacheAvailable = .Exists AndAlso (Date.Now - .LastWriteTime < FileCacheExpiredTime)
+            End With
+            If CacheAvailable Then
+                '缓存有效
+                Try
+                    Return LoadFileViaMyBitmap(TempDownloadingPath)
+                Catch
+                    'MyBitmap 从文件解析失败
+                    File.Delete(TempDownloadingPath)
+                End Try
+            End If
+        Catch ex As Exception
+            Log(ex, $"读取网络图片缓存（缓存位置 {TempDownloadingPath}，源 {Source}）时预期之外的异常")
+        End Try
+        Return Nothing
+    End Function
+
+    ''' <summary>
+    ''' 下载图片至本地缓存文件，失败后若指定了 FallbackSource 会再尝试，再失败后抛出异常。
+    ''' </summary>
+    Private Sub DownloadImage()
+        Dim TargetUrl As String = Source, Retried As Boolean = False
+        Try
+DownloadRetry:
+            Directory.CreateDirectory(IO.Path.GetDirectoryName(TempDownloadingPath))
+            Using Client As New WebClient()
+                Client.DownloadFile(TargetUrl, TempDownloadingPath)
+            End Using
+        Catch ex As Exception When (Not Retried) AndAlso (FallbackSource IsNot Nothing)
+            Log(ex, $"下载图片可重试地失败（{Source}）", LogLevel.Developer)
+            TargetUrl = FallbackSource
+            Retried = True
+            GoTo DownloadRetry
+        Catch ex As Exception
+            Throw New Exception("下载图片失败。", ex)
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' 使用 MyBitmap 从文件路径创建 ImageSource 并 Freeze 住。
+    ''' </summary>
+    Private Shared Function LoadFileViaMyBitmap(FilePath As String) As ImageSource
+        LoadFileViaMyBitmap = New MyBitmap(FilePath)
+        LoadFileViaMyBitmap.Freeze()
+    End Function
+
 End Class
 
 #End Region
