@@ -243,6 +243,8 @@
                                           ToolTip="将 Mod、资源包、光影包的文件直接放入整合包中，这样在导入时就无需联网下载它们。&#xa;建议仅在无法稳定连接 CurseForge 或 Modrinth 时才考虑勾选。" />
                         <local:MyCheckBox Text="Modrinth 上传模式" x:Name="CheckAdvancedModrinth"
                                           ToolTip="如果你想要打包上传到 Modrinth，勾选此项会生成完全符合 Modrinth 要求的整合包文件。&#xa;由于 Modrinth 要求，只能从 CurseForge 下载的资源将无法联网下载，会被直接放入整合包中。&#xa;此外，勾选后也不能在整合包中包含 PCL 启动器文件。" />
+                        <local:MyCheckBox Text="发布模式" x:Name="CheckAdvancedModrinth"
+                                          ToolTip="锁定部分版本设置，以避免因为玩家误操作导致游戏崩溃等。&#xa;勾选此项目后，如需更改被锁定的配置，需要重新导入新的整合包。" />
                         <local:MyHint Theme="Blue" RelativeSetup="HintExportConfig" CanClose="True" Margin="0,20,0,2"
                                       Text="配置文件中含有更多高级选项，例如精准控制导出的文件、设置整合包存放位置等。&#xa;要修改这些选项，请先点击 “保存配置”，在编辑配置文件后再导入。" />
                         <Grid Height="35" Margin="0,12,0,0">
