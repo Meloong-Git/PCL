@@ -1,4 +1,6 @@
-﻿Public Class MySkin
+﻿Imports System.Drawing
+
+Public Class MySkin
 
     '事件
     Public Event Click(sender As Object, e As MouseButtonEventArgs)
@@ -231,6 +233,23 @@ Retry:
                 Dim AccessToken As String = McLoginMsLoader.Output.AccessToken
                 Dim Uuid As String = McLoginMsLoader.Output.Uuid
                 Dim SkinData As JObject = GetJson(McLoginMsLoader.Output.ProfileJson)
+                For Each itemSkin In SkinData("capes")
+                    If itemSkin("url") Is Nothing Then Continue For
+                    Dim localFile = $"{PathTemp}Cache\Capes\{itemSkin("alias")}.png"
+                    Dim capeFrontFile = $"{PathTemp}Cache\Capes\{itemSkin("alias")}-front.png"
+                    If File.Exists(localFile) AndAlso File.Exists(capeFrontFile) Then
+                        itemSkin("url") = capeFrontFile
+                        Continue For
+                    End If
+                    NetDownloadByLoader(itemSkin("url").ToString(), localFile)
+                    Dim capeFrontRegion As New Rectangle(1, 0, 11, 17)
+                    Dim capeFront As New Bitmap(capeFrontRegion.Width, capeFrontRegion.Height)
+                    Dim capeImage = Image.FromFile(localFile)
+                    Dim gra = Graphics.FromImage(capeFront)
+                    gra.DrawImage(capeImage, capeFrontRegion, capeFrontRegion, GraphicsUnit.Pixel)
+                    capeFront.Save(capeFrontFile)
+                    itemSkin("url") = capeFrontFile
+                Next
                 '获取玩家的所有披风
                 Dim SelId As Integer? = Nothing
                 RunInUiWait(
@@ -246,11 +265,16 @@ Retry:
                             {"Mojang Office", "Mojang 办公室披风"}, {"Home", "家园披风"}, {"Menace", "入侵披风"}, {"Yearn", "渴望披风"},
                             {"Common", "普通披风"}, {"Pan", "薄煎饼披风"}, {"Founder's", "创始人披风"}
                         }
-                        Dim SelectionControl As New List(Of IMyRadio) From {New MyRadioBox With {.Text = "无披风"}}
+                        Dim SelectionControl As New List(Of IMyRadio) From {New MyListItem With {.Title = "无披风", .Type = MyListItem.CheckType.RadioBox}}
                         For Each Cape In SkinData("capes")
                             Dim CapeName As String = Cape("alias").ToString
                             If CapeNames.ContainsKey(CapeName) Then CapeName = CapeNames(CapeName)
-                            SelectionControl.Add(New MyRadioBox With {.Text = CapeName})
+                            SelectionControl.Add(New MyListItem With {
+                                                     .Title = CapeName,
+                                                     .Type = MyListItem.CheckType.RadioBox,
+                                                     .Logo = Cape("url"),
+                                                     .LogoScale = 0.8
+                                                 })
                         Next
                         SelId = MyMsgBoxSelect(SelectionControl, "选择披风", "确定", "取消")
                     Catch ex As Exception
