@@ -1,4 +1,5 @@
 ﻿Imports System.ComponentModel
+Imports System.Windows.Interop
 
 Public Class FormMain
 
@@ -203,6 +204,8 @@ Public Class FormMain
         End Sub, "UpdateLog Output")
     End Sub
 
+    Private ReadOnly Helper As New DragFileHelper()
+
     '窗口加载
     Private IsWindowLoadFinished As Boolean = False
     Public Sub New()
@@ -241,7 +244,11 @@ Public Class FormMain
         [AddHandler](DragDrop.DragOverEvent, New DragEventHandler(AddressOf HandleDrag), handledEventsToo:=True)
         '加载 UI
         InitializeComponent()
+
+
+
         Opacity = 0
+        '旧代码
         ''开启管理员权限下的文件拖拽，但下列代码也没用（#2531）
         'If IsAdmin() Then
         '    Log("[Start] PCL 正以管理员权限运行")
@@ -249,6 +256,24 @@ Public Class FormMain
         '    ChangeWindowMessageFilter(&H4A, 1)
         '    ChangeWindowMessageFilter(&H49, 1)
         'End If
+
+        '开启管理员权限下的文件拖拽
+        If IsAdmin() Then
+            AddHandler Me.SourceInitialized,
+            Sub(sender, e)
+                Dim wpfHelper As New WindowInteropHelper(Me)
+                Helper.HwndIntPtrSource = HwndSource.FromHwnd(wpfHelper.Handle)
+                Helper.AddHook()
+            End Sub
+            AddHandler Me.Closing,
+            Sub(sender, e)
+                Helper.RemoveDragHook()
+            End Sub
+            AddHandler Helper.DragDrop,
+            Sub(sender, e)
+                Me.FileDrag(Helper.DropFilePaths)
+            End Sub
+        End If
         '切换到首页
         If Not IsNothing(FrmLaunchLeft.Parent) Then FrmLaunchLeft.SetValue(ContentPresenter.ContentProperty, Nothing)
         If Not IsNothing(FrmLaunchRight.Parent) Then FrmLaunchRight.SetValue(ContentPresenter.ContentProperty, Nothing)
