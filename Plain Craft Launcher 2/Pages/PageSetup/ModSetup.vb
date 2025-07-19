@@ -181,6 +181,7 @@
         {"VersionAdvanceRun", New SetupEntry("", Source:=SetupSource.Version)},
         {"VersionAdvanceRunWait", New SetupEntry(True, Source:=SetupSource.Version)},
         {"VersionAdvanceDisableJLW", New SetupEntry(False, Source:=SetupSource.Version)},
+        {"VersionAdvanceDisableModUpdate", New SetupEntry(False, Source:=SetupSource.Version)},
         {"VersionRamType", New SetupEntry(2, Source:=SetupSource.Version)},
         {"VersionRamCustom", New SetupEntry(15, Source:=SetupSource.Version)},
         {"VersionRamOptimize", New SetupEntry(0, Source:=SetupSource.Version)},
