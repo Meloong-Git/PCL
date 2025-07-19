@@ -692,7 +692,7 @@ Public Class FormMain
                 ElseIf Str.StartsWithF("file:///") Then
                     e.Effects = DragDropEffects.Copy
                 End If
-            ElseIf e.Data.GetDataPresent(DataFormats.FileDrop) Then
+            ElseIf e.Data.GetDataPresent(DataFormats.FileDrop) AndAlso e.Data.GetFormats(false).Contains("FileName") Then
                 Dim Files As String() = e.Data.GetData(DataFormats.FileDrop)
                 If Files IsNot Nothing AndAlso Files.Length > 0 Then
                     e.Effects = DragDropEffects.Link
