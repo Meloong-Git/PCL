@@ -130,27 +130,34 @@
             '清理 ini 缓存
             IniClearCache(PageVersionLeft.Version.PathIndie & "options.txt")
             IniClearCache(PageVersionLeft.Version.Path & "PCL\Setup.ini")
-            '遍历重命名所有文件与文件夹
-            For Each Entry As DirectoryInfo In New DirectoryInfo(NewPath).EnumerateDirectories
-                If Not Entry.Name.Contains(OldName) Then Continue For
+            '重命名 JAR 文件、JSON 文件与 natives 文件夹
+            If Directory.Exists(NewPath & OldName & "-natives") Then
                 If IsCaseChangedOnly Then
-                    My.Computer.FileSystem.RenameDirectory(Entry.FullName, Entry.Name & "_temp")
-                    My.Computer.FileSystem.RenameDirectory(Entry.FullName & "_temp", Entry.Name.Replace(OldName, NewName))
+                    My.Computer.FileSystem.RenameDirectory(NewPath & OldName & "-natives", OldName & "natives" & "_temp")
+                    My.Computer.FileSystem.RenameDirectory(NewPath & OldName & "-natives" & "_temp", NewName & "-natives")
                 Else
-                    DeleteDirectory(NewPath & Entry.Name.Replace(OldName, NewName))
-                    My.Computer.FileSystem.RenameDirectory(Entry.FullName, Entry.Name.Replace(OldName, NewName))
+                    DeleteDirectory(NewPath & NewName & "-natives")
+                    My.Computer.FileSystem.RenameDirectory(NewPath & OldName & "-natives", NewName & "-natives")
                 End If
-            Next
-            For Each Entry As FileInfo In New DirectoryInfo(NewPath).EnumerateFiles
-                If Not Entry.Name.Contains(OldName) Then Continue For
+            End If
+            If File.Exists(NewPath & OldName & ".jar") Then
                 If IsCaseChangedOnly Then
-                    My.Computer.FileSystem.RenameFile(Entry.FullName, Entry.Name & "_temp")
-                    My.Computer.FileSystem.RenameFile(Entry.FullName & "_temp", Entry.Name.Replace(OldName, NewName))
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & ".jar", OldName & "_temp" & ".jar")
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & "_temp" & ".jar", NewName & ".jar")
                 Else
-                    If File.Exists(NewPath & Entry.Name.Replace(OldName, NewName)) Then File.Delete(NewPath & Entry.Name.Replace(OldName, NewName))
-                    My.Computer.FileSystem.RenameFile(Entry.FullName, Entry.Name.Replace(OldName, NewName))
+                    File.Delete(NewPath & NewName & ".jar")
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & ".jar", NewName & ".jar")
                 End If
-            Next
+            End If
+            If File.Exists(NewPath & OldName & ".json") Then
+                If IsCaseChangedOnly Then
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & ".json", OldName & "_temp" & ".json")
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & "_temp" & ".json", NewName & ".json")
+                Else
+                    File.Delete(NewPath & NewName & ".json")
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & ".json", NewName & ".json")
+                End If
+            End If
             '替换版本设置文件中的路径
             If File.Exists(NewPath & "PCL\Setup.ini") Then
                 WriteFile(NewPath & "PCL\Setup.ini", ReadFile(NewPath & "PCL\Setup.ini").Replace(OldPath, NewPath))
