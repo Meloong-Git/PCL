@@ -476,7 +476,7 @@
         Else
             HintModOptiFine.Visibility = Visibility.Collapsed
         End If
-        If SelectedFabric IsNot Nothing AndAlso VersionSortInteger(SelectedMinecraftId, "1.21.4") > 0 Then
+        If SelectedFabric IsNot Nothing AndAlso VersionSortInteger(SelectedMinecraftId, "1.20.4") > 0 Then
             HintModOptiFineHigh.Visibility = Visibility.Visible
         Else
             HintModOptiFineHigh.Visibility = Visibility.Collapsed
