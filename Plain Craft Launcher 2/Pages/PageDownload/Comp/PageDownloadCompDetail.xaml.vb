@@ -75,6 +75,8 @@
         Dim Results As List(Of CompFile) = CompFileLoader.Output
         If PageType = CompType.Any Then
             Results = Results.Where(Function(r) r.Type <> CompType.Plugin).ToList
+        ElseIf PageType = CompType.Shader OrElse PageType = CompType.ResourcePack Then
+            Results = Results.ToList
         Else
             Results = Results.Where(Function(r) r.Type = PageType).ToList
         End If
@@ -305,7 +307,7 @@
         End Try
     End Sub
     '资源下载；整合包另存为
-    Public Shared CachedFolder As String = Nothing '仅在本次缓存的下载文件夹
+    Public Shared CachedFolder As New Dictionary(Of CompType, String) '仅在本次缓存的下载文件夹
     Public Sub Save_Click(sender As Object, e As EventArgs)
         Dim File As CompFile = If(TypeOf sender Is MyListItem, sender, sender.Parent).Tag
         RunInNewThread(
@@ -356,8 +358,8 @@
                         Return False
                     End Function
                     '获取常规资源默认下载位置
-                    If CachedFolder IsNot Nothing Then
-                        DefaultFolder = CachedFolder
+                    If CachedFolder.ContainsKey(Project.Type) AndAlso Not String.IsNullOrEmpty(CachedFolder(Project.Type)) Then
+                        DefaultFolder = CachedFolder(Project.Type)
                         Log($"[Comp] 使用上次下载时的文件夹作为默认下载位置：{DefaultFolder}")
                     ElseIf McVersionCurrent IsNot Nothing AndAlso IsVersionSuitable(McVersionCurrent) Then
                         DefaultFolder = $"{McVersionCurrent.PathIndie}{SubFolder}"
@@ -422,7 +424,13 @@
                     If Not Target.Contains("\") Then Return
                     '构造步骤加载器
                     Dim LoaderName As String = Desc & "下载：" & GetFileNameWithoutExtentionFromPath(Target) & " "
-                    If Target <> DefaultFolder AndAlso File.Type = CompType.Mod Then CachedFolder = GetPathFromFullPath(Target)
+                    If Target <> DefaultFolder Then
+                        If CachedFolder.ContainsKey(Project.Type) Then
+                            CachedFolder(Project.Type) = GetPathFromFullPath(Target)
+                        Else
+                            CachedFolder.Add(Project.Type, GetPathFromFullPath(Target))
+                        End If
+                    End If
                     Dim Loaders As New List(Of LoaderBase)
                     Loaders.Add(New LoaderDownload("下载文件", New List(Of NetFile) From {File.ToNetFile(Target)}) With {.ProgressWeight = 6, .Block = True})
                     '启动

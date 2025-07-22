@@ -12,7 +12,7 @@ body:
       required: false
     - label: "我知晓大多数此类问题都是网络环境不佳导致的，但我确实认为我的问题可能是 PCL 导致的，和网络环境无关。"
       required: true
-    - label: "我已在 [Issues 页面](https://github.com/Hex-Dragon/PCL2/issues?q=is%3Aissue+) 和 [常见&难检反馈及问题列表](https://github.com/Hex-Dragon/PCL2/discussions/1930) 中搜索，确认了这一 Bug 未被提交过。"
+    - label: "我已在 [Issues 页面](https://github.com/Meloong-Git/PCL/issues?q=is%3Aissue+) 和 [常见&难检反馈及问题列表](https://github.com/Meloong-Git/PCL/discussions/1930) 中搜索，确认了这一 Bug 未被提交过。"
       required: true
 - type: textarea
   id: "yml-2"

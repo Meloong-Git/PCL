@@ -1430,6 +1430,7 @@ Retry:
         End If
         'Authlib-Injector
         If McLoginLoader.Output.Type = "Auth" Then
+            If (McLaunchJavaSelected.VersionCode >= 6) Then DataList.Add("-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT")
             Dim Server As String = If(McLoginLoader.Input.Type = McLoginType.Legacy,
                 "http://hiperauth.tech/api/yggdrasil-hiper/", 'HiPer 登录
                 Setup.Get("VersionServerAuthServer", McVersionCurrent))
@@ -1499,6 +1500,7 @@ NextVersion:
         End If
         'Authlib-Injector
         If McLoginLoader.Output.Type = "Auth" Then
+            If (McLaunchJavaSelected.VersionCode >= 6) Then DataList.Add("-Djavax.net.ssl.trustStoreType=WINDOWS-ROOT")
             Dim Server As String = If(McLoginLoader.Input.Type = McLoginType.Legacy,
                 "http://hiperauth.tech/api/yggdrasil-hiper/", 'HiPer 登录
                 Setup.Get("VersionServerAuthServer", Version:=McVersionCurrent))

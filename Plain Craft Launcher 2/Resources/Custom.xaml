@@ -113,7 +113,7 @@
         <TextBlock Margin="0,0,0,4"
                     Text="· 打开网页、启动游戏、打开文件：已在上方的卡片中介绍" />
         <local:MyButton Margin="0,5,0,6" Width="250" Height="35"
-                    Text="查看 PCL 源代码" EventType="打开网页" EventData="https://github.com/Hex-Dragon/PCL2/blob/main/Plain%20Craft%20Launcher%202/FormMain.xaml.vb"/>
+                    Text="查看 PCL 源代码" EventType="打开网页" EventData="https://github.com/Meloong-Git/PCL/blob/main/Plain%20Craft%20Launcher%202/FormMain.xaml.vb"/>
         <TextBlock Margin="0,0,0,4"
                     Text="· 今日人品、清理垃圾、内存优化、安装整合包：触发对应功能" />
         <TextBlock Margin="0,0,0,4"
@@ -302,7 +302,7 @@
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
                     Text="如果你在尝试制作联网更新的主页，可以查看下方的 GitHub 讨论页。&#xa;你可以根据其中的介绍为主页添加版本号检查以节省流量，也可以通过检查 Referer 和 User Agent 来确定对方的 PCL 版本。" />
         <local:MyButton Margin="0,0,0,8" Height="35" HorizontalAlignment="Center" Padding="20,0,20,0"
-                    Text="打开 GitHub 讨论页" EventType="打开网页" EventData="https://github.com/Hex-Dragon/PCL2/discussions/2528" />
+                    Text="打开 GitHub 讨论页" EventType="打开网页" EventData="https://github.com/Meloong-Git/PCL/discussions/2528" />
     </StackPanel>
 </local:MyCard>
 

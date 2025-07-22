@@ -30,7 +30,7 @@
                         </Image.Clip>
                     </Image>
                     <local:MyButton Text="赞助作者" Grid.Column="2" Grid.Row="0" Height="35" EventType="打开网页" EventData="https://afdian.com/a/LTCat" />
-                    <local:MyButton Text="查看源代码" Grid.Column="2" Grid.Row="1" Height="35" EventType="打开网页" EventData="https://github.com/Hex-Dragon/PCL2" />
+                    <local:MyButton Text="查看源代码" Grid.Column="2" Grid.Row="1" Height="35" EventType="打开网页" EventData="https://github.com/Meloong-Git/PCL" />
                 </Grid>
             </local:MyCard>
             <local:MyCard Margin="0,0,0,15" Title="特别鸣谢">
@@ -105,7 +105,8 @@
             <local:MyCard Margin="0,0,0,15" Title="赞助者">
                 <StackPanel Margin="25,40,10,20">
                     <TextBlock HorizontalAlignment="Left" Text="以下是 2025 年 5 月的高级赞助者们！感谢各位对 PCL 和伟大的咕咕咕事业的支持！" Margin="0,0,25,5.5" TextTrimming="None" TextWrapping="WrapWithOverflow" />
-                    <WrapPanel Margin="0,0,0,10">                        <TextBlock Width="120" Margin="0,1.5" Text="Alliance" />
+                    <WrapPanel Margin="0,0,0,10">
+                        <TextBlock Width="120" Margin="0,1.5" Text="Alliance" />
                         <TextBlock Width="120" Margin="0,1.5" Text="风之轻语" />
                         <TextBlock Width="120" Margin="0,1.5" Text="大博文" />
                         <TextBlock Width="120" Margin="0,1.5" Text="狐狸不吃酸葡萄" />
@@ -384,7 +385,7 @@
                     <TextBlock Margin="0,0,0,2" LineHeight="17" Text="Copyright © 龙腾猫跃 2016. All Rights Reserved.&#13;计算机软件著作权登记号：2020SR0875133&#13;违法违规行为举报投诉邮箱：hexdragon@vip.qq.com&#13;非 MINECRAFT 官方产品。未经 MOJANG 或 MICROSOFT 批准，也不与 MOJANG 或 MICROSOFT 关联。" TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Height="35" HorizontalAlignment="Left" Margin="0,12,0,0">
                         <local:MyButton Text="用户协议与免责声明" Width="170" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" EventType="打开网页" EventData="https://shimo.im/docs/rGrd8pY8xWkt6ryW" />
-                        <local:MyButton Text="开源代码" Width="140" Padding="13,0" EventType="打开网页" EventData="https://github.com/Hex-Dragon/PCL2" />
+                        <local:MyButton Text="开源代码" Width="140" Padding="13,0" EventType="打开网页" EventData="https://github.com/Meloong-Git/PCL" />
                     </StackPanel>
                 </StackPanel>
             </local:MyCard>

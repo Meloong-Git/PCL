@@ -27,7 +27,8 @@
                         <local:MyHint Text="必须安装 OptiFabric 才能正常使用 OptiFine！" Margin="0,10,0,0" x:Name="HintOptiFabric" Theme="Red" />
                         <local:MyHint Text="安装结束后，请在 Mod 下载中搜索 OptiFabric Origins 并下载，否则 OptiFine 会无法使用！" Margin="0,10,0,0" x:Name="HintOptiFabricOld" Theme="Yellow" />
                         <local:MyHint Text="OptiFine 与一部分 Mod 的兼容性不佳，请谨慎安装。" Margin="0,10,0,0" x:Name="HintModOptiFine" Theme="Yellow" />
-                        <local:MyCard Title="Forge" Height="40" Margin="0,12,0,0" x:Name="CardForge" IsSwaped="True" CanSwap="True" SwapLogoRight="True">
+						<local:MyHint Text="1.20.5+ 没有 OptiFabric，无法使用 OptiFine，如需加载光影请考虑使用其他 Mod" Margin="0,10,0,0" x:Name="HintModOptiFineHigh" Theme="Blue" />
+						<local:MyCard Title="Forge" Height="40" Margin="0,12,0,0" x:Name="CardForge" IsSwaped="True" CanSwap="True" SwapLogoRight="True">
                         <StackPanel Margin="20,40,18,15" VerticalAlignment="Top" Name="PanForge" />
                         <Grid x:Name="PanForgeInfo" Height="18" Margin="132,11,15,0" VerticalAlignment="Top" Tag="True">
                             <Grid.RenderTransform>

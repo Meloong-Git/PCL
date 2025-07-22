@@ -1610,7 +1610,8 @@ OnLoaded:
         If SkinJson("textures") Is Nothing OrElse SkinJson("textures")("skin") Is Nothing OrElse SkinJson("textures")("skin")("url") Is Nothing Then
             Throw New Exception("用户未设置自定义皮肤")
         Else
-            SkinValue = SkinJson("textures")("skin")("url").ToString.Replace("http:", "https:")
+            Dim SkinUrl As String = SkinJson("textures")("skin")("url").ToString
+            SkinValue = If(SkinUrl.Contains("minecraft.net"),SkinUrl.Replace("http:", "https:"),SkinUrl)
         End If
         '保存缓存
         WriteIni(PathTemp & "Cache\Skin\Index" & Type & ".ini", Uuid, SkinValue)

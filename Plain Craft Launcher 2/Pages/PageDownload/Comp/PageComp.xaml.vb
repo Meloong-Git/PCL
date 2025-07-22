@@ -68,6 +68,10 @@ Public Class PageComp
     ''' 在切换到页面时，应自动将筛选项设置为与该目标 MC 版本和加载器相同。
     ''' </summary>
     Public Shared TargetVersion As McVersion = Nothing
+    ''' <summary>
+    ''' 在切换到该页面时自动设置的搜索框内的内容。
+    ''' </summary>
+    Public Shared TargetName As String = Nothing
 
     '在点击 MyCompItem 时会获取 Loader 的输入，以使资源详情页面可以应用相同的筛选项
     Public Loader As New LoaderTask(Of CompProjectRequest, Integer)("社区资源获取：XXX", AddressOf CompProjectsGet, AddressOf LoaderInput) With {.ReloadTimeout = 60 * 1000}
@@ -94,6 +98,11 @@ Public Class PageComp
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("NeoForge")
             End If
             TargetVersion = Nothing
+            If TargetName IsNot Nothing Then
+                '设置搜索框内容
+                TextSearchName.Text = TargetName
+                TargetName = Nothing
+            End If
             '如果已经完成请求，则重新开始
             If IsLoaderInited Then StartNewSearch()
             ScrollToHome()

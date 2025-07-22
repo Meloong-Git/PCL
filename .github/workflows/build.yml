@@ -38,7 +38,6 @@ jobs:
     
     - name: Update Help
       run:  |
-        $workpath = [System.Environment]::CurrentDirectory
         Set-Location ..
         git clone https://github.com/LTCatt/PCL2Help.git -b master --single-branch --depth 1
         Set-Location PCL2Help

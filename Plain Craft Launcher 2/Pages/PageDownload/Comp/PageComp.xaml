@@ -34,7 +34,7 @@
                     <TextBlock VerticalAlignment="Center" Grid.Row="2" HorizontalAlignment="Left" Text="版本" Margin="0,0,18,0" />
                     <local:MyComboBox x:Name="TextSearchVersion" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" IsEditable="True" MaxDropDownHeight="320">
                         <local:MyComboBoxItem Content="全部 (也可自行输入)" IsSelected="True" />
-                        <local:MyComboBoxItem Content="1.21.5" />
+                        <local:MyComboBoxItem Content="1.21.8" />
                         <local:MyComboBoxItem Content="1.21.1" />
                         <local:MyComboBoxItem Content="1.20.6" />
                         <local:MyComboBoxItem Content="1.20.1" />

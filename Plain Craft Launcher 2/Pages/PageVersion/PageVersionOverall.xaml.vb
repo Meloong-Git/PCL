@@ -130,27 +130,34 @@
             '清理 ini 缓存
             IniClearCache(PageVersionLeft.Version.PathIndie & "options.txt")
             IniClearCache(PageVersionLeft.Version.Path & "PCL\Setup.ini")
-            '遍历重命名所有文件与文件夹
-            For Each Entry As DirectoryInfo In New DirectoryInfo(NewPath).EnumerateDirectories
-                If Not Entry.Name.Contains(OldName) Then Continue For
+            '重命名 JAR 文件、JSON 文件与 natives 文件夹
+            If Directory.Exists(NewPath & OldName & "-natives") Then
                 If IsCaseChangedOnly Then
-                    My.Computer.FileSystem.RenameDirectory(Entry.FullName, Entry.Name & "_temp")
-                    My.Computer.FileSystem.RenameDirectory(Entry.FullName & "_temp", Entry.Name.Replace(OldName, NewName))
+                    My.Computer.FileSystem.RenameDirectory(NewPath & OldName & "-natives", OldName & "natives" & "_temp")
+                    My.Computer.FileSystem.RenameDirectory(NewPath & OldName & "-natives" & "_temp", NewName & "-natives")
                 Else
-                    DeleteDirectory(NewPath & Entry.Name.Replace(OldName, NewName))
-                    My.Computer.FileSystem.RenameDirectory(Entry.FullName, Entry.Name.Replace(OldName, NewName))
+                    DeleteDirectory(NewPath & NewName & "-natives")
+                    My.Computer.FileSystem.RenameDirectory(NewPath & OldName & "-natives", NewName & "-natives")
                 End If
-            Next
-            For Each Entry As FileInfo In New DirectoryInfo(NewPath).EnumerateFiles
-                If Not Entry.Name.Contains(OldName) Then Continue For
+            End If
+            If File.Exists(NewPath & OldName & ".jar") Then
                 If IsCaseChangedOnly Then
-                    My.Computer.FileSystem.RenameFile(Entry.FullName, Entry.Name & "_temp")
-                    My.Computer.FileSystem.RenameFile(Entry.FullName & "_temp", Entry.Name.Replace(OldName, NewName))
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & ".jar", OldName & "_temp" & ".jar")
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & "_temp" & ".jar", NewName & ".jar")
                 Else
-                    If File.Exists(NewPath & Entry.Name.Replace(OldName, NewName)) Then File.Delete(NewPath & Entry.Name.Replace(OldName, NewName))
-                    My.Computer.FileSystem.RenameFile(Entry.FullName, Entry.Name.Replace(OldName, NewName))
+                    File.Delete(NewPath & NewName & ".jar")
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & ".jar", NewName & ".jar")
                 End If
-            Next
+            End If
+            If File.Exists(NewPath & OldName & ".json") Then
+                If IsCaseChangedOnly Then
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & ".json", OldName & "_temp" & ".json")
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & "_temp" & ".json", NewName & ".json")
+                Else
+                    File.Delete(NewPath & NewName & ".json")
+                    My.Computer.FileSystem.RenameFile(NewPath & OldName & ".json", NewName & ".json")
+                End If
+            End If
             '替换版本设置文件中的路径
             If File.Exists(NewPath & "PCL\Setup.ini") Then
                 WriteFile(NewPath & "PCL\Setup.ini", ReadFile(NewPath & "PCL\Setup.ini").Replace(OldPath, NewPath))
@@ -185,7 +192,7 @@
         '选择 自定义 时修改图片
         Try
             If ComboDisplayLogo.SelectedItem Is ItemDisplayLogoCustom Then
-                Dim FileName As String = SelectFile("常用图片文件(*.png;*.jpg;*.gif)|*.png;*.jpg;*.gif", "选择图片")
+                Dim FileName As String = SelectFile("常用图片文件(*.png;*.jpg;*.gif;*.jpeg)|*.png;*.jpg;*.gif;*.jpeg", "选择图片")
                 If FileName = "" Then
                     Reload() '还原选项
                     Return
@@ -342,7 +349,7 @@
                         DeleteDirectory(PageVersionLeft.Version.Path)
                         Hint("版本 " & PageVersionLeft.Version.Name & " 已永久删除！", HintType.Finish)
                     Else
-                        FileIO.FileSystem.DeleteDirectory(PageVersionLeft.Version.Path, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                        FileIO.FileSystem.DeleteDirectory(PageVersionLeft.Version.Path, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
                         Hint("版本 " & PageVersionLeft.Version.Name & " 已删除到回收站！", HintType.Finish)
                     End If
                 Case 2
