@@ -26,6 +26,7 @@
                             <local:MyMenuItem Click="BtnSkinSave_Click" Header="保存皮肤"/>
                             <local:MyMenuItem Click="BtnSkinRefresh_Click" Header="刷新头像"/>
                             <local:MyMenuItem Click="BtnSkinCape_Click" Header="修改披风"/>
+                            <local:MyMenuItem Click="BtnSkinRedeem_Click" Header="兑换披风" />
                         </ContextMenu>
                     </local:MyIconButton.ContextMenu>
                 </local:MyIconButton>
