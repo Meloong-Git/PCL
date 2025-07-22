@@ -33,6 +33,7 @@
         {"SystemHighestBetaVersionReg", New SetupEntry(0, Source:=SetupSource.Registry, Encoded:=True)},
         {"SystemHighestAlphaVersionReg", New SetupEntry(0, Source:=SetupSource.Registry, Encoded:=True)},
         {"SystemSetupVersionReg", New SetupEntry(VersionSetup, Source:=SetupSource.Registry)},
+        {"SystemCreateMojangPath", New SetupEntry(False, Source:=SetupSource.Registry)},
         {"SystemSetupVersionIni", New SetupEntry(VersionSetup)},
         {"SystemHelpVersion", New SetupEntry(0, Source:=SetupSource.Registry)},
         {"SystemDebugMode", New SetupEntry(False, Source:=SetupSource.Registry)},

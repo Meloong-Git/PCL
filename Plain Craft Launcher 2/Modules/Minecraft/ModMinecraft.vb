@@ -52,9 +52,19 @@ Public Module ModMinecraft
             Catch ex As Exception
                 Log(ex, "扫描 PCL 所在文件夹中是否有 MC 文件夹失败")
             End Try
-
             '扫描官启文件夹
             Dim MojangPath As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\"
+            If Not Setup.Get("SystemCreateMojangPath") AndAlso Not Directory.Exists(MojangPath) Then
+                Try
+                    Directory.CreateDirectory(MojangPath)
+                    Directory.CreateDirectory($"{MojangPath}\versions\")
+                    McFolderLauncherProfilesJsonCreate(Path & ".minecraft\")
+                    Log("[Minecraft] 自动创建官方启动器文件夹成功")
+                Catch ex As Exception
+                    Log(ex, "[Minecraft] 自动创建官方启动器文件夹失败")
+                End Try
+                    Setup.Set("SystemCreateMojangPath", True)
+            End If
             If (Not CacheMcFolderList.Any OrElse MojangPath <> CacheMcFolderList(0).Path) AndAlso '当前文件夹不是官启文件夹
                 Directory.Exists(MojangPath & "versions\") Then '具有权限且存在 versions 文件夹
                 CacheMcFolderList.Add(New McFolder With {.Name = "官方启动器文件夹", .Path = MojangPath, .Type = McFolderType.Original})
