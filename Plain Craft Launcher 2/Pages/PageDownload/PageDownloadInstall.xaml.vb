@@ -19,7 +19,7 @@
         SelectReload()
 
         '非重复加载部分
-        If IsLoad Then Exit Sub
+        If IsLoad Then Return
         IsLoad = True
 
         McDownloadForgeRecommendedRefresh()
@@ -38,7 +38,7 @@
     Public IsInSelectPage As Boolean = False
     Private IsFirstLoaded As Boolean = False
     Private Sub EnterSelectPage()
-        If IsInSelectPage Then Exit Sub
+        If IsInSelectPage Then Return
         IsInSelectPage = True
 
         PanInner.Margin = New Thickness(25, 10, 25, 40)
@@ -87,8 +87,8 @@
         DlOptiFabricLoader.Start()
 
         AniStart({
-            AaOpacity(PanMinecraft, -PanMinecraft.Opacity, 90, 10),
-            AaTranslateX(PanMinecraft, -50 - CType(PanMinecraft.RenderTransform, TranslateTransform).X, 100, 10),
+            AaOpacity(PanMinecraft, -PanMinecraft.Opacity, 70, 10),
+            AaTranslateX(PanMinecraft, -50 - CType(PanMinecraft.RenderTransform, TranslateTransform).X, 90, 10),
             AaCode(
             Sub()
                 PanBack.ScrollToHome()
@@ -101,15 +101,15 @@
                 FabricApi_Loaded()
                 OptiFabric_Loaded()
                 SelectReload()
+                PanMinecraft.Visibility = Visibility.Collapsed
             End Sub, After:=True),
-            AaOpacity(PanSelect, 1 - PanSelect.Opacity, 90, 100),
-            AaTranslateX(PanSelect, -CType(PanSelect.RenderTransform, TranslateTransform).X, 200, 100, Ease:=New AniEaseOutFluent(AniEasePower.ExtraStrong)),
+            AaOpacity(PanSelect, 1 - PanSelect.Opacity, 70, 100),
+            AaTranslateX(PanSelect, -CType(PanSelect.RenderTransform, TranslateTransform).X, 160, 100, Ease:=New AniEaseOutFluent(AniEasePower.ExtraStrong)),
             AaCode(
             Sub()
-                PanMinecraft.Visibility = Visibility.Collapsed
                 PanBack.IsHitTestVisible = True
                 '初始化 Binding
-                If IsFirstLoaded Then Exit Sub
+                If IsFirstLoaded Then Return
                 IsFirstLoaded = True
                 BtnOptiFineClearInner.SetBinding(Shapes.Path.FillProperty, New Binding("Foreground") With {.Source = CardOptiFine.MainTextBlock, .Mode = BindingMode.OneWay})
                 BtnLiteLoaderClearInner.SetBinding(Shapes.Path.FillProperty, New Binding("Foreground") With {.Source = CardLiteLoader.MainTextBlock, .Mode = BindingMode.OneWay})
@@ -122,7 +122,7 @@
         }, "FrmDownloadInstall SelectPageSwitch", True)
     End Sub
     Public Sub ExitSelectPage() Handles BtnBack.Click
-        If Not IsInSelectPage Then Exit Sub
+        If Not IsInSelectPage Then Return
         IsInSelectPage = False
 
         PanInner.Margin = New Thickness(25, 10, 25, 25)
@@ -137,11 +137,11 @@
         PanBack.ScrollToHome()
 
         AniStart({
-            AaOpacity(PanSelect, -PanSelect.Opacity, 90, 10),
-            AaTranslateX(PanSelect, 50 - CType(PanSelect.RenderTransform, TranslateTransform).X, 100, 10),
+            AaOpacity(PanSelect, -PanSelect.Opacity, 70, 10),
+            AaTranslateX(PanSelect, 50 - CType(PanSelect.RenderTransform, TranslateTransform).X, 90, 10),
             AaCode(Sub() PanBack.ScrollToHome(), After:=True),
-            AaOpacity(PanMinecraft, 1 - PanMinecraft.Opacity, 90, 100),
-            AaTranslateX(PanMinecraft, -CType(PanMinecraft.RenderTransform, TranslateTransform).X, 200, 100, Ease:=New AniEaseOutFluent(AniEasePower.ExtraStrong)),
+            AaOpacity(PanMinecraft, 1 - PanMinecraft.Opacity, 70, 100),
+            AaTranslateX(PanMinecraft, -CType(PanMinecraft.RenderTransform, TranslateTransform).X, 160, 100, Ease:=New AniEaseOutFluent(AniEasePower.ExtraStrong)),
             AaCode(
             Sub()
                 PanSelect.Visibility = Visibility.Collapsed
@@ -168,19 +168,19 @@
     'OptiFine
     Private SelectedOptiFine As DlOptiFineListEntry = Nothing
     Private Sub SetOptiFineInfoShow(IsShow As String)
-        If PanOptiFineInfo.Tag = IsShow Then Exit Sub
+        If PanOptiFineInfo.Tag = IsShow Then Return
         PanOptiFineInfo.Tag = IsShow
         If IsShow = "True" Then
             '显示信息栏
             AniStart({
-                AaTranslateY(PanOptiFineInfo, -CType(PanOptiFineInfo.RenderTransform, TranslateTransform).Y, 270, 100, Ease:=New AniEaseOutBack),
-                AaOpacity(PanOptiFineInfo, 1 - PanOptiFineInfo.Opacity, 100, 90)
+                AaTranslateY(PanOptiFineInfo, -CType(PanOptiFineInfo.RenderTransform, TranslateTransform).Y, 200, 100, Ease:=New AniEaseOutFluent),
+                AaOpacity(PanOptiFineInfo, 1 - PanOptiFineInfo.Opacity, 80, 90)
             }, "SetOptiFineInfoShow")
         Else
             '隐藏信息栏
             AniStart({
-                AaTranslateY(PanOptiFineInfo, 6 - CType(PanOptiFineInfo.RenderTransform, TranslateTransform).Y, 200),
-                AaOpacity(PanOptiFineInfo, -PanOptiFineInfo.Opacity, 100)
+                AaTranslateY(PanOptiFineInfo, 6 - CType(PanOptiFineInfo.RenderTransform, TranslateTransform).Y, 120),
+                AaOpacity(PanOptiFineInfo, -PanOptiFineInfo.Opacity, 50)
             }, "SetOptiFineInfoShow")
         End If
     End Sub
@@ -188,19 +188,19 @@
     'LiteLoader
     Private SelectedLiteLoader As DlLiteLoaderListEntry = Nothing
     Private Sub SetLiteLoaderInfoShow(IsShow As String)
-        If PanLiteLoaderInfo.Tag = IsShow Then Exit Sub
+        If PanLiteLoaderInfo.Tag = IsShow Then Return
         PanLiteLoaderInfo.Tag = IsShow
         If IsShow = "True" Then
             '显示信息栏
             AniStart({
-                AaTranslateY(PanLiteLoaderInfo, -CType(PanLiteLoaderInfo.RenderTransform, TranslateTransform).Y, 270, 100, Ease:=New AniEaseOutBack),
-                AaOpacity(PanLiteLoaderInfo, 1 - PanLiteLoaderInfo.Opacity, 100, 90)
+                AaTranslateY(PanLiteLoaderInfo, -CType(PanLiteLoaderInfo.RenderTransform, TranslateTransform).Y, 200, 100, Ease:=New AniEaseOutFluent),
+                AaOpacity(PanLiteLoaderInfo, 1 - PanLiteLoaderInfo.Opacity, 80, 90)
             }, "SetLiteLoaderInfoShow")
         Else
             '隐藏信息栏
             AniStart({
-                AaTranslateY(PanLiteLoaderInfo, 6 - CType(PanLiteLoaderInfo.RenderTransform, TranslateTransform).Y, 200),
-                AaOpacity(PanLiteLoaderInfo, -PanLiteLoaderInfo.Opacity, 100)
+                AaTranslateY(PanLiteLoaderInfo, 6 - CType(PanLiteLoaderInfo.RenderTransform, TranslateTransform).Y, 120),
+                AaOpacity(PanLiteLoaderInfo, -PanLiteLoaderInfo.Opacity, 50)
             }, "SetLiteLoaderInfoShow")
         End If
     End Sub
@@ -208,19 +208,19 @@
     'Forge
     Private SelectedForge As DlForgeVersionEntry = Nothing
     Private Sub SetForgeInfoShow(IsShow As String)
-        If PanForgeInfo.Tag = IsShow Then Exit Sub
+        If PanForgeInfo.Tag = IsShow Then Return
         PanForgeInfo.Tag = IsShow
         If IsShow = "True" Then
             '显示信息栏
             AniStart({
-                AaTranslateY(PanForgeInfo, -CType(PanForgeInfo.RenderTransform, TranslateTransform).Y, 270, 100, Ease:=New AniEaseOutBack),
-                AaOpacity(PanForgeInfo, 1 - PanForgeInfo.Opacity, 100, 90)
+                AaTranslateY(PanForgeInfo, -CType(PanForgeInfo.RenderTransform, TranslateTransform).Y, 200, 100, Ease:=New AniEaseOutFluent),
+                AaOpacity(PanForgeInfo, 1 - PanForgeInfo.Opacity, 80, 90)
             }, "SetForgeInfoShow")
         Else
             '隐藏信息栏
             AniStart({
-                AaTranslateY(PanForgeInfo, 6 - CType(PanForgeInfo.RenderTransform, TranslateTransform).Y, 200),
-                AaOpacity(PanForgeInfo, -PanForgeInfo.Opacity, 100)
+                AaTranslateY(PanForgeInfo, 6 - CType(PanForgeInfo.RenderTransform, TranslateTransform).Y, 120),
+                AaOpacity(PanForgeInfo, -PanForgeInfo.Opacity, 50)
             }, "SetForgeInfoShow")
         End If
     End Sub
@@ -228,19 +228,19 @@
     'NeoForge
     Private SelectedNeoForge As DlNeoForgeListEntry = Nothing
     Private Sub SetNeoForgeInfoShow(IsShow As String)
-        If PanNeoForgeInfo.Tag = IsShow Then Exit Sub
+        If PanNeoForgeInfo.Tag = IsShow Then Return
         PanNeoForgeInfo.Tag = IsShow
         If IsShow = "True" Then
             '显示信息栏
             AniStart({
-                AaTranslateY(PanNeoForgeInfo, -CType(PanNeoForgeInfo.RenderTransform, TranslateTransform).Y, 270, 100, Ease:=New AniEaseOutBack),
-                AaOpacity(PanNeoForgeInfo, 1 - PanNeoForgeInfo.Opacity, 100, 90)
+                AaTranslateY(PanNeoForgeInfo, -CType(PanNeoForgeInfo.RenderTransform, TranslateTransform).Y, 200, 100, Ease:=New AniEaseOutFluent),
+                AaOpacity(PanNeoForgeInfo, 1 - PanNeoForgeInfo.Opacity, 80, 90)
             }, "SetNeoForgeInfoShow")
         Else
             '隐藏信息栏
             AniStart({
-                AaTranslateY(PanNeoForgeInfo, 6 - CType(PanNeoForgeInfo.RenderTransform, TranslateTransform).Y, 200),
-                AaOpacity(PanNeoForgeInfo, -PanNeoForgeInfo.Opacity, 100)
+                AaTranslateY(PanNeoForgeInfo, 6 - CType(PanNeoForgeInfo.RenderTransform, TranslateTransform).Y, 120),
+                AaOpacity(PanNeoForgeInfo, -PanNeoForgeInfo.Opacity, 50)
             }, "SetNeoForgeInfoShow")
         End If
     End Sub
@@ -248,19 +248,19 @@
     'Fabric
     Private SelectedFabric As String = Nothing
     Private Sub SetFabricInfoShow(IsShow As String)
-        If PanFabricInfo.Tag = IsShow Then Exit Sub
+        If PanFabricInfo.Tag = IsShow Then Return
         PanFabricInfo.Tag = IsShow
         If IsShow = "True" Then
             '显示信息栏
             AniStart({
-                AaTranslateY(PanFabricInfo, -CType(PanFabricInfo.RenderTransform, TranslateTransform).Y, 270, 100, Ease:=New AniEaseOutBack),
-                AaOpacity(PanFabricInfo, 1 - PanFabricInfo.Opacity, 100, 90)
+                AaTranslateY(PanFabricInfo, -CType(PanFabricInfo.RenderTransform, TranslateTransform).Y, 200, 100, Ease:=New AniEaseOutFluent),
+                AaOpacity(PanFabricInfo, 1 - PanFabricInfo.Opacity, 80, 90)
             }, "SetFabricInfoShow")
         Else
             '隐藏信息栏
             AniStart({
-                AaTranslateY(PanFabricInfo, 6 - CType(PanFabricInfo.RenderTransform, TranslateTransform).Y, 200),
-                AaOpacity(PanFabricInfo, -PanFabricInfo.Opacity, 100)
+                AaTranslateY(PanFabricInfo, 6 - CType(PanFabricInfo.RenderTransform, TranslateTransform).Y, 120),
+                AaOpacity(PanFabricInfo, -PanFabricInfo.Opacity, 50)
             }, "SetFabricInfoShow")
         End If
     End Sub
@@ -268,19 +268,19 @@
     'FabricApi
     Private SelectedFabricApi As CompFile = Nothing
     Private Sub SetFabricApiInfoShow(IsShow As String)
-        If PanFabricApiInfo.Tag = IsShow Then Exit Sub
+        If PanFabricApiInfo.Tag = IsShow Then Return
         PanFabricApiInfo.Tag = IsShow
         If IsShow = "True" Then
             '显示信息栏
             AniStart({
-                AaTranslateY(PanFabricApiInfo, -CType(PanFabricApiInfo.RenderTransform, TranslateTransform).Y, 270, 100, Ease:=New AniEaseOutBack),
-                AaOpacity(PanFabricApiInfo, 1 - PanFabricApiInfo.Opacity, 100, 90)
+                AaTranslateY(PanFabricApiInfo, -CType(PanFabricApiInfo.RenderTransform, TranslateTransform).Y, 200, 100, Ease:=New AniEaseOutFluent),
+                AaOpacity(PanFabricApiInfo, 1 - PanFabricApiInfo.Opacity, 80, 90)
             }, "SetFabricApiInfoShow")
         Else
             '隐藏信息栏
             AniStart({
-                AaTranslateY(PanFabricApiInfo, 6 - CType(PanFabricApiInfo.RenderTransform, TranslateTransform).Y, 200),
-                AaOpacity(PanFabricApiInfo, -PanFabricApiInfo.Opacity, 100)
+                AaTranslateY(PanFabricApiInfo, 6 - CType(PanFabricApiInfo.RenderTransform, TranslateTransform).Y, 120),
+                AaOpacity(PanFabricApiInfo, -PanFabricApiInfo.Opacity, 50)
             }, "SetFabricApiInfoShow")
         End If
     End Sub
@@ -288,19 +288,19 @@
     'OptiFabric
     Private SelectedOptiFabric As CompFile = Nothing
     Private Sub SetOptiFabricInfoShow(IsShow As String)
-        If PanOptiFabricInfo.Tag = IsShow Then Exit Sub
+        If PanOptiFabricInfo.Tag = IsShow Then Return
         PanOptiFabricInfo.Tag = IsShow
         If IsShow = "True" Then
             '显示信息栏
             AniStart({
-                AaTranslateY(PanOptiFabricInfo, -CType(PanOptiFabricInfo.RenderTransform, TranslateTransform).Y, 270, 100, Ease:=New AniEaseOutBack),
-                AaOpacity(PanOptiFabricInfo, 1 - PanOptiFabricInfo.Opacity, 100, 90)
+                AaTranslateY(PanOptiFabricInfo, -CType(PanOptiFabricInfo.RenderTransform, TranslateTransform).Y, 200, 100, Ease:=New AniEaseOutFluent),
+                AaOpacity(PanOptiFabricInfo, 1 - PanOptiFabricInfo.Opacity, 80, 90)
             }, "SetOptiFabricInfoShow")
         Else
             '隐藏信息栏
             AniStart({
-                AaTranslateY(PanOptiFabricInfo, 6 - CType(PanOptiFabricInfo.RenderTransform, TranslateTransform).Y, 200),
-                AaOpacity(PanOptiFabricInfo, -PanOptiFabricInfo.Opacity, 100)
+                AaTranslateY(PanOptiFabricInfo, 6 - CType(PanOptiFabricInfo.RenderTransform, TranslateTransform).Y, 120),
+                AaOpacity(PanOptiFabricInfo, -PanOptiFabricInfo.Opacity, 50)
             }, "SetOptiFabricInfoShow")
         End If
     End Sub
@@ -310,7 +310,7 @@
     ''' 重载已选择的项目的显示。
     ''' </summary>
     Private Sub SelectReload() Handles CardOptiFine.Swap, LoadOptiFine.StateChanged, CardForge.Swap, LoadForge.StateChanged, CardNeoForge.Swap, LoadNeoForge.StateChanged, CardFabric.Swap, LoadFabric.StateChanged, CardFabricApi.Swap, LoadFabricApi.StateChanged, CardOptiFabric.Swap, LoadOptiFabric.StateChanged, CardLiteLoader.Swap, LoadLiteLoader.StateChanged
-        If SelectedMinecraftId Is Nothing OrElse IsReloading Then Exit Sub
+        If SelectedMinecraftId Is Nothing OrElse IsReloading Then Return
         IsReloading = True
         '主预览
         SelectNameUpdate()
@@ -476,6 +476,11 @@
         Else
             HintModOptiFine.Visibility = Visibility.Collapsed
         End If
+        If SelectedFabric IsNot Nothing AndAlso VersionSortInteger(SelectedMinecraftId, "1.21.4") > 0 Then
+            HintModOptiFineHigh.Visibility = Visibility.Visible
+        Else
+            HintModOptiFineHigh.Visibility = Visibility.Collapsed
+        End If
         '结束
         IsReloading = False
     End Sub
@@ -540,13 +545,13 @@
     Private IsSelectNameEdited As Boolean = False
     Private IsSelectNameChanging As Boolean = False
     Private Sub SelectNameUpdate()
-        If IsSelectNameEdited OrElse IsSelectNameChanging Then Exit Sub
+        If IsSelectNameEdited OrElse IsSelectNameChanging Then Return
         IsSelectNameChanging = True
         TextSelectName.Text = GetSelectName()
         IsSelectNameChanging = False
     End Sub
     Private Sub TextSelectName_TextChanged(sender As Object, e As TextChangedEventArgs) Handles TextSelectName.TextChanged
-        If IsSelectNameChanging Then Exit Sub
+        If IsSelectNameChanging Then Return
         IsSelectNameEdited = True
         SelectReload()
     End Sub
@@ -590,7 +595,7 @@
                                 Version("id") = "20w14∞"
                                 Version("type") = "special"
                                 Version.Add("lore", GetMcFoolName(Version("id")))
-                            Case "3d shareware v1.34", "1.rv-pre1", "15w14a", "2.0", "22w13oneblockatatime", "23w13a_or_b", "24w14potato"
+                            Case "3d shareware v1.34", "1.rv-pre1", "15w14a", "2.0", "22w13oneblockatatime", "23w13a_or_b", "24w14potato", "25w14craftmine"
                                 Type = "愚人节版"
                                 Version("type") = "special"
                                 Version.Add("lore", GetMcFoolName(Version("id")))
@@ -671,6 +676,8 @@
         If SelectedNeoForge IsNot Nothing Then Return "与 NeoForge 不兼容"
         If LoadOptiFine Is Nothing OrElse LoadOptiFine.State.LoadingState = MyLoading.MyLoadingState.Run Then Return "加载中……"
         If LoadOptiFine.State.LoadingState = MyLoading.MyLoadingState.Error Then Return "获取版本列表失败：" & CType(LoadOptiFine.State, Object).Error.Message
+        '检查 Fabric 1.20.5+：没有 OptiFabric 故全部不兼容
+        If SelectedFabric IsNot Nothing AndAlso VersionSortInteger(SelectedMinecraftId, "1.20.4") > 0 Then Return "与 Fabric 不兼容"
         '检查 Forge 1.13 - 1.14.3：全部不兼容
         If SelectedForge IsNot Nothing AndAlso
             VersionSortInteger(SelectedMinecraftId, "1.13") >= 0 AndAlso VersionSortInteger("1.14.3", SelectedMinecraftId) >= 0 Then
@@ -717,7 +724,7 @@
     ''' </summary>
     Private Sub OptiFine_Loaded() Handles LoadOptiFine.StateChanged
         Try
-            If DlOptiFineListLoader.State <> LoadState.Finished Then Exit Sub
+            If DlOptiFineListLoader.State <> LoadState.Finished Then Return
 
             '获取版本列表
             Dim Versions As New List(Of DlOptiFineListEntry)
@@ -725,7 +732,7 @@
                 If SelectedForge IsNot Nothing AndAlso Not IsOptiFineSuitForForge(Version, SelectedForge) Then Continue For
                 If Version.NameDisplay.StartsWith(SelectedMinecraftId & " ") Then Versions.Add(Version)
             Next
-            If Not Versions.Any() Then Exit Sub
+            If Not Versions.Any() Then Return
             '排序
             Versions = Versions.Sort(
             Function(Left As DlOptiFineListEntry, Right As DlOptiFineListEntry) As Boolean
@@ -791,13 +798,13 @@
     ''' </summary>
     Private Sub LiteLoader_Loaded() Handles LoadLiteLoader.StateChanged
         Try
-            If DlLiteLoaderListLoader.State <> LoadState.Finished Then Exit Sub
+            If DlLiteLoaderListLoader.State <> LoadState.Finished Then Return
             '获取版本列表
             Dim Versions As New List(Of DlLiteLoaderListEntry)
             For Each Version As DlLiteLoaderListEntry In DlLiteLoaderListLoader.Output.Value
                 If Version.Inherit = SelectedMinecraftId Then Versions.Add(Version)
             Next
-            If Not Versions.Any() Then Exit Sub
+            If Not Versions.Any() Then Return
             '可视化
             PanLiteLoader.Children.Clear()
             For Each Version In Versions
@@ -871,13 +878,13 @@
     ''' </summary>
     Private Sub Forge_Loaded() Handles LoadForge.StateChanged
         Try
-            If Not LoadForge.State.IsLoader Then Exit Sub
+            If Not LoadForge.State.IsLoader Then Return
             Dim Loader As LoaderTask(Of String, List(Of DlForgeVersionEntry)) = LoadForge.State
-            If SelectedMinecraftId <> Loader.Input Then Exit Sub
-            If Loader.State <> LoadState.Finished Then Exit Sub
+            If SelectedMinecraftId <> Loader.Input Then Return
+            If Loader.State <> LoadState.Finished Then Return
             '获取要显示的版本
             Dim Versions = Loader.Output.ToList '复制数组，以免 Output 在实例化后变空
-            If Not Loader.Output.Any() Then Exit Sub
+            If Not Loader.Output.Any() Then Return
             PanForge.Children.Clear()
             Versions = Versions.Where(
             Function(v)
@@ -942,9 +949,9 @@
     Private Sub NeoForge_Loaded() Handles LoadNeoForge.StateChanged
         Try
             '获取版本列表
-            If DlNeoForgeListLoader.State <> LoadState.Finished Then Exit Sub
+            If DlNeoForgeListLoader.State <> LoadState.Finished Then Return
             Dim Versions = DlNeoForgeListLoader.Output.Value.Where(Function(v) v.Inherit = SelectedMinecraftId).ToList
-            If Not Versions.Any() Then Exit Sub
+            If Not Versions.Any() Then Return
             '可视化
             PanNeoForge.Children.Clear()
             NeoForgeDownloadListItemPreload(PanNeoForge, Versions, AddressOf NeoForge_Selected, False)
@@ -981,6 +988,8 @@
     Private Function LoadFabricGetError() As String
         If LoadFabric Is Nothing OrElse LoadFabric.State.LoadingState = MyLoading.MyLoadingState.Run Then Return "加载中……"
         If LoadFabric.State.LoadingState = MyLoading.MyLoadingState.Error Then Return "获取版本列表失败：" & CType(LoadFabric.State, Object).Error.Message
+        '检查 Fabric 1.20.5+：没有 OptiFabric 故全部不兼容
+        If SelectedOptiFine IsNot Nothing AndAlso VersionSortInteger(SelectedMinecraftId, "1.20.4") > 0 Then Return "与 OptiFine 不兼容"
         For Each Version As JObject In DlFabricListLoader.Output.Value("game")
             If Version("version").ToString = SelectedMinecraftId.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3") Then
                 If SelectedForge IsNot Nothing Then Return "与 Forge 不兼容"
@@ -1001,10 +1010,10 @@
     ''' </summary>
     Private Sub Fabric_Loaded() Handles LoadFabric.StateChanged
         Try
-            If DlFabricListLoader.State <> LoadState.Finished Then Exit Sub
+            If DlFabricListLoader.State <> LoadState.Finished Then Return
             '获取版本列表
             Dim Versions As JArray = DlFabricListLoader.Output.Value("loader")
-            If Not Versions.Any() Then Exit Sub
+            If Not Versions.Any() Then Return
             '可视化
             PanFabric.Children.Clear()
             PanFabric.Tag = Versions
@@ -1106,8 +1115,8 @@
     ''' </summary>
     Private Sub FabricApi_Loaded() Handles LoadFabricApi.StateChanged
         Try
-            If DlFabricApiLoader.State <> LoadState.Finished Then Exit Sub
-            If SelectedMinecraftId Is Nothing OrElse SelectedFabric Is Nothing Then Exit Sub
+            If DlFabricApiLoader.State <> LoadState.Finished Then Return
+            If SelectedMinecraftId Is Nothing OrElse SelectedFabric Is Nothing Then Return
             '获取版本列表
             Dim Versions As New List(Of CompFile)
             For Each Version In DlFabricApiLoader.Output
@@ -1119,7 +1128,7 @@
                     Versions.Add(Version)
                 End If
             Next
-            If Not Versions.Any() Then Exit Sub
+            If Not Versions.Any() Then Return
             Versions = Versions.OrderByDescending(Function(v) v.ReleaseDate).ToList
             '可视化
             PanFabricApi.Children.Clear()
@@ -1202,14 +1211,14 @@
     ''' </summary>
     Private Sub OptiFabric_Loaded() Handles LoadOptiFabric.StateChanged
         Try
-            If DlOptiFabricLoader.State <> LoadState.Finished Then Exit Sub
-            If SelectedMinecraftId Is Nothing OrElse SelectedFabric Is Nothing OrElse SelectedOptiFine Is Nothing Then Exit Sub
+            If DlOptiFabricLoader.State <> LoadState.Finished Then Return
+            If SelectedMinecraftId Is Nothing OrElse SelectedFabric Is Nothing OrElse SelectedOptiFine Is Nothing Then Return
             '获取版本列表
             Dim Versions As New List(Of CompFile)
             For Each Version In DlOptiFabricLoader.Output
                 If IsSuitableOptiFabric(Version, SelectedMinecraftId) Then Versions.Add(Version)
             Next
-            If Not Versions.Any() Then Exit Sub
+            If Not Versions.Any() Then Return
             '排序
             Versions = Versions.OrderByDescending(Function(v) v.ReleaseDate).ToList
             '可视化
@@ -1254,10 +1263,10 @@
         '确认版本隔离
         If (SelectedForge IsNot Nothing OrElse SelectedNeoForge IsNot Nothing OrElse SelectedFabric IsNot Nothing) AndAlso
            (Setup.Get("LaunchArgumentIndieV2") = 0 OrElse Setup.Get("LaunchArgumentIndieV2") = 2) Then
-            If MyMsgBox("你尚未开启版本隔离，这会导致多个版本共用同一个 Mod 文件夹。" & vbCrLf &
-                        "因此游戏可能会因为读取到与当前版本不符的 Mod 而崩溃。" & vbCrLf &
-                        "推荐在开始下载前，在 设置 → 启动选项 → 版本隔离 中开启版本隔离！", "版本隔离提示", "取消下载", "继续") = 1 Then
-                Exit Sub
+            If MyMsgBox("你尚未开启版本隔离，多个 MC 版本会共用同一个 Mod 文件夹。" & vbCrLf &
+                        "因此，游戏可能会因为读取到与当前版本不符的 Mod 而崩溃。" & vbCrLf &
+                        "推荐先在 设置 → 启动选项 → 默认版本隔离 中开启版本隔离！", "版本隔离提示", "取消下载", "继续") = 1 Then
+                Return
             End If
         End If
         '提交安装申请
@@ -1275,7 +1284,7 @@
             .OptiFabric = SelectedOptiFabric,
             .LiteLoaderEntry = SelectedLiteLoader
         }
-        If Not McInstall(Request) Then Exit Sub
+        If Not McInstall(Request) Then Return
         '返回，这样在再次进入安装页面时这个版本就会显示文件夹已重复
         ExitSelectPage()
     End Sub

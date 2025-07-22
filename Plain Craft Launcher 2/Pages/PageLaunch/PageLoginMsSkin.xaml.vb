@@ -33,7 +33,7 @@
         AniStart(AaOpacity(PanButtons, 1 - PanButtons.Opacity, 120), "PageLoginMsSkin Button")
     End Sub
     Public Sub HidePanel() Handles PanData.MouseLeave
-        If BtnEdit.ContextMenu.IsOpen OrElse BtnSkin.ContextMenu.IsOpen OrElse PanData.IsMouseOver Then Exit Sub
+        If BtnEdit.ContextMenu.IsOpen OrElse BtnSkin.ContextMenu.IsOpen OrElse PanData.IsMouseOver Then Return
         AniStart(AaOpacity(PanButtons, -PanButtons.Opacity, 120), "PageLoginMsSkin Button")
     End Sub
 
@@ -74,14 +74,14 @@
         '检查条件，获取新皮肤
         If IsChanging Then
             Hint("正在更改皮肤中，请稍候！")
-            Exit Sub
+            Return
         End If
         If McLoginLoader.State = LoadState.Failed Then
             Hint("登录失败，无法更改皮肤！", HintType.Critical)
-            Exit Sub
+            Return
         End If
         Dim SkinInfo As McSkinInfo = McSkinSelect()
-        If Not SkinInfo.IsVaild Then Exit Sub
+        If Not SkinInfo.IsVaild Then Return
         Hint("正在更改皮肤……")
         IsChanging = True
         '开始实际获取
@@ -108,7 +108,7 @@ Retry:
                     GoTo Retry
                 ElseIf Result.Contains("""error""") Then
                     Hint("更改皮肤失败：" & GetJson(Result)("error"), HintType.Critical)
-                    Exit Sub
+                    Return
                 End If
                 '获取新皮肤地址
                 Log("[Skin] 皮肤修改返回值：" & vbCrLf & Result)
@@ -117,7 +117,7 @@ Retry:
                 For Each Skin As JObject In ResultJson("skins")
                     If Skin("state").ToString = "ACTIVE" Then
                         MySkin.ReloadCache(Skin("url"))
-                        Exit Sub
+                        Return
                     End If
                 Next
                 Throw New Exception("未知错误（" & Result & "）")

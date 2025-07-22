@@ -22,10 +22,10 @@
     End Sub
 #End If
 
-#Region "自定义主页"
+#Region "主页"
 
     ''' <summary>
-    ''' 刷新自定义主页。
+    ''' 刷新主页。
     ''' </summary>
     Private Sub Refresh() Handles Me.Loaded
         RunInNewThread(
@@ -35,9 +35,9 @@
                     RefreshReal()
                 End SyncLock
             Catch ex As Exception
-                Log(ex, "加载 PCL 主页自定义信息失败", LogLevel.Msgbox)
+                Log(ex, "加载 PCL 主页自定义信息失败", If(ModeDebug, LogLevel.Msgbox, LogLevel.Hint))
             End Try
-        End Sub, $"刷新自定义主页 #{GetUuid()}")
+        End Sub, $"刷新主页 #{GetUuid()}")
     End Sub
     Private Sub RefreshReal()
         Dim Content As String = ""
@@ -65,7 +65,7 @@ Download:
                     RunInUiWait(Sub() LoadContent("")) '在加载结束前清空页面
                     Setup.Set("CacheSavedPageVersion", "")
                     OnlineLoader.Start(Url) '下载完成后将会再次触发更新
-                    Exit Sub
+                    Return
                 End If
             Case 3
                 Select Case Setup.Get("UiCustomPreset")
@@ -127,14 +127,18 @@ Download:
                         Log("[Page] 主页预设：杂志主页")
                         Url = "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Ext1nguisher/Custom.xaml"
                         GoTo Download
+                    Case 12
+                        Log("[Page] 主页预设：PCL GitHub 仪表盘")
+                        Url = "https://raw.gitcode.com/Deep-Dark-Forest/PCL2-GitHub-Dashboard-Homepage/raw/main/custom.xaml"
+                        GoTo Download
                 End Select
         End Select
         RunInUi(Sub() LoadContent(Content))
     End Sub
     Private RefreshLock As New Object
 
-    '联网获取自定义主页文件
-    Private OnlineLoader As New LoaderTask(Of String, Integer)("自定义主页获取", AddressOf OnlineLoaderSub) With {.ReloadTimeout = 10 * 60 * 1000}
+    '联网获取主页文件
+    Private OnlineLoader As New LoaderTask(Of String, Integer)("下载主页", AddressOf OnlineLoaderSub) With {.ReloadTimeout = 10 * 60 * 1000}
     Private Sub OnlineLoaderSub(Task As LoaderTask(Of String, Integer))
         Dim Address As String = Task.Input '#3721 中连续触发两次导致内容变化
         Try
@@ -146,50 +150,46 @@ Download:
                 VersionAddress = Address.BeforeFirst("?")
                 If Not VersionAddress.EndsWith("/") Then VersionAddress += "/"
                 VersionAddress += "version"
-                If Address.Contains("?") Then VersionAddress += Address.AfterLast("?")
+                If Address.Contains("?") Then VersionAddress += "?" & Address.AfterFirst("?")
             End If
             '校验版本
             Dim Version As String = ""
             Dim NeedDownload As Boolean = True
             Try
                 Version = NetGetCodeByRequestOnce(VersionAddress, Timeout:=10000)
-                If Version.Length > 1000 Then Throw New Exception($"获取的自定义主页版本过长（{Version.Length} 字符）")
+                If Version.Length > 1000 Then Throw New Exception($"获取的主页版本过长（{Version.Length} 字符）")
                 Dim CurrentVersion As String = Setup.Get("CacheSavedPageVersion")
                 If Version <> "" AndAlso CurrentVersion <> "" AndAlso Version = CurrentVersion Then
-                    Log($"[Page] 当前缓存的自定义主页已为最新，当前版本：{Version}，检查源：{VersionAddress}")
+                    Log($"[Page] 当前缓存的主页已为最新，当前版本：{Version}，检查源：{VersionAddress}")
                     NeedDownload = False
                 Else
-                    Log($"[Page] 需要下载联网自定义主页，当前版本：{Version}，检查源：{VersionAddress}")
+                    Log($"[Page] 需要下载联网主页，当前版本：{Version}，检查源：{VersionAddress}")
                 End If
             Catch exx As Exception
-                Log(exx, $"联网获取自定义主页版本失败", LogLevel.Developer)
-                Log($"[Page] 无法检查联网自定义主页版本，将直接下载，检查源：{VersionAddress}")
+                Log(exx, $"联网获取主页版本失败", LogLevel.Developer)
+                Log($"[Page] 无法检查联网主页版本，将直接下载，检查源：{VersionAddress}")
             End Try
             '实际下载
             If NeedDownload Then
                 Dim FileContent As String = NetGetCodeByRequestRetry(Address)
-                Log($"[Page] 已联网下载自定义主页，内容长度：{FileContent.Length}，来源：{Address}")
+                Log($"[Page] 已联网下载主页，内容长度：{FileContent.Length}，来源：{Address}")
                 Setup.Set("CacheSavedPageUrl", Address)
                 Setup.Set("CacheSavedPageVersion", Version)
                 WriteFile(PathTemp & "Cache\Custom.xaml", FileContent)
             End If
             '要求刷新
-            Refresh()
+            RunInUi(AddressOf Refresh) '不直接调用 Refresh，以防止死循环（#6245）
         Catch ex As Exception
-            If Setup.Get("CacheSavedPageVersion") = "" Then
-                Log(ex, $"联网下载自定义主页失败（{Address}）", LogLevel.Msgbox)
-            Else
-                Log(ex, $"联网下载自定义主页失败（{Address}）")
-            End If
+            Log(ex, $"下载主页失败（{Address}）", If(ModeDebug, LogLevel.Msgbox, LogLevel.Hint))
         End Try
     End Sub
 
     ''' <summary>
-    ''' 立即强制刷新自定义主页。
+    ''' 立即强制刷新主页。
     ''' 必须在 UI 线程调用。
     ''' </summary>
     Public Sub ForceRefresh() Implements IRefreshable.Refresh
-        Log("[Page] 要求强制刷新自定义主页")
+        Log("[Page] 要求强制刷新主页")
         ClearCache()
         '实际的刷新
         If FrmMain.PageCurrent.Page = FormMain.PageType.Launch Then
@@ -201,50 +201,55 @@ Download:
     End Sub
 
     ''' <summary>
-    ''' 清空自定义主页缓存信息。
+    ''' 清空主页缓存信息。
     ''' </summary>
     Private Sub ClearCache()
         LoadedContentHash = -1
         OnlineLoader.Input = ""
         Setup.Set("CacheSavedPageUrl", "")
         Setup.Set("CacheSavedPageVersion", "")
-        Log("[Page] 已清空自定义主页缓存")
+        Log("[Page] 已清空主页缓存")
     End Sub
 
     ''' <summary>
-    ''' 从文本内容中加载自定义主页。
+    ''' 从文本内容中加载主页。
     ''' 必须在 UI 线程调用。
     ''' </summary>
     Private Sub LoadContent(Content As String)
         SyncLock LoadContentLock
             '如果加载目标内容一致则不加载
             Dim Hash = Content.GetHashCode()
-            If Hash = LoadedContentHash Then Exit Sub
+            If Hash = LoadedContentHash Then Return
             LoadedContentHash = Hash
             '实际加载内容
             PanCustom.Children.Clear()
             If String.IsNullOrWhiteSpace(Content) Then
-                Log($"[Page] 实例化：清空自定义主页 UI，来源为空")
+                Log($"[Page] 实例化：清空主页 UI，来源为空")
                 Return
             End If
+            Dim LoadStartTime As Date = Date.Now
             Try
+                '修改时应同时修改 PageOtherHelpDetail.Init
                 Content = HelpArgumentReplace(Content)
                 If Content.Contains("xmlns") Then Content = Content.RegexReplace("xmlns[^""']*(""|')[^""']*(""|')", "").Replace("xmlns", "") '禁止声明命名空间
                 Content = "<StackPanel xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:sys=""clr-namespace:System;assembly=mscorlib"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"" xmlns:local=""clr-namespace:PCL;assembly=Plain Craft Launcher 2"">" & Content & "</StackPanel>"
-                Log($"[Page] 实例化：加载自定义主页 UI 开始，最终内容长度：{Content.Count}")
+                Log($"[Page] 实例化：加载主页 UI 开始，最终内容长度：{Content.Count}")
                 PanCustom.Children.Add(GetObjectFromXML(Content))
-            Catch ex As UnauthorizedAccessException
-                Log(ex, "加载失败的自定义主页内容：" & vbCrLf & Content)
-                If MyMsgBox(ex.Message, "加载自定义主页失败", "重试", "取消") = 1 Then
-                    GoTo Refresh '防止 SyncLock 死锁
-                End If
             Catch ex As Exception
-                Log(ex, "加载失败的自定义主页内容：" & vbCrLf & Content)
-                If MyMsgBox($"自定义主页内容编写有误，请根据下列错误信息进行检查：{vbCrLf}{GetExceptionSummary(ex)}", "加载自定义主页失败", "重试", "取消") = 1 Then
-                    GoTo Refresh '防止 SyncLock 死锁
+                If ModeDebug Then
+                    Log(ex, "加载失败的主页内容：" & vbCrLf & Content)
+                    If MyMsgBox(If(TypeOf ex Is UnauthorizedAccessException, ex.Message, $"主页内容编写有误，请根据下列错误信息进行检查：{vbCrLf}{GetExceptionSummary(ex)}"),
+                                "加载主页界面失败", "重试", "取消") = 1 Then
+                        GoTo Refresh '防止 SyncLock 死锁
+                    End If
+                Else
+                    Log(ex, "加载主页界面失败", LogLevel.Hint)
                 End If
+                Return
             End Try
-            Log($"[Page] 实例化：加载自定义主页 UI 完成")
+            Dim LoadCostTime = (Date.Now - LoadStartTime).Milliseconds
+            Log($"[Page] 实例化：加载主页 UI 完成，耗时 {LoadCostTime}ms")
+            If LoadCostTime > 3000 Then Hint($"主页加载过于缓慢（花费了 {Math.Round(LoadCostTime / 1000, 1)} 秒），请向主页作者反馈此问题，或暂时停止使用该主页")
         End SyncLock
         Return
 Refresh:

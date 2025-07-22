@@ -3,22 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:PCL"
              FocusVisualStyle="{x:Null}"
-             UseLayoutRounding="True" SnapsToDevicePixels="True" HorizontalAlignment="Stretch" BorderThickness="1" BorderBrush="#99FF4444" CornerRadius="3">
-    <Border.Background>
-        <LinearGradientBrush EndPoint="1,0.5" StartPoint="0,0.5">
-            <GradientStop x:Name="Gradient1" Color="#88FFBBBB" Offset="0.3"/>
-            <GradientStop x:Name="Gradient2" Color="#88FF8888" Offset="0.9"/>
-        </LinearGradientBrush>
-    </Border.Background>
+             UseLayoutRounding="True" SnapsToDevicePixels="True" HorizontalAlignment="Stretch" BorderThickness="3,0,0,0" BorderBrush="#99FF4444" CornerRadius="2">
     <Grid UseLayoutRounding="False" SnapsToDevicePixels="False">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <Path IsHitTestVisible="False" Grid.Column="0" x:Name="Path" VerticalAlignment="Center" Fill="#BF0000" Width="14" Stretch="Uniform" Margin="10,0,2,0" Data="F1 M 58.5832,55.4172L 17.4169,55.4171C 15.5619,53.5621 15.5619,50.5546 17.4168,48.6996L 35.201,15.8402C 37.056,13.9852 40.0635,13.9852 41.9185,15.8402L 58.5832,48.6997C 60.4382,50.5546 60.4382,53.5622 58.5832,55.4172 Z M 34.0417,25.7292L 36.0208,41.9584L 39.9791,41.9583L 41.9583,25.7292L 34.0417,25.7292 Z M 38,44.3333C 36.2511,44.3333 34.8333,45.7511 34.8333,47.5C 34.8333,49.2489 36.2511,50.6667 38,50.6667C 39.7489,50.6667 41.1666,49.2489 41.1666,47.5C 41.1666,45.7511 39.7489,44.3333 38,44.3333 Z " />
-        <TextBlock IsHitTestVisible="False" Grid.Column="1" x:Name="LabText" Margin="0,0.5,0,0" Padding="6,6,8,6" VerticalAlignment="Center" Foreground="#BF0000" TextWrapping="Wrap" />
-        <local:MyIconButton x:Name="BtnClose" SnapsToDevicePixels="True" Visibility="Collapsed" Foreground="#BF0000" Theme="Custom" Margin="0,0,6,0" Grid.Column="2" Height="20" Width="20" VerticalAlignment="Center" Logo="F1 M 26.9166,22.1667L 37.9999,33.25L 49.0832,22.1668L 53.8332,26.9168L 42.7499,38L 53.8332,49.0834L 49.0833,53.8334L 37.9999,42.75L 26.9166,53.8334L 22.1666,49.0833L 33.25,38L 22.1667,26.9167L 26.9166,22.1667 Z"
-                           ToolTip="不再显示" ToolTipService.Placement="Center" ToolTipService.VerticalOffset="29" ToolTipService.HorizontalOffset="2" />
+        <TextBlock IsHitTestVisible="False" x:Name="LabText" LineHeight="16" Margin="0,0,0,-1" Padding="12,9" VerticalAlignment="Center" TextWrapping="Wrap" />
+        <local:MyIconButton x:Name="BtnClose" Visibility="Collapsed" Theme="Custom" Margin="0,0,8,0" Grid.Column="1" Height="20" Width="20" VerticalAlignment="Center" Logo="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z"
+                           ToolTip="不再提示" ToolTipService.Placement="Center" ToolTipService.VerticalOffset="29" ToolTipService.HorizontalOffset="2" />
     </Grid>
 </Border>

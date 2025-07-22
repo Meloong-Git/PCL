@@ -34,9 +34,9 @@
         End Get
         Set(value As String)
             If value = "" Then value = Nothing
-            If _Source = value Then Exit Property
+            If _Source = value Then Return
             _Source = value
-            If Not IsInitialized Then Exit Property '属性读取顺序修正：在完成 XAML 属性读取后再触发图片加载（#4868）
+            If Not IsInitialized Then Return '属性读取顺序修正：在完成 XAML 属性读取后再触发图片加载（#4868）
             Load()
         End Set
     End Property
@@ -82,7 +82,7 @@
         End Get
         Set(value As String)
             If value = "" Then value = Nothing
-            If _ActualSource = value Then Exit Property
+            If _ActualSource = value Then Return
             _ActualSource = value
             Try
                 Dim Bitmap As MyBitmap = If(value Is Nothing, Nothing, New MyBitmap(value)) '在这里先触发可能的文件读取，尽量避免在 UI 线程中读取文件
@@ -103,12 +103,12 @@
         '空
         If Source Is Nothing Then
             ActualSource = Nothing
-            Exit Sub
+            Return
         End If
         '本地图片
         If Not Source.StartsWithF("http") Then
             ActualSource = Source
-            Exit Sub
+            Return
         End If
         '从缓存加载网络图片
         Dim Url As String = Source
@@ -118,7 +118,7 @@
         Dim EnableCache As Boolean = Me.EnableCache
         If EnableCache AndAlso TempFile.Exists Then
             ActualSource = TempPath
-            If (Date.Now - TempFile.LastWriteTime) < FileCacheExpiredTime Then Exit Sub '无需刷新缓存
+            If (Date.Now - TempFile.LastWriteTime) < FileCacheExpiredTime Then Return '无需刷新缓存
         End If
         RunInNewThread(
         Sub()
@@ -159,19 +159,19 @@ RetryStart:
                     '空
                     If Url Is Nothing Then
                         ActualSource = Nothing
-                        Exit Sub
+                        Return
                     End If
                     '本地图片
                     If Not Url.StartsWithF("http") Then
                         ActualSource = Url
-                        Exit Sub
+                        Return
                     End If
                     '从缓存加载网络图片
                     TempPath = GetTempPath(Url)
                     TempFile = New FileInfo(TempPath)
                     If EnableCache AndAlso TempFile.Exists() Then
                         ActualSource = TempPath
-                        If (Date.Now - TempFile.CreationTime) < FileCacheExpiredTime Then Exit Sub '无需刷新缓存
+                        If (Date.Now - TempFile.CreationTime) < FileCacheExpiredTime Then Return '无需刷新缓存
                     End If
                     '下载
                     If Source = Url Then Thread.Sleep(1000) '延迟 1s 重试

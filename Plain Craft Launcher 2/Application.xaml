@@ -8,12 +8,6 @@
     <Application.Resources>
         <ResourceDictionary>
             
-            <!-- 本地化 -->
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/Resources/Language/zh_CN.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/Resources/Language/zh_CN.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-            
             <!-- Converter -->
             <local:AdditionConverter x:Key="AdditionConverter"/>
             <local:MultiplicationConverter x:Key="MultiplicationConverter"/>
@@ -66,7 +60,7 @@
             <SolidColorBrush x:Key="ColorBrushWhite" Color="#ffffff" />
             <SolidColorBrush x:Key="ColorBrushTransparent" Color="Transparent" />
             <SolidColorBrush x:Key="ColorBrushSemiTransparent">#01eaf2fe</SolidColorBrush>
-            <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="#D2FFFFFF" />
+            <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="#F1FFFFFF" />
 
             <!-- Window -->
             <Style TargetType="{x:Type Window}" x:Key="MyWindow">
@@ -209,7 +203,7 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-            <Style TargetType="local:MyScrollViewer">
+            <Style TargetType="local:MyScrollViewer" x:Name="StyleMyScrollViewer">
                 <Setter Property="OverridesDefaultStyle" Value="True" />
                 <Setter Property="CanContentScroll" Value="False" />
                 <Setter Property="PanningMode" Value="VerticalOnly" />
@@ -225,6 +219,7 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+            <Style TargetType="local:PageComp" BasedOn="{StaticResource {x:Type local:MyScrollViewer}}" />
             <Style TargetType="ScrollViewer" x:Key="ScrollViewerFullMargin">
                 <Setter Property="OverridesDefaultStyle" Value="True" />
                 <Setter Property="CanContentScroll" Value="False" />

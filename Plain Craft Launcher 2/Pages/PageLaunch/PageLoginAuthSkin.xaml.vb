@@ -49,11 +49,10 @@
             Log("[Launch] 要求更换角色，但登录加载器繁忙", LogLevel.Debug)
             If CType(McLoginLoader.Input, McLoginServer).ForceReselectProfile Then
                 Hint("正在尝试更换，请稍候！")
-                Exit Sub
             Else
                 Hint("正在登录中，请稍后再更换角色！", HintType.Critical)
-                Exit Sub
             End If
+            Return
         End If
         Hint("正在尝试更换，请稍候！")
         Setup.Set("CacheAuthUuid", "") '清空选择缓存

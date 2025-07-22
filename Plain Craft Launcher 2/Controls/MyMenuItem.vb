@@ -37,7 +37,7 @@
             Time = AnimationTimeOut
         End If
         '重复性验证
-        If ColorName = BackName Then Exit Sub
+        If ColorName = BackName Then Return
         ColorName = BackName
         '触发颜色动画
         If IsLoaded AndAlso AniControlEnabled = 0 Then '防止默认属性变更触发动画

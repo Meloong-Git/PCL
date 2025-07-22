@@ -16,9 +16,9 @@
 
 <local:MyCard Title="卡片、提示条" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
     <StackPanel Margin="25,40,23,15">
-        <local:MyHint Text="local:MyHint 代表提示条，它默认是警告样式。" />
-        <local:MyHint Margin="0,8,0,2" IsWarn="False"
-                    Text="将提示条的 IsWarn 属性改为 False 即可改为提示样式。&#xA;使用左边的那堆字符可以在任意地方手动换行，如果需要使用等号、引号等特殊字符，可以自行百度 XAML 转义字符。" />
+        <local:MyHint Text="local:MyHint 代表提示条。" />
+        <local:MyHint Margin="0,8,0,2" Theme="Blue"
+                    Text="将提示条的 Theme 属性改为 Blue、Yellow 或 Red 即可修改配色。&#xA;使用左边的那堆字符可以在任意地方手动换行，如果需要使用等号、引号等特殊字符，可以自行百度 XAML 转义字符。" />
         <TextBlock TextWrapping="Wrap" Margin="0,6,0,0"
                     Text="卡片（local:MyCard）的 Title 属性决定了它的标题。&#xA;为卡片添加 CanSwap 属性让它可以被折叠，True 代表是，False 代表否。在此基础上，再使用 IsSwaped 属性调整它是否默认被折叠。" />
     </StackPanel>
@@ -113,7 +113,7 @@
         <TextBlock Margin="0,0,0,4"
                     Text="· 打开网页、启动游戏、打开文件：已在上方的卡片中介绍" />
         <local:MyButton Margin="0,5,0,6" Width="250" Height="35"
-                    Text="查看 PCL 源代码" EventType="打开网页" EventData="https://github.com/Hex-Dragon/PCL2/blob/main/Plain%20Craft%20Launcher%202/FormMain.xaml.vb"/>
+                    Text="查看 PCL 源代码" EventType="打开网页" EventData="https://github.com/Meloong-Git/PCL/blob/main/Plain%20Craft%20Launcher%202/FormMain.xaml.vb"/>
         <TextBlock Margin="0,0,0,4"
                     Text="· 今日人品、清理垃圾、内存优化、安装整合包：触发对应功能" />
         <TextBlock Margin="0,0,0,4"
@@ -242,7 +242,6 @@
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="在花括号 {} 中写入特定内容，PCL 会在加载时对其进行替换。&#xa;例如，path 会被替换为 PCL 可执行文件所在文件夹（{path}），用于在 EventData 中指定特定文件，或是加载图片。" />
-        <local:MyHint Margin="0,6,0,10" Text="以下特性于 PCL 2.6.5 (299) 加入，不适用于更早版本的 PCL。" IsWarn="False" />
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="你也可以使用替换标记来获取随机内容：cave 会被替换为一条随机的回声洞内容，hint 则是 “你知道吗” 的内容。" />
         <TextBlock TextWrapping="Wrap" Margin="10,6,0,5" Foreground="{DynamicResource ColorBrush3}"
@@ -275,7 +274,6 @@
 
 <local:MyCard Title="进阶：图标按钮" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
     <StackPanel Margin="25,40,23,15">
-        <local:MyHint Margin="0,0,0,10" Text="以下特性于 PCL 2.6.5 (299) 加入，不适用于更早版本的 PCL。" IsWarn="False" />
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="MyIconTextButton 是一种带有自定义矢量图标的按钮变体，它同样支持 EventType 与 EventData 属性。&#xa;通过设置 Logo 属性来控制它的图标，设置 LogoScale 属性还可以调整图标的缩放比例。" />
         <local:MyIconTextButton Margin="0,4,0,8" Height="35" HorizontalAlignment="Center"
@@ -299,13 +297,12 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="进阶：联网自定义主页" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="进阶：联网主页" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
     <StackPanel Margin="25,40,23,15">
-        <local:MyHint Margin="0,0,0,10" Text="以下特性于 PCL 2.6.5 (299) 加入，不适用于更早版本的 PCL。" IsWarn="False" />
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
-                    Text="如果你在尝试制作联网更新的自定义主页，可以查看下方的 GitHub 讨论页。&#xa;你可以根据其中的介绍为主页添加版本号检查以节省流量，也可以通过检查 Referer 和 User Agent 来确定对方的 PCL 版本。" />
+                    Text="如果你在尝试制作联网更新的主页，可以查看下方的 GitHub 讨论页。&#xa;你可以根据其中的介绍为主页添加版本号检查以节省流量，也可以通过检查 Referer 和 User Agent 来确定对方的 PCL 版本。" />
         <local:MyButton Margin="0,0,0,8" Height="35" HorizontalAlignment="Center" Padding="20,0,20,0"
-                    Text="打开 GitHub 讨论页" EventType="打开网页" EventData="https://github.com/Hex-Dragon/PCL2/discussions/2528" />
+                    Text="打开 GitHub 讨论页" EventType="打开网页" EventData="https://github.com/Meloong-Git/PCL/discussions/2528" />
     </StackPanel>
 </local:MyCard>
 
@@ -343,7 +340,7 @@ local:MyCard（卡片）：
 
 local:MyHint（提示条）：
  - Text：设置显示的文本（&#xA; 代表换行）
- - IsWarn：设置为 True 代表警告样式，False 代表提示样式
+ - Theme：设置颜色主题（Blue、Yellow 或 Red）
 
 local:MyButton（按钮）：
  - Text：设置显示的文本

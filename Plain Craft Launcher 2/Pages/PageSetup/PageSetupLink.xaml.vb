@@ -8,7 +8,7 @@
         PanBack.ScrollToHome()
 
         '非重复加载部分
-        If IsLoaded Then Exit Sub
+        If IsLoaded Then Return
         IsLoaded = True
 
         AniControlEnabled += 1

@@ -19,7 +19,7 @@
             Return LabTitle.Text
         End Get
         Set(value As String)
-            If LabTitle.Text = value Then Exit Property
+            If LabTitle.Text = value Then Return
             LabTitle.Text = value
         End Set
     End Property
@@ -30,7 +30,7 @@
             Return If(LabTitleRaw?.Text, "")
         End Get
         Set(value As String)
-            If LabTitleRaw.Text = value Then Exit Property
+            If LabTitleRaw.Text = value Then Return
             LabTitleRaw.Text = value
             LabTitleRaw.Visibility = If(value = "", Visibility.Collapsed, Visibility.Visible)
         End Set
@@ -42,7 +42,7 @@
             Return LabInfo.Text
         End Get
         Set(value As String)
-            If LabInfo.Text = value Then Exit Property
+            If LabInfo.Text = value Then Return
             LabInfo.Text = value
         End Set
     End Property
@@ -88,11 +88,11 @@
     Private Sub Button_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonUp
         If IsMouseDown Then
             RaiseEvent Click(sender, e)
-            If e.Handled Then Exit Sub
+            If e.Handled Then Return
             Log("[Control] 按下资源工程列表项：" & LabTitle.Text)
         End If
     End Sub
-    Private Sub ProjectClick(sender As MyCompItem, e As EventArgs) Handles Me.Click
+    Private Sub MyCompItem_Click(sender As MyCompItem, e As EventArgs) Handles Me.Click
         '记录当前展开的卡片标题（#2712）
         Dim Titles As New List(Of String)
         If FrmMain.PageCurrent.Page = FormMain.PageType.CompDetail Then
@@ -103,26 +103,37 @@
             FrmMain.PageCurrent.Additional(1) = Titles
         End If
         '打开详情页
-        Dim TargetVersion As String
-        Dim TargetLoader As CompModLoaderType
-        If FrmMain.PageCurrent.Page = FormMain.PageType.CompDetail Then
+        Dim TargetType As CompType
+        Dim TargetVersion As String = Nothing
+        Dim TargetLoader As CompModLoaderType = CompModLoaderType.Any
+        If FrmMain.PageCurrent.Page = FormMain.PageType.Download Then
+            '从下载页进入
+            Select Case FrmMain.PageCurrentSub
+                Case FormMain.PageSubType.DownloadMod
+                    TargetType = CompType.Mod
+                    TargetVersion = FrmDownloadMod.Content.Loader.Input.GameVersion
+                    TargetLoader = FrmDownloadMod.Content.Loader.Input.ModLoader
+                Case FormMain.PageSubType.DownloadPack
+                    TargetType = CompType.ModPack
+                    TargetVersion = FrmDownloadPack.Content.Loader.Input.GameVersion
+                Case FormMain.PageSubType.DownloadDataPack
+                    TargetType = CompType.DataPack
+                    TargetVersion = FrmDownloadDataPack.Content.Loader.Input.GameVersion
+                Case FormMain.PageSubType.DownloadResourcePack
+                    TargetType = CompType.ResourcePack
+                    TargetVersion = FrmDownloadResourcePack.Content.Loader.Input.GameVersion
+                Case FormMain.PageSubType.DownloadShader
+                    TargetType = CompType.Shader
+                    TargetVersion = FrmDownloadShader.Content.Loader.Input.GameVersion
+            End Select
+        Else
+            '从详情页进入（查看前置）
+            TargetType = CompType.Any '允许任意类别
             TargetVersion = FrmMain.PageCurrent.Additional(2)
             TargetLoader = FrmMain.PageCurrent.Additional(3)
-        Else
-            Select Case CType(sender.Tag, CompProject).Type
-                Case CompType.Mod
-                    TargetVersion = If(PageDownloadMod.Loader.Input.GameVersion, "")
-                    TargetLoader = PageDownloadMod.Loader.Input.ModLoader
-                Case CompType.ModPack
-                    TargetVersion = If(PageDownloadPack.Loader.Input.GameVersion, "")
-                Case Else 'CompType.ResourcePack
-                    'FUTURE: Res
-                    TargetVersion = "" 'If(PageDownloadResource.Loader.Input.GameVersion, "")
-            End Select
         End If
-        If CType(sender.Tag, CompProject).Type <> CompType.Mod Then TargetLoader = CompModLoaderType.Any
         FrmMain.PageChange(New FormMain.PageStackData With {.Page = FormMain.PageType.CompDetail,
-                           .Additional = {sender.Tag, New List(Of String), TargetVersion, TargetLoader}})
+                           .Additional = {sender.Tag, New List(Of String), TargetVersion, TargetLoader, TargetType}})
     End Sub
 
     '鼠标点击判定
@@ -174,7 +185,7 @@
     ''' </summary>
     Public Property CanInteraction As Boolean = True
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp
-        If Not CanInteraction Then Exit Sub
+        If Not CanInteraction Then Return
         '判断当前颜色
         Dim StateNew As String, Time As Integer
         If IsMouseOver Then
@@ -189,7 +200,7 @@
             StateNew = "Idle"
             Time = 180
         End If
-        If StateLast = StateNew Then Exit Sub
+        If StateLast = StateNew Then Return
         StateLast = StateNew
         '触发颜色动画
         If IsLoaded AndAlso AniControlEnabled = 0 Then '防止默认属性变更触发动画

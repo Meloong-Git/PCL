@@ -17,33 +17,41 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="28" />
                             <RowDefinition Height="7" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="7" />
                             <RowDefinition Height="27" />
                             <RowDefinition Height="27" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="版本列表源" Margin="0,0,25,0" />
-                        <local:MyComboBox x:Name="ComboDownloadVersion" Grid.ColumnSpan="2" Tag="ToolDownloadVersion" Grid.Column="1">
-                            <local:MyComboBoxItem Content="尽量使用镜像源（加载快，但版本可能不是最新的）" IsSelected="True" />
-                            <local:MyComboBoxItem Content="仅在官方源加载缓慢时改用镜像源" />
-                            <local:MyComboBoxItem Content="尽量使用官方源（保证版本最新，但加载缓慢）" />
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="文件下载源" Margin="0,0,25,0" />
+                        <local:MyComboBox x:Name="ComboDownloadSource" Grid.ColumnSpan="2" Tag="ToolDownloadSource" Grid.Column="1">
+                            <local:MyComboBoxItem Content="尽量使用镜像源" />
+                            <local:MyComboBoxItem Content="优先使用官方源，在加载缓慢时换用镜像源" IsSelected="True" />
+                            <local:MyComboBoxItem Content="尽量使用官方源" />
                         </local:MyComboBox>
-                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="最大线程数" Margin="0,0,25,0" />
-                        <local:MySlider x:Name="SliderDownloadThread" Grid.Row="2" Tag="ToolDownloadThread" MaxValue="255" Value="63" Grid.Column="1"
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="版本列表源" Margin="0,0,25,0" Grid.Row="2" />
+                        <local:MyComboBox x:Name="ComboDownloadVersion" Grid.ColumnSpan="2" Tag="ToolDownloadVersion" Grid.Column="1" Grid.Row="2">
+                            <local:MyComboBoxItem Content="尽量使用镜像源（可能缺少刚刚更新的版本）" />
+                            <local:MyComboBoxItem Content="优先使用官方源，在加载缓慢时换用镜像源" IsSelected="True" />
+                            <local:MyComboBoxItem Content="尽量使用官方源" />
+                        </local:MyComboBox>
+                        <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="最大线程数" Margin="0,0,25,0" />
+                        <local:MySlider x:Name="SliderDownloadThread" Grid.Row="4" Tag="ToolDownloadThread" MaxValue="255" Value="63" Grid.Column="1"
                                         ToolTip="线程数越多，限速的文件下载越快，但过高的线程数会造成下载时非常严重的卡顿。&#xa;一般而言，64 线程已可以保证足够的下载速度。" />
-                        <TextBlock VerticalAlignment="Center" Grid.Row="3" HorizontalAlignment="Left" Text="速度限制" Margin="0,0,25,0" />
-                        <local:MySlider x:Name="SliderDownloadSpeed" Grid.Row="3" Tag="ToolDownloadSpeed" MaxValue="42" Value="42" Grid.Column="1"
+                        <TextBlock VerticalAlignment="Center" Grid.Row="5" HorizontalAlignment="Left" Text="速度限制" Margin="0,0,25,0" />
+                        <local:MySlider x:Name="SliderDownloadSpeed" Grid.Row="5" Tag="ToolDownloadSpeed" MaxValue="42" Value="42" Grid.Column="1"
                                         ToolTip="设置下载的速度上限，以避免在下载时导致其他需要联网的程序卡死" />
-                        <TextBlock VerticalAlignment="Top" Grid.Row="4" HorizontalAlignment="Left" Text="目标文件夹" Margin="0,5,25,5" />
-                        <TextBlock Margin="0,5" HorizontalAlignment="Left" Text="请在 启动 → 版本选择 → 文件夹列表 中更改下载目标文件夹。&#xa;在某个文件夹或游戏版本上右键，即可选择打开对应文件夹。" Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Opacity="0.5" />
-                        <local:MyCheckBox Margin="0,2,0,4" Text="在正版登录时验证 SSL 证书" Grid.Row="5" Height="22" Grid.ColumnSpan="2"
+                        <TextBlock VerticalAlignment="Top" Grid.Row="6" HorizontalAlignment="Left" Text="目标文件夹" Margin="0,5,25,5" />
+                        <TextBlock Margin="0,5" HorizontalAlignment="Left" Text="请在 启动 → 版本选择 → 文件夹列表 中更改下载目标文件夹。&#xa;在某个文件夹或游戏版本上右键，即可选择打开对应文件夹。" Grid.Row="6" Grid.Column="1" VerticalAlignment="Center" Opacity="0.5" />
+                        <local:MyCheckBox Margin="0,2,0,4" Text="在正版登录时验证 SSL 证书" Grid.Row="7" Height="22" Grid.ColumnSpan="2"
                                           x:Name="CheckDownloadCert" Tag="ToolDownloadCert" 
                                           ToolTip="开启验证可以提高安全性，但可能会导致正版登录失败（见 #3018）。&#xa;若登录因为 “未能为 SSL/TLS 安全通道建立信任关系” 失败，请考虑关闭此选项。" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="Mod 与整合包">
-                <StackPanel Margin="25,37,25,15">
+            <local:MyCard Margin="0,0,0,15" Title="社区资源">
+                <StackPanel Margin="25,37,25,12">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
@@ -64,12 +72,12 @@
                         </local:MyComboBox>-->
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="文件名格式" Margin="0,0,25,0" />
                         <local:MyComboBox Grid.Row="0" x:Name="ComboDownloadTranslateV2" Grid.ColumnSpan="2" Tag="ToolDownloadTranslateV2" Grid.Column="1" 
-                                          ToolTip="下载 Mod 时，Mod 的默认文件名格式">
-                            <local:MyComboBoxItem Content="【遗物】relics-0.1.14" />
-                            <local:MyComboBoxItem Content="[遗物] relics-0.1.14" IsSelected="True" />
-                            <local:MyComboBoxItem Content="遗物-relics-0.1.14" />
-                            <local:MyComboBoxItem Content="relics-0.1.14-遗物" />
-                            <local:MyComboBoxItem Content="relics-0.1.14" />
+                                          ToolTip="下载社区资源时，其默认文件名的格式">
+                            <local:MyComboBoxItem Content="【机械动力】create-1.21.1-6.0.4" />
+                            <local:MyComboBoxItem Content="[机械动力] create-1.21.1-6.0.4" IsSelected="True" />
+                            <local:MyComboBoxItem Content="机械动力-create-1.21.1-6.0.4" />
+                            <local:MyComboBoxItem Content="create-1.21.1-6.0.4-机械动力" />
+                            <local:MyComboBoxItem Content="create-1.21.1-6.0.4" />
                         </local:MyComboBox>
                         <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="Mod 管理样式" Margin="0,0,25,0" />
                         <local:MyComboBox Grid.Row="2" x:Name="ComboModLocalNameStyle" Grid.ColumnSpan="2" Tag="ToolModLocalNameStyle" Grid.Column="1" 
@@ -77,7 +85,7 @@
                             <local:MyComboBoxItem Content="标题显示译名，详情显示文件名" IsSelected="True" />
                             <local:MyComboBoxItem Content="标题显示文件名，详情显示译名" />
                         </local:MyComboBox>
-                        <local:MyCheckBox Margin="0,2,0,4" Text="显示 Mod 加载器时忽略 Quilt" Grid.Row="4" Height="22" Grid.ColumnSpan="2"
+                        <local:MyCheckBox Margin="0,2,0,4" Text="在显示 Mod 加载器时忽略 Quilt" Grid.Row="4" Height="22" Grid.ColumnSpan="2"
                                           x:Name="CheckDownloadIgnoreQuilt" Tag="ToolDownloadIgnoreQuilt" />
                     </Grid>
                 </StackPanel>

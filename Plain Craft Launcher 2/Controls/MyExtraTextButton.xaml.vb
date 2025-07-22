@@ -14,7 +14,7 @@ Public Class MyExtraTextButton
             Return _Logo
         End Get
         Set(value As String)
-            If value = _Logo Then Exit Property
+            If value = _Logo Then Return
             _Logo = value
             Path.Data = (New GeometryConverter).ConvertFromString(value)
         End Set
@@ -55,7 +55,7 @@ Public Class MyExtraTextButton
             Return _Show
         End Get
         Set(value As Boolean)
-            If _Show = value Then Exit Property
+            If _Show = value Then Return
             _Show = value
             RunInUi(
             Sub()

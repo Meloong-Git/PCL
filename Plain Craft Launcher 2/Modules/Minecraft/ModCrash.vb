@@ -71,11 +71,7 @@
         '将可能可用的日志文件导出
         For Each FilePath In RightLogs
             Try
-                If FilePath.Contains("crash-") Then
-                    AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(FilePath, ReadFile(FilePath).Split(vbCrLf.ToCharArray)))
-                Else
-                    AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(FilePath, ReadFile(FilePath, Encoding.UTF8).Split(vbCrLf.ToCharArray)))
-                End If
+                AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(FilePath, ReadFile(FilePath).Split(vbCrLf.ToCharArray)))
             Catch ex As Exception
                 Log(ex, "读取可能的崩溃日志文件失败（" & FilePath & "）")
             End Try
@@ -117,11 +113,7 @@ Extracted:
                 If Not TargetFile.Exists OrElse TargetFile.Length = 0 Then Continue For
                 Dim Ext As String = TargetFile.Extension.ToLower
                 If Ext = ".log" OrElse Ext = ".txt" Then
-                    If TargetFile.Name.StartsWithF("crash-") Then
-                        AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(TargetFile.FullName, ReadFile(TargetFile.FullName).Split(vbCrLf.ToCharArray)))
-                    Else
-                        AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(TargetFile.FullName, ReadFile(TargetFile.FullName, Encoding.UTF8).Split(vbCrLf.ToCharArray)))
-                    End If
+                    AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(TargetFile.FullName, ReadFile(TargetFile.FullName).Split(vbCrLf.ToCharArray)))
                 Else
                     File.Delete(TargetFile.FullName)
                 End If
@@ -137,20 +129,21 @@ Extracted:
     Private Enum AnalyzeFileType
         HsErr
         MinecraftLog
-        ExtraLog
+        ExtraLogFile
+        ExtraReportFile
         CrashReport
     End Enum
     Private DirectFile As KeyValuePair(Of String, String())? = Nothing '在弹窗中选择直接打开的文件
     ''' <summary>
     ''' 从 AnalyzeRawFiles 中提取实际有用的文本片段存储到 AnalyzeFiles，并整理可用于生成报告的文件。
-    ''' 返回找到的用于分析的项目数。
+    ''' 返回是否有足够信息可用于分析。
     ''' </summary>
-    Public Function Prepare() As Integer
+    Public Function Prepare() As Boolean
         Log("[Crash] 步骤 2：准备日志文本")
 
         '对日志文件进行分类
         DirectFile = Nothing
-        Dim TotalFiles As New List(Of KeyValuePair(Of AnalyzeFileType, KeyValuePair(Of String, String())))
+        Dim AllFiles As New List(Of KeyValuePair(Of AnalyzeFileType, KeyValuePair(Of String, String())))
         For Each LogFile In AnalyzeRawFiles
             Dim MatchName As String = GetFileNameFromPath(LogFile.Key).ToLower
             Dim TargetType As AnalyzeFileType
@@ -170,27 +163,35 @@ Extracted:
                     TargetType = AnalyzeFileType.MinecraftLog
                     If DirectFile Is Nothing Then DirectFile = LogFile
                 Else
-                    TargetType = AnalyzeFileType.ExtraLog
+                    TargetType = AnalyzeFileType.ExtraLogFile
                 End If
-            ElseIf MatchName.EndsWithF(".log", True) OrElse MatchName.EndsWithF(".txt", True) Then
-                TargetType = AnalyzeFileType.ExtraLog
+            ElseIf MatchName.EndsWithF(".log", True) Then
+                TargetType = AnalyzeFileType.ExtraLogFile
+            ElseIf MatchName.EndsWithF(".txt", True) Then
+                TargetType = AnalyzeFileType.ExtraReportFile
             Else
                 Log("[Crash] " & MatchName & " 分类为 Ignore")
                 Continue For
             End If
-            If Not LogFile.Value.Any() Then
-                Log("[Crash] " & MatchName & " 由于内容为空跳过")
-            Else
-                TotalFiles.Add(New KeyValuePair(Of AnalyzeFileType, KeyValuePair(Of String, String()))(TargetType, LogFile))
+            If LogFile.Value.Any Then
+                AllFiles.Add(New KeyValuePair(Of AnalyzeFileType, KeyValuePair(Of String, String()))(TargetType, LogFile))
                 Log("[Crash] " & MatchName & " 分类为 " & GetStringFromEnum(TargetType))
+            Else
+                Log("[Crash] " & MatchName & " 由于内容为空跳过")
             End If
         Next
 
+        '若只有额外日志，则将它们视作 Minecraft 日志
+        If AllFiles.Any() AndAlso AllFiles.All(Function(p) p.Key = AnalyzeFileType.ExtraLogFile) Then
+            Log("[Crash] 由于仅发现了额外日志，将它们视作 Minecraft 日志进行分析")
+            AllFiles = AllFiles.Select(Function(p) New KeyValuePair(Of AnalyzeFileType, KeyValuePair(Of String, String()))(AnalyzeFileType.MinecraftLog, p.Value)).ToList
+        End If
+
         '将分类后的文件分别写入
-        For Each SelectType In {AnalyzeFileType.MinecraftLog, AnalyzeFileType.HsErr, AnalyzeFileType.ExtraLog, AnalyzeFileType.CrashReport}
+        For Each SelectType In {AnalyzeFileType.MinecraftLog, AnalyzeFileType.HsErr, AnalyzeFileType.ExtraLogFile, AnalyzeFileType.CrashReport}
             '获取该种类的所有文件 {文件路径 -> 文件内容行}
             Dim SelectedFiles As New List(Of KeyValuePair(Of String, String()))
-            For Each File In TotalFiles
+            For Each File In AllFiles
                 If SelectType = File.Key Then SelectedFiles.Add(File.Value)
             Next
             If Not SelectedFiles.Any() Then Continue For
@@ -232,54 +233,59 @@ Extracted:
                         Next
                         '选择一份最佳的来自启动器的游戏日志
                         For Each FileName As String In {"rawoutput.log", "启动器日志.txt", "log1.txt", "游戏崩溃前的输出.txt", "PCL2 启动器日志.txt", "PCL 启动器日志.txt"}
-                            If FileNameDict.ContainsKey(FileName) Then
-                                Dim CurrentLog = FileNameDict(FileName)
-                                '截取 “以下为游戏输出的最后一段内容” 后的内容
-                                Dim HasLauncherMark As Boolean = False
-                                For Each Line In CurrentLog.Value
-                                    If HasLauncherMark Then
-                                        LogMc += Line & vbLf
-                                    ElseIf Line.Contains("以下为游戏输出的最后一段内容") Then
-                                        HasLauncherMark = True
-                                        Log("[Crash] 找到 PCL 输出的游戏实时日志头")
-                                    End If
-                                Next
-                                '导入后 500 行
-                                If Not HasLauncherMark Then LogMc += GetHeadTailLines(CurrentLog.Value, 0, 500)
-                                LogMc = LogMc.TrimEnd(vbCrLf.ToCharArray)
-                                Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为启动器日志")
-                                Exit For
-                            End If
+                            If Not FileNameDict.ContainsKey(FileName) Then Continue For
+                            Dim CurrentLog = FileNameDict(FileName)
+                            '截取 “以下为游戏输出的最后一段内容” 后的内容
+                            Dim HasLauncherMark As Boolean = False
+                            For Each Line In CurrentLog.Value
+                                If HasLauncherMark Then
+                                    LogMc += Line & vbLf
+                                ElseIf Line.Contains("以下为游戏输出的最后一段内容") Then
+                                    HasLauncherMark = True
+                                    Log("[Crash] 找到 PCL 输出的游戏实时日志头")
+                                End If
+                            Next
+                            '导入后 500 行
+                            If Not HasLauncherMark Then LogMc += GetHeadTailLines(CurrentLog.Value, 0, 500)
+                            LogMc = LogMc.TrimEnd(vbCrLf.ToCharArray)
+                            Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为启动器日志")
+                            Exit For
                         Next
                         '选择一份最佳的 Minecraft Log
                         For Each FileName As String In {"latest.log", "latest log.txt", "debug.log", "debug log.txt"}
-                            If FileNameDict.ContainsKey(FileName) Then
-                                Dim CurrentLog = FileNameDict(FileName)
-                                LogMc += GetHeadTailLines(CurrentLog.Value, 250, 500)
-                                Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为 Minecraft 日志")
-                                Exit For
-                            End If
+                            If Not FileNameDict.ContainsKey(FileName) Then Continue For
+                            Dim CurrentLog = FileNameDict(FileName)
+                            LogMc += GetHeadTailLines(CurrentLog.Value, 1500, 500)
+                            Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为 Minecraft 日志")
+                            Exit For
                         Next
                         '查找 Debug Log
                         For Each FileName As String In {"debug.log", "debug log.txt"}
-                            If FileNameDict.ContainsKey(FileName) Then
-                                Dim CurrentLog = FileNameDict(FileName)
-                                LogMcDebug += GetHeadTailLines(CurrentLog.Value, 1000, 0)
-                                Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为 Minecraft Debug 日志")
-                                Exit For
-                            End If
+                            If Not FileNameDict.ContainsKey(FileName) Then Continue For
+                            Dim CurrentLog = FileNameDict(FileName)
+                            LogMcDebug += GetHeadTailLines(CurrentLog.Value, 1000, 0)
+                            Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为 Minecraft Debug 日志")
+                            Exit For
                         Next
-                        '检查错误
+                        '兜底
                         If LogMc = "" Then
-                            LogMc = Nothing
-                            Throw New Exception("无法找到匹配的 Minecraft Log")
+                            If LogMcDebug <> "" Then '如果没有找到 Minecraft 日志，则使用 Debug 日志作为兜底
+                                LogMc = LogMcDebug
+                            ElseIf FileNameDict.Any() Then '如果都没有找到，则使用第一个文件
+                                Dim CurrentLog = FileNameDict.First.Value
+                                LogMc += GetHeadTailLines(CurrentLog.Value, 1500, 500)
+                                Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为兜底日志")
+                            Else
+                                LogMc = Nothing
+                                Throw New Exception("无法找到匹配的 Minecraft Log")
+                            End If
                         End If
                         If LogMcDebug = "" Then LogMcDebug = Nothing
-                    Case AnalyzeFileType.ExtraLog
+                    Case AnalyzeFileType.ExtraLogFile, AnalyzeFileType.ExtraReportFile
                         '全部丢过去
                         For Each SelectedFile In SelectedFiles
                             OutputFiles.Add(SelectedFile.Key)
-                            Log("[Crash] 输出报告：" & SelectedFile.Key & "，作为额外日志")
+                            Log("[Crash] 输出报告：" & SelectedFile.Key & "，不用作分析")
                         Next
                 End Select
             Catch ex As Exception
@@ -287,15 +293,13 @@ Extracted:
             End Try
         Next
 
-        '获取种类数
-        Dim ResultCount As Integer = If(LogMc Is Nothing, 0, 1) + If(LogHs Is Nothing, 0, 1) + If(LogCrash Is Nothing, 0, 1)
-        If ResultCount = 0 Then
-            Log("[Crash] 步骤 2：准备日志文本完成，没有任何可供分析的日志")
-        Else
+        '结束
+        Prepare = LogMc IsNot Nothing OrElse LogHs IsNot Nothing OrElse LogCrash IsNot Nothing
+        If Prepare Then
             Log(("[Crash] 步骤 2：准备日志文本完成，找到" & If(LogMc Is Nothing, "", "游戏日志、") & If(LogMcDebug Is Nothing, "", "游戏 Debug 日志、") & If(LogHs Is Nothing, "", "虚拟机日志、") & If(LogCrash Is Nothing, "", "崩溃日志、")).TrimEnd("、") & "用作分析")
+        Else
+            Log("[Crash] 步骤 2：准备日志文本完成，没有任何可供分析的日志")
         End If
-        Return ResultCount
-
     End Function
     ''' <summary>
     ''' 输出字符串的前后某些行，并统一行尾为 vbLf (正则 \n)、删除空行和重复行。
@@ -386,7 +390,7 @@ Extracted:
     ''' </summary>
     Public Sub Analyze(Optional Version As McVersion = Nothing)
         Log("[Crash] 步骤 3：分析崩溃原因")
-        LogAll = (If(LogMc, "") & If(LogMcDebug, "") & If(LogHs, "") & If(LogCrash, ""))
+        LogAll = If(LogMc, If(LogMcDebug, "")) & If(LogHs, "") & If(LogCrash, "")
 
         '1. 精准日志匹配，中/高优先级
         AnalyzeCrit1()
@@ -472,7 +476,7 @@ Done:
         '空白分析
         If LogMc Is Nothing AndAlso LogHs Is Nothing AndAlso LogCrash Is Nothing Then
             AppendReason(CrashReason.没有可用的分析文件)
-            Exit Sub
+            Return
         End If
 
         '崩溃报告分析，高优先级
@@ -614,9 +618,9 @@ Done:
             Dim IsMixin As Boolean = MixinAnalyze(LogMc)
             '常规信息
             If LogMc.Contains("An exception was thrown, the game will display an error screen and halt.") Then AppendReason(CrashReason.Forge报错, RegexSeek(LogMc, "(?<=the game will display an error screen and halt.[\n\r]+[^\n]+?Exception: )[\s\S]+?(?=\n\tat)")?.Trim(vbCrLf))
-            If LogMc.Contains("A potential solution has been determined:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, Join(RegexSearch(If(RegexSeek(LogMc, "(?<=A potential solution has been determined:\n)((\t)+ - [^\n]+\n)+"), ""), "(?<=(\t)+)[^\n]+"), vbLf))
-            If LogMc.Contains("A potential solution has been determined, this may resolve your problem:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, Join(RegexSearch(If(RegexSeek(LogMc, "(?<=A potential solution has been determined, this may resolve your problem:\n)((\t)+ - [^\n]+\n)+"), ""), "(?<=(\t)+)[^\n]+"), vbLf))
-            If LogMc.Contains("确定了一种可能的解决方法，这样做可能会解决你的问题：") Then AppendReason(CrashReason.Fabric报错并给出解决方案, Join(RegexSearch(If(RegexSeek(LogMc, "(?<=确定了一种可能的解决方法，这样做可能会解决你的问题：\n)((\t)+ - [^\n]+\n)+"), ""), "(?<=(\t)+)[^\n]+"), vbLf))
+            If LogMc.Contains("A potential solution has been determined:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, Join(RegexSearch(If(RegexSeek(LogMc, "(?<=A potential solution has been determined:\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+"), vbLf))
+            If LogMc.Contains("A potential solution has been determined, this may resolve your problem:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, Join(RegexSearch(If(RegexSeek(LogMc, "(?<=A potential solution has been determined, this may resolve your problem:\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+"), vbLf))
+            If LogMc.Contains("确定了一种可能的解决方法，这样做可能会解决你的问题：") Then AppendReason(CrashReason.Fabric报错并给出解决方案, Join(RegexSearch(If(RegexSeek(LogMc, "(?<=确定了一种可能的解决方法，这样做可能会解决你的问题：\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+"), vbLf))
             If Not IsMixin AndAlso LogMc.Contains("due to errors, provided by ") Then '在 #3104 的情况下，这一句导致 OptiFabric 的 Mixin 失败错判为 Fabric Loader 加载失败
                 AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(If(RegexSeek(LogMc, "(?<=due to errors, provided by ')[^']+"), "").TrimEnd((vbCrLf & " ").ToCharArray)))
             End If
@@ -704,11 +708,12 @@ NextStack:
                 If Word.Length <= 2 OrElse Word.StartsWithF("func_") Then Continue For
                 If {"com", "org", "net", "asm", "fml", "mod", "jar", "sun", "lib", "map", "gui", "dev", "nio", "api", "dsi", "top", "mcp",
                     "core", "init", "mods", "main", "file", "game", "load", "read", "done", "util", "tile", "item", "base", "oshi", "impl", "data", "pool", "task",
-                    "forge", "setup", "block", "model", "mixin", "event", "unimi", "netty", "world",
+                    "forge", "setup", "block", "model", "mixin", "event", "unimi", "netty", "world", "lwjgl",
                     "gitlab", "common", "server", "config", "mixins", "compat", "loader", "launch", "entity", "assist", "client", "plugin", "modapi", "mojang", "shader", "events", "github", "recipe", "render", "packet", "events",
                     "preinit", "preload", "machine", "reflect", "channel", "general", "handler", "content", "systems", "modules", "service",
                     "fastutil", "optifine", "internal", "platform", "override", "fabricmc", "neoforge",
-                    "injection", "listeners", "scheduler", "minecraft", "transformer", "transformers", "neoforged", "universal", "multipart", "minecraftforge", "blockentity", "spongepowered", "electronwill"
+                    "injection", "listeners", "scheduler", "minecraft", "universal", "multipart", "neoforged", "microsoft",
+                    "transformer", "transformers", "minecraftforge", "blockentity", "spongepowered", "electronwill"
                    }.Contains(Word.ToLower) Then Continue For
                 PossibleWords.Add(Word.Trim)
             Next
@@ -873,7 +878,7 @@ NextStack:
                 Try
                     '获取文件路径
                     RunInUiWait(Sub() FileAddress = SelectSaveFile("选择保存位置", "错误报告-" & Date.Now.ToString("G").Replace("/", "-").Replace(":", ".").Replace(" ", "_") & ".zip", "Minecraft 错误报告(*.zip)|*.zip"))
-                    If String.IsNullOrEmpty(FileAddress) Then Exit Sub
+                    If String.IsNullOrEmpty(FileAddress) Then Return
                     Directory.CreateDirectory(GetPathFromFullPath(FileAddress))
                     If File.Exists(FileAddress) Then File.Delete(FileAddress)
                     '输出诊断信息
@@ -896,9 +901,10 @@ NextStack:
                         End Select
                         If File.Exists(OutputFile) Then
                             If FileEncoding Is Nothing Then FileEncoding = GetEncoding(ReadFileBytes(OutputFile))
-                            WriteFile(TempFolder & "Report\" & FileName,
-                                      SecretFilter(ReadFile(OutputFile, FileEncoding), If(FileName = "启动脚本.bat", "F", "*")),
-                                      Encoding:=FileEncoding)
+                            Dim FileContent As String = ReadFile(OutputFile, FileEncoding)
+                            FileContent = FilterAccessToken(FileContent, If(FileName = "启动脚本.bat", "F", "*"))
+                            FileContent = FilterUserName(FileContent, "*")
+                            WriteFile(TempFolder & "Report\" & FileName, FileContent, Encoding:=FileEncoding)
                             Log($"[Crash] 导出文件：{FileName}，编码：{FileEncoding.HeaderName}")
                         End If
                     Next
@@ -908,7 +914,7 @@ NextStack:
                     Hint("错误报告已导出！", HintType.Finish)
                 Catch ex As Exception
                     Log(ex, "导出错误报告失败", LogLevel.Feedback)
-                    Exit Sub
+                    Return
                 End Try
                 OpenExplorer(FileAddress)
         End Select
@@ -937,7 +943,7 @@ NextStack:
                 Case CrashReason.内存不足
                     Results.Add("Minecraft 内存不足，导致其无法继续运行。\n这很可能是因为电脑内存不足、游戏分配的内存不足，或是配置要求过高。\n\n你可以尝试在 更多 → 百宝箱 中选择 内存优化，然后再启动游戏。\n如果还是不行，请在启动设置中增加为游戏分配的内存，并删除配置要求较高的材质、Mod、光影。\n如果依然不奏效，请在开始游戏前尽量关闭其他软件，或者……换台电脑？\h")
                 Case CrashReason.使用OpenJ9
-                    Results.Add("游戏因为使用 Open J9 而崩溃了。\n请在启动设置的 Java 选择一项中改用非 OpenJ9 的 Java，然后再启动游戏。")
+                    Results.Add("游戏因为使用 OpenJ9 而崩溃了。\n请在启动设置的 Java 选择一项中改用非 OpenJ9 的 Java，然后再启动游戏。")
                 Case CrashReason.使用JDK
                     Results.Add("游戏似乎因为使用 JDK，或 Java 版本过高而崩溃了。\n请在启动设置的 Java 选择一项中改用 JRE 8（Java 8），然后再启动游戏。\n如果你没有安装 JRE 8，你可以从网络中下载、安装一个。")
                 Case CrashReason.Java版本过高
@@ -1019,7 +1025,7 @@ NextStack:
                 Case CrashReason.OptiFine与Forge不兼容
                     Results.Add("由于 OptiFine 与当前版本的 Forge 不兼容，导致了游戏崩溃。\n\n请前往 OptiFine 官网（https://optifine.net/downloads）查看 OptiFine 所兼容的 Forge 版本，并严格按照对应版本重新安装游戏。")
                 Case CrashReason.ShadersMod与OptiFine同时安装
-                    Results.Add("无需同时安装 Optifine 和 Shaders Mod，OptiFine 已经集成了 Shaders Mod 的功能。\n在删除 Shaders Mod 后，游戏即可正常运行。")
+                    Results.Add("无需同时安装 OptiFine 和 Shaders Mod，OptiFine 已经集成了 Shaders Mod 的功能。\n在删除 Shaders Mod 后，游戏即可正常运行。")
                 Case CrashReason.低版本Forge与高版本Java不兼容
                     Results.Add("由于低版本 Forge 与当前 Java 不兼容，导致了游戏崩溃。\n\n请尝试以下解决方案：\n - 更新 Forge 到 36.2.26 或更高版本\n - 换用版本低于 1.8.0.320 的 Java")
                 Case CrashReason.版本Json中存在多个Forge

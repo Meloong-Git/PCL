@@ -6,7 +6,7 @@
       xmlns:local="clr-namespace:PCL"
       mc:Ignorable="d" d:DesignWidth="297.6">
     <StackPanel Margin="0,0,0,5">
-        <local:MyHint x:Name="HintChinese" Text="玩家名如果包含英文、数字、下划线以外的内容，可能会无法进入 Minecraft 1.18 以后的世界！" Margin="0,0,0,15" Visibility="Collapsed" />
+        <local:MyHint x:Name="HintChinese" Theme="Red" Text="玩家名如果包含英文、数字、下划线以外的内容，可能会无法进入 Minecraft 1.18 以后的世界！" Margin="0,0,0,15" Visibility="Collapsed" />
         <local:MySkin HorizontalAlignment="Center" x:Name="Skin" HasCape="False" Margin="0,0,0,15" />
         <local:MyComboBox IsEditable="True" x:Name="ComboName" Height="28" IsTextSearchEnabled="False" HintText="游戏用户名" />
     </StackPanel>

@@ -99,9 +99,7 @@
                 <Grid x:Name="PanTitle" Height="48">
                     <Grid.Background>
                         <LinearGradientBrush EndPoint="1,0" StartPoint="0,0">
-                            <GradientStop Color="{StaticResource ColorObject3}" Offset="0"/>
-                            <GradientStop Color="{StaticResource ColorObject2}" Offset="0.5"/>
-                            <GradientStop Color="{StaticResource ColorObject3}" Offset="1"/>
+                            <GradientStop Color="{StaticResource ColorObject4}" Offset="0"/>
                         </LinearGradientBrush>
                     </Grid.Background>
                     <local:MyImage x:Name="ImgTitle" IsHitTestVisible="False" Stretch="UniformToFill" IsEnabled="False" RenderOptions.BitmapScalingMode="LowQuality" />
@@ -115,19 +113,19 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="1*" />
                         </Grid.ColumnDefinitions>
-                        <Path x:Name="ShapeTitleLogo" Data="M26,29 v-25 h5 a7,7 180 0 1 0,14 h-5 M61,6.5 a10,11.5 180 1 0 0,18 M68,2.5 v24.5 h12 M98,2 v27 M107,2 v27" SnapsToDevicePixels="False" UseLayoutRounding="False" IsHitTestVisible="False" HorizontalAlignment="Left" Margin="19,15.5,0,15.5" Stretch="fill" Stroke="White" StrokeThickness="1.9" Width="53" />
+                        <Path x:Name="ShapeTitleLogo" Data="M26,29 v-25 h6 a7,7 180 0 1 0,14 h-6 M62.5,6.5 a10,11.5 180 1 0 0,18 M71,2.5 v24.5 h13.5" SnapsToDevicePixels="False" UseLayoutRounding="False" IsHitTestVisible="False" HorizontalAlignment="Left" Margin="19,15.5,0,15.5" Stretch="fill" Stroke="White" StrokeThickness="2.2" Width="39" />
                         <TextBlock x:Name="LabTitleLogo" Visibility="Collapsed" SnapsToDevicePixels="False" UseLayoutRounding="False" IsHitTestVisible="False" HorizontalAlignment="Left" Margin="18,0,0,0" Foreground="White" FontSize="17" VerticalAlignment="Center" />
                         <local:MyImage x:Name="ImageTitleLogo" SnapsToDevicePixels="False" UseLayoutRounding="False" IsHitTestVisible="False" HorizontalAlignment="Left" Margin="7" VerticalAlignment="Center" Visibility="Collapsed" />
                         <StackPanel Grid.Column="1" x:Name="PanTitleSelect" HorizontalAlignment="Left" Height="27" VerticalAlignment="Center" Orientation="Horizontal" Margin="13,0">
-                            <local:MyRadioButton x:Name="BtnTitleSelect0" Text="{DynamicResource LangTitleHome}" Tag="0" Margin="5,0" Checked="True" Padding="2,0"
-                                             LogoScale="0.95" Logo="M985.403 552.96C985.403 812.702 773.041 1024 512 1024S38.597 812.702 38.597 552.96c0-158.208 79.163-304.955 211.771-392.625 31.074-20.52 72.94-11.973 93.46 19.101s12.012 72.94-19.062 93.46c-94.681 62.622-151.237 167.306-151.237 280.064 0 185.344 151.788 336.108 338.471 336.108S850.471 738.304 850.471 552.96c0-114.649-57.974-220.278-155.096-282.585-31.35-20.125-40.448-61.833-20.362-93.184s61.794-40.448 93.184-20.4c135.995 87.236 217.206 235.362 217.206 396.169zM512 560.128c37.258 0 67.466-30.208 67.466-67.466V67.466C579.466 30.208 549.258 0 512 0s-67.466 30.208-67.466 67.466v425.196c0 37.258 30.208 67.466 67.466 67.466z" />
-                            <local:MyRadioButton x:Name="BtnTitleSelect1" Text="{DynamicResource LangTitleDownload}" Tag="1" Margin="5,0" Padding="2,0"
+                            <local:MyRadioButton x:Name="BtnTitleSelect0" Text="启动" Tag="0" Margin="5,0" Checked="True" Padding="2,0"
+                                             LogoScale="0.9" Logo="M52.1,164.5c-1.4,0-3.1-0.5-4.2-1.3c-2.6-1.7-4-4.2-4-7V43.8c0-2.9,1.6-5.8,4.1-7c1.2-0.8,2.7-1.2,4.1-1.2c1.5,0,2.9,0.4,4.2,1.2L153.1,93c0,0,0.1,0,0.1,0.1c2.6,1.7,4,4.2,4,7c0,3-1.7,5.8-4.2,7.1l-96.8,56.2C55.1,164,53.5,164.5,52.1,164.5z M60.4,142.1l72.1-42.1L60.4,58.2V142.1z" />
+                            <local:MyRadioButton x:Name="BtnTitleSelect1" Text="下载" Tag="1" Margin="5,0" Padding="2,0"
                                              LogoScale="0.9" Logo="M955 610h-59c-15 0-29 13-29 29v196c0 15-13 29-29 29h-649c-15 0-29-13-29-29v-196c0-15-13-29-29-29h-59c-15 0-29 13-29 29V905c0 43 35 78 78 78h787c43 0 78-35 78-78V640c0-15-13-29-29-29zM492 740c11 11 29 11 41 0l265-265c11-11 11-29 0-41l-41-41c-11-11-29-11-41 0l-110 110c-11 11-33 3-33-13V68C571 53 555 39 541 39h-59c-15 0-29 13-29 29v417c0 17-21 25-33 13l-110-110c-11-11-29-11-41 0L226 433c-11 11-11 29 0 41L492 740z" />
                             <local:MyRadioButton x:Name="BtnTitleSelect2" Text="联机" Tag="2" Margin="5,0" Padding="2,0"
                                              LogoScale="1.05" Logo="M512 817c-48.601 0-88-39.399-88-88s39.399-88 88-88 88 39.399 88 88-39.399 88-88 88zM237.671 565.74C308.335 474.58 397.369 429 504.774 429c118.433 0 214.225 55.421 287.377 166.264l-53.407 30.369c-13.84 7.87-31.362 4.367-41.114-8.219-50.291-64.911-114.577-97.367-192.856-97.367-86.851 0-156.835 40.318-209.95 120.953l-47.995-28.02c-15.263-8.91-20.412-28.507-11.502-43.77a32 32 0 0 1 2.344-3.47zM107.691 419.47C205.24 278.491 337.805 208 505.379 208c178.77 0 317.694 80.224 416.772 240.672l-56.54 31.73c-13.686 7.68-30.922 4.303-40.697-7.975C735.581 360.213 629.07 303.009 505.38 300.815 373.997 298.485 261.637 362.88 168.3 494l-50.116-28.505c-15.362-8.738-20.732-28.275-11.994-43.637a32 32 0 0 1 1.5-2.387z"/>
-                            <local:MyRadioButton x:Name="BtnTitleSelect3" Text="{DynamicResource LangTitleSetup}" Tag="3" Margin="5,0" Padding="2,0"
+                            <local:MyRadioButton x:Name="BtnTitleSelect3" Text="设置" Tag="3" Margin="5,0" Padding="2,0"
                                              LogoScale="1.1" Logo="M940.4 463.7L773.3 174.2c-17.3-30-49.2-48.4-83.8-48.4H340.2c-34.6 0-66.5 18.5-83.8 48.4L89.2 463.7c-17.3 30-17.3 66.9 0 96.8L256.4 850c17.3 30 49.2 48.4 83.8 48.4h349.2c34.6 0 66.5-18.5 83.8-48.4l167.2-289.5c17.3-29.9 17.3-66.8 0-96.8z m-94.6 96.8L725.9 768.1c-17.3 30-49.2 48.4-83.8 48.4H387.5c-34.6 0-66.5-18.5-83.8-48.4L183.9 560.5c-17.3-30-17.3-66.9 0-96.8l119.8-207.5c17.3-30 49.2-48.4 83.8-48.4h254.6c34.6 0 66.5 18.5 83.8 48.4l119.8 207.5c17.3 30 17.3 66.9 0.1 96.8z M522.3 321.2c-2.5-0.1-5-0.2-7.5-0.2-119.9 0-214 110.3-186.3 235 15.8 70.9 71.5 126.6 142.4 142.4 17.5 3.9 34.7 5.4 51.4 4.7 102.1-3.9 183.6-87.9 183.6-191 0.1-103-81.5-187-183.6-190.9z m68.6 269.1c-18.5 18-43 28.9-68.6 30.7l-6 0.3c-30.2 0.4-58.6-11.4-79.7-33-19.5-20.1-30.7-47-30.9-75-0.3-29.6 11.1-57.4 32-78.3 20.6-20.6 48-32 77.2-32 2.5 0 5 0.1 7.5 0.3 26.7 1.8 51.5 13.2 70.5 32.5 19.6 20 30.8 46.9 31.2 74.9 0.2 30.2-11.5 58.6-33.2 79.6z"/>
-                            <local:MyRadioButton x:Name="BtnTitleSelect4" Text="{DynamicResource LangTitleOther}" Tag="4" Margin="5,0" Padding="2,0"
+                            <local:MyRadioButton x:Name="BtnTitleSelect4" Text="更多" Tag="4" Margin="5,0" Padding="2,0"
                                              LogoScale="0.93" Logo="M364 0h-273C40 0 0 40 0 91v273C0 414 40 455 91 455h273C414 455 455 414 455 364V91C455 40 414 0 364 0zM341 341H113V113h227v227zM933 0h-273C609 0 568 40 568 91v273c0 50 40 91 91 91h273C983 455 1024 414 1024 364V91c0-50-40-91-90-91zM910 341h-227V113h227v227zM364 568h-273C40 568 0 609 0 659v273c0 50 40 91 91 91h273C414 1024 455 983 455 932v-273C455 609 414 568 364 568zM341 910H113v-227h227v227zM933 568h-273c-50 0-91 40-91 91v273c0 50 40 91 91 91h273c50 0 90-40 90-91v-273c0-50-40-90-90-90zM910 910h-227v-227h227v227z"/>
                         </StackPanel>
                     </Grid>
@@ -145,7 +143,7 @@
                     <Rectangle x:Name="RectLeftBackground" Width="0" Fill="{DynamicResource ColorBrushBackgroundTransparentSidebar}" IsHitTestVisible="False" />
                     <Rectangle x:Name="RectLeftShadow" Width="4" HorizontalAlignment="Left" IsHitTestVisible="False" Grid.Column="1" >
                         <Rectangle.Fill>
-                            <LinearGradientBrush EndPoint="1,0" StartPoint="0,0" Opacity="0.085">
+                            <LinearGradientBrush EndPoint="1,0" StartPoint="0,0" Opacity="0.04">
                                 <GradientStop Color="#000000" Offset="0"/>
                                 <GradientStop Color="#00000000" Offset="1"/>
                             </LinearGradientBrush>

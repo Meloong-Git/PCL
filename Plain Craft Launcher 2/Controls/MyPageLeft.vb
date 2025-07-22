@@ -39,16 +39,17 @@
                     Element.Opacity = 0
                     Element.RenderTransform = New TranslateTransform(-25, 0)
                     If TypeOf Element Is MyListItem Then CType(Element, MyListItem).IsMouseOverAnimationEnabled = False
-                    AniList.Add(AaOpacity(Element, If(TypeOf Element Is TextBlock, 0.6, 1), 200, Delay, New AniEaseOutFluent(AniEasePower.Weak)))
+                    AniList.Add(AaOpacity(Element, If(TypeOf Element Is TextBlock, 0.6, 1), 100, Delay, New AniEaseOutFluent(AniEasePower.Weak)))
                     AniList.Add(AaTranslateX(Element, 5, 200, Delay, New AniEaseOutFluent))
                     AniList.Add(AaTranslateX(Element, 20, 300, Delay, New AniEaseOutBack(AniEasePower.Weak)))
                     If TypeOf Element Is MyListItem Then
-                        AniList.Add(AaCode(Sub()
-                                               CType(Element, MyListItem).IsMouseOverAnimationEnabled = True
-                                               CType(Element, MyListItem).RefreshColor(Me, New EventArgs)
-                                           End Sub, Delay + 280))
+                        AniList.Add(AaCode(
+                        Sub()
+                            CType(Element, MyListItem).IsMouseOverAnimationEnabled = True
+                            CType(Element, MyListItem).RefreshColor(Me, New EventArgs)
+                        End Sub, Delay + 280))
                     End If
-                    Delay += Math.Max(8, 20 - Id) * 2.5
+                    Delay += Math.Max(15 - Id, 7) * 2
                     Id += 1
                 End If
             Next
@@ -63,8 +64,8 @@
                 RenderTransformOrigin = New Point(0.5, 0.5)
             End If
             AniStart({
-                AaScaleTransform(Me, 0.95 - CType(RenderTransform, ScaleTransform).ScaleX, 130,, New AniEaseInFluent(AniEasePower.Weak)),
-                AaOpacity(Me, -Opacity, 100, 30)
+                AaScaleTransform(Me, 0.95 - CType(RenderTransform, ScaleTransform).ScaleX, 110,, New AniEaseInFluent(AniEasePower.Weak)),
+                AaOpacity(Me, -Opacity, 80, 30)
             }, "PageLeft PageChange " & Uuid)
         Else
             '逐个退出动画
@@ -72,8 +73,8 @@
             Dim Id As Integer = 0
             Dim Controls = GetAllAnimControls()
             For Each Element As FrameworkElement In Controls
-                AniList.Add(AaOpacity(Element, -Element.Opacity, 60, 80 / Controls.Count * Id))
-                AniList.Add(AaTranslateX(Element, -6, 60, 80 / Controls.Count * Id))
+                AniList.Add(AaOpacity(Element, -Element.Opacity, 50, 70 / Controls.Count * Id))
+                AniList.Add(AaTranslateX(Element, -6, 50, 70 / Controls.Count * Id))
                 Id += 1
             Next
             AniStart(AniList, "PageLeft PageChange " & Uuid)
@@ -87,7 +88,7 @@
         Return AllControls
     End Function
     Private Sub GetAllAnimControls(Element As FrameworkElement, ByRef AllControls As List(Of FrameworkElement), IgnoreInvisibility As Boolean)
-        If Not IgnoreInvisibility AndAlso Element.Visibility = Visibility.Collapsed Then Exit Sub
+        If Not IgnoreInvisibility AndAlso Element.Visibility = Visibility.Collapsed Then Return
         If TypeOf Element Is MyTextButton Then
             AllControls.Add(Element)
         ElseIf TypeOf Element Is MyListItem Then

@@ -49,7 +49,7 @@
         If Not Loader.State = LoadState.Finished Then
             Hint("皮肤正在获取中，请稍候！", HintType.Critical)
             If Not Loader.State = LoadState.Loading Then Loader.Start()
-            Exit Sub
+            Return
         End If
         Try
             Dim FileAddress As String = SelectSaveFile("选取保存皮肤的位置", GetFileNameFromPath(Address), "皮肤图片文件(*.png)|*.png")
@@ -87,7 +87,7 @@
             Catch ex As Exception '#2272
                 Log(ex, $"皮肤文件已损坏：{Address}", LogLevel.Hint)
                 File.Delete(Address)
-                Exit Sub
+                Return
             End Try
             ImgBack.Tag = Address
             '大小检查
@@ -209,11 +209,11 @@
         '检查条件，获取新披风
         If IsChanging Then
             Hint("正在更改披风中，请稍候！")
-            Exit Sub
+            Return
         End If
         If McLoginMsLoader.State = LoadState.Failed Then
             Hint("登录失败，无法更改披风！", HintType.Critical)
-            Exit Sub
+            Return
         End If
         Hint("正在获取披风列表，请稍候……")
         IsChanging = True
@@ -226,7 +226,7 @@ Retry:
                 If McLoginMsLoader.State <> LoadState.Finished Then McLoginMsLoader.WaitForExit(PageLoginMsSkin.GetLoginData())
                 If McLoginMsLoader.State <> LoadState.Finished Then
                     Hint("登录失败，无法更改披风！", HintType.Critical)
-                    Exit Sub
+                    Return
                 End If
                 Dim AccessToken As String = McLoginMsLoader.Output.AccessToken
                 Dim Uuid As String = McLoginMsLoader.Output.Uuid
@@ -243,7 +243,8 @@ Retry:
                             {"Minecon2013", "Minecon 2013 参与者披风"}, {"Minecon2015", "Minecon 2015 参与者披风"}, {"Minecon2016", "Minecon 2016 参与者披风"},
                             {"Cherry Blossom", "樱花披风"}, {"15th Anniversary", "15 周年纪念披风"}, {"Purple Heart", "紫色心形披风"},
                             {"Follower's", "追随者披风"}, {"MCC 15th Year", "MCC 15 周年披风"}, {"Minecraft Experience", "村民救援披风"},
-                            {"Mojang Office", "Mojang 办公室披风"}, {"Home", "家园披风"}, {"Menace", "入侵披风"}
+                            {"Mojang Office", "Mojang 办公室披风"}, {"Home", "家园披风"}, {"Menace", "入侵披风"}, {"Yearn", "渴望披风"},
+                            {"Common", "普通披风"}, {"Pan", "薄煎饼披风"}, {"Founder's", "创始人披风"}
                         }
                         Dim SelectionControl As New List(Of IMyRadio) From {New MyRadioBox With {.Text = "无披风"}}
                         For Each Cape In SkinData("capes")
@@ -256,7 +257,7 @@ Retry:
                         Log(ex, "获取玩家皮肤列表失败", LogLevel.Feedback)
                     End Try
                 End Sub)
-                If SelId Is Nothing Then Exit Sub
+                If SelId Is Nothing Then Return
                 '发送请求
                 Dim Result As String = NetRequestRetry("https://api.minecraftservices.com/minecraft/profile/capes/active",
                     If(SelId = 0, "DELETE", "PUT"),
@@ -264,7 +265,7 @@ Retry:
                     "application/json", Headers:=New Dictionary(Of String, String) From {{"Authorization", "Bearer " & AccessToken}})
                 If Result.Contains("""errorMessage""") Then
                     Hint("更改披风失败：" & GetJson(Result)("errorMessage"), HintType.Critical)
-                    Exit Sub
+                    Return
                 Else
                     Hint("更改披风成功！", HintType.Finish)
                 End If

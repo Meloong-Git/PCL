@@ -36,7 +36,7 @@
     End Property
     Public Overrides Sub OnApplyTemplate()
         MyBase.OnApplyTemplate()
-        If HintText = "" OrElse labHint.Text <> "" Then Exit Sub
+        If HintText = "" OrElse labHint.Text <> "" Then Return
         labHint.Text = If(Text = "", HintText, "")
     End Sub
 
@@ -217,11 +217,11 @@
             IsTextChanged = IsLoaded
             '进行输入验证
             Validate()
-            If Not IsValidated Then Exit Sub
+            If Not IsValidated Then Return
             '改变文本
             RaiseEvent ValidatedTextChanged(sender, e)
         Catch ex As Exception
-            Log(ex, "进行输入验证时出错", LogLevel.Assert)
+            Log(ex, "进行输入验证时出错", LogLevel.Critical)
         End Try
     End Sub
 
@@ -230,7 +230,7 @@
     Private Sub RefreshColor() Handles Me.IsEnabledChanged, Me.MouseEnter, Me.MouseLeave, Me.GotFocus, Me.LostFocus
         Try
             '不对 ComboBox 从属进行动画
-            If TemplatedParent IsNot Nothing AndAlso TypeOf TemplatedParent Is MyComboBox Then Exit Sub
+            If TemplatedParent IsNot Nothing AndAlso TypeOf TemplatedParent Is MyComboBox Then Return
             '判断当前颜色
             Dim ForeColorName As String, BackColorName As String
             Dim AnimationTime As Integer
@@ -280,7 +280,7 @@
     End Sub
     Private Sub RefreshTextColor() Handles Me.IsEnabledChanged
         Dim NewColor As MyColor = If(IsEnabled, ColorGray1, ColorGray4)
-        If CType(Foreground, SolidColorBrush).Color.R = NewColor.R Then Exit Sub
+        If CType(Foreground, SolidColorBrush).Color.R = NewColor.R Then Return
         If IsLoaded AndAlso AniControlEnabled = 0 AndAlso Not Text = "" Then
             '有动画
             AniStart({AaColor(Me, ForegroundProperty, If(IsEnabled, "ColorBrushGray1", "ColorBrushGray4"), 200)}, "MyTextBox TextColor " & Uuid)

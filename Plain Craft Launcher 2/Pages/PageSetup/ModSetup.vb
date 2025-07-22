@@ -118,7 +118,8 @@
         {"ToolHelpChinese", New SetupEntry(True, Source:=SetupSource.Registry)},
         {"ToolDownloadThread", New SetupEntry(63, Source:=SetupSource.Registry)},
         {"ToolDownloadSpeed", New SetupEntry(42, Source:=SetupSource.Registry)},
-        {"ToolDownloadVersion", New SetupEntry(0, Source:=SetupSource.Registry)},
+        {"ToolDownloadSource", New SetupEntry(1, Source:=SetupSource.Registry)},
+        {"ToolDownloadVersion", New SetupEntry(1, Source:=SetupSource.Registry)},
         {"ToolDownloadTranslate", New SetupEntry(0, Source:=SetupSource.Registry)},
         {"ToolDownloadTranslateV2", New SetupEntry(1, Source:=SetupSource.Registry)},
         {"ToolDownloadIgnoreQuilt", New SetupEntry(True, Source:=SetupSource.Registry)},
@@ -245,7 +246,7 @@
             Value = CTypeDynamic(Value, E.Type)
             If E.State = 2 Then
                 '如果已应用，且值相同，则无需再次更改
-                If E.Value = Value AndAlso Not ForceReload Then Exit Sub
+                If E.Value = Value AndAlso Not ForceReload Then Return
             Else
                 '如果未应用，则直接更改并应用
                 If E.Source <> SetupSource.Version Then E.State = 2
@@ -362,7 +363,7 @@
     ''' </summary>
     Private Sub Read(Key As String, ByRef E As SetupEntry, Version As McVersion)
         Try
-            If Not E.State = 0 Then Exit Sub
+            If Not E.State = 0 Then Return
             Dim SourceValue As String = Nothing '先用 String 储存，避免类型转换
             Select Case E.Source
                 Case SetupSource.Normal
@@ -422,7 +423,7 @@
 
     '游戏内存
     Public Sub LaunchRamType(Type As Integer)
-        If FrmSetupLaunch Is Nothing Then Exit Sub
+        If FrmSetupLaunch Is Nothing Then Return
         FrmSetupLaunch.RamType(Type)
     End Sub
 
@@ -493,11 +494,9 @@
     Public Sub UiLauncherTransparent(Value As Integer)
         FrmMain.Opacity = Value / 1000 + 0.4
     End Sub
-#If Not BETA Then
     Public Sub UiLauncherTheme(Value As Integer)
         ThemeRefresh(Value)
     End Sub
-#End If
     Public Sub UiBackgroundColorful(Value As Boolean)
         ThemeRefresh()
     End Sub
@@ -515,7 +514,7 @@
         FrmMain.ImgBack.Margin = New Thickness(-(Value + 1) / 1.8)
     End Sub
     Public Sub UiBackgroundSuit(Value As Integer)
-        If IsNothing(FrmMain.ImgBack.Background) Then Exit Sub
+        If IsNothing(FrmMain.ImgBack.Background) Then Return
         Dim Width As Double = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Width
         Dim Height As Double = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Height
         If Value = 0 Then
@@ -586,7 +585,7 @@
 
     '主页
     Public Sub UiCustomType(Value As Integer)
-        If FrmSetupUI Is Nothing Then Exit Sub
+        If FrmSetupUI Is Nothing Then Return
         Select Case Value
             Case 0 '无
                 FrmSetupUI.PanCustomPreset.Visibility = Visibility.Collapsed
@@ -611,7 +610,7 @@
                 FrmSetupUI.HintCustomWarn.Visibility = If(Setup.Get("HintCustomWarn"), Visibility.Collapsed, Visibility.Visible)
                 FrmSetupUI.HintCustom.Text = $"从指定网址联网获取主页内容。服主也可以用于动态更新服务器公告。{vbCrLf}如果你制作了稳定运行的联网主页，可以点击这条提示投稿，若合格即可加入预设！"
                 FrmSetupUI.HintCustom.EventType = "打开网页"
-                FrmSetupUI.HintCustom.EventData = "https://github.com/Hex-Dragon/PCL2/discussions/2528"
+                FrmSetupUI.HintCustom.EventData = "https://github.com/Meloong-Git/PCL/discussions/2528"
             Case 3 '预设
                 FrmSetupUI.PanCustomPreset.Visibility = Visibility.Visible
                 FrmSetupUI.PanCustomLocal.Visibility = Visibility.Collapsed
@@ -748,16 +747,16 @@
 
     '游戏内存
     Public Sub VersionRamType(Type As Integer)
-        If FrmVersionSetup Is Nothing Then Exit Sub
+        If FrmVersionSetup Is Nothing Then Return
         FrmVersionSetup.RamType(Type)
     End Sub
 
     '服务器
     Public Sub VersionServerLogin(Type As Integer)
-        If FrmVersionSetup Is Nothing Then Exit Sub
+        If FrmVersionSetup Is Nothing Then Return
         '为第三方登录清空缓存以更新描述
         WriteIni(PathMcFolder & "PCL.ini", "VersionCache", "")
-        If PageVersionLeft.Version Is Nothing Then Exit Sub
+        If PageVersionLeft.Version Is Nothing Then Return
         PageVersionLeft.Version = New McVersion(PageVersionLeft.Version.Name).Load()
         LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
     End Sub

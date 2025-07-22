@@ -77,13 +77,13 @@
     End Sub
 
     Public Sub Btn1_Click() Handles Btn1.Click
-        If MyConverter.IsExited OrElse SelectedIndex = -1 Then Exit Sub
+        If MyConverter.IsExited OrElse SelectedIndex = -1 Then Return
         MyConverter.IsExited = True
         MyConverter.Result = SelectedIndex
         Close()
     End Sub
     Public Sub Btn2_Click() Handles Btn2.Click
-        If MyConverter.IsExited Then Exit Sub
+        If MyConverter.IsExited Then Return
         MyConverter.IsExited = True
         MyConverter.Result = Nothing
         Close()

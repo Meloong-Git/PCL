@@ -1,65 +1,89 @@
-﻿Public NotInheritable Class SystemDropShadowChrome
+﻿Public Class MyDropShadow
     Inherits Decorator
 
-    '源码来源于：https://referencesource.microsoft.com/#PresentationFramework.Aero/parent/Shared/Microsoft/Windows/Themes/SystemDropShadowChrome.cs,6d9c27d92a8128c1
-
-    Public Shared ReadOnly ColorProperty As DependencyProperty = DependencyProperty.Register("Color", GetType(Color), GetType(SystemDropShadowChrome), New FrameworkPropertyMetadata(Color.FromArgb(&H71, &H0, &H0, &H0), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)))
+    ''' <summary>
+    ''' 阴影颜色。
+    ''' </summary>
     Public Property Color As Color
         Get
-            Return CType(GetValue(ColorProperty), Color)
+            Return GetValue(ColorProperty)
         End Get
         Set(value As Color)
             SetValue(ColorProperty, value)
         End Set
     End Property
+    Public Shared ReadOnly ColorProperty As DependencyProperty = DependencyProperty.Register("Color", GetType(Color), GetType(MyDropShadow),
+        New FrameworkPropertyMetadata(Color.FromArgb(&H71, &H0, &H0, &H0), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)))
 
-    Public Shared ReadOnly CornerRadiusProperty As DependencyProperty = DependencyProperty.Register("CornerRadius", GetType(CornerRadius), GetType(SystemDropShadowChrome), New FrameworkPropertyMetadata(New CornerRadius(), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)), New ValidateValueCallback(AddressOf IsCornerRadiusValid))
+    ''' <summary>
+    ''' 阴影模糊半径。
+    ''' </summary>
+    Public Property ShadowRadius As Double
+        Get
+            Return GetValue(ShadowRadiusProperty)
+        End Get
+        Set(value As Double)
+            SetValue(ShadowRadiusProperty, value)
+        End Set
+    End Property
+    Public Shared ReadOnly ShadowRadiusProperty As DependencyProperty = DependencyProperty.Register("ShadowRadius", GetType(Double), GetType(MyDropShadow),
+        New FrameworkPropertyMetadata(CDbl(5), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)))
+
+    ''' <summary>
+    ''' 圆角大小。
+    ''' </summary>
     Public Property CornerRadius As CornerRadius
         Get
-            Return CType(GetValue(CornerRadiusProperty), CornerRadius)
+            Return GetValue(CornerRadiusProperty)
         End Get
         Set(value As CornerRadius)
             SetValue(CornerRadiusProperty, value)
         End Set
     End Property
     Private Shared Function IsCornerRadiusValid(value As Object) As Boolean
-        Dim cr As CornerRadius = CType(value, CornerRadius)
+        Dim cr As CornerRadius = value
         Return Not (cr.TopLeft < 0.0 OrElse cr.TopRight < 0.0 OrElse cr.BottomLeft < 0.0 OrElse cr.BottomRight < 0.0 OrElse Double.IsNaN(cr.TopLeft) OrElse Double.IsNaN(cr.TopRight) OrElse Double.IsNaN(cr.BottomLeft) OrElse Double.IsNaN(cr.BottomRight) OrElse Double.IsInfinity(cr.TopLeft) OrElse Double.IsInfinity(cr.TopRight) OrElse Double.IsInfinity(cr.BottomLeft) OrElse Double.IsInfinity(cr.BottomRight))
     End Function
+    Public Shared ReadOnly CornerRadiusProperty As DependencyProperty = DependencyProperty.Register("CornerRadius", GetType(CornerRadius), GetType(MyDropShadow),
+        New FrameworkPropertyMetadata(New CornerRadius(), FrameworkPropertyMetadataOptions.AffectsRender, New PropertyChangedCallback(AddressOf ClearBrushes)), New ValidateValueCallback(AddressOf IsCornerRadiusValid))
 
-    Private Const ShadowDepth As Double = 5
+
+    ' =======================================
+    '  渲染
+    ' =======================================
+
 
     Protected Overrides Sub OnRender(drawingContext As DrawingContext)
         Dim cornerRadius As CornerRadius = Me.CornerRadius
-        Dim shadowBounds As New Rect(New Point(ShadowDepth, ShadowDepth), New Size(RenderSize.Width, RenderSize.Height))
+        Dim shadowBounds As New Rect(0, 0, RenderSize.Width, RenderSize.Height)
         Dim color As Color = Me.Color
 
         If shadowBounds.Width > 0 AndAlso shadowBounds.Height > 0 AndAlso color.A > 0 Then
-            Dim centerWidth As Double = shadowBounds.Right - shadowBounds.Left - 2 * ShadowDepth
-            Dim centerHeight As Double = shadowBounds.Bottom - shadowBounds.Top - 2 * ShadowDepth
+            Dim centerWidth As Double = shadowBounds.Right - shadowBounds.Left - 2 * ShadowRadius
+            Dim centerHeight As Double = shadowBounds.Bottom - shadowBounds.Top - 2 * ShadowRadius
             Dim maxRadius As Double = Math.Min(centerWidth * 0.5, centerHeight * 0.5)
             cornerRadius.TopLeft = Math.Min(cornerRadius.TopLeft, maxRadius)
             cornerRadius.TopRight = Math.Min(cornerRadius.TopRight, maxRadius)
             cornerRadius.BottomLeft = Math.Min(cornerRadius.BottomLeft, maxRadius)
             cornerRadius.BottomRight = Math.Min(cornerRadius.BottomRight, maxRadius)
             Dim brushes As Brush() = GetBrushes(color, cornerRadius)
-            Dim centerTop As Double = shadowBounds.Top + ShadowDepth
-            Dim centerLeft As Double = shadowBounds.Left + ShadowDepth
-            Dim centerRight As Double = shadowBounds.Right - ShadowDepth
-            Dim centerBottom As Double = shadowBounds.Bottom - ShadowDepth
+            Dim centerTop As Double = shadowBounds.Top + ShadowRadius
+            Dim centerLeft As Double = shadowBounds.Left + ShadowRadius
+            Dim centerRight As Double = shadowBounds.Right - ShadowRadius
+            Dim centerBottom As Double = shadowBounds.Bottom - ShadowRadius
             Dim guidelineSetX As Double() = New Double() {centerLeft, centerLeft + cornerRadius.TopLeft, centerRight - cornerRadius.TopRight, centerLeft + cornerRadius.BottomLeft, centerRight - cornerRadius.BottomRight, centerRight}
             Dim guidelineSetY As Double() = New Double() {centerTop, centerTop + cornerRadius.TopLeft, centerTop + cornerRadius.TopRight, centerBottom - cornerRadius.BottomLeft, centerBottom - cornerRadius.BottomRight, centerBottom}
             drawingContext.PushGuidelineSet(New GuidelineSet(guidelineSetX, guidelineSetY))
-            cornerRadius.TopLeft += ShadowDepth
-            cornerRadius.TopRight += ShadowDepth
-            cornerRadius.BottomLeft += ShadowDepth
-            cornerRadius.BottomRight += ShadowDepth
+            cornerRadius.TopLeft += ShadowRadius
+            cornerRadius.TopRight += ShadowRadius
+            cornerRadius.BottomLeft += ShadowRadius
+            cornerRadius.BottomRight += ShadowRadius
             Dim topLeft As New Rect(shadowBounds.Left, shadowBounds.Top, cornerRadius.TopLeft, cornerRadius.TopLeft)
             drawingContext.DrawRectangle(brushes(Placement.TopLeft), Nothing, topLeft)
             Dim topWidth As Double = guidelineSetX(2) - guidelineSetX(1)
 
             If topWidth > 0 Then
-                Dim top As New Rect(guidelineSetX(1), shadowBounds.Top, topWidth, ShadowDepth)
+                Dim top As New Rect(guidelineSetX(1), shadowBounds.Top, topWidth, ShadowRadius)
                 drawingContext.DrawRectangle(brushes(Placement.Top), Nothing, top)
             End If
 
@@ -68,14 +92,14 @@
             Dim leftHeight As Double = guidelineSetY(3) - guidelineSetY(1)
 
             If leftHeight > 0 Then
-                Dim left As New Rect(shadowBounds.Left, guidelineSetY(1), ShadowDepth, leftHeight)
+                Dim left As New Rect(shadowBounds.Left, guidelineSetY(1), ShadowRadius, leftHeight)
                 drawingContext.DrawRectangle(brushes(Placement.Left), Nothing, left)
             End If
 
             Dim rightHeight As Double = guidelineSetY(4) - guidelineSetY(2)
 
             If rightHeight > 0 Then
-                Dim right As New Rect(guidelineSetX(5), guidelineSetY(2), ShadowDepth, rightHeight)
+                Dim right As New Rect(guidelineSetX(5), guidelineSetY(2), ShadowRadius, rightHeight)
                 drawingContext.DrawRectangle(brushes(Placement.Right), Nothing, right)
             End If
 
@@ -84,20 +108,20 @@
             Dim bottomWidth As Double = guidelineSetX(4) - guidelineSetX(3)
 
             If bottomWidth > 0 Then
-                Dim bottom As New Rect(guidelineSetX(3), guidelineSetY(5), bottomWidth, ShadowDepth)
+                Dim bottom As New Rect(guidelineSetX(3), guidelineSetY(5), bottomWidth, ShadowRadius)
                 drawingContext.DrawRectangle(brushes(Placement.Bottom), Nothing, bottom)
             End If
 
             Dim bottomRight As New Rect(guidelineSetX(4), guidelineSetY(4), cornerRadius.BottomRight, cornerRadius.BottomRight)
             drawingContext.DrawRectangle(brushes(Placement.BottomRight), Nothing, bottomRight)
 
-            If cornerRadius.TopLeft = ShadowDepth AndAlso cornerRadius.TopLeft = cornerRadius.TopRight AndAlso cornerRadius.TopLeft = cornerRadius.BottomLeft AndAlso cornerRadius.TopLeft = cornerRadius.BottomRight Then
+            If cornerRadius.TopLeft = ShadowRadius AndAlso cornerRadius.TopLeft = cornerRadius.TopRight AndAlso cornerRadius.TopLeft = cornerRadius.BottomLeft AndAlso cornerRadius.TopLeft = cornerRadius.BottomRight Then
                 Dim center As New Rect(guidelineSetX(0), guidelineSetY(0), centerWidth, centerHeight)
                 drawingContext.DrawRectangle(brushes(Placement.Center), Nothing, center)
             Else
                 Dim figure As New PathFigure()
 
-                If cornerRadius.TopLeft > ShadowDepth Then
+                If cornerRadius.TopLeft > ShadowRadius Then
                     figure.StartPoint = New Point(guidelineSetX(1), guidelineSetY(0))
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(1), guidelineSetY(1)), True))
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(0), guidelineSetY(1)), True))
@@ -105,7 +129,7 @@
                     figure.StartPoint = New Point(guidelineSetX(0), guidelineSetY(0))
                 End If
 
-                If cornerRadius.BottomLeft > ShadowDepth Then
+                If cornerRadius.BottomLeft > ShadowRadius Then
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(0), guidelineSetY(3)), True))
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(3), guidelineSetY(3)), True))
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(3), guidelineSetY(5)), True))
@@ -113,7 +137,7 @@
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(0), guidelineSetY(5)), True))
                 End If
 
-                If cornerRadius.BottomRight > ShadowDepth Then
+                If cornerRadius.BottomRight > ShadowRadius Then
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(4), guidelineSetY(5)), True))
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(4), guidelineSetY(4)), True))
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(5), guidelineSetY(4)), True))
@@ -121,7 +145,7 @@
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(5), guidelineSetY(5)), True))
                 End If
 
-                If cornerRadius.TopRight > ShadowDepth Then
+                If cornerRadius.TopRight > ShadowRadius Then
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(5), guidelineSetY(2)), True))
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(2), guidelineSetY(2)), True))
                     figure.Segments.Add(New LineSegment(New Point(guidelineSetX(2), guidelineSetY(0)), True))
@@ -158,28 +182,27 @@
     Private _brushes As Brush()
 
     Private Shared Sub ClearBrushes(o As DependencyObject, e As DependencyPropertyChangedEventArgs)
-        CType(o, SystemDropShadowChrome)._brushes = Nothing
+        CType(o, MyDropShadow)._brushes = Nothing
     End Sub
-    Private Shared Function CreateStops(c As Color, cornerRadius As Double) As GradientStopCollection
-        Dim gradientScale As Double = 1 / (cornerRadius + ShadowDepth)
-        Dim gsc As New GradientStopCollection From {
-            New GradientStop(c, (0.5 + cornerRadius) * gradientScale)
-        }
+    Private Function CreateStops(c As Color, cornerRadius As Double) As GradientStopCollection
+        Dim gradientScale As Double = 1 / (ShadowRadius + cornerRadius)
+        Dim gsc As New GradientStopCollection
         Dim stopColor As Color = c
+        gsc.Add(New GradientStop(stopColor, (ShadowRadius * 0.1 + cornerRadius) * gradientScale))
         stopColor.A = CByte(0.74336 * c.A)
-        gsc.Add(New GradientStop(stopColor, (1.5 + cornerRadius) * gradientScale))
+        gsc.Add(New GradientStop(stopColor, (ShadowRadius * 0.3 + cornerRadius) * gradientScale))
         stopColor.A = CByte(0.38053 * c.A)
-        gsc.Add(New GradientStop(stopColor, (2.5 + cornerRadius) * gradientScale))
+        gsc.Add(New GradientStop(stopColor, (ShadowRadius * 0.5 + cornerRadius) * gradientScale))
         stopColor.A = CByte(0.12389 * c.A)
-        gsc.Add(New GradientStop(stopColor, (3.5 + cornerRadius) * gradientScale))
+        gsc.Add(New GradientStop(stopColor, (ShadowRadius * 0.7 + cornerRadius) * gradientScale))
         stopColor.A = CByte(0.02654 * c.A)
-        gsc.Add(New GradientStop(stopColor, (4.5 + cornerRadius) * gradientScale))
+        gsc.Add(New GradientStop(stopColor, (ShadowRadius * 0.9 + cornerRadius) * gradientScale))
         stopColor.A = 0
-        gsc.Add(New GradientStop(stopColor, (5 + cornerRadius) * gradientScale))
+        gsc.Add(New GradientStop(stopColor, (ShadowRadius + cornerRadius) * gradientScale))
         gsc.Freeze()
         Return gsc
     End Function
-    Private Shared Function CreateBrushes(c As Color, cornerRadius As CornerRadius) As Brush()
+    Private Function CreateBrushes(c As Color, cornerRadius As CornerRadius) As Brush()
         Dim brushes As Brush() = New Brush(8) {}
         brushes(Placement.Center) = New SolidColorBrush(c)
         brushes(Placement.Center).Freeze()
@@ -297,3 +320,5 @@
     End Function
 
 End Class
+
+'参考自：https://referencesource.microsoft.com/#PresentationFramework.Aero/parent/Shared/Microsoft/Windows/Themes/SystemDropShadowChrome.cs,6d9c27d92a8128c1

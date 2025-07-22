@@ -41,7 +41,7 @@ Public Class MyRadioBox
                 RaiseEvent PreviewCheck(Me, e)
                 If e.Handled Then
                     Radiobox_MouseLeave()
-                    Exit Sub
+                    Return
                 End If
             End If
 
@@ -54,7 +54,7 @@ Public Class MyRadioBox
             End If
 
             '保证只有一个单选框选中
-            If Parent Is Nothing Then Exit Sub
+            If Parent Is Nothing Then Return
             Dim RadioboxList As New List(Of MyRadioBox)
             Dim CheckedCount As Integer = 0
             For Each Control In CType(Parent, Object).Children '收集控件列表与选中个数
@@ -172,7 +172,7 @@ Public Class MyRadioBox
     Private MouseDowned As Boolean = False
     Private AllowMouseDown As Boolean = True
     Private Sub Radiobox_MouseUp() Handles Me.MouseLeftButtonUp
-        If Not MouseDowned Then Exit Sub
+        If Not MouseDowned Then Return
         Log("[Control] 按下单选框：" & Text)
         SetChecked(True, True)
         MouseDowned = False
@@ -187,7 +187,7 @@ Public Class MyRadioBox
         End If
     End Sub
     Private Sub Radiobox_MouseLeave() Handles Me.MouseLeave
-        If Not MouseDowned Then Exit Sub
+        If Not MouseDowned Then Return
         MouseDowned = False
         AniStart(AaColor(ShapeBorder, Ellipse.FillProperty, "ColorBrushHalfWhite", 100), "MyRadioBox Background " & Uuid)
         If Not Checked Then
@@ -224,7 +224,7 @@ Public Class MyRadioBox
         AniStart(AaColor(LabText, TextBlock.ForegroundProperty, "ColorBrush3", AnimationTimeOfMouseIn), "MyRadioBox TextColor " & Uuid)
     End Sub
     Private Sub Radiobox_MouseLeaveAnimation() Handles Me.MouseLeave
-        If Not Me.IsEnabled Then Exit Sub 'MouseLeave 比 IsEnabledChanged 后执行，所以如果自定义事件修改了 IsEnabled，将导致显示错误
+        If Not Me.IsEnabled Then Return 'MouseLeave 比 IsEnabledChanged 后执行，所以如果自定义事件修改了 IsEnabled，将导致显示错误
         If IsLoaded AndAlso AniControlEnabled = 0 Then
             AniStart(AaColor(ShapeBorder, Ellipse.StrokeProperty, If(IsEnabled, If(Checked, "ColorBrush2", "ColorBrush1"), "ColorBrushGray4"), AnimationTimeOfMouseOut), "MyRadioBox BorderColor " & Uuid)
             AniStart(AaColor(LabText, TextBlock.ForegroundProperty, If(IsEnabled, "ColorBrush1", "ColorBrushGray4"), AnimationTimeOfMouseOut), "MyRadioBox TextColor " & Uuid)

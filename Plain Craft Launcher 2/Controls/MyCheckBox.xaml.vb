@@ -40,7 +40,7 @@ Public Class MyCheckBox
     ''' <param name="user">是否由用户引发。</param>
     Public Sub SetChecked(value As Boolean, user As Boolean)
         Try
-            If value = Checked Then Exit Sub
+            If value = Checked Then Return
 
             'Preview 事件
             If value AndAlso user Then
@@ -50,7 +50,7 @@ Public Class MyCheckBox
                     MouseDowned = True
                     Checkbox_MouseLeave()
                     MouseDowned = False
-                    Exit Sub
+                    Return
                 End If
             End If
 
@@ -133,14 +133,14 @@ Public Class MyCheckBox
     Private MouseDowned As Boolean = False
     Private AllowMouseDown As Boolean = True
     Private Sub Checkbox_MouseUp() Handles Me.MouseLeftButtonUp
-        If Not MouseDowned Then Exit Sub
+        If Not MouseDowned Then Return
         Log("[Control] 按下复选框（" & (Not Checked).ToString & "）：" & Text)
         MouseDowned = False
         SetChecked(Not Checked, True)
         AniStart(AaColor(ShapeBorder, Border.BackgroundProperty, "ColorBrushHalfWhite", 100), "MyCheckBox Background " & Uuid)
     End Sub
     Private Sub Checkbox_MouseDown() Handles Me.MouseLeftButtonDown
-        If Not AllowMouseDown Then Exit Sub
+        If Not AllowMouseDown Then Return
         MouseDowned = True
         Focus()
         AniStart(AaColor(ShapeBorder, Border.BackgroundProperty, "ColorBrushBg1", 100), "MyCheckBox Background " & Uuid)
@@ -154,7 +154,7 @@ Public Class MyCheckBox
         End If
     End Sub
     Private Sub Checkbox_MouseLeave() Handles Me.MouseLeave
-        If Not MouseDowned Then Exit Sub
+        If Not MouseDowned Then Return
         MouseDowned = False
         AniStart(AaColor(ShapeBorder, Border.BackgroundProperty, "ColorBrushHalfWhite", 100), "MyCheckBox Background " & Uuid)
         If Checked Then
@@ -203,7 +203,7 @@ Public Class MyCheckBox
          }, "MyCheckBox BorderColor " & Uuid)
     End Sub
     Private Sub Checkbox_MouseLeaveAnimation() Handles Me.MouseLeave
-        If Not IsEnabled Then Exit Sub 'MouseLeave 比 IsEnabledChanged 后执行，所以如果自定义事件修改了 IsEnabled，将导致显示错误
+        If Not IsEnabled Then Return 'MouseLeave 比 IsEnabledChanged 后执行，所以如果自定义事件修改了 IsEnabled，将导致显示错误
         AniStart({
                  AaColor(LabText, TextBlock.ForegroundProperty, If(Me.IsEnabled, "ColorBrush1", "ColorBrushGray4"), AnimationTimeOfMouseOut)
          }, "MyCheckBox TextColor " & Uuid)

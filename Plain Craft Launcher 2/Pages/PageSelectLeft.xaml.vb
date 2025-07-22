@@ -21,7 +21,7 @@
                         Exit For
                     End If
                 Next
-                If IsEqual Then Exit Sub
+                If IsEqual Then Return
             End If
             McFolderListLast = McFolderList
 
@@ -127,7 +127,7 @@
             For i = 0 To McFolderList.Count - 1
                 If McFolderList(i).Path = PathMcFolder Then
                     CType(FrmSelectLeft.PanList.Children(i + 1), MyListItem).Checked = True '去掉第一个标题
-                    Exit Sub
+                    Return
                 End If
             Next
             If Not McFolderList.Any() Then
@@ -151,20 +151,20 @@
         '检查是否有下载任务
         If HasDownloadingTask() Then
             Hint("在下载任务进行时，无法添加游戏文件夹！", HintType.Critical)
-            Exit Sub
+            Return
         End If
         Try
             '获取输入
             NewFolder = SelectFolder()
-            If NewFolder = "" Then Exit Sub
-            If NewFolder.Contains("!") OrElse NewFolder.Contains(";") Then Hint("Minecraft 文件夹路径中不能含有感叹号或分号！", HintType.Critical) : Exit Sub
+            If NewFolder = "" Then Return
+            If NewFolder.Contains("!") OrElse NewFolder.Contains(";") Then Hint("Minecraft 文件夹路径中不能含有感叹号或分号！", HintType.Critical) : Return
             '要求输入显示名称
             Dim SplitedNames As String() = NewFolder.TrimEnd("\").Split("\")
             Dim DefaultName As String = If(SplitedNames.Last = ".minecraft", If(SplitedNames.Count >= 3, SplitedNames(SplitedNames.Count - 2), ""), SplitedNames.Last)
             If DefaultName.Length > 40 Then DefaultName = DefaultName.Substring(0, 39)
             Dim NewName As String = MyMsgBoxInput("输入显示名称", "输入该文件夹在左边栏列表中显示的名称。", DefaultName,
                                               New ObjectModel.Collection(Of Validate) From {New ValidateNullOrWhiteSpace, New ValidateLength(1, 30), New ValidateExcept({">", "|"})})
-            If String.IsNullOrWhiteSpace(NewName) Then Exit Sub
+            If String.IsNullOrWhiteSpace(NewName) Then Return
             '添加文件夹
             AddFolder(NewFolder, NewName, True)
         Catch ex As Exception
@@ -183,7 +183,7 @@
                 If Not CheckPermission(FolderPath) Then
                     If ShowHint Then
                         Hint("添加文件夹失败：PCL 没有访问该文件夹的权限！", HintType.Critical)
-                        Exit Sub
+                        Return
                     Else
                         Throw New Exception("PCL 没有访问文件夹的权限：" & FolderPath)
                     End If
@@ -208,7 +208,7 @@
                         IsAdded = True
                         If Folder.Split(">")(0) = DisplayName Then
                             If ShowHint Then Hint("此文件夹已在列表中！", HintType.Info)
-                            Exit Sub
+                            Return
                         Else
                             Folders(i) = DisplayName & ">" & FolderPath
                             IsReplace = True
@@ -225,15 +225,15 @@
                 Setup.Set("LaunchFolderSelect", FolderPath.Replace(Path, "$"))
                 McFolderListLoader.Start(IsForceRestart:=True)
                 '提示
-                If IsReplace Then Exit Sub
+                If IsReplace Then Return
                 If ShowHint Then Hint("文件夹 " & DisplayName & " 已添加！", HintType.Finish)
                 '检查是否为根目录整合包，自动关闭版本隔离
                 '1. 根目录中存在数个 Mod
                 Dim ModFolder As New DirectoryInfo(FolderPath & "mods\")
-                If Not (ModFolder.Exists AndAlso ModFolder.EnumerateFiles.Count >= 3) Then Exit Sub
+                If Not (ModFolder.Exists AndAlso ModFolder.EnumerateFiles.Count >= 3) Then Return
                 '2. 版本数较少，可能为整合包
                 Dim VersionFolder As New DirectoryInfo(FolderPath & "versions\")
-                If Not (VersionFolder.Exists AndAlso VersionFolder.EnumerateDirectories.Count <= 3) Then Exit Sub
+                If Not (VersionFolder.Exists AndAlso VersionFolder.EnumerateDirectories.Count <= 3) Then Return
                 '3. 能够找到可安装 Mod 的版本
                 For Each VersionPath In VersionFolder.EnumerateDirectories
                     Dim Version As New McVersion(VersionPath.FullName)
@@ -241,7 +241,7 @@
                     If Not Version.Modable Then Continue For
                     '4. 该版本的隔离文件夹下不存在 mods
                     Dim ModIndieFolder As New DirectoryInfo(Version.Path & "mods\")
-                    If ModIndieFolder.Exists AndAlso ModIndieFolder.EnumerateFiles.Any Then Exit Sub
+                    If ModIndieFolder.Exists AndAlso ModIndieFolder.EnumerateFiles.Any Then Return
                     '满足以上全部条件则视为根目录整合包
                     Setup.Set("VersionArgumentIndie", 2, Version:=Version)
                     Setup.Set("VersionArgumentIndieV2", False, Version:=Version)
@@ -258,7 +258,7 @@
         '检查是否有下载任务
         If HasDownloadingTask() Then
             Hint("在下载任务进行时，无法创建游戏文件夹！", HintType.Critical)
-            Exit Sub
+            Return
         End If
         If Not Directory.Exists(Path & ".minecraft\") Then
             Directory.CreateDirectory(Path & ".minecraft\")
@@ -290,7 +290,7 @@
                     '不删除
                     Case 3
                         '取消
-                        Exit Sub
+                        Return
                 End Select
             End If
             '若修改了本部分代码，应对应修改 Delete_Click 中的代码
@@ -317,8 +317,8 @@
     Public Sub Delete_Click(sender As Object, e As RoutedEventArgs)
         Dim Folder As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
         Dim DeleteText As String = If((Folder.Type = McFolderType.Original OrElse Folder.Type = McFolderType.RenamedOriginal) AndAlso Folder.Path = Path & ".minecraft\" AndAlso McFolderList.Count = 1, "清空", "删除")
-        If MyMsgBox("你确定要" & DeleteText & "这个文件夹吗？" & vbCrLf & "目标文件夹：" & Folder.Path & vbCrLf & vbCrLf & "这会导致该文件夹中的所有存档与其他文件永久丢失，且不可恢复！", "删除警告", "取消", "确认", "取消") <> 2 Then Exit Sub
-        If MyMsgBox("如果你在该文件夹中存放了除 MC 以外的其他文件，这些文件也会被一同删除！" & vbCrLf & "继续删除会导致该文件夹中的所有文件永久丢失，请在仔细确认后再继续！" & vbCrLf & "目标文件夹：" & Folder.Path & vbCrLf & vbCrLf & "这是最后一次警告！", "删除警告", "确认" & DeleteText, "取消", IsWarn:=True) <> 1 Then Exit Sub
+        If MyMsgBox("你确定要" & DeleteText & "这个文件夹吗？" & vbCrLf & "目标文件夹：" & Folder.Path & vbCrLf & vbCrLf & "这会导致该文件夹中的所有存档与其他文件永久丢失，且不可恢复！", "删除警告", "取消", "确认", "取消") <> 2 Then Return
+        If MyMsgBox("如果你在该文件夹中存放了除 MC 以外的其他文件，这些文件也会被一同删除！" & vbCrLf & "继续删除会导致该文件夹中的所有文件永久丢失，请在仔细确认后再继续！" & vbCrLf & "目标文件夹：" & Folder.Path & vbCrLf & vbCrLf & "这是最后一次警告！", "删除警告", "确认" & DeleteText, "取消", IsWarn:=True) <> 1 Then Return
         '移出列表
         If Folder.Type = McFolderType.Custom Then
             Dim Folders As New List(Of String)(Setup.Get("LaunchFolders").ToString.Split("|"))
@@ -369,7 +369,7 @@
             Dim NewName As String =
                 MyMsgBoxInput("输入新名称", "", Folder.Name,
                               New ObjectModel.Collection(Of Validate) From {New ValidateNullOrWhiteSpace, New ValidateLength(1, 30), New ValidateExcept({">", "|"})})
-            If String.IsNullOrWhiteSpace(NewName) Then Exit Sub
+            If String.IsNullOrWhiteSpace(NewName) Then Return
             '修改自定义名
             Dim Folders As New List(Of String)(Setup.Get("LaunchFolders").ToString.Split("|"))
             Dim IsAdded As Boolean = False
@@ -380,7 +380,7 @@
                     IsAdded = True
                     If FolderCurrent.Split(">")(0) = NewName Then
                         '名称未修改
-                        Exit Sub
+                        Return
                     Else
                         Folders(i) = NewName & ">" & Folder.Path
                     End If
@@ -400,12 +400,12 @@
 
     '点击选项
     Public Sub Folder_Change(sender As MyListItem, e As RouteEventArgs)
-        If Not e.RaiseByMouse OrElse Not sender.Checked Then Exit Sub
+        If Not e.RaiseByMouse OrElse Not sender.Checked Then Return
         '检查是否有下载任务
         If HasDownloadingTask(True) Then
             Hint("在下载任务进行时，无法切换游戏文件夹！", HintType.Critical)
             e.Handled = True
-            Exit Sub
+            Return
         End If
         '更换
         Setup.Set("LaunchFolderSelect", CType(sender.Tag, McFolder).Path.Replace(Path, "$"))

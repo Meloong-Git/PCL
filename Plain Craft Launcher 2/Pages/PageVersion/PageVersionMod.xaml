@@ -59,7 +59,7 @@
             <local:MyLoading Text="正在加载 Mod 列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
         </local:MyCard>
         <local:MyCard x:Name="CardSelect" Visibility="Collapsed" Opacity="0"
-                      HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="25,25,25,0" UseAnimation="False" HasMouseAnimation="False">
+                      HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="25,25,25,0" UseAnimation="False">
             <local:MyCard.RenderTransform>
                 <TranslateTransform x:Name="TransSelect" Y="-10" />
             </local:MyCard.RenderTransform>
