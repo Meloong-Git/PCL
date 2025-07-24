@@ -119,10 +119,17 @@ Public Module ModLaunch
             '内存优化
             Select Case Setup.Get("VersionRamOptimize", Version:=McVersionCurrent)
                 Case 0 '全局
-                    If Setup.Get("LaunchArgumentRam") Then '使用全局设置
-                        CType(Loaders(2), LoaderCombo(Of String)).Block = False
-                        Loaders.Insert(3, New LoaderTask(Of Integer, Integer)("内存优化", AddressOf McLaunchMemoryOptimize) With {.ProgressWeight = 30})
-                    End If
+                    Select Case Setup.Get("LaunchArgumentRam") '使用全局设置
+                        Case 0 '关闭
+                        Case 1 '优化可安装 Mod 的版本
+                            If McVersionCurrent.Modable Then
+                                CType(Loaders(2), LoaderCombo(Of String)).Block = False
+                                Loaders.Insert(3, New LoaderTask(Of Integer, Integer)("内存优化", AddressOf McLaunchMemoryOptimize) With {.ProgressWeight = 30})
+                            End If
+                        Case 2 '优化所有版本
+                            CType(Loaders(2), LoaderCombo(Of String)).Block = False
+                            Loaders.Insert(3, New LoaderTask(Of Integer, Integer)("内存优化", AddressOf McLaunchMemoryOptimize) With {.ProgressWeight = 30})
+                    End Select
                 Case 1 '开启
                     CType(Loaders(2), LoaderCombo(Of String)).Block = False
                     Loaders.Insert(3, New LoaderTask(Of Integer, Integer)("内存优化", AddressOf McLaunchMemoryOptimize) With {.ProgressWeight = 30})
@@ -504,6 +511,7 @@ NextInner:
     End Sub
 
 #End Region
+
 #Region "分方式登录模块"
 
     '各个登录方式的主对象与输入构造
