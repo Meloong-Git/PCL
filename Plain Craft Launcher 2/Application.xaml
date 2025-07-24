@@ -61,6 +61,11 @@
             <SolidColorBrush x:Key="ColorBrushTransparent" Color="Transparent" />
             <SolidColorBrush x:Key="ColorBrushSemiTransparent">#01eaf2fe</SolidColorBrush>
             <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="#F1FFFFFF" />
+            <SolidColorBrush x:Key="ColorBrushFatal">#c23616</SolidColorBrush>
+            <SolidColorBrush x:Key="ColorBrushError">#e74c3c</SolidColorBrush>
+            <SolidColorBrush x:Key="ColorBrushWarn">#f39c12</SolidColorBrush>
+            <SolidColorBrush x:Key="ColorBrushInfo">#000000</SolidColorBrush>
+            <SolidColorBrush x:Key="ColorBrushDebug">#95a5a6</SolidColorBrush>
 
             <!-- Window -->
             <Style TargetType="{x:Type Window}" x:Key="MyWindow">
