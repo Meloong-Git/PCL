@@ -5,41 +5,41 @@
     mc:Ignorable="d" x:Class="PageDownloadResourcePack"
     PanScroll="{Binding ElementName=Content}">
     <local:PageComp x:Name="Content" PageType="ResourcePack" TypeName="资源包" TypeNameSpaced="资源包">
-        <local:MyComboBoxItem Tag="" Content="全部" IsSelected="True" />
+        <local:MyComboBoxItem Content="全部" IsSelected="True" />
 
         <local:MyComboBoxItem Content="风格" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版风" Tag="403/vanilla-like" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="写实风" Tag="400/realistic" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="现代风" Tag="401/" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="中世纪" Tag="402/" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="蒸汽朋克" Tag="399/" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="主题化" Tag="/themed" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="简洁" Tag="/simplistic" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="装饰" Tag="/decoration" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="战斗" Tag="/combat" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="实用" Tag="/utility" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="改良" Tag="/tweaks" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="鬼畜" Tag="/cursed" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版风" local:PageComp.FilterTag="403/vanilla-like" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="写实风" local:PageComp.FilterTag="400/realistic" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="现代风" local:PageComp.FilterTag="401/" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="中世纪" local:PageComp.FilterTag="402/" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="蒸汽朋克" local:PageComp.FilterTag="399/" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="主题化" local:PageComp.FilterTag="/themed" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="简洁" local:PageComp.FilterTag="/simplistic" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="装饰" local:PageComp.FilterTag="/decoration" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="战斗" local:PageComp.FilterTag="/combat" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="实用" local:PageComp.FilterTag="/utility" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="改良" local:PageComp.FilterTag="/tweaks" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="鬼畜" local:PageComp.FilterTag="/cursed" />
 
         <local:MyComboBoxItem Content="特性" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含实体" Tag="/entities" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含声音" Tag="/audio" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含字体" Tag="5244/fonts" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含模型" Tag="/models" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含语言" Tag="/locale" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含 UI" Tag="/gui" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="核心着色器" Tag="/core-shaders" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="动态效果" Tag="404/" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="兼容 Mod" Tag="4465/modded" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="含实体" local:PageComp.FilterTag="/entities" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="含声音" local:PageComp.FilterTag="/audio" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="含字体" local:PageComp.FilterTag="5244/fonts" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="含模型" local:PageComp.FilterTag="/models" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="含语言" local:PageComp.FilterTag="/locale" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="含 UI" local:PageComp.FilterTag="/gui" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="核心着色器" local:PageComp.FilterTag="/core-shaders" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="动态效果" local:PageComp.FilterTag="404/" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="兼容 Mod" local:PageComp.FilterTag="4465/modded" />
 
         <local:MyComboBoxItem Content="分辨率" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="8x 或更低" Tag="/8x-" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="16x" Tag="393/16x" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="32x" Tag="394/32x" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="48x" Tag="/48x" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="64x" Tag="395/64x" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="128x" Tag="396/128x" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="256x" Tag="397/256x" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="512x 或更高" Tag="398/512x+" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="8x 或更低" local:PageComp.FilterTag="/8x-" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="16x" local:PageComp.FilterTag="393/16x" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="32x" local:PageComp.FilterTag="394/32x" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="48x" local:PageComp.FilterTag="/48x" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="64x" local:PageComp.FilterTag="395/64x" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="128x" local:PageComp.FilterTag="396/128x" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="256x" local:PageComp.FilterTag="397/256x" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="512x 或更高" local:PageComp.FilterTag="398/512x+" />
     </local:PageComp>
 </local:MyPageRight>

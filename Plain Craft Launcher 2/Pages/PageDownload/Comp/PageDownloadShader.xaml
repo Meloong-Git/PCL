@@ -5,30 +5,30 @@
     mc:Ignorable="d" x:Class="PageDownloadShader"
     PanScroll="{Binding ElementName=Content}">
     <local:PageComp x:Name="Content" PageType="Shader" TypeName="光影包" TypeNameSpaced="光影包">
-        <local:MyComboBoxItem Tag="" Content="全部" IsSelected="True" />
+        <local:MyComboBoxItem Content="全部" IsSelected="True" />
         
         <local:MyComboBoxItem Content="风格" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版风" Tag="6555/vanilla-like" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="幻想风" Tag="6554/fantasy" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="写实风" Tag="6553/realistic" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="半写实风" Tag="/semi-realistic" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="卡通风" Tag="/cartoon" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版风" local:PageComp.FilterTag="6555/vanilla-like" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="幻想风" local:PageComp.FilterTag="6554/fantasy" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="写实风" local:PageComp.FilterTag="6553/realistic" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="半写实风" local:PageComp.FilterTag="/semi-realistic" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="卡通风" local:PageComp.FilterTag="/cartoon" />
 
         <local:MyComboBoxItem Content="特性" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="彩色光照" Tag="/colored-lighting" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="路径追踪" Tag="/path-tracing" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="PBR" Tag="/pbr" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="反射" Tag="/reflections" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="彩色光照" local:PageComp.FilterTag="/colored-lighting" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="路径追踪" local:PageComp.FilterTag="/path-tracing" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="PBR" local:PageComp.FilterTag="/pbr" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="反射" local:PageComp.FilterTag="/reflections" />
 
         <local:MyComboBoxItem Content="性能负荷" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="极低" Tag="/potato" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="低" Tag="/low" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="中" Tag="/medium" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="高" Tag="/high" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="极低" local:PageComp.FilterTag="/potato" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="低" local:PageComp.FilterTag="/low" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="中" local:PageComp.FilterTag="/medium" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="高" local:PageComp.FilterTag="/high" />
 
         <local:MyComboBoxItem Content="加载器" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版可用" Tag="/vanilla" ToolTip="作为资源包加载，可以直接在原版游戏里使用。" ToolTipService.HorizontalOffset="70" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="Iris" Tag="/iris" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="OptiFine" Tag="/optifine" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版可用" local:PageComp.FilterTag="/vanilla" ToolTip="作为资源包加载，可以直接在原版游戏里使用。" ToolTipService.HorizontalOffset="70" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="Iris" local:PageComp.FilterTag="/iris" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="OptiFine" local:PageComp.FilterTag="/optifine" />
     </local:PageComp>
 </local:MyPageRight>
