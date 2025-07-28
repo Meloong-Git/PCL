@@ -208,7 +208,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="JVM 参数头部" Margin="0,0,25,0" />
+                    <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="Java 虚拟机参数" Margin="0,0,25,0" />
                     <local:MyTextBox x:Name="TextAdvanceJvm" Grid.Row="0" Grid.ColumnSpan="2" Tag="VersionAdvanceJvm" Grid.Column="1" MaxLength="4000" ToolTip="启动 Minecraft 时使用的额外 JVM 参数，在没有确定把握的情况下请不要尝试修改。&#xa;支持 Minecraft 版本 JSON 中的字符串替换标记，例如 ${library_directory}。&#xa;&#xa;若留空，则跟随全局设置的值。" HintText="跟随全局设置"
                                      Height="100" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" Padding="0,5" VerticalScrollBarVisibility="Auto" />
                     <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="游戏参数尾部" Margin="0,0,25,0" />
