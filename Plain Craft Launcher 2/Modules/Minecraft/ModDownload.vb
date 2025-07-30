@@ -1211,12 +1211,12 @@
                     Replace("https://piston-data.mojang.com", "https://bmclapi2.bangbang93.com/maven").
                     Replace("https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com/maven").
                     Replace("https://libraries.minecraft.net", "https://bmclapi2.bangbang93.com/maven").
-                    Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://raw.gitcode.com/zkitefly/unlisted-versions-of-minecraft/raw/main"),
+                    Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto"),
                 Original.
                     Replace("https://piston-data.mojang.com", "https://bmclapi2.bangbang93.com/libraries").
                     Replace("https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com/libraries").
                     Replace("https://libraries.minecraft.net", "https://bmclapi2.bangbang93.com/libraries").
-                    Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://raw.gitcode.com/zkitefly/unlisted-versions-of-minecraft/raw/main")
+                    Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto")
             }
         Else
             Return {
@@ -1224,12 +1224,12 @@
                     Replace("https://piston-data.mojang.com", "https://bmclapi2.bangbang93.com/maven").
                     Replace("https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com/maven").
                     Replace("https://libraries.minecraft.net", "https://bmclapi2.bangbang93.com/maven").
-                    Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://raw.gitcode.com/zkitefly/unlisted-versions-of-minecraft/raw/main"),
+                    Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto"),
                 Original.
                     Replace("https://piston-data.mojang.com", "https://bmclapi2.bangbang93.com/libraries").
                     Replace("https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com/libraries").
                     Replace("https://libraries.minecraft.net", "https://bmclapi2.bangbang93.com/libraries").
-                    Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://raw.gitcode.com/zkitefly/unlisted-versions-of-minecraft/raw/main"),
+                    Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto"),
                 Original
             }
         End If
@@ -1255,7 +1255,7 @@
                 Replace("https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com").
                 Replace("https://launcher.mojang.com", "https://bmclapi2.bangbang93.com").
                 Replace("https://launchermeta.mojang.com", "https://bmclapi2.bangbang93.com").
-                Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://raw.gitcode.com/zkitefly/unlisted-versions-of-minecraft/raw/main"),
+                Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto"),
             Original
         }
     End Function
