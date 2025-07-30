@@ -151,7 +151,7 @@ Public Module ModDownloadLib
         Else
             NewItem.Info = Entry("lore").ToString
         End If
-        If Entry("url").ToString.Contains("pcl") Then NewItem.Info = "[PCL 特供下载] " & NewItem.Info
+        If Entry("url").ToString.Contains("unlisted-versions-of-minecraft") Then NewItem.Info = "[UVMC 特供下载] " & NewItem.Info
         AddHandler NewItem.Click, OnClick
         '建立菜单
         If IsSaveOnly Then
