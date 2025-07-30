@@ -256,6 +256,8 @@ Public Class PageVersionExport
             Yield "!*.log"
             Yield "!*.dat_old"
             Yield "!*.BakaCoreInfo"
+            Yield "!hmclversion.cfg"
+            Yield "!log4j2.xml"
             Yield ""
         End If
     End Function
@@ -407,7 +409,6 @@ Public Class PageVersionExport
         Next
 
         '确认导出位置
-        Dim Extension As String = If(CheckOptionsPcl.Checked, ".zip", ".mrpack")
         Dim PackPath As String = Nothing
         If Not String.IsNullOrWhiteSpace(ConfigPackPath) AndAlso
            (Not ConfigPackPath.EndsWithF("\") AndAlso Not ConfigPackPath.EndsWithF("/")) Then
@@ -421,9 +422,11 @@ Public Class PageVersionExport
             End Try
         End If
         If PackPath Is Nothing Then
+            Dim Extensions As New List(Of String)
+            If Not CheckAdvancedModrinth.Checked Then Extensions.Add("压缩文件(*.zip)|*.zip")
+            If Not CheckOptionsPcl.Checked Then Extensions.Add("Modrinth 整合包文件(*.mrpack)|*.mrpack")
             PackPath = SelectSaveFile("选择导出位置",
-                PackName & If(String.IsNullOrEmpty(TextExportVersion.Text), "", " " & TextExportVersion.Text),
-                $"整合包文件(*{Extension})|*{Extension}")
+                PackName & If(String.IsNullOrEmpty(TextExportVersion.Text), "", " " & TextExportVersion.Text), Extensions.Join("|"))
             Log($"[Export] 手动指定的导出路径：{PackPath}")
         End If
         If String.IsNullOrEmpty(PackPath) Then Return
@@ -561,8 +564,8 @@ Public Class PageVersionExport
             Sub()
                 Try
                     Dim ModrinthHashes = Loader.Input.Select(Function(m) m.ModrinthHash)
-                    Dim ModrinthRaw = CType(GetJson(DlModRequest("https://api.modrinth.com/v2/version_files", "POST",
-                        $"{{""hashes"": [""{ModrinthHashes.Join(""",""")}""], ""algorithm"": ""sha1""}}", "application/json")), JObject)
+                    Dim ModrinthRaw As JObject = DlModRequest("https://api.modrinth.com/v2/version_files", HttpMethod.Post,
+                        $"{{""hashes"": [""{ModrinthHashes.Join(""",""")}""], ""algorithm"": ""sha1""}}", "application/json")
                     For Each ModFile In Loader.Input
                         '查找对应的文件
                         If Not ModrinthRaw.ContainsKey(ModFile.ModrinthHash) Then Continue For
@@ -586,8 +589,8 @@ Public Class PageVersionExport
                 Try
                     If ModrinthUploadMode Then Return 'Modrinth 上传模式下，不能从 CurseForge 获取信息
                     Dim CurseForgeHashes = Loader.Input.Select(Function(m) m.CurseForgeHash)
-                    Dim CurseForgeRaw = CType(CType(GetJson(DlModRequest("https://api.curseforge.com/v1/fingerprints/432/", "POST",
-                        $"{{""fingerprints"": [{CurseForgeHashes.Join(",")}]}}", "application/json")), JObject)("data")("exactMatches"), JContainer)
+                    Dim CurseForgeRaw As JContainer = DlModRequest("https://api.curseforge.com/v1/fingerprints/432/", HttpMethod.Post,
+                        $"{{""fingerprints"": [{CurseForgeHashes.Join(",")}]}}", "application/json")("data")("exactMatches")
                     For Each ResultJson As JObject In CurseForgeRaw
                         If Not ResultJson.ContainsKey("file") Then Continue For
                         Dim File As JObject = ResultJson("file")
@@ -612,7 +615,7 @@ Public Class PageVersionExport
 
             '等待线程结束
             Do Until EndedThreadCount = 2
-                If Loader.IsAborted Then Exit Sub
+                If Loader.IsAborted Then Return
                 Thread.Sleep(10)
             Loop
 

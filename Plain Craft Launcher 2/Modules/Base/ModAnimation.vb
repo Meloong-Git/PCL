@@ -624,6 +624,26 @@ Public Module ModAnimation
             Return Ease.GetValue(t)
         End Function
     End Class
+    ''' <summary>
+    ''' 以特定速度开始的平滑结束。
+    ''' </summary>
+    Public Class AniEaseOutFluentWithInitial
+        Inherits AniEase
+        Private ReadOnly alpha As Double '(初速度 / 平均速度) – 1
+        ''' <param name="InitialPixelPerSecond">初速度，px/s</param>
+        ''' <param name="TotalSecond">总时长，s</param>
+        ''' <param name="TotalDistance">总路程，px</param>
+        Public Sub New(InitialPixelPerSecond As Double, TotalSecond As Double, TotalDistance As Double)
+            Dim v0_norm As Double = InitialPixelPerSecond * TotalSecond / TotalDistance '归一化初速度
+            alpha = v0_norm - 1.0
+            If alpha < 0 Then alpha = 0 '初速度小于平均速度时，退化为线性
+        End Sub
+        Public Overrides Function GetValue(percent As Double) As Double
+            Dim p As Double = MathClamp(percent, 0, 1)
+            If alpha = 0 Then Return p '退化到线性
+            Return (alpha + 1) * p / (1 + alpha * p)
+        End Function
+    End Class
 
     'Back / 回弹
     ''' <summary>
@@ -807,7 +827,7 @@ Sleeper:
                                    Thread.Sleep(1)
                                Loop
                            Catch ex As Exception
-                               Log(ex, "动画帧执行失败", LogLevel.Assert)
+                               Log(ex, "动画帧执行失败", LogLevel.Critical)
                            End Try
                        End Sub, "Animation", ThreadPriority.AboveNormal)
     End Sub

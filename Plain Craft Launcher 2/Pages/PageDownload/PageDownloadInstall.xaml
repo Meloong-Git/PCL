@@ -23,10 +23,10 @@
                             <local:MyImage x:Name="ImgLogo" Margin="52,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left" Height="32" RenderOptions.BitmapScalingMode="HighQuality" />
                             <local:MyTextBox Margin="93,0,16,0" Padding="-1,0" MinHeight="30" FontSize="15" VerticalAlignment="Center" x:Name="TextSelectName" MaxLength="70" HasBackground="False" />
                         </local:MyCard>
-                        <local:MyHint Text="如果不安装 Fabric API，大多数 Mod 都会无法使用！" Margin="0,10,0,0" x:Name="HintFabricAPI" IsWarn="True" />
-                        <local:MyHint Text="必须安装 OptiFabric 才能正常使用 OptiFine！" Margin="0,10,0,0" x:Name="HintOptiFabric" IsWarn="True" />
-                        <local:MyHint Text="安装结束后，请在 Mod 下载中搜索 OptiFabric Origins 并下载，否则 OptiFine 会无法使用！" Margin="0,10,0,0" x:Name="HintOptiFabricOld" IsWarn="False" />
-                        <local:MyHint Text="OptiFine 与一部分 Mod 的兼容性不佳，请谨慎安装。" Margin="0,10,0,0" x:Name="HintModOptiFine" IsWarn="False" />
+                        <local:MyHint Text="如果不安装 Fabric API，大多数 Mod 都会无法使用！" Margin="0,10,0,0" x:Name="HintFabricAPI" Theme="Red" />
+                        <local:MyHint Text="必须安装 OptiFabric 才能正常使用 OptiFine！" Margin="0,10,0,0" x:Name="HintOptiFabric" Theme="Red" />
+                        <local:MyHint Text="安装结束后，请在 Mod 下载中搜索 OptiFabric Origins 并下载，否则 OptiFine 会无法使用！" Margin="0,10,0,0" x:Name="HintOptiFabricOld" Theme="Yellow" />
+                        <local:MyHint Text="OptiFine 与一部分 Mod 的兼容性不佳，请谨慎安装。" Margin="0,10,0,0" x:Name="HintModOptiFine" Theme="Yellow" />
                         <local:MyCard Title="Forge" Height="40" Margin="0,12,0,0" x:Name="CardForge" IsSwaped="True" CanSwap="True" SwapLogoRight="True">
                         <StackPanel Margin="20,40,18,15" VerticalAlignment="Top" Name="PanForge" />
                         <Grid x:Name="PanForgeInfo" Height="18" Margin="132,11,15,0" VerticalAlignment="Top" Tag="True">

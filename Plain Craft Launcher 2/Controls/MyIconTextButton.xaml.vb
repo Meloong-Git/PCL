@@ -72,7 +72,7 @@ Public Class MyIconTextButton
     Public Event Click(sender As Object, e As RouteEventArgs)
     Private IsMouseDown As Boolean = False
     Private Sub MyIconTextButton_MouseUp() Handles Me.MouseLeftButtonUp
-        If Not IsMouseDown Then Exit Sub
+        If Not IsMouseDown Then Return
         Log("[Control] 按下带图标按钮：" & Text)
         IsMouseDown = False
         RaiseEvent Click(Me, New RouteEventArgs(True))

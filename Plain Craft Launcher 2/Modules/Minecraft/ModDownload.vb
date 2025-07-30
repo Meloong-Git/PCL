@@ -197,10 +197,17 @@
     Public DlClientListMojangLoader As New LoaderTask(Of String, DlClientListResult)("DlClientList Mojang", AddressOf DlClientListMojangMain)
     Private IsNewClientVersionHinted As Boolean = False
     Private Sub DlClientListMojangMain(Loader As LoaderTask(Of String, DlClientListResult))
-        Dim Json As JObject = NetGetCodeByRequestRetry("https://launchermeta.mojang.com/mc/game/version_manifest.json", IsJson:=True)
+        Dim StartTime As Long = GetTimeTick()
+        Dim Json As JObject = GetJson(NetRequestByClientRetry("https://launchermeta.mojang.com/mc/game/version_manifest.json"))
         Try
             Dim Versions As JArray = Json("versions")
             If Versions.Count < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Json.ToString & "）")
+            '确定官方源是否可用
+            If Not DlPreferMojang Then
+                Dim DeltaTime = GetTimeTick() - StartTime
+                DlPreferMojang = DeltaTime < 4000
+                Log($"[Download] Mojang 官方源加载耗时：{DeltaTime}ms，{If(DlPreferMojang, "可优先使用官方源", "不优先使用官方源")}")
+            End If
             '添加 UVMC 项
             Dim CacheFilePath As String = PathTemp & "Cache\uvmc-download.json"
             If Not File.Exists(CacheFilePath) Then
@@ -239,7 +246,7 @@
     ''' </summary>
     Public DlClientListBmclapiLoader As New LoaderTask(Of String, DlClientListResult)("DlClientList Bmclapi", AddressOf DlClientListBmclapiMain)
     Private Sub DlClientListBmclapiMain(Loader As LoaderTask(Of String, DlClientListResult))
-        Dim Json As JObject = NetGetCodeByRequestRetry("https://bmclapi2.bangbang93.com/mc/game/version_manifest.json", IsJson:=True)
+        Dim Json As JObject = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/mc/game/version_manifest.json"))
         Try
             Dim Versions As JArray = Json("versions")
             If Versions.Count < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Json.ToString & "）")
@@ -259,7 +266,7 @@
             '检查是否有要求的版本（#5195）
             If Not String.IsNullOrEmpty(Loader.Input) Then
                 Dim Id = Loader.Input
-                If Not DlClientListLoader.Output.Value("versions").Any(Function(v) v("id") = Id) Then
+                If DlClientListLoader.Output.Value IsNot Nothing AndAlso Not DlClientListLoader.Output.Value("versions").Any(Function(v) v("id") = Id) Then
                     Throw New Exception("BMCLAPI 源未包含目标版本 " & Id)
                 End If
             End If
@@ -392,7 +399,7 @@
     ''' </summary>
     Public DlOptiFineListOfficialLoader As New LoaderTask(Of Integer, DlOptiFineListResult)("DlOptiFineList Official", AddressOf DlOptiFineListOfficialMain)
     Private Sub DlOptiFineListOfficialMain(Loader As LoaderTask(Of Integer, DlOptiFineListResult))
-        Dim Result As String = NetGetCodeByClient("https://optifine.net/downloads", Encoding.Default)
+        Dim Result As String = NetRequestByClientRetry("https://optifine.net/downloads", Encoding:=Encoding.Default)
         If Result.Length < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Result & "）")
         Try
             '获取所有版本信息
@@ -428,7 +435,7 @@
     ''' </summary>
     Public DlOptiFineListBmclapiLoader As New LoaderTask(Of Integer, DlOptiFineListResult)("DlOptiFineList Bmclapi", AddressOf DlOptiFineListBmclapiMain)
     Private Sub DlOptiFineListBmclapiMain(Loader As LoaderTask(Of Integer, DlOptiFineListResult))
-        Dim Json As JArray = NetGetCodeByRequestRetry("https://bmclapi2.bangbang93.com/optifine/versionList", IsJson:=True)
+        Dim Json As JArray = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/optifine/versionList"))
         Try
             Dim Versions As New List(Of DlOptiFineListEntry)
             For Each Token As JObject In Json
@@ -498,7 +505,7 @@
     ''' </summary>
     Public DlForgeListOfficialLoader As New LoaderTask(Of Integer, DlForgeListResult)("DlForgeList Official", AddressOf DlForgeListOfficialMain)
     Private Sub DlForgeListOfficialMain(Loader As LoaderTask(Of Integer, DlForgeListResult))
-        Dim Result As String = NetGetCodeByRequestRetry("https://files.minecraftforge.net/maven/net/minecraftforge/forge/index_1.2.4.html", Encoding.Default, "text/html", UseBrowserUserAgent:=True)
+        Dim Result As String = NetRequestByClientRetry("https://files.minecraftforge.net/maven/net/minecraftforge/forge/index_1.2.4.html", Encoding:=Encoding.Default, Accept:="text/html", UseBrowserUserAgent:=True)
         If Result.Length < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Result & "）")
         '获取所有版本信息
         Dim Names As List(Of String) = RegexSearch(Result, "(?<=a href=""index_)[0-9.]+(_pre[0-9]?)?(?=.html)")
@@ -512,7 +519,7 @@
     ''' </summary>
     Public DlForgeListBmclapiLoader As New LoaderTask(Of Integer, DlForgeListResult)("DlForgeList Bmclapi", AddressOf DlForgeListBmclapiMain)
     Private Sub DlForgeListBmclapiMain(Loader As LoaderTask(Of Integer, DlForgeListResult))
-        Dim Result As String = NetGetCodeByRequestRetry("https://bmclapi2.bangbang93.com/forge/minecraft", Encoding.Default)
+        Dim Result As String = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/forge/minecraft", Encoding:=Encoding.Default)
         If Result.Length < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Result & "）")
         '获取所有版本信息
         Dim Names As List(Of String) = RegexSearch(Result, "[0-9.]+(_pre[0-9]?)?")
@@ -644,7 +651,7 @@
     Public Sub DlForgeVersionOfficialMain(Loader As LoaderTask(Of String, List(Of DlForgeVersionEntry)))
         Dim Result As String
         Try
-            Result = NetGetCodeByLoader("https://files.minecraftforge.net/maven/net/minecraftforge/forge/index_" &
+            Result = NetRequestByLoader("https://files.minecraftforge.net/maven/net/minecraftforge/forge/index_" &
                                           Loader.Input.Replace("-", "_") & '兼容 Forge 1.7.10-pre4，#4057
                                           ".html", UseBrowserUserAgent:=True)
         Catch ex As Exception
@@ -715,9 +722,8 @@
     ''' Forge 版本列表，BMCLAPI。
     ''' </summary>
     Public Sub DlForgeVersionBmclapiMain(Loader As LoaderTask(Of String, List(Of DlForgeVersionEntry)))
-        Dim Json As JArray = NetGetCodeByRequestRetry("https://bmclapi2.bangbang93.com/forge/minecraft/" &
-                                                      Loader.Input.Replace("-", "_"), '兼容 Forge 1.7.10-pre4，#4057
-                                                      IsJson:=True)
+        Dim Json As JArray = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/forge/minecraft/" &
+                                                      Loader.Input.Replace("-", "_"))) '兼容 Forge 1.7.10-pre4，#4057
         Dim Versions As New List(Of DlForgeVersionEntry)
         Try
             Dim Recommended As String = McDownloadForgeRecommendedGet(Loader.Input)
@@ -851,8 +857,8 @@
     Public DlNeoForgeListOfficialLoader As New LoaderTask(Of Integer, DlNeoForgeListResult)("DlNeoForgeList Official", AddressOf DlNeoForgeListOfficialMain)
     Private Sub DlNeoForgeListOfficialMain(Loader As LoaderTask(Of Integer, DlNeoForgeListResult))
         '获取版本列表 JSON
-        Dim ResultLatest As String = NetGetCodeByLoader("https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge", UseBrowserUserAgent:=True, IsJson:=True)
-        Dim ResultLegacy As String = NetGetCodeByLoader("https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/forge", UseBrowserUserAgent:=True, IsJson:=True)
+        Dim ResultLatest As String = NetRequestByClientRetry("https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge")
+        Dim ResultLegacy As String = NetRequestByClientRetry("https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/forge")
         If ResultLatest.Length < 100 OrElse ResultLegacy.Length < 100 Then Throw New Exception("获取到的版本列表长度不足（" & ResultLatest & "）")
         '解析
         Try
@@ -869,8 +875,8 @@
     Public DlNeoForgeListBmclapiLoader As New LoaderTask(Of Integer, DlNeoForgeListResult)("DlNeoForgeList Bmclapi", AddressOf DlNeoForgeListBmclapiMain)
     Public Sub DlNeoForgeListBmclapiMain(Loader As LoaderTask(Of Integer, DlNeoForgeListResult))
         '获取版本列表 JSON
-        Dim ResultLatest As String = NetGetCodeByLoader("https://bmclapi2.bangbang93.com/neoforge/meta/api/maven/details/releases/net/neoforged/neoforge", UseBrowserUserAgent:=True, IsJson:=True)
-        Dim ResultLegacy As String = NetGetCodeByLoader("https://bmclapi2.bangbang93.com/neoforge/meta/api/maven/details/releases/net/neoforged/forge", UseBrowserUserAgent:=True, IsJson:=True)
+        Dim ResultLatest As String = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/neoforge/meta/api/maven/details/releases/net/neoforged/neoforge")
+        Dim ResultLegacy As String = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/neoforge/meta/api/maven/details/releases/net/neoforged/forge")
         If ResultLatest.Length < 100 OrElse ResultLegacy.Length < 100 Then Throw New Exception("获取到的版本列表长度不足（" & ResultLatest & "）")
         '解析
         Try
@@ -975,7 +981,7 @@
     ''' </summary>
     Public DlLiteLoaderListOfficialLoader As New LoaderTask(Of Integer, DlLiteLoaderListResult)("DlLiteLoaderList Official", AddressOf DlLiteLoaderListOfficialMain)
     Private Sub DlLiteLoaderListOfficialMain(Loader As LoaderTask(Of Integer, DlLiteLoaderListResult))
-        Dim Result As JObject = NetGetCodeByRequestRetry("https://dl.liteloader.com/versions/versions.json", IsJson:=True)
+        Dim Result As JObject = GetJson(NetRequestByClientRetry("https://dl.liteloader.com/versions/versions.json"))
         Try
             Dim Json As JObject = Result("versions")
             Dim Versions As New List(Of DlLiteLoaderListEntry)
@@ -1003,7 +1009,7 @@
     ''' </summary>
     Public DlLiteLoaderListBmclapiLoader As New LoaderTask(Of Integer, DlLiteLoaderListResult)("DlLiteLoaderList Bmclapi", AddressOf DlLiteLoaderListBmclapiMain)
     Private Sub DlLiteLoaderListBmclapiMain(Loader As LoaderTask(Of Integer, DlLiteLoaderListResult))
-        Dim Result As JObject = NetGetCodeByRequestRetry("https://bmclapi2.bangbang93.com/maven/com/mumfrey/liteloader/versions.json", IsJson:=True)
+        Dim Result As JObject = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/maven/com/mumfrey/liteloader/versions.json"))
         Try
             Dim Json As JObject = Result("versions")
             Dim Versions As New List(Of DlLiteLoaderListEntry)
@@ -1074,7 +1080,7 @@
     ''' </summary>
     Public DlFabricListOfficialLoader As New LoaderTask(Of Integer, DlFabricListResult)("DlFabricList Official", AddressOf DlFabricListOfficialMain)
     Private Sub DlFabricListOfficialMain(Loader As LoaderTask(Of Integer, DlFabricListResult))
-        Dim Result As JObject = NetGetCodeByRequestRetry("https://meta.fabricmc.net/v2/versions", IsJson:=True)
+        Dim Result As JObject = GetJson(NetRequestByClientRetry("https://meta.fabricmc.net/v2/versions"))
         Try
             Dim Output = New DlFabricListResult With {.IsOfficial = True, .SourceName = "Fabric 官方源", .Value = Result}
             If Output.Value("game") Is Nothing OrElse Output.Value("loader") Is Nothing OrElse Output.Value("installer") Is Nothing Then Throw New Exception("获取到的列表缺乏必要项")
@@ -1089,7 +1095,7 @@
     ''' </summary>
     Public DlFabricListBmclapiLoader As New LoaderTask(Of Integer, DlFabricListResult)("DlFabricList Bmclapi", AddressOf DlFabricListBmclapiMain)
     Private Sub DlFabricListBmclapiMain(Loader As LoaderTask(Of Integer, DlFabricListResult))
-        Dim Result As JObject = NetGetCodeByRequestRetry("https://bmclapi2.bangbang93.com/fabric-meta/v2/versions", IsJson:=True)
+        Dim Result As JObject = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/fabric-meta/v2/versions"))
         Try
             Dim Output = New DlFabricListResult With {.IsOfficial = False, .SourceName = "BMCLAPI", .Value = Result}
             If Output.Value("game") Is Nothing OrElse Output.Value("loader") Is Nothing OrElse Output.Value("installer") Is Nothing Then Throw New Exception("获取到的列表缺乏必要项")
@@ -1116,72 +1122,36 @@
 #Region "DlMod | Mod 镜像源请求"
 
     ''' <summary>
-    ''' 对可能涉及 Mod 镜像源的请求进行处理，返回字符串或 JObject。
-    ''' 调用 NetGetCodeByRequest，会进行重试。
-    ''' </summary>
-    Public Function DlModRequest(Url As String, Optional IsJson As Boolean = False) As Object
-        Dim Urls As New List(Of KeyValuePair(Of String, Integer))
-        Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
-        Urls.Add(New KeyValuePair(Of String, Integer)(Url, 20))
-        'Dim McimUrl As String = DlSourceModGet(Url)
-        'If McimUrl <> Url Then
-        '    Select Case Setup.Get("ToolDownloadMod")
-        '        Case 0
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 5))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
-        '        Case 1
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 5))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
-        '        Case Else
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
-        '            Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
-        '    End Select
-        'End If
-        Dim Exs As String = ""
-        For Each Source In Urls
-            Try
-                Return NetGetCodeByRequestOnce(Source.Key, Encode:=Encoding.UTF8, Timeout:=Source.Value * 1000, IsJson:=IsJson, UseBrowserUserAgent:=True)
-            Catch ex As Exception
-                Exs += ex.Message + vbCrLf
-            End Try
-        Next
-        Throw New Exception(Exs)
-    End Function
-
-    ''' <summary>
-    ''' 对可能涉及 Mod 镜像源的请求进行处理。
+    ''' 对可能涉及 Mod 镜像源的请求进行处理，返回 JToken。
     ''' 调用 NetRequest，会进行重试。
     ''' </summary>
-    Public Function DlModRequest(Url As String, Method As String, Data As String, ContentType As String) As String
+    Public Function DlModRequest(Url As String, Optional Method As HttpMethod = Nothing,
+                                 Optional Content As String = Nothing, Optional ContentType As String = Nothing) As JToken
         Dim Urls As New List(Of KeyValuePair(Of String, Integer))
-        Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
-        Urls.Add(New KeyValuePair(Of String, Integer)(Url, 20))
+        Urls.Add(New KeyValuePair(Of String, Integer)(Url, 10)) '至少 10s，要不然有时候远端服务器来不及完成
+        Urls.Add(New KeyValuePair(Of String, Integer)(Url, 30))
         'Dim McimUrl As String = DlSourceModGet(Url)
         'If McimUrl <> Url Then
         '   Select Case Setup.Get("ToolDownloadMod")
         '       Case 0
-        '           Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 5))
         '           Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
-        '           Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
+        '           Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 30))
+        '           Urls.Add(New KeyValuePair(Of String, Integer)(Url, 30))
         '       Case 1
-        '           Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
-        '           Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 5))
-        '           Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
+        '           Urls.Add(New KeyValuePair(Of String, Integer)(Url, 10))
         '           Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
+        '           Urls.Add(New KeyValuePair(Of String, Integer)(Url, 30))
+        '           Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 30))
         '       Case Else
-        '           Urls.Add(New KeyValuePair(Of String, Integer)(Url, 5))
-        '           Urls.Add(New KeyValuePair(Of String, Integer)(Url, 15))
-        '           Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
+        '           Urls.Add(New KeyValuePair(Of String, Integer)(Url, 10))
+        '           Urls.Add(New KeyValuePair(Of String, Integer)(Url, 30))
+        '           Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 30))
         '   End Select
         'End If
         Dim Exs As String = ""
         For Each Source In Urls
             Try
-                Return NetRequestOnce(Source.Key, Method, Data, ContentType, Timeout:=Source.Value * 1000)
+                Return GetJson(NetRequestByClient(Source.Key, Method, Content, ContentType, Timeout:=Source.Value * 1000, Encoding:=Encoding.UTF8))
             Catch ex As Exception
                 Exs += ex.Message + vbCrLf
             End Try
@@ -1193,18 +1163,54 @@
 
 #Region "DlSource | 镜像下载源"
 
-    Public Function DlSourceResourceGet(Original As String) As String()
-        Original = Original.Replace("http://resources.download.minecraft.net", "https://resources.download.minecraft.net")
-        Return {
-            Original.
-                Replace("https://piston-data.mojang.com", "https://bmclapi2.bangbang93.com/assets").
-                Replace("https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com/assets").
-                Replace("https://resources.download.minecraft.net", "https://bmclapi2.bangbang93.com/assets"),
-            Original
-        }
+    Private DlPreferMojang As Boolean = False
+    ''' <summary>
+    ''' 下载文件（而非获取版本列表）的时候，是否优先使用官方源。
+    ''' </summary>
+    Public ReadOnly Property DlSourcePreferMojang As Boolean
+        Get
+            Return Setup.Get("ToolDownloadSource") = 2 OrElse (Setup.Get("ToolDownloadSource") = 1 AndAlso DlPreferMojang)
+        End Get
+    End Property
+    ''' <summary>
+    ''' 下载文件（而非获取版本列表）的时候，根据是否优先使用官方源决定使用 Url 的顺序。
+    ''' </summary>
+    Public Function DlSourceOrder(OfficialUrls As IEnumerable(Of String), MirrorUrls As IEnumerable(Of String)) As IEnumerable(Of String)
+        Return If(DlSourcePreferMojang, OfficialUrls.Union(MirrorUrls), MirrorUrls.Union(OfficialUrls))
+    End Function
+    ''' <summary>
+    ''' 获取版本列表（而非下载文件）的时候，是否优先使用官方源。
+    ''' </summary>
+    Public ReadOnly Property DlVersionListPreferMojang As Boolean
+        Get
+            Return Setup.Get("ToolDownloadVersion") = 2 OrElse (Setup.Get("ToolDownloadVersion") = 1 AndAlso DlPreferMojang)
+        End Get
+    End Property
+    ''' <summary>
+    ''' 获取版本列表（而非下载文件）的时候，根据是否优先使用官方源决定使用 Url 的顺序。
+    ''' </summary>
+    Public Function DlVersionListOrder(OfficialUrls As IEnumerable(Of String), MirrorUrls As IEnumerable(Of String)) As IEnumerable(Of String)
+        Return If(DlVersionListPreferMojang, OfficialUrls.Union(MirrorUrls), MirrorUrls.Union(OfficialUrls))
     End Function
 
-    Public Function DlSourceLibraryGet(Original As String) As String()
+
+    ''' <summary>
+    ''' 下载 Assets 文件。
+    ''' </summary>
+    Public Function DlSourceAssetsGet(Original As String) As IEnumerable(Of String)
+        Original = Original.Replace("http://resources.download.minecraft.net", "https://resources.download.minecraft.net")
+        Return DlSourceOrder(
+            {Original},
+            {Original.
+                Replace("https://piston-data.mojang.com", "https://bmclapi2.bangbang93.com/assets").
+                Replace("https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com/assets").
+                Replace("https://resources.download.minecraft.net", "https://bmclapi2.bangbang93.com/assets")
+            })
+    End Function
+    ''' <summary>
+    ''' 下载 Libraries 文件。
+    ''' </summary>
+    Public Function DlSourceLibraryGet(Original As String) As IEnumerable(Of String)
         If {"minecraftforge", "fabricmc", "neoforged"}.Any(Function(k) Original.Contains(k)) Then '不添加原版源
             Return {
                 Original.
@@ -1219,47 +1225,44 @@
                     Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto")
             }
         Else
-            Return {
-                Original.
+            Return DlSourceOrder(
+                {Original},
+                {Original.
                     Replace("https://piston-data.mojang.com", "https://bmclapi2.bangbang93.com/maven").
                     Replace("https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com/maven").
                     Replace("https://libraries.minecraft.net", "https://bmclapi2.bangbang93.com/maven").
                     Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto"),
-                Original.
+                 Original.
                     Replace("https://piston-data.mojang.com", "https://bmclapi2.bangbang93.com/libraries").
                     Replace("https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com/libraries").
                     Replace("https://libraries.minecraft.net", "https://bmclapi2.bangbang93.com/libraries").
-                    Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto"),
-                Original
-            }
+                    Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto")
+                })
         End If
     End Function
-
-    Public Function DlSourceModGet(Original As String) As String
-        Return Original
-        'Return Original.
-        '    Replace("api.modrinth.com", "mod.mcimirror.top/modrinth").
-        '    Replace("staging-api.modrinth.com", "mod.mcimirror.top/modrinth").
-        '    Replace("cdn.modrinth.com", "mod.mcimirror.top").
-        '    Replace("api.curseforge.com", "mod.mcimirror.top/curseforge").
-        '    Replace("edge.forgecdn.net", "mod.mcimirror.top").
-        '    Replace("mediafilez.forgecdn.net", "mod.mcimirror.top").
-        '    Replace("media.forgecdn.net", "mod.mcimirror.top")
-    End Function
-
-    Public Function DlSourceLauncherOrMetaGet(Original As String) As String()
+    ''' <summary>
+    ''' 下载 Launcher 或 Meta 文件。
+    ''' 不应使用它来获取版本列表（因为它只使用文件下载源设置来决定源顺序）。
+    ''' </summary>
+    Public Function DlSourceLauncherOrMetaGet(Original As String) As IEnumerable(Of String)
         If Original Is Nothing Then Throw New Exception("无对应的 json 下载地址")
-        Return {
-            Original.
+        Return DlSourceOrder(
+            {Original},
+            {Original.
                 Replace("https://piston-data.mojang.com", "https://bmclapi2.bangbang93.com").
                 Replace("https://piston-meta.mojang.com", "https://bmclapi2.bangbang93.com").
                 Replace("https://launcher.mojang.com", "https://bmclapi2.bangbang93.com").
                 Replace("https://launchermeta.mojang.com", "https://bmclapi2.bangbang93.com").
-                Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto"),
-            Original
-        }
+                Replace("https://zkitefly.github.io/unlisted-versions-of-minecraft", "https://alist.8mi.tech/d/mirror/unlisted-versions-of-minecraft/Auto")
+            })
     End Function
 
+    'Mod 下载源
+    Public Function DlSourceModGet(Original As String) As String
+        Return Original
+    End Function
+
+    'Loader 自动切换
     Private Sub DlSourceLoader(Of InputType, OutputType)(MainLoader As LoaderTask(Of InputType, OutputType),
                                                          LoaderList As List(Of KeyValuePair(Of LoaderTask(Of InputType, OutputType), Integer)),
                                                          Optional IsForceRestart As Boolean = False)
@@ -1278,7 +1281,7 @@
                     '检查加载器成功
                     MainLoader.Output = SubLoader.Key.Output
                     DlSourceLoaderAbort(LoaderList)
-                    Exit Sub
+                    Return
                 ElseIf BeforeLoadersAllFailed Then
                     '此前的加载器全部失败，直接启动后续加载器
                     If WaitCycle < SubLoader.Value * 100 Then WaitCycle = SubLoader.Value * 100
@@ -1320,7 +1323,7 @@
             '检查父加载器中断
             If MainLoader.IsAborted Then
                 DlSourceLoaderAbort(LoaderList)
-                Exit Sub
+                Return
             End If
         Loop
     End Sub

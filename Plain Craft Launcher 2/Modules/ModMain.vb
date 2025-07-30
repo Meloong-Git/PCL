@@ -34,12 +34,12 @@ Public Module ModMain
     ''' <summary>
     ''' 等待弹出的提示列表。以 {String, HintType, Log As Boolean} 形式存储为数组。
     ''' </summary>
-    Private HintWaiting As List(Of HintMessage) = If(HintWaiting, New List(Of HintMessage))
+    Private HintWaiting As SafeList(Of HintMessage) = If(HintWaiting, New SafeList(Of HintMessage))
     ''' <summary>
     ''' 在窗口左下角弹出提示文本。
     ''' </summary>
     Public Sub Hint(Text As String, Optional Type As HintType = HintType.Info, Optional Log As Boolean = True)
-        If HintWaiting Is Nothing Then HintWaiting = New List(Of HintMessage)
+        If HintWaiting Is Nothing Then HintWaiting = New SafeList(Of HintMessage)
         HintWaiting.Add(New HintMessage With {.Text = If(Text, ""), .Type = Type, .Log = Log})
     End Sub
 
@@ -47,7 +47,7 @@ Public Module ModMain
         Try
 
             'Tag 存储了：{ 是否可以重用, Uuid }
-            If Not HintWaiting.Any() Then Exit Sub
+            If Not HintWaiting.Any() Then Return
             Do While HintWaiting.Any
                 ''清除空提示
                 'If IsNothing(HintWaiting(0)) OrElse IsNothing(HintWaiting(0)(0)) Then
@@ -343,7 +343,7 @@ EndHint:
     Public WaitingMyMsgBox As List(Of MyMsgBoxConverter) = If(WaitingMyMsgBox, New List(Of MyMsgBoxConverter))
     Public Sub MyMsgBoxTick()
         Try
-            If FrmMain Is Nothing OrElse FrmMain.PanMsg Is Nothing OrElse FrmMain.WindowState = WindowState.Minimized Then Exit Sub
+            If FrmMain Is Nothing OrElse FrmMain.PanMsg Is Nothing OrElse FrmMain.WindowState = WindowState.Minimized Then Return
             If FrmMain.PanMsg.Children.Count > 0 Then
                 '弹窗中
                 FrmMain.PanMsg.Visibility = Visibility.Visible
@@ -405,6 +405,9 @@ EndHint:
     Public FrmDownloadFabric As PageDownloadFabric
     Public FrmDownloadMod As PageDownloadMod
     Public FrmDownloadPack As PageDownloadPack
+    Public FrmDownloadDataPack As PageDownloadDataPack
+    Public FrmDownloadShader As PageDownloadShader
+    Public FrmDownloadResourcePack As PageDownloadResourcePack
 
     '设置页面声明
     Public FrmSetupLeft As PageSetupLeft
@@ -634,7 +637,7 @@ NextFile:
                 Catch ex As Exception
                     Log(ex, "检查帮助文件夹失败", LogLevel.Msgbox)
                 End Try
-                If Loader.IsAborted Then Exit Sub
+                If Loader.IsAborted Then Return
 
                 '将文件实例化
                 Dim Dict As New List(Of HelpEntry)
@@ -650,7 +653,7 @@ NextFile:
 
                 '回设
                 If Not Dict.Any() Then Throw New Exception("未找到可用的帮助；若不需要帮助页面，可以在 设置 → 个性化 → 功能隐藏 中将其隐藏")
-                If Loader.IsAborted Then Exit Sub
+                If Loader.IsAborted Then Return
                 Loader.Output = Dict
 
             Catch ex As Exception
@@ -693,8 +696,8 @@ NextFile:
     Private AprilDistance As Integer = 0
     Private Sub TimerFool()
         Try
-            If FrmLaunchLeft Is Nothing OrElse FrmLaunchLeft.AprilPosTrans Is Nothing OrElse FrmMain.lastMouseArg Is Nothing Then Exit Sub
-            If IsAprilGiveup OrElse FrmMain.PageCurrent <> FormMain.PageType.Launch OrElse AniControlEnabled <> 0 OrElse Not FrmLaunchLeft.BtnLaunch.IsLoaded Then Exit Sub
+            If FrmLaunchLeft Is Nothing OrElse FrmLaunchLeft.AprilPosTrans Is Nothing OrElse FrmMain.lastMouseArg Is Nothing Then Return
+            If IsAprilGiveup OrElse FrmMain.PageCurrent <> FormMain.PageType.Launch OrElse AniControlEnabled <> 0 OrElse Not FrmLaunchLeft.BtnLaunch.IsLoaded Then Return
 
             '计算是否空闲
             Dim MousePos = FrmMain.lastMouseArg.GetPosition(FrmMain)
@@ -763,7 +766,7 @@ NextFile:
             '移动
             AprilSpeed = AprilSpeed * 0.8 + Acc
             Dim SpeedValue = Math.Min(60, AprilSpeed.Length)
-            If SpeedValue < 0.01 Then Exit Sub
+            If SpeedValue < 0.01 Then Return
             AprilSpeed.Normalize()
             AprilSpeed *= SpeedValue
             AprilDistance += SpeedValue
@@ -910,7 +913,7 @@ NextFile:
             If ThemeDontClick = 2 Then ThemeRefresh()
 #End Region
         Catch ex As Exception
-            Log(ex, "短程主时钟执行异常", LogLevel.Assert)
+            Log(ex, "短程主时钟执行异常", LogLevel.Critical)
         End Try
         Timer4Count += 1
         If Timer4Count = 4 Then
@@ -930,15 +933,16 @@ NextFile:
 #Region "每 7.5s 执行一次的代码"
                 If FrmMain.BtnExtraApril_ShowCheck AndAlso AprilDistance <> 0 Then FrmMain.BtnExtraApril.Ribble()
                 '以未知原因窗口被丢到一边去的修复（Top、Left = -25600），还有 #745
-                RunInUi(Sub()
-                            If Not FrmMain.Hidden Then
-                                If FrmMain.Top < -9000 Then FrmMain.Top = 100
-                                If FrmMain.Left < -9000 Then FrmMain.Left = 100 '窗口拉至最大时 Left = -18.8
-                            End If
-                        End Sub)
+                RunInUi(
+                Sub()
+                    If Not FrmMain.Hidden Then
+                        If FrmMain.Top < -9000 Then FrmMain.Top = 100
+                        If FrmMain.Left < -9000 Then FrmMain.Left = 100 '窗口拉至最大时 Left = -18.8
+                    End If
+                End Sub)
 #End Region
             Catch ex As Exception
-                Log(ex, "长程主时钟执行异常", LogLevel.Assert)
+                Log(ex, "长程主时钟执行异常", LogLevel.Critical)
             End Try
         End If
     End Sub
@@ -954,7 +958,7 @@ NextFile:
                 Log(ex, "程序主时钟出错", LogLevel.Feedback)
             End Try
         End Sub, "Timer Main")
-        If Not IsAprilEnabled Then Exit Sub
+        If Not IsAprilEnabled Then Return
         RunInNewThread(
         Sub()
             Try

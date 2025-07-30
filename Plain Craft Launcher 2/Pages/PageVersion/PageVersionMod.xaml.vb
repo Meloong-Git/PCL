@@ -14,9 +14,10 @@
         AniControlEnabled -= 1
 
         '非重复加载部分
-        If IsLoad Then Exit Sub
+        If IsLoad Then Return
         IsLoad = True
 
+        AddHandler FrmMain.KeyDown, AddressOf FrmMain_KeyDown
         '调整按钮边距（这玩意儿没法从 XAML 改）
         For Each Btn As MyRadioButton In PanFilter.Children
             Btn.LabText.Margin = New Thickness(-2, 0, 8, 0)
@@ -89,7 +90,7 @@
             Else
                 PanEmpty.Visibility = Visibility.Visible
                 PanBack.Visibility = Visibility.Collapsed
-                Exit Sub
+                Return
             End If
             '修改缓存
             ModItems.Clear()
@@ -154,7 +155,7 @@
     ''' 刷新整个 UI。
     ''' </summary>
     Public Sub RefreshUI()
-        If PanList Is Nothing Then Exit Sub
+        If PanList Is Nothing Then Return
         Dim ShowingMods = If(IsSearching, SearchResult, If(McModLoader.Output, New List(Of McMod))).Where(Function(m) CanPassFilter(m)).ToList
         '重新列出列表
         AniControlEnabled += 1
@@ -380,7 +381,9 @@ Install:
     ''' 下载 Mod。
     ''' </summary>
     Private Sub BtnManageDownload_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnManageDownload.Click, BtnHintDownload.Click
-        PageDownloadMod.TargetVersion = PageVersionLeft.Version '将当前版本设置为筛选器
+        '预设置当前版本和搜索框内容
+        PageComp.TargetVersion = PageVersionLeft.Version
+        PageComp.TargetName = SearchBox.Text
         FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadMod)
     End Sub
 
@@ -423,8 +426,14 @@ Install:
         ChangeAllSelected(False)
         AniControlEnabled += CacheAniControlEnabled
     End Sub
-    Private Sub PageVersionMod_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
+    Private Sub FrmMain_KeyDown(sender As Object, e As KeyEventArgs) '监听自己的事件的话进入页面后不点击右侧控件就没办法监听到事件 (#4311)
+        If FrmMain.PageRight IsNot Me Then Return
         If My.Computer.Keyboard.CtrlKeyDown AndAlso e.Key = Key.A Then ChangeAllSelected(True)
+    End Sub
+    Private Sub SearchBox_PreviewKeyDown(sender As Object, e As KeyEventArgs) Handles SearchBox.PreviewKeyDown
+        'Ctrl + A 会被搜索框捕获，导致无法全选，所以在按下 Ctrl + A 时转移焦点以便捕获
+        If SearchBox.Text.Any Then Return
+        If My.Computer.Keyboard.CtrlKeyDown AndAlso e.Key = Key.A Then PanBack.Focus()
     End Sub
 
 #End Region
@@ -432,7 +441,7 @@ Install:
 #Region "筛选"
 
     Private _Filter As FilterType = FilterType.All
-    Private Property Filter As FilterType
+    Public Property Filter As FilterType
         Get
             Return _Filter
         End Get
@@ -454,7 +463,7 @@ Install:
             RefreshUI()
         End Set
     End Property
-    Private Enum FilterType As Integer
+    Public Enum FilterType As Integer
         All = 0
         Enabled = 1
         Disabled = 2
@@ -584,7 +593,7 @@ Install:
             If MyMsgBox($"新版本 Mod 可能不兼容旧存档或者其他 Mod，这可能导致游戏崩溃，甚至永久损坏存档！{vbCrLf}如果你在游玩整合包，请千万不要自行更新 Mod！{vbCrLf}{vbCrLf}在更新前，请先备份存档，并检查 Mod 的更新日志。{vbCrLf}如果更新后出现问题，你也可以在回收站找回更新前的 Mod。", "Mod 更新警告", "我已了解风险，继续更新", "取消", IsWarn:=True) = 1 Then
                 Setup.Set("HintUpdateMod", True)
             Else
-                Exit Sub
+                Return
             End If
         End If
         Try
@@ -634,14 +643,14 @@ Install:
                 Try
                     For Each Entry As McMod In ModList
                         If File.Exists(Entry.Path) Then
-                            My.Computer.FileSystem.DeleteFile(Entry.Path, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                            My.Computer.FileSystem.DeleteFile(Entry.Path, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
                         Else
                             Log($"[Mod] 未找到更新前的 Mod 文件，跳过对它的删除：{Entry.Path}", LogLevel.Debug)
                         End If
                     Next
                     For Each Entry As KeyValuePair(Of String, String) In FileCopyList
                         If File.Exists(Entry.Value) Then
-                            My.Computer.FileSystem.DeleteFile(Entry.Value, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                            My.Computer.FileSystem.DeleteFile(Entry.Value, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
                             Log($"[Mod] 更新后的 Mod 文件已存在，将会把它放入回收站：{Entry.Value}", LogLevel.Debug)
                         End If
                         If Directory.Exists(GetPathFromFullPath(Entry.Value)) Then
@@ -676,7 +685,7 @@ Install:
                     Case LoadState.Aborted
                         Hint("Mod 更新已中止！", HintType.Info)
                     Case Else
-                        Exit Sub
+                        Return
                 End Select
                 Log($"[Mod] 已从正在进行 Mod 更新的文件夹列表移除：{PathMods}")
                 UpdatingVersions.Remove(PathMods)
@@ -730,7 +739,7 @@ Install:
                     If IsShiftPressed Then
                         File.Delete(ModEntity.Path)
                     Else
-                        My.Computer.FileSystem.DeleteFile(ModEntity.Path, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                        My.Computer.FileSystem.DeleteFile(ModEntity.Path, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
                     End If
                 Catch ex As OperationCanceledException
                     Log(ex, "删除 Mod 被主动取消")
@@ -759,7 +768,7 @@ Install:
                 RefreshBars()
             End If
             '显示结果提示
-            If Not IsSuccessful Then Exit Sub
+            If Not IsSuccessful Then Return
             If IsShiftPressed Then
                 If ModList.Count = 1 Then
                     Hint($"已彻底删除 {ModList.Single.FileName}！", HintType.Finish)
@@ -808,7 +817,8 @@ Install:
                     .Additional = {ModEntry.Comp, New List(Of String), PageVersionLeft.Version.Version.McName,
                         If(PageVersionLeft.Version.Version.HasForge, CompModLoaderType.Forge,
                         If(PageVersionLeft.Version.Version.HasNeoForge, CompModLoaderType.NeoForge,
-                        If(PageVersionLeft.Version.Version.HasFabric, CompModLoaderType.Fabric, CompModLoaderType.Any)))}})
+                        If(PageVersionLeft.Version.Version.HasFabric, CompModLoaderType.Fabric, CompModLoaderType.Any))),
+                        CompType.Mod}})
             Else
                 '获取信息
                 Dim ContentLines As New List(Of String)

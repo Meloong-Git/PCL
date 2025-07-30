@@ -42,7 +42,7 @@
         End If
     End Sub
     Public Sub Forge_StateChanged(sender As MyLoading, newState As MyLoading.MyLoadingState, oldState As MyLoading.MyLoadingState)
-        If newState <> MyLoading.MyLoadingState.Stop Then Exit Sub
+        If newState <> MyLoading.MyLoadingState.Stop Then Return
 
         Dim Card As MyCard = CType(sender.Parent, FrameworkElement).Parent
         Dim Loader As LoaderTask(Of String, List(Of DlForgeVersionEntry)) = sender.State

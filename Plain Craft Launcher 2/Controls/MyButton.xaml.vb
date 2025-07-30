@@ -142,7 +142,7 @@ Public Class MyButton
 
     '实现自定义事件
     Private Sub Button_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonUp
-        If Not IsMouseDown Then Exit Sub
+        If Not IsMouseDown Then Return
         Log("[Control] 按下按钮：" & Text)
         RaiseEvent Click(sender, e)
         If Not String.IsNullOrEmpty(Tag) Then
@@ -185,7 +185,7 @@ Public Class MyButton
         AniStart(AaColor(PanFore, BackgroundProperty, If(_ColorType = ColorState.Red, "ColorBrushRedBack", "ColorBrush7"), AnimationColorIn), "MyButton Background " & Uuid)
     End Sub
     Private Sub Button_MouseUp() Handles Me.MouseLeftButtonUp
-        If Not IsMouseDown Then Exit Sub
+        If Not IsMouseDown Then Return
         IsMouseDown = False
         AniStart({
                AaScaleTransform(PanFore, 1 - CType(PanFore.RenderTransform, ScaleTransform).ScaleX, 300, 10, New AniEaseOutFluent(AniEasePower.Middle))
@@ -193,7 +193,7 @@ Public Class MyButton
     End Sub
     Private Sub Button_MouseLeave() Handles Me.MouseLeave
         AniStart(AaColor(PanFore, BackgroundProperty, "ColorBrushHalfWhite", AnimationColorOut), "MyButton Background " & Uuid)
-        If Not IsMouseDown Then Exit Sub
+        If Not IsMouseDown Then Return
         IsMouseDown = False
         AniStart(AaScaleTransform(PanFore, 1 - CType(PanFore.RenderTransform, ScaleTransform).ScaleX, 800,, New AniEaseOutFluent(AniEasePower.Strong)), "MyButton Scale " & Uuid)
     End Sub

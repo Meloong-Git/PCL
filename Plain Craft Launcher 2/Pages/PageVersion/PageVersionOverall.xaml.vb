@@ -11,7 +11,7 @@
         Reload()
 
         '非重复加载部分
-        If IsLoad Then Exit Sub
+        If IsLoad Then Return
         IsLoad = True
         PanDisplay.TriggerForceResize()
 
@@ -54,7 +54,7 @@
 
     '版本分类
     Private Sub ComboDisplayType_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboDisplayType.SelectionChanged
-        If Not (IsLoad AndAlso AniControlEnabled = 0) Then Exit Sub
+        If Not (IsLoad AndAlso AniControlEnabled = 0) Then Return
         If ComboDisplayType.SelectedIndex <> 1 Then
             '改为不隐藏
             Try
@@ -75,7 +75,7 @@
                 If Not Setup.Get("HintHide") Then
                     If MyMsgBox("确认要从版本列表中隐藏该版本吗？隐藏该版本后，它将不再出现于 PCL 显示的版本列表中。" & vbCrLf & "此后，在版本列表页面按下 F11 才可以查看被隐藏的版本。", "隐藏版本提示",, "取消") <> 1 Then
                         ComboDisplayType.SelectedIndex = 0
-                        Exit Sub
+                        Return
                     End If
                     Setup.Set("HintHide", True)
                 End If
@@ -110,46 +110,48 @@
             Dim OldPath As String = PageVersionLeft.Version.Path
             '修改此部分的同时修改快速安装的版本名检测*
             Dim NewName As String = MyMsgBoxInput("重命名版本", "", OldName, New ObjectModel.Collection(Of Validate) From {New ValidateFolderName(PathMcFolder & "versions", IgnoreCase:=False)})
-            If String.IsNullOrWhiteSpace(NewName) Then Exit Sub
+            If String.IsNullOrWhiteSpace(NewName) Then Return
             Dim NewPath As String = PathMcFolder & "versions\" & NewName & "\"
             '获取临时中间名，以防止仅修改大小写的重命名失败
             Dim TempName As String = NewName & "_temp"
             Dim TempPath As String = PathMcFolder & "versions\" & TempName & "\"
             Dim IsCaseChangedOnly As Boolean = NewName.ToLower = OldName.ToLower
-            '重新加载版本 Json 信息，避免 HMCL 项被合并
+            '重新读取版本 JSON 信息，避免 JsonObject 中已被合并的项被重新存储
             Dim JsonObject As JObject
             Try
-                JsonObject = GetJson(ReadFile(PageVersionLeft.Version.Path & PageVersionLeft.Version.Name & ".json"))
+                Dim JsonPath As String = PageVersionLeft.Version.GetJsonPath()
+                JsonObject = GetJson(ReadFile(JsonPath))
+                File.Delete(JsonPath)
             Catch ex As Exception
-                Log(ex, "重命名读取 json 时失败")
+                Log(ex, "在重命名读取 json 时失败")
                 JsonObject = PageVersionLeft.Version.JsonObject
             End Try
             '重命名主文件夹
             My.Computer.FileSystem.RenameDirectory(OldPath, TempName)
             My.Computer.FileSystem.RenameDirectory(TempPath, NewName)
             '清理 ini 缓存
+            IniClearCache(PageVersionLeft.Version.PathIndie & "options.txt")
             IniClearCache(PageVersionLeft.Version.Path & "PCL\Setup.ini")
-            '遍历重命名所有文件与文件夹
-            For Each Entry As DirectoryInfo In New DirectoryInfo(NewPath).EnumerateDirectories
-                If Not Entry.Name.Contains(OldName) Then Continue For
+            '重命名 jar 文件与 natives 文件夹
+            '不能进行遍历重命名，否则在版本名很短的时候容易误伤其他文件（#6443）
+            If Directory.Exists($"{NewPath}{OldName}-natives") Then
                 If IsCaseChangedOnly Then
-                    My.Computer.FileSystem.RenameDirectory(Entry.FullName, Entry.Name & "_temp")
-                    My.Computer.FileSystem.RenameDirectory(Entry.FullName & "_temp", Entry.Name.Replace(OldName, NewName))
+                    My.Computer.FileSystem.RenameDirectory($"{NewPath}{OldName}-natives", $"{OldName}natives_temp")
+                    My.Computer.FileSystem.RenameDirectory($"{NewPath}{OldName}-natives_temp", $"{NewName}-natives")
                 Else
-                    DeleteDirectory(NewPath & Entry.Name.Replace(OldName, NewName))
-                    My.Computer.FileSystem.RenameDirectory(Entry.FullName, Entry.Name.Replace(OldName, NewName))
+                    DeleteDirectory($"{NewPath}{NewName}-natives")
+                    My.Computer.FileSystem.RenameDirectory($"{NewPath}{OldName}-natives", $"{NewName}-natives")
                 End If
-            Next
-            For Each Entry As FileInfo In New DirectoryInfo(NewPath).EnumerateFiles
-                If Not Entry.Name.Contains(OldName) Then Continue For
+            End If
+            If File.Exists($"{NewPath}{OldName}.jar") Then
                 If IsCaseChangedOnly Then
-                    My.Computer.FileSystem.RenameFile(Entry.FullName, Entry.Name & "_temp")
-                    My.Computer.FileSystem.RenameFile(Entry.FullName & "_temp", Entry.Name.Replace(OldName, NewName))
+                    My.Computer.FileSystem.RenameFile($"{NewPath}{OldName}.jar", $"{OldName}_temp.jar")
+                    My.Computer.FileSystem.RenameFile($"{NewPath}{OldName}_temp.jar", $"{NewName}.jar")
                 Else
-                    If File.Exists(NewPath & Entry.Name.Replace(OldName, NewName)) Then File.Delete(NewPath & Entry.Name.Replace(OldName, NewName))
-                    My.Computer.FileSystem.RenameFile(Entry.FullName, Entry.Name.Replace(OldName, NewName))
+                    File.Delete($"{NewPath}{NewName}.jar")
+                    My.Computer.FileSystem.RenameFile($"{NewPath}{OldName}.jar", $"{NewName}.jar")
                 End If
-            Next
+            End If
             '替换版本设置文件中的路径
             If File.Exists(NewPath & "PCL\Setup.ini") Then
                 WriteFile(NewPath & "PCL\Setup.ini", ReadFile(NewPath & "PCL\Setup.ini").Replace(OldPath, NewPath))
@@ -158,15 +160,13 @@
             If ReadIni(PathMcFolder & "PCL.ini", "Version") = OldName Then
                 WriteIni(PathMcFolder & "PCL.ini", "Version", NewName)
             End If
-            '更改版本 Json
-            If File.Exists(NewPath & NewName & ".json") Then
-                Try
-                    JsonObject("id") = NewName
-                    WriteFile(NewPath & NewName & ".json", JsonObject.ToString)
-                Catch ex As Exception
-                    Log(ex, "重命名版本 json 失败")
-                End Try
-            End If
+            '写入版本 Json
+            Try
+                JsonObject("id") = NewName
+                WriteFile(NewPath & NewName & ".json", JsonObject.ToString)
+            Catch ex As Exception
+                Log(ex, "重命名版本 json 失败")
+            End Try
             '刷新与提示
             Hint("重命名成功！", HintType.Finish)
             PageVersionLeft.Version = New McVersion(NewName).Load()
@@ -180,17 +180,15 @@
 
     '版本图标
     Private Sub ComboDisplayLogo_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboDisplayLogo.SelectionChanged
-        If Not (IsLoad AndAlso AniControlEnabled = 0) Then Exit Sub
+        If Not (IsLoad AndAlso AniControlEnabled = 0) Then Return
         '选择 自定义 时修改图片
         Try
             If ComboDisplayLogo.SelectedItem Is ItemDisplayLogoCustom Then
-                Dim FileName As String = SelectFile("常用图片文件(*.png;*.jpg;*.gif)|*.png;*.jpg;*.gif", "选择图片")
+                Dim FileName As String = SelectFile("常用图片文件(*.png;*.jpeg;*.jpg;*.gif;*.webp)|*.png;*.jpeg;*.jpg;*.gif;*.webp", "选择图片")
                 If FileName = "" Then
                     Reload() '还原选项
-                    Exit Sub
+                    Return
                 End If
-                File.Delete(PageVersionLeft.Version.Path & "PCL\Logo.png")
-                Directory.CreateDirectory(PageVersionLeft.Version.Path & "PCL") '虽然不知道为啥，有时候真没这文件夹
                 CopyFile(FileName, PageVersionLeft.Version.Path & "PCL\Logo.png")
             Else
                 File.Delete(PageVersionLeft.Version.Path & "PCL\Logo.png")
@@ -261,11 +259,11 @@
         Try
             '弹窗要求指定脚本的保存位置
             Dim SavePath As String = SelectSaveFile("选择脚本保存位置", "启动 " & PageVersionLeft.Version.Name & ".bat", "批处理文件(*.bat)|*.bat")
-            If SavePath = "" Then Exit Sub
+            If SavePath = "" Then Return
             '检查中断（等玩家选完弹窗指不定任务就结束了呢……）
             If McLaunchLoader.State = LoadState.Loading Then
                 Hint("请在当前启动任务结束后再试！", HintType.Critical)
-                Exit Sub
+                Return
             End If
             '生成脚本
             If McLaunchStart(New McLaunchOptions With {.SaveBatch = SavePath, .Version = PageVersionLeft.Version}) Then
@@ -286,13 +284,13 @@
             '忽略文件检查提示
             If ShouldIgnoreFileCheck(PageVersionLeft.Version) Then
                 Hint("请先关闭 [版本设置 → 设置 → 高级启动选项 → 关闭文件校验]，然后再尝试补全文件！", HintType.Info)
-                Exit Sub
+                Return
             End If
             '重复任务检查
             For Each OngoingLoader In LoaderTaskbar
                 If OngoingLoader.Name <> PageVersionLeft.Version.Name & " 文件补全" Then Continue For
                 Hint("正在处理中，请稍候！", HintType.Critical)
-                Exit Sub
+                Return
             Next
             '启动
             Dim Loader As New LoaderCombo(Of String)(PageVersionLeft.Version.Name & " 文件补全", DlClientFix(PageVersionLeft.Version, True, AssetsIndexExistsBehaviour.AlwaysDownload))
@@ -326,16 +324,17 @@
                         If(IsHintIndie, vbCrLf & "由于该版本开启了版本隔离，删除版本时该版本对应的存档、资源包、Mod 等文件也将被一并删除！", ""),
                         "版本删除确认", , "取消",, IsHintIndie OrElse IsShiftPressed)
                 Case 1
+                    IniClearCache(PageVersionLeft.Version.PathIndie & "options.txt")
                     IniClearCache(PageVersionLeft.Version.Path & "PCL\Setup.ini")
                     If IsShiftPressed Then
                         DeleteDirectory(PageVersionLeft.Version.Path)
                         Hint("版本 " & PageVersionLeft.Version.Name & " 已永久删除！", HintType.Finish)
                     Else
-                        FileIO.FileSystem.DeleteDirectory(PageVersionLeft.Version.Path, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                        FileIO.FileSystem.DeleteDirectory(PageVersionLeft.Version.Path, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
                         Hint("版本 " & PageVersionLeft.Version.Name & " 已删除到回收站！", HintType.Finish)
                     End If
                 Case 2
-                    Exit Sub
+                    Return
             End Select
             LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             FrmMain.PageBack()

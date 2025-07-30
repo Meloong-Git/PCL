@@ -186,7 +186,7 @@
 End Class
 Partial Public Module ModAnimation
     Public Sub AniDispose(Control As MyIconButton, RemoveFromChildren As Boolean, Optional CallBack As ParameterizedThreadStart = Nothing)
-        If Not Control.IsHitTestVisible Then Exit Sub
+        If Not Control.IsHitTestVisible Then Return
         Control.IsHitTestVisible = False
         AniStart({
                  AaScaleTransform(Control, -1.5, 200,, New AniEaseInFluent),

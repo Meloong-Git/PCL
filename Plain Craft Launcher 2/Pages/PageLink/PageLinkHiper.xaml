@@ -103,7 +103,6 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
-                <!--<local:MyHint IsWarn="True" Text="这是错误文本。" x:Name="HintTypeError" Visibility="Collapsed" Grid.ColumnSpan="5" Grid.RowSpan="5" Margin="15,15,15,0" VerticalAlignment="Top" />-->
                 <local:MyCard x:Name="BtnSelectCreate" Grid.Column="1" Grid.Row="1">
                     <Grid Margin="35,0,25,0" IsHitTestVisible="False">
                         <Grid.RowDefinitions>

@@ -11,7 +11,7 @@
             Return _Progress
         End Get
         Set(value As Double)
-            If _Progress = value Then Exit Property
+            If _Progress = value Then Return
             _Progress = value
             If value < 0.0001 Then
                 PanProgress.Visibility = Visibility.Collapsed
@@ -30,7 +30,7 @@
             Return _Logo
         End Get
         Set(value As String)
-            If value = _Logo Then Exit Property
+            If value = _Logo Then Return
             _Logo = value
             Path.Data = (New GeometryConverter).ConvertFromString(value)
         End Set
@@ -51,7 +51,7 @@
             Return _Show
         End Get
         Set(value As Boolean)
-            If _Show = value Then Exit Property
+            If _Show = value Then Return
             _Show = value
             RunInUi(Sub()
                         If value Then
@@ -121,7 +121,7 @@
         Focus()
     End Sub
     Private Sub Button_RightMouseDown(sender As Object, e As MouseButtonEventArgs) Handles PanClick.MouseRightButtonDown
-        If Not CanRightClick Then Exit Sub
+        If Not CanRightClick Then Return
         If Not IsLeftMouseHeld AndAlso Not IsRightMouseHeld Then
             AniStart({
                 AaScaleTransform(PanScale, 0.85 - CType(PanScale.RenderTransform, ScaleTransform).ScaleX, 800,, New AniEaseOutFluent(AniEasePower.Strong)),
@@ -141,7 +141,7 @@
         RefreshColor() '直接刷新颜色以判断是否已触发 MouseLeave
     End Sub
     Private Sub Button_RightMouseUp() Handles PanClick.MouseRightButtonUp
-        If Not CanRightClick Then Exit Sub
+        If Not CanRightClick Then Return
         If Not IsLeftMouseHeld Then
             AniStart({
                 AaScaleTransform(PanScale, 1 - CType(PanScale.RenderTransform, ScaleTransform).ScaleX, 300,, New AniEaseOutBack)

@@ -1,17 +1,83 @@
-﻿Public Class PageDownloadMod
+﻿Imports System.Windows.Markup
 
-    Public Const PageSize = 40
+<ContentProperty("SearchTags")>
+Public Class PageComp
+
+#Region "属性"
+
     ''' <summary>
-    ''' 在切换到该页面时自动设置的目标版本。
+    ''' 用于 XAML 快速设置的 Tag 下拉框列表。
+    ''' </summary>
+    Public ReadOnly Property SearchTags As ItemCollection
+        Get
+            Return ComboSearchTag.Items
+        End Get
+    End Property
+
+    ''' <summary>
+    ''' 英文前后不含空格的可读资源类型名，例如 "Mod"、"整合包"。
+    ''' </summary>
+    Public Property TypeName As String
+        Get
+            Return _TypeName
+        End Get
+        Set(Value As String)
+            If _TypeName = Value Then Return
+            _TypeName = Value
+            Loader.Name = $"社区资源获取：{Value}"
+        End Set
+    End Property
+    Private _TypeName As String = ""
+
+    ''' <summary>
+    ''' 英文前后含一个空格的可读资源类型名，例如 " Mod "、"整合包"。
+    ''' </summary>
+    Public Property TypeNameSpaced As String
+        Get
+            Return _TypeNameSpaced
+        End Get
+        Set(Value As String)
+            If _TypeNameSpaced = Value Then Return
+            _TypeNameSpaced = Value
+            PanAlways.Title = $"搜索{Value}"
+            Load.Text = $"正在获取{Value}列表"
+        End Set
+    End Property
+    Private _TypeNameSpaced As String = ""
+
+    ''' <summary>
+    ''' 该页面对应的资源类型。
+    ''' </summary>
+    Public Property PageType As CompType
+        Get
+            Return _Type
+        End Get
+        Set(Value As CompType)
+            If _Type = Value Then Return
+            _Type = Value
+            BtnSearchInstallModPack.Visibility = If(Value = CompType.ModPack, Visibility.Visible, Visibility.Collapsed)
+        End Set
+    End Property
+    Private _Type As CompType = -1
+
+#End Region
+
+#Region "加载"
+
+    ''' <summary>
+    ''' 在切换到页面时，应自动将筛选项设置为与该目标 MC 版本和加载器相同。
     ''' </summary>
     Public Shared TargetVersion As McVersion = Nothing
+    ''' <summary>
+    ''' 在切换到该页面时自动设置的搜索框内的内容。
+    ''' </summary>
+    Public Shared TargetName As String = Nothing
 
-    '加载器信息
-    Public Shared Loader As New LoaderTask(Of CompProjectRequest, Integer)("CompProject Mod", AddressOf CompProjectsGet, AddressOf LoaderInput) With {.ReloadTimeout = 60 * 1000}
-    Public Shared Storage As New CompProjectStorage
-    Public Shared Page As Integer = 0
+    '在点击 MyCompItem 时会获取 Loader 的输入，以使资源详情页面可以应用相同的筛选项
+    Public Loader As New LoaderTask(Of CompProjectRequest, Integer)("社区资源获取：XXX", AddressOf CompProjectsGet, AddressOf LoaderInput) With {.ReloadTimeout = 60 * 1000}
+
     Private IsLoaderInited As Boolean = False
-    Private Sub PageDownloadMod_Inited(sender As Object, e As EventArgs) Handles Me.Loaded
+    Private Sub PageCompControls_Inited(sender As Object, e As EventArgs) Handles Me.Loaded
         '不知道从 Initialized 改成 Loaded 会不会有问题，但用 Initialized 会导致初始的筛选器修改被覆盖回默认值
         If TargetVersion IsNot Nothing Then
             '设置目标
@@ -32,45 +98,53 @@
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("NeoForge")
             End If
             TargetVersion = Nothing
+            If TargetName IsNot Nothing Then
+                TextSearchName.Text = TargetName
+                TargetName = Nothing
+            End If
             '如果已经完成请求，则重新开始
             If IsLoaderInited Then StartNewSearch()
-            PanScroll.ScrollToHome()
+            ScrollToHome()
         End If
         '加载器初始化
         If IsLoaderInited Then Return
         IsLoaderInited = True
-        PageLoaderInit(Load, PanLoad, PanContent, PanAlways, Loader, AddressOf Load_OnFinish, AddressOf LoaderInput)
+        CType(Parent, MyPageRight).PageLoaderInit(Load, PanLoad, PanContent, PanAlways, Loader, AddressOf Load_OnFinish, AddressOf LoaderInput)
         If McVersionHighest = -1 Then McVersionHighest = Math.Max(McVersionHighest, Integer.Parse(CType(TextSearchVersion.Items(1), MyComboBoxItem).Content.ToString.Split(".")(1)))
     End Sub
-    Private Shared Function LoaderInput() As CompProjectRequest
-        Dim Request As New CompProjectRequest(CompType.Mod, Storage, (Page + 1) * PageSize)
-        If FrmDownloadMod IsNot Nothing Then
-            Dim ModLoader As CompModLoaderType = Val(FrmDownloadMod.ComboSearchLoader.SelectedItem.Tag)
-            Dim GameVersion As String = If(FrmDownloadMod.TextSearchVersion.Text = "全部 (也可自行输入)", Nothing,
-                    If(FrmDownloadMod.TextSearchVersion.Text.Contains(".") OrElse FrmDownloadMod.TextSearchVersion.Text.Contains("w"), FrmDownloadMod.TextSearchVersion.Text, Nothing))
-            If GameVersion IsNot Nothing AndAlso GameVersion.Contains(".") AndAlso Val(GameVersion.Split(".")(1)) < 14 AndAlso '1.14-
-                ModLoader = CompModLoaderType.Forge Then '选择了 Forge
-                ModLoader = CompModLoaderType.Any '此时，视作没有筛选 Mod Loader（因为部分老 Mod 没有设置自己支持的加载器）
-            End If
-            With Request
-                .SearchText = FrmDownloadMod.TextSearchName.Text
-                .GameVersion = GameVersion
-                .Tag = FrmDownloadMod.ComboSearchTag.SelectedItem.Tag
-                .ModLoader = ModLoader
-                .Source = CType(Val(FrmDownloadMod.ComboSearchSource.SelectedItem.Tag), CompSourceType)
-            End With
-        End If
+    Private Function LoaderInput() As CompProjectRequest
+        Dim Request As New CompProjectRequest(PageType, Storage, (Page + 1) * PageSize)
+        Dim GameVersion As String = If(TextSearchVersion.Text = "全部 (也可自行输入)", Nothing,
+                If(TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w"), TextSearchVersion.Text, Nothing))
+        With Request
+            .SearchText = TextSearchName.Text
+            .GameVersion = GameVersion
+            .Tag = ComboSearchTag.SelectedItem.Tag
+            .ModLoader = If(PageType = CompType.Mod, Val(ComboSearchLoader.SelectedItem.Tag), CompModLoaderType.Any)
+            .Source = CType(Val(ComboSearchSource.SelectedItem.Tag), CompSourceType)
+        End With
         Return Request
     End Function
+
+#End Region
+
+    Public Storage As New CompProjectStorage
+    ''' <summary>
+    ''' 每页展示的结果数量。
+    ''' </summary>
+    Public Const PageSize = 40
+    Public Page As Integer = 0
 
     '结果 UI 化
     Private Sub Load_OnFinish()
         Try
-            Log($"[Comp] 开始可视化 Mod 列表，已储藏 {Storage.Results.Count} 个结果，当前在第 {Page + 1} 页")
+            Log($"[Comp] 开始可视化{TypeNameSpaced}列表，已储藏 {Storage.Results.Count} 个结果，当前在第 {Page + 1} 页")
             '列表项
             PanProjects.Children.Clear()
             For i = Math.Min(Page * PageSize, Storage.Results.Count - 1) To Math.Min((Page + 1) * PageSize - 1, Storage.Results.Count - 1)
-                PanProjects.Children.Add(Storage.Results(i).ToCompItem(Loader.Input.GameVersion Is Nothing, Loader.Input.ModLoader = CompModLoaderType.Any))
+                PanProjects.Children.Add(Storage.Results(i).ToCompItem(
+                    ShowMcVersionDesc:=Loader.Input.GameVersion Is Nothing,
+                    ShowLoaderDesc:=Loader.Input.ModLoader = CompModLoaderType.Any AndAlso (PageType = CompType.Mod OrElse PageType = CompType.ModPack)))
             Next
             '页码
             CardPages.Visibility = If(Storage.Results.Count > 40 OrElse
@@ -94,9 +168,9 @@
                 HintError.Text = Storage.ErrorMessage
             End If
             '强制返回顶部
-            PanBack.ScrollToTop()
+            ScrollToTop()
         Catch ex As Exception
-            Log(ex, "可视化 Mod 列表出错", LogLevel.Feedback)
+            Log(ex, $"可视化{TypeNameSpaced}列表出错", LogLevel.Feedback)
         End Try
     End Sub
 
@@ -107,14 +181,13 @@
                 Dim ErrorMessage As String = ""
                 If Loader.Error IsNot Nothing Then ErrorMessage = Loader.Error.Message
                 If ErrorMessage.Contains("不是有效的 json 文件") Then
-                    Log("[Download] 下载的 Mod 列表 json 文件损坏，已自动重试", LogLevel.Debug)
-                    PageLoaderRestart()
+                    Log($"[Download] 下载的{TypeNameSpaced}列表 json 文件损坏，已自动重试", LogLevel.Debug)
+                    CType(Parent, MyPageRight).PageLoaderRestart()
                 End If
         End Select
     End Sub
 
     '切换页码
-
     Private Sub BtnPageFirst_Click(sender As Object, e As RoutedEventArgs) Handles BtnPageFirst.Click
         ChangePage(0)
     End Sub
@@ -128,7 +201,7 @@
         CardPages.IsEnabled = False
         Page = NewPage
         FrmMain.BackToTop()
-        Log($"[Download] Mod 切换到第 {Page + 1} 页")
+        Log($"[Download] {TypeName}：切换到第 {Page + 1} 页")
         RunInThread(
         Sub()
             Thread.Sleep(100) '等待向上滚的动画结束
@@ -166,7 +239,7 @@
         If Not TextSearchVersion.IsDropDownOpen Then UpdateSearchLoaderVisibility()
     End Sub
     Private Sub UpdateSearchLoaderVisibility() Handles TextSearchVersion.DropDownClosed
-        If TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w") Then
+        If PageType = CompType.Mod AndAlso (TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w")) Then
             ComboSearchLoader.Visibility = Visibility.Visible
             Grid.SetColumnSpan(TextSearchVersion, 1)
         Else
@@ -177,5 +250,10 @@
     End Sub
 
 #End Region
+
+    '安装已有整合包按钮
+    Private Sub BtnSearchInstallModPack_Click(sender As Object, e As EventArgs) Handles BtnSearchInstallModPack.Click
+        ModpackInstall()
+    End Sub
 
 End Class

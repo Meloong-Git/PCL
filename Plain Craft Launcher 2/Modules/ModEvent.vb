@@ -1,7 +1,7 @@
 ﻿Public Module ModEvent
 
     Public Sub TryStartEvent(Type As String, Data As String)
-        If String.IsNullOrWhiteSpace(Type) Then Exit Sub
+        If String.IsNullOrWhiteSpace(Type) Then Return
         Dim RealData As String() = {""}
         If Data IsNot Nothing Then RealData = Data.Split("|")
         StartEvent(Type, RealData)
@@ -15,7 +15,7 @@
                     Data(0) = Data(0).Replace("\", "/")
                     If Not Data(0).Contains("://") OrElse Data(0).StartsWithF("file", True) Then '为了支持更多协议（#2200）
                         MyMsgBox("EventData 必须为一个网址。" & vbCrLf & "如果想要启动程序，请将 EventType 改为 打开文件。", "事件执行失败")
-                        Exit Sub
+                        Return
                     End If
                     Hint("正在开启中，请稍候……")
                     OpenWebsite(Data(0))
@@ -39,7 +39,7 @@
                                         Case 2
                                             Setup.Set("HintCustomCommand", True)
                                         Case 3
-                                            Exit Sub
+                                            Return
                                     End Select
                                 End If
                                 Dim Info As New ProcessStartInfo With {
@@ -58,7 +58,7 @@
                     If Data(0) = "\current" Then
                         If McVersionCurrent Is Nothing Then
                             Hint("请先选择一个 Minecraft 版本！", HintType.Critical)
-                            Exit Sub
+                            Return
                         Else
                             Data(0) = McVersionCurrent.Name
                         End If
@@ -100,7 +100,7 @@
                     Data(0) = Data(0).Replace("\", "/")
                     If Not (Data(0).StartsWithF("http://", True) OrElse Data(0).StartsWithF("https://", True)) Then
                         MyMsgBox("EventData 必须为以 http:// 或 https:// 开头的网址。" & vbCrLf & "PCL 不支持其他乱七八糟的下载协议。", "事件执行失败")
-                        Exit Sub
+                        Return
                     End If
                     Try
                         Select Case Data.Length

@@ -13,13 +13,13 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.9.3" '不含分支前缀的显示用版本名
-    Public Const VersionStandardCode As String = "2.9.3." & VersionBranchCode '标准格式的四段式版本号
+    Public Const VersionBaseName As String = "2.10.5" '不含分支前缀的显示用版本名
+    Public Const VersionStandardCode As String = "2.10.5." & VersionBranchCode '标准格式的四段式版本号
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If BETA Then
-    Public Const VersionCode As Integer = 355 'Release
+    Public Const VersionCode As Integer = 361 'Release
 #Else
-    Public Const VersionCode As Integer = 354 'Snapshot
+    Public Const VersionCode As Integer = 364 'Snapshot
 #End If
     '自动生成的版本信息
     Public Const VersionDisplayName As String = VersionBranchName & " " & VersionBaseName
@@ -745,7 +745,6 @@ Public Module ModBase
             Dim IsRight As Boolean = FilePath.EndsWithF("\")
             FilePath = Left(FilePath, Len(FilePath) - 1)
             GetPathFromFullPath = Left(FilePath, FilePath.LastIndexOfAny({"\", "/"})) & If(IsRight, "\", "/")
-            If GetPathFromFullPath = "" Then Throw New Exception("不包含路径：" & FilePath)
         Else
             '是文件路径
             GetPathFromFullPath = Left(FilePath, FilePath.LastIndexOfAny({"\", "/"}) + 1)
@@ -786,13 +785,16 @@ Public Module ModBase
     End Function
 
     '读取、写入、复制文件
+    ''' <summary>
+    ''' 复制文件。会自动创建文件夹、会覆盖已有的文件。
+    ''' </summary>
     Public Sub CopyFile(FromPath As String, ToPath As String)
         Try
             '还原文件路径
             If Not FromPath.Contains(":\") Then FromPath = Path & FromPath
             If Not ToPath.Contains(":\") Then ToPath = Path & ToPath
             '如果复制同一个文件则跳过
-            If FromPath = ToPath Then Exit Sub
+            If FromPath = ToPath Then Return
             '确保目录存在
             Directory.CreateDirectory(GetPathFromFullPath(ToPath))
             '复制文件
@@ -804,7 +806,6 @@ Public Module ModBase
     ''' <summary>
     ''' 读取文件，如果失败则返回空数组。
     ''' </summary>
-    ''' <param name="FilePath">文件完整或相对路径。</param>
     Public Function ReadFileBytes(FilePath As String, Optional Encoding As Encoding = Nothing) As Byte()
         Try
             '还原文件路径
@@ -1364,7 +1365,7 @@ RetryDir:
         Try
             Directory.Delete(Path, True)
         Catch ex As Exception
-            If Not RetriedDir Then
+            If Not RetriedDir AndAlso Not RunInUi() Then
                 RetriedDir = True
                 Log(ex, $"删除文件夹失败，将在 0.3s 后重试（{Path}）")
                 Thread.Sleep(300)
@@ -1460,7 +1461,7 @@ RetryDir:
             CommonReason = "由于操作系统或显卡存在问题，导致出现错误。请尝试重启 PCL。"
         ElseIf {"远程主机强迫关闭了", "远程方已关闭传输流", "未能解析此远程名称", "由于目标计算机积极拒绝",
                 "操作已超时", "操作超时", "服务器超时", "连接超时"}.Any(Function(s) DescList.Any(Function(l) l.Contains(s))) Then
-            CommonReason = "你的网络环境不佳，导致难以连接到服务器。请检查网络，多重试几次，或尝试使用 VPN。"
+            CommonReason = "你的网络环境不佳，导致难以连接到服务器。请稍后重试，或使用 VPN 以改善网络环境。"
         End If
 
         '构造输出信息
@@ -1503,7 +1504,7 @@ RetryDir:
             CommonReason = "由于操作系统或显卡存在问题，导致出现错误。请尝试重启 PCL。"
         ElseIf {"远程主机强迫关闭了", "远程方已关闭传输流", "未能解析此远程名称", "由于目标计算机积极拒绝",
                 "操作已超时", "操作超时", "服务器超时", "连接超时"}.Any(Function(s) Desc.Contains(s)) Then
-            CommonReason = "你的网络环境不佳，导致难以连接到服务器。请检查网络，多重试几次，或尝试使用 VPN。"
+            CommonReason = "你的网络环境不佳，导致难以连接到服务器。请稍后重试，或使用 VPN 以改善网络环境。"
         End If
 
         '构造输出信息
@@ -1550,7 +1551,7 @@ RetryDir:
     ''' <summary>
     ''' 获取 JSON 对象。
     ''' </summary>
-    Public Function GetJson(Data As String)
+    Public Function GetJson(Data As String) As JToken
         Try
             Return JsonConvert.DeserializeObject(Data, New JsonSerializerSettings With {.DateTimeZoneHandling = DateTimeZoneHandling.Local})
         Catch ex As Exception
@@ -1982,8 +1983,8 @@ RetryDir:
 #Region "系统"
 
     ''' <summary>
-    ''' 线程安全的，可以直接使用 For Each 的 List。
-    ''' 在使用 For Each 循环时，列表的结果可能并非最新，但不会抛出异常。
+    ''' 线程安全的 List。
+    ''' 通过在 For Each 循环中使用一个浅表副本规避多线程操作或移除自身导致的异常。
     ''' </summary>
     Public Class SafeList(Of T)
         Inherits SynchronizedCollection(Of T)
@@ -2015,8 +2016,8 @@ RetryDir:
     End Class
 
     ''' <summary>
-    ''' 线程安全的，可以直接使用 For Each 的字典。
-    ''' 在使用 For Each 循环时，字典的结果可能并非最新，但不会抛出异常。
+    ''' 线程安全的字典。
+    ''' 通过在 For Each 循环中使用一个浅表副本规避多线程操作或移除自身导致的异常。
     ''' </summary>
     Public Class SafeDictionary(Of TKey, TValue)
         Implements IDictionary(Of TKey, TValue)
@@ -2131,6 +2132,19 @@ RetryDir:
     End Class
 
     ''' <summary>
+    ''' 将二维数组转换为字典。
+    ''' </summary>
+    <Extension> Public Function ToDictionary(Of T)(arr As T(,)) As Dictionary(Of T, T)
+        Dim result As New Dictionary(Of T, T)
+        If arr.Length = 0 Then Return result
+        If arr.GetLength(1) <> 2 Then Throw New ArgumentException("数组必须为两列，第一列为 Key，第二列为 Value。")
+        For i As Integer = 0 To arr.GetLength(0) - 1
+            result(arr(i, 0)) = arr(i, 1)
+        Next
+        Return result
+    End Function
+
+    ''' <summary>
     ''' 可用于临时存放文件的，不含任何特殊字符的文件夹路径，以“\”结尾。
     ''' </summary>
     Public PathPure As String = GetPureASCIIDir()
@@ -2178,10 +2192,10 @@ RetryDir:
     End Function
 
     ''' <summary>
-    ''' 判断当前系统语言是否为 zh-CN。
+    ''' 判断当前系统语言是否为中文。
     ''' </summary>
     Public Function IsSystemLanguageChinese() As Boolean
-        Return CultureInfo.CurrentCulture.Name = "zh-CN" OrElse CultureInfo.CurrentUICulture.Name = "zh-CN"
+        Return CultureInfo.CurrentCulture.Name.StartsWithF("zh-") OrElse CultureInfo.CurrentUICulture.Name.StartsWithF("zh-")
     End Function
 
     Private Uuid As Integer = 1
@@ -2223,6 +2237,9 @@ RetryDir:
 NextElement:
         Next i
         Return ResultArray
+    End Function
+    <Extension> Public Function Any(Arr As UIElementCollection) As Boolean
+        Return Arr?.Count > 0
     End Function
 
     ''' <summary>
@@ -2333,13 +2350,17 @@ NextElement:
     ''' <param name="FileName">文件名。可以为“notepad”等缩写。</param>
     ''' <param name="Arguments">运行参数。</param>
     Public Sub ShellOnly(FileName As String, Optional Arguments As String = "")
-        FileName = ShortenPath(FileName)
-        Using Program As New Process
-            Program.StartInfo.Arguments = Arguments
-            Program.StartInfo.FileName = FileName
-            Log("[System] 执行外部命令：" & FileName & " " & Arguments)
-            Program.Start()
-        End Using
+        Try
+            FileName = ShortenPath(FileName)
+            Using Program As New Process
+                Program.StartInfo.Arguments = Arguments
+                Program.StartInfo.FileName = FileName
+                Log("[System] 执行外部命令：" & FileName & " " & Arguments)
+                Program.Start()
+            End Using
+        Catch ex As Exception
+            Log(ex, "打开文件或程序失败：" & FileName, LogLevel.Msgbox)
+        End Try
     End Sub
     ''' <summary>
     ''' 前台运行文件并返回返回值。
@@ -2457,7 +2478,7 @@ NextElement:
     ''' </summary>
     Public Sub RunInThread(Action As Action)
         If RunInUi() Then
-            RunInNewThread(Action, "Runtime Invoke " & GetUuid() & "#")
+            RunInNewThread(Action, "Invoke " & GetUuid())
         Else
             Action()
         End If
@@ -2671,7 +2692,7 @@ Retry:
             End Select
         End If
 
-        'If Double.IsNaN(newValue) OrElse Double.IsInfinity(newValue) Then Exit Sub '安全性检查
+        'If Double.IsNaN(newValue) OrElse Double.IsInfinity(newValue) Then Return '安全性检查
         'Select Case control.VerticalAlignment
         '  Case VerticalAlignment.Top, VerticalAlignment.Stretch, VerticalAlignment.Center
         '      control.Margin = New Thickness(control.Margin.Left, newValue, control.Margin.Right, control.Margin.Bottom)
@@ -2755,11 +2776,11 @@ Retry:
             Using Reader As New XamlXmlReader(Stream)
                 While Reader.Read()
                     For Each BlackListType In {GetType(WebBrowser), GetType(Frame), GetType(MediaElement), GetType(ObjectDataProvider), GetType(XamlReader), GetType(Window), GetType(XmlDataProvider)}
-                        If Reader.Type IsNot Nothing AndAlso BlackListType.IsAssignableFrom(Reader.Type.UnderlyingType) Then Throw New UnauthorizedAccessException($"不允许使用 {BlackListType.Name} 类型。")
-                        If Reader.Value IsNot Nothing AndAlso Reader.Value = BlackListType.Name Then Throw New UnauthorizedAccessException($"不允许使用 {BlackListType.Name} 值。")
+                        If Reader.Type IsNot Nothing AndAlso BlackListType.IsAssignableFrom(Reader.Type.UnderlyingType) Then Throw New UnauthorizedAccessException($"基于安全考虑，不允许使用 {BlackListType.Name} 类型。")
+                        If Reader.Value IsNot Nothing AndAlso Reader.Value = BlackListType.Name Then Throw New UnauthorizedAccessException($"基于安全考虑，不允许使用 {BlackListType.Name} 值。")
                     Next
                     For Each BlackListMember In {"Code", "FactoryMethod", "Static"}
-                        If Reader.Member IsNot Nothing AndAlso Reader.Member.Name = BlackListMember Then Throw New UnauthorizedAccessException($"不允许使用 {BlackListMember} 成员。")
+                        If Reader.Member IsNot Nothing AndAlso Reader.Member.Name = BlackListMember Then Throw New UnauthorizedAccessException($"基于安全考虑，不允许使用 {BlackListMember} 成员。")
                     Next
                 End While
             End Using
@@ -2844,9 +2865,10 @@ Retry:
         ''' </summary>
         Feedback = 5
         ''' <summary>
-        ''' 弹窗，结束程序。
+        ''' 弹出 Windows 原生弹窗，要求反馈。在无法保证 WPF 窗口能正常运行时使用此级别。
+        ''' 在第二次触发后会直接结束程序。
         ''' </summary>
-        Assert = 6
+        Critical = 6
     End Enum
     Private LogList As New StringBuilder
     Private LogWritter As StreamWriter
@@ -2889,7 +2911,7 @@ Retry:
     Private ReadOnly LogFlushLock As New Object '防止外部调用 LogFlush 时同时输出多次日志
     Public Sub LogFlush()
         On Error Resume Next
-        If LogWritter Is Nothing Then Exit Sub
+        If LogWritter Is Nothing Then Return
         Dim Log As String = Nothing
         SyncLock LogFlushLock
             If LogList.Length > 0 Then
@@ -2905,6 +2927,7 @@ Retry:
     End Sub
 
     Private ReadOnly LogListLock As New Object '防止日志乱码，只在调试模式下启用
+    Private IsCriticalErrorTriggered As Boolean = False
     ''' <summary>
     ''' 输出 Log。
     ''' </summary>
@@ -2915,7 +2938,7 @@ Retry:
         '处理错误会导致再次调用 Log() 导致无限循环
 
         '输出日志
-        Dim AppendText As String = "[" & GetTimeNow() & "] " & Text & vbCrLf '减轻同步锁占用
+        Dim AppendText As String = $"[{GetTimeNow()}] <{If(Thread.CurrentThread.Name = "", "主线程", Thread.CurrentThread.Name)}> {Text}{vbCrLf}" '减轻同步锁占用
         If ModeDebug Then
             SyncLock LogListLock
                 LogList.Append(AppendText)
@@ -2926,7 +2949,7 @@ Retry:
 #If DEBUG Then
         Console.Write(AppendText)
 #End If
-        If IsProgramEnded OrElse Level = LogLevel.Normal Then Exit Sub
+        If IsProgramEnded OrElse Level = LogLevel.Normal Then Return
 
         '去除前缀
         Text = Text.RegexReplace("\[[^\]]+?\] ", "")
@@ -2953,19 +2976,16 @@ Retry:
                 Else
                     MyMsgBox(Text & vbCrLf & vbCrLf & "将 PCL 更新至最新版或许可以解决这个问题……", Title, IsWarn:=True)
                 End If
-            Case LogLevel.Assert
-                Dim Time As Long = GetTimeTick()
+            Case LogLevel.Critical
+                If IsCriticalErrorTriggered Then
+                    FormMain.EndProgramForce(ProcessReturnValues.Exception)
+                    Return
+                End If
+                IsCriticalErrorTriggered = True
                 If CanFeedback(False) Then
                     If MsgBox(Text & vbCrLf & vbCrLf & "是否反馈此问题？如果不反馈，这个问题可能永远无法得到解决！", MsgBoxStyle.Critical + MsgBoxStyle.YesNo, Title) = MsgBoxResult.Yes Then Feedback(False, True)
                 Else
                     MsgBox(Text & vbCrLf & vbCrLf & "将 PCL 更新至最新版或许可以解决这个问题……", MsgBoxStyle.Critical, Title)
-                End If
-                If GetTimeTick() - Time < 1500 Then
-                    '弹窗无法保留
-                    Log("[System] PCL 已崩溃：" & vbCrLf & Text)
-                    FormMain.EndProgramForce(ProcessReturnValues.Exception)
-                Else
-                    FormMain.EndProgramForce(ProcessReturnValues.Fail)
                 End If
         End Select
 
@@ -2976,13 +2996,13 @@ Retry:
     ''' <param name="Desc">错误描述。会在处理时在末尾加入冒号。</param>
     Public Sub Log(Ex As Exception, Desc As String, Optional Level As LogLevel = LogLevel.Debug, Optional Title As String = "出现错误")
         On Error Resume Next
-        If TypeOf Ex Is ThreadInterruptedException Then Exit Sub
+        If TypeOf Ex Is ThreadInterruptedException Then Return
 
         '获取错误信息
         Dim ExFull As String = Desc & "：" & GetExceptionDetail(Ex)
 
         '输出日志
-        Dim AppendText As String = "[" & GetTimeNow() & "] " & Desc & "：" & GetExceptionDetail(Ex, True) & vbCrLf '减轻同步锁占用
+        Dim AppendText As String = $"[{GetTimeNow()}] <{If(Thread.CurrentThread.Name = "", "主线程", Thread.CurrentThread.Name)}> {Desc}：{GetExceptionDetail(Ex, True)}{vbCrLf}" '减轻同步锁占用
         If ModeDebug Then
             SyncLock LogListLock
                 LogList.Append(AppendText)
@@ -2993,7 +3013,7 @@ Retry:
 #If DEBUG Then
         Console.Write(AppendText)
 #End If
-        If IsProgramEnded Then Exit Sub
+        If IsProgramEnded Then Return
 
         '输出提示
         Select Case Level
@@ -3022,19 +3042,16 @@ Retry:
                 Else
                     MyMsgBox(ExFull & vbCrLf & vbCrLf & "将 PCL 更新至最新版或许可以解决这个问题……", Title, IsWarn:=True)
                 End If
-            Case LogLevel.Assert
-                Dim Time As Long = GetTimeTick()
+            Case LogLevel.Critical
+                If IsCriticalErrorTriggered Then
+                    FormMain.EndProgramForce(ProcessReturnValues.Exception)
+                    Return
+                End If
+                IsCriticalErrorTriggered = True
                 If CanFeedback(False) Then
                     If MsgBox(ExFull & vbCrLf & vbCrLf & "是否反馈此问题？如果不反馈，这个问题可能永远无法得到解决！", MsgBoxStyle.Critical + MsgBoxStyle.YesNo, Title) = MsgBoxResult.Yes Then Feedback(False, True)
                 Else
                     MsgBox(ExFull & vbCrLf & vbCrLf & "将 PCL 更新至最新版或许可以解决这个问题……", MsgBoxStyle.Critical, Title)
-                End If
-                If GetTimeTick() - Time < 1500 Then
-                    '弹窗无法保留
-                    Log("[System] PCL 已崩溃：" & vbCrLf & ExFull)
-                    FormMain.EndProgramForce(ProcessReturnValues.Exception)
-                Else
-                    FormMain.EndProgramForce(ProcessReturnValues.Fail)
                 End If
         End Select
 
@@ -3047,7 +3064,7 @@ Retry:
         If ForceOpenLog OrElse (ShowMsgbox AndAlso MyMsgBox("若你在汇报一个 Bug，请点击 打开文件夹 按钮，并上传 Log(1~5).txt 中包含错误信息的文件。" & vbCrLf & "游戏崩溃一般与启动器无关，请不要因为游戏崩溃而提交反馈。", "反馈提交提醒", "打开文件夹", "不需要") = 1) Then
             OpenExplorer(Path & "PCL\Log1.txt")
         End If
-        OpenWebsite("https://github.com/Hex-Dragon/PCL2/issues/")
+        OpenWebsite("https://github.com/Meloong-Git/PCL/issues/")
     End Sub
     Public Function CanFeedback(ShowHint As Boolean) As Boolean
         If False.Equals(PageSetupSystem.IsLauncherNewest) Then

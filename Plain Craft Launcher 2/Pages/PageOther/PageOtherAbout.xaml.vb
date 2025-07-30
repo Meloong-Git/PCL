@@ -7,7 +7,7 @@
         PanBack.ScrollToHome()
 
         '非重复加载部分
-        If IsLoaded Then Exit Sub
+        If IsLoaded Then Return
         IsLoaded = True
 
         ItemAboutPcl.Info = ItemAboutPcl.Info.Replace("%VERSION%", VersionDisplayName).Replace("%VERSIONCODE%", VersionCode).Replace("%BRANCH%", VersionBranchCode)

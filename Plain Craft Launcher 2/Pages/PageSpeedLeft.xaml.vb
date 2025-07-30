@@ -13,7 +13,7 @@ Public Class PageSpeedLeft
         '如果在页面切换动画的 “上一页消失” 部分已经完成了下载，就直接尝试返回
         TryReturnToHome()
 
-        If IsLoad Then Exit Sub
+        If IsLoad Then Return
         IsLoad = True
 
         '监控定时器
@@ -34,7 +34,7 @@ Public Class PageSpeedLeft
     '定时器任务
     Private ReadOnly RightCards As New Dictionary(Of String, MyCard)
     Private Sub Watcher()
-        If Not FrmMain.PageCurrent = FormMain.PageType.DownloadManager Then Exit Sub
+        If Not FrmMain.PageCurrent = FormMain.PageType.DownloadManager Then Return
         Try
 
 #Region "更新左边栏"
@@ -46,7 +46,8 @@ Public Class PageSpeedLeft
                 LabThread.Text = "0 / " & NetTaskThreadLimit
             Else
                 '有任务，输出基本信息
-                Dim RawPercent As Double = LoaderTaskbarProgress
+                Dim Tasks = LoaderTaskbar.Where(Function(l) l.Show).ToList() '筛选掉启动 MC 的任务（#6270）
+                Dim RawPercent As Double = If(Tasks.Any, MathClamp(Tasks.Select(Function(l) l.Progress).Average(), 0, 1), 1)
                 Dim PredictText As String = Math.Floor(RawPercent * 100) & "." & StrFill(Math.Floor((RawPercent * 100 - Math.Floor(RawPercent * 100)) * 100), "0", 2) & " %"
                 LabProgress.Text = If(RawPercent > 0.999999, "100 %", PredictText)
                 LabSpeed.Text = GetString(NetManager.Speed) & "/s"
@@ -58,7 +59,7 @@ Public Class PageSpeedLeft
         Catch ex As Exception
             Log(ex, "下载管理左栏监视出错", LogLevel.Feedback)
         End Try
-        If FrmSpeedRight Is Nothing OrElse FrmSpeedRight.PanMain Is Nothing Then Exit Sub
+        If FrmSpeedRight Is Nothing OrElse FrmSpeedRight.PanMain Is Nothing Then Return
         Try
             For Each Loader In LoaderTaskbar.ToList
                 TaskRefresh(Loader)
@@ -68,7 +69,7 @@ Public Class PageSpeedLeft
         End Try
     End Sub
     Public Sub TaskRefresh(Loader As LoaderBase)
-        If Loader Is Nothing OrElse Not Loader.Show Then Exit Sub
+        If Loader Is Nothing OrElse Not Loader.Show Then Return
         Try
             '获取实际加载器列表
             Dim LoaderList As List(Of LoaderBase) = CType(Loader, Object).GetLoaderList()
@@ -76,11 +77,11 @@ Public Class PageSpeedLeft
                 '已有此卡片
                 Dim Card As Grid = RightCards(Loader.Name)
                 Dim NewValue As Double = Loader.Progress + Loader.State
-                If Val(Card.Tag) = NewValue Then Exit Sub
+                If Val(Card.Tag) = NewValue Then Return
                 Card.Tag = NewValue
                 If Card.Children.Count <= 3 Then
                     Log("[Watcher] 元素不足的卡片：" & Loader.Name, LogLevel.Debug)
-                    Exit Sub
+                    Return
                 End If
                 Card = Card.Children(3)
                 Try

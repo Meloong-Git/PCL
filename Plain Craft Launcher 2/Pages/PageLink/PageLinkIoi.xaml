@@ -10,7 +10,7 @@
             <StackPanel Orientation="Vertical" Margin="25,10">
                 <local:MyCard Margin="0,15,0,0" x:Name="CardUser" Title="已连接的玩家 (0)">
                     <StackPanel Margin="20,37,20,15">
-                        <local:MyHint Margin="5,2,5,8" x:Name="LabHint" IsWarn="False" />
+                        <local:MyHint Margin="5,2,5,8" x:Name="LabHint" />
                         <StackPanel x:Name="PanUserList" />
                         <Grid Height="35" Margin="5,8,5,5">
                             <Grid.ColumnDefinitions>

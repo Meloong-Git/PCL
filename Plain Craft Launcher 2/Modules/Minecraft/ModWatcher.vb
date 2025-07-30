@@ -15,7 +15,7 @@
                 TriggerLauncherShutdown = False
             End If
         Next
-        If IsWatcherRunning = IsRunning Then Exit Sub
+        If IsWatcherRunning = IsRunning Then Return
         IsWatcherRunning = IsRunning
         If IsWatcherRunning Then
             MinecraftStart()
@@ -81,7 +81,7 @@
             WatcherStateChanged()
 
             '初始化进程与日志读取
-            Me.GameProcess = Loader.Input
+            GameProcess = Loader.Input
             GameProcess.BeginOutputReadLine()
             GameProcess.BeginErrorReadLine()
             AddHandler GameProcess.OutputDataReceived, AddressOf LogReceived
@@ -118,7 +118,7 @@
                 Return _State
             End Get
             Set(value As MinecraftState)
-                If _State = value Then Exit Property
+                If _State = value Then Return
                 _State = value
                 WatcherStateChanged()
             End Set
@@ -144,7 +144,7 @@
                 '输出文本
                 Dim Copyed As New List(Of String)
                 SyncLock WaitingLogLock
-                    If Not WaitingLog.Any() Then Exit Sub
+                    If Not WaitingLog.Any() Then Return
                     Copyed = WaitingLog
                     WaitingLog = New List(Of String)(1000)
                 End SyncLock
@@ -180,8 +180,9 @@
         Public LatestLog As New Queue(Of String)
         Private Sub GameLog(Text As String)
             '预处理
-            If Text Is Nothing Then Exit Sub
+            If Text Is Nothing Then Return
             Text = Text.Replace(vbCrLf, vbCr).Replace(vbLf, vbCr).Replace(vbCr, vbCrLf)
+            'If Text.Contains("�����") Then Hint("检测到错误的日志编码：" & Text)
             '加入预存储
             LatestLog.Enqueue(Text)
             If LatestLog.Count >= 501 Then LatestLog.Dequeue()
@@ -256,8 +257,8 @@
         Private WindowHandle As IntPtr
         Private Sub TimerWindow()
             Try
-                If GameProcess.HasExited Then Exit Sub
-                If IsWindowFinished Then Exit Sub
+                If GameProcess.HasExited Then Return
+                If IsWindowFinished Then Return
                 '获取全部窗口，检查是否有新增的
                 Dim MinecraftWindow As KeyValuePair(Of IntPtr, String)? = Nothing
                 Try
@@ -267,10 +268,10 @@
                     Log(ex, "由于反作弊或安全软件拦截，PCL 无法操作游戏窗口", LogLevel.Hint)
                     IsWindowFinished = True
                 End Try
-                If MinecraftWindow Is Nothing Then Exit Sub
+                If MinecraftWindow Is Nothing Then Return
                 Dim MinecraftWindowName = MinecraftWindow.Value.Value, MinecraftWindowHandle = MinecraftWindow.Value.Key
                 '已找到窗口
-                If Not MinecraftWindowName.StartsWithF("FML") Then
+                If Not MinecraftWindowName.StartsWithF("FML") AndAlso Not MinecraftWindowName.StartsWithF("Quilt Loader") Then
                     '已找到 Minecraft 窗口
                     WindowHandle = MinecraftWindowHandle
                     WatcherLog($"Minecraft 窗口已加载：{MinecraftWindowName}（{MinecraftWindowHandle.ToInt64}）")
@@ -291,8 +292,8 @@
                         End Sub, "MinecraftWindowMaximize")
                     End If
                 ElseIf Not IsWindowAppeared Then
-                    '已找到 FML 窗口
-                    WatcherLog("FML 窗口已加载：" & MinecraftWindowName & "（" & MinecraftWindowHandle.ToInt64 & "）")
+                    '已找到 Mod Loader 窗口
+                    WatcherLog("Mod Loader 窗口已加载：" & MinecraftWindowName & "（" & MinecraftWindowHandle.ToInt64 & "）")
                 End If
                 IsWindowAppeared = True
             Catch ex As Exception
@@ -307,27 +308,27 @@
             TryGetMinecraftWindow = Nothing
             EnumWindows(
                 Sub(hwnd As IntPtr, lParam As Integer)
-                    If TryGetMinecraftWindow IsNot Nothing Then Exit Sub
+                    If TryGetMinecraftWindow IsNot Nothing Then Return
                     '检查类名
                     Dim str As New StringBuilder(512)
                     GetClassName(hwnd, str, str.Capacity)
                     Dim ClassName As String = str.ToString
-                    If Not (ClassName = "GLFW30" OrElse ClassName = "LWJGL" OrElse ClassName = "SunAwtFrame") Then Exit Sub
+                    If Not (ClassName = "GLFW30" OrElse ClassName = "LWJGL" OrElse ClassName = "SunAwtFrame") Then Return
                     '获取窗口标题名
                     str = New StringBuilder(512)
                     GetWindowText(hwnd, str, str.Capacity)
                     Dim WindowText As String = str.ToString
                     '有的 Mod 可以修改窗口标题，所以不能检测是否为 Minecraft 打头，这并不准确
                     '部分版本会搞个 GLFW message window 出来所以得反选
-                    If Not (WindowText.StartsWithF("FML") OrElse (WindowText <> "PopupMessageWindow") AndAlso Not WindowText.StartsWithF("GLFW")) Then Exit Sub
+                    If Not (WindowText.StartsWithF("FML") OrElse (WindowText <> "PopupMessageWindow") AndAlso Not WindowText.StartsWithF("GLFW")) Then Return
                     '获取窗口关联的进程
                     Dim ProcessId As Integer
                     GetWindowThreadProcessId(hwnd, ProcessId)
                     Try
-                        If Process.GetProcessById(ProcessId).StartTime < GameProcess.StartTime Then Exit Sub '需要是此后启动的进程
+                        If Process.GetProcessById(ProcessId).StartTime < GameProcess.StartTime Then Return '需要是此后启动的进程
                     Catch ex As Exception
                         Log(ex, "枚举 Minecraft 窗口进程失败")
-                        Exit Sub
+                        Return
                     End Try
                     '返回
                     TryGetMinecraftWindow = New KeyValuePair(Of IntPtr, String)(hwnd, WindowText)
@@ -344,7 +345,7 @@
 
         '崩溃处理
         Private Sub Crashed()
-            If State = MinecraftState.Crashed OrElse State = MinecraftState.Ended Then Exit Sub
+            If State = MinecraftState.Crashed OrElse State = MinecraftState.Ended Then Return
             State = MinecraftState.Crashed
             '崩溃分析
             WatcherLog("Minecraft 已崩溃，将在 2 秒后开始崩溃分析")

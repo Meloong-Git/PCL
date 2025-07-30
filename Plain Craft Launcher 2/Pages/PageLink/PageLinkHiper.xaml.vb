@@ -18,7 +18,7 @@
     Private IsLoad As Boolean = False
     Private Sub OnLoaded() Handles Me.Loaded
         FormMain.EndProgramForce(ProcessReturnValues.Aborted)
-        If IsLoad Then Exit Sub
+        If IsLoad Then Return
         IsLoad = True
         '启动监视线程
         If Not IsWatcherStarted Then RunInNewThread(AddressOf WatcherThread, "Hiper Watcher")
@@ -149,7 +149,7 @@
 
     '每 1 秒执行的 Timer
     Private Sub WatcherTimer1()
-        If HiperState <> LoadState.Finished Then Exit Sub
+        If HiperState <> LoadState.Finished Then Return
         RunInUi(Sub()
                     '索引码剩余时间
                     Dim Span As TimeSpan = HiperCertTime - Date.Now
@@ -178,7 +178,7 @@
                         HiperExit(True)
                         ShowWindowToTop(Handle)
                         Beep()
-                        Exit Sub
+                        Return
                     End If
                     '网络质量
                     Dim QualityScore As Integer = If(IpIsInChina, 0, -2)
@@ -272,7 +272,7 @@
         Log("[Hiper] 连接步骤：" & Intro)
         LoadStep = [Step]
         RunInUiWait(Sub()
-                        If FrmLinkHiper Is Nothing OrElse Not FrmLinkHiper.LabLoadDesc.IsLoaded Then Exit Sub
+                        If FrmLinkHiper Is Nothing OrElse Not FrmLinkHiper.LabLoadDesc.IsLoaded Then Return
                         FrmLinkHiper.LabLoadDesc.Text = Intro
                         FrmLinkHiper.UpdateProgress()
                     End Sub)
@@ -280,7 +280,7 @@
 
     '承接重试
     Private Sub CardLoad_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles CardLoad.MouseLeftButtonUp
-        If Not InitLoader.State = LoadState.Failed Then Exit Sub
+        If Not InitLoader.State = LoadState.Failed Then Return
         InitLoader.Start(IsForceRestart:=True)
     End Sub
 
@@ -299,7 +299,7 @@
     Private Sub UpdateProgress(Optional Value As Double = -1)
         If Value = -1 Then Value = InitLoader.Progress
         Dim DisplayingProgress As Double = ColumnProgressA.Width.Value
-        If Math.Round(Value - DisplayingProgress, 3) = 0 Then Exit Sub
+        If Math.Round(Value - DisplayingProgress, 3) = 0 Then Return
         If DisplayingProgress > Value Then
             ColumnProgressA.Width = New GridLength(Value, GridUnitType.Star)
             ColumnProgressB.Width = New GridLength(1 - Value, GridUnitType.Star)
@@ -327,7 +327,7 @@
 
     '退出
     Private Sub BtnFinishExit_Click(sender As Object, e As EventArgs) Handles BtnFinishExit.Click
-        If IsServerSide AndAlso MyMsgBox("你确定要关闭联机房间吗？", "确认退出", "确定", "取消", IsWarn:=True) = 2 Then Exit Sub
+        If IsServerSide AndAlso MyMsgBox("你确定要关闭联机房间吗？", "确认退出", "确定", "取消", IsWarn:=True) = 2 Then Return
         HiperExit(False)
     End Sub
 
@@ -338,7 +338,7 @@
     'Ping 房主
     Private Sub BtnFinishPing_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles BtnFinishPing.MouseLeftButtonUp
         LabFinishPing.Text = "检测中"
-        If TaskPingHost.State = LoadState.Loading Then Exit Sub
+        If TaskPingHost.State = LoadState.Loading Then Return
         TaskPingHost.Start(True, IsForceRestart:=True)
     End Sub
     Private Shared TaskPingHost As New LoaderTask(Of Boolean, Integer)("HiPer Ping Host",
@@ -362,7 +362,7 @@
             Return _CurrentSubpage
         End Get
         Set(value As Subpages)
-            If _CurrentSubpage = value Then Exit Property
+            If _CurrentSubpage = value Then Return
             _CurrentSubpage = value
             Log("[Hiper] 子页面更改为 " & GetStringFromEnum(value))
             PageOnContentExit()
@@ -384,7 +384,7 @@
         If InitLoader.State = LoadState.Loading Then InitLoader.Abort()
         If InitLoader.State = LoadState.Failed Then InitLoader.State = LoadState.Waiting
         RunInUi(Sub()
-                    If FrmLinkHiper Is Nothing OrElse Not FrmLinkHiper.IsLoaded Then Exit Sub
+                    If FrmLinkHiper Is Nothing OrElse Not FrmLinkHiper.IsLoaded Then Return
                     FrmLinkHiper.CurrentSubpage = If(ExitToCertPage, Subpages.PanCert, Subpages.PanSelect)
                     FrmLinkHiper.PageOnContentExit()
                 End Sub)

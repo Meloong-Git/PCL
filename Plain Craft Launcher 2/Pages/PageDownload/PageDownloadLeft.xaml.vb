@@ -11,7 +11,7 @@
     ''' <summary>
     ''' 勾选事件改变页面。
     ''' </summary>
-    Private Sub PageCheck(sender As MyListItem, e As RouteEventArgs) Handles ItemInstall.Check, ItemClient.Check, ItemOptiFine.Check, ItemForge.Check, ItemNeoForge.Check, ItemLiteLoader.Check, ItemMod.Check, ItemFabric.Check, ItemPack.Check
+    Private Sub PageCheck(sender As MyListItem, e As RouteEventArgs) Handles ItemInstall.Check, ItemClient.Check, ItemOptiFine.Check, ItemForge.Check, ItemNeoForge.Check, ItemLiteLoader.Check, ItemMod.Check, ItemFabric.Check, ItemPack.Check, ItemResourcePack.Check, ItemShader.Check, ItemDataPack.Check
         '尚未初始化控件属性时，sender.Tag 为 Nothing，会导致切换到页面 0
         '若使用 IsLoaded，则会导致模拟点击不被执行（模拟点击切换页面时，控件的 IsLoaded 为 False）
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
@@ -47,6 +47,15 @@
             Case FormMain.PageSubType.DownloadPack
                 If FrmDownloadPack Is Nothing Then FrmDownloadPack = New PageDownloadPack
                 Return FrmDownloadPack
+            Case FormMain.PageSubType.DownloadResourcePack
+                If FrmDownloadResourcePack Is Nothing Then FrmDownloadResourcePack = New PageDownloadResourcePack
+                Return FrmDownloadResourcePack
+            Case FormMain.PageSubType.DownloadShader
+                If FrmDownloadShader Is Nothing Then FrmDownloadShader = New PageDownloadShader
+                Return FrmDownloadShader
+            Case FormMain.PageSubType.DownloadDataPack
+                If FrmDownloadDataPack Is Nothing Then FrmDownloadDataPack = New PageDownloadDataPack
+                Return FrmDownloadDataPack
             Case Else
                 Throw New Exception("未知的下载子页面种类：" & ID)
         End Select
@@ -56,7 +65,7 @@
     ''' 切换现有页面。
     ''' </summary>
     Public Sub PageChange(ID As FormMain.PageSubType)
-        If PageID = ID Then Exit Sub
+        If PageID = ID Then Return
         AniControlEnabled += 1
         Try
             PageChangeRun(PageGet(ID))
@@ -110,19 +119,50 @@
                 DlOptiFabricLoader.Start(IsForceRestart:=True)
                 ItemInstall.Checked = True
             Case FormMain.PageSubType.DownloadMod
-                PageDownloadMod.Storage = New CompProjectStorage
-                PageDownloadMod.Page = 0
                 CompProjectCache.Clear()
                 CompFilesCache.Clear()
-                If FrmDownloadMod IsNot Nothing Then FrmDownloadMod.PageLoaderRestart()
+                If FrmDownloadMod IsNot Nothing Then
+                    FrmDownloadMod.Content.Storage = New CompProjectStorage
+                    FrmDownloadMod.Content.Page = 0
+                    FrmDownloadMod.PageLoaderRestart()
+                End If
                 ItemMod.Checked = True
             Case FormMain.PageSubType.DownloadPack
-                PageDownloadPack.Storage = New CompProjectStorage
-                PageDownloadPack.Page = 0
                 CompProjectCache.Clear()
                 CompFilesCache.Clear()
-                If FrmDownloadPack IsNot Nothing Then FrmDownloadPack.PageLoaderRestart()
+                If FrmDownloadPack IsNot Nothing Then
+                    FrmDownloadPack.Content.Storage = New CompProjectStorage
+                    FrmDownloadPack.Content.Page = 0
+                    FrmDownloadPack.PageLoaderRestart()
+                End If
                 ItemPack.Checked = True
+            Case FormMain.PageSubType.DownloadResourcePack
+                CompProjectCache.Clear()
+                CompFilesCache.Clear()
+                If FrmDownloadResourcePack IsNot Nothing Then
+                    FrmDownloadResourcePack.Content.Storage = New CompProjectStorage
+                    FrmDownloadResourcePack.Content.Page = 0
+                    FrmDownloadResourcePack.PageLoaderRestart()
+                End If
+                ItemResourcePack.Checked = True
+            Case FormMain.PageSubType.DownloadShader
+                CompProjectCache.Clear()
+                CompFilesCache.Clear()
+                If FrmDownloadShader IsNot Nothing Then
+                    FrmDownloadShader.Content.Storage = New CompProjectStorage
+                    FrmDownloadShader.Content.Page = 0
+                    FrmDownloadShader.PageLoaderRestart()
+                End If
+                ItemShader.Checked = True
+            Case FormMain.PageSubType.DownloadDataPack
+                CompProjectCache.Clear()
+                CompFilesCache.Clear()
+                If FrmDownloadDataPack IsNot Nothing Then
+                    FrmDownloadDataPack.Content.Storage = New CompProjectStorage
+                    FrmDownloadDataPack.Content.Page = 0
+                    FrmDownloadDataPack.PageLoaderRestart()
+                End If
+                ItemDataPack.Checked = True
             Case FormMain.PageSubType.DownloadClient
                 DlClientListLoader.Start(IsForceRestart:=True)
                 ItemClient.Checked = True
@@ -147,13 +187,13 @@
 
     '点击返回
     Private Sub ItemInstall_Click(sender As Object, e As MouseButtonEventArgs) Handles ItemInstall.Click
-        If Not ItemInstall.Checked Then Exit Sub
+        If Not ItemInstall.Checked Then Return
         FrmDownloadInstall.ExitSelectPage()
     End Sub
 
     '展开手动安装
     Private Sub ItemHand_Click(sender As Object, e As RouteEventArgs) Handles ItemHand.Changed
-        If ItemHand.Checked = False Then Exit Sub
+        If ItemHand.Checked = False Then Return
         e.Handled = True
         AniControlEnabled += 1
         If Not Setup.Get("HintHandInstall") Then
@@ -162,7 +202,7 @@
                         "在自动安装页面先选择 MC 版本，然后就可以选择 OptiFine、Forge 等组件，让 PCL 自动进行安装了。", "自动安装提示", "返回自动安装", "继续下载手动安装包") = 1 Then
                 FrmMain.PageChange(New FormMain.PageStackData With {.Page = FormMain.PageType.Download}, FormMain.PageSubType.DownloadInstall)
                 AniControlEnabled -= 1
-                Exit Sub
+                Return
             End If
         End If
         ItemHand.Visibility = Visibility.Collapsed

@@ -14,7 +14,7 @@
             Return _MaxValue
         End Get
         Set(value As Integer)
-            If value = _MaxValue Then Exit Property
+            If value = _MaxValue Then Return
             _MaxValue = value
             RefreshWidth(Nothing, Nothing)
         End Set
@@ -29,7 +29,7 @@
             Try
 
                 newValue = MathClamp(newValue, 0, MaxValue)
-                If _Value = newValue Then Exit Property
+                If _Value = newValue Then Return
 
                 '触发 Preview 事件，修改新值
                 Dim OldValue = _Value
@@ -40,12 +40,12 @@
                     If e.Handled Then
                         _Value = OldValue
                         DragStop()
-                        Exit Property
+                        Return
                     End If
                 End If
 
                 If IsLoaded AndAlso AniControlEnabled = 0 Then
-                    If ActualWidth < ShapeDot.Width Then Exit Property
+                    If ActualWidth < ShapeDot.Width Then Return
                     Dim NewWidth As Double = _Value / MaxValue * (ActualWidth - ShapeDot.Width)
                     Dim DeltaProcess As Double = Math.Abs(LineFore.Width / (ActualWidth - ShapeDot.Width) - _Value / MaxValue)
                     Dim Time As Double = (1 - Math.Pow(1 - DeltaProcess, 3)) * 300 + If(ChangeByKey, 100, 0)
@@ -103,7 +103,7 @@
         Popup.IsOpen = False
     End Sub
     Public Sub RefreshPopup()
-        If GetHintText Is Nothing Then Exit Sub
+        If GetHintText Is Nothing Then Return
         Popup.IsOpen = True
         TextHint.Text = GetHintText.DynamicInvoke(Value)
         Dim typeface As New Typeface(TextHint.FontFamily, TextHint.FontStyle, TextHint.FontWeight, TextHint.FontStretch)
@@ -165,7 +165,7 @@
     End Sub
     Private Sub MySlider_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
         '拒绝一边拖动一边用按键改变
-        If ReferenceEquals(Me, DragControl) Then Exit Sub
+        If ReferenceEquals(Me, DragControl) Then Return
         '改变值
         If e.Key = Key.Left Then
             ChangeByKey = True
@@ -178,7 +178,7 @@
             ChangeByKey = False
             e.Handled = True
         Else
-            Exit Sub
+            Return
         End If
         '更新 Popup
         If GetHintText IsNot Nothing Then

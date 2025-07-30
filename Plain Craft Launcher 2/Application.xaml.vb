@@ -115,7 +115,11 @@ WaitRetry:
             LogStart()
             '添加日志
             Log($"[Start] 程序版本：{VersionDisplayName} ({VersionCode}{If(CommitHash = "", "", $"，#{CommitHash}")})")
+#If RELEASE Then
+            Log($"[Start] 识别码：{UniqueAddress}{If(ThemeCheckOne(9), "，正式版", "")}")
+#Else
             Log($"[Start] 识别码：{UniqueAddress}{If(ThemeCheckOne(9), "，已解锁反馈主题", "")}")
+#End If
             Log($"[Start] 程序路径：{PathWithName}")
             Log($"[Start] 系统编码：{Encoding.Default.HeaderName} ({Encoding.Default.CodePage}, GBK={IsGBKEncoding})")
             Log($"[Start] 管理员权限：{IsAdmin()}")
@@ -131,6 +135,7 @@ WaitRetry:
             Setup.Load("SystemDebugAnim")
             Setup.Load("ToolDownloadThread")
             Setup.Load("ToolDownloadCert")
+            Setup.Load("ToolDownloadSpeed")
             '网络配置初始化
             ServicePointManager.Expect100Continue = True
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 Or SecurityProtocolType.Tls Or SecurityProtocolType.Tls11 Or SecurityProtocolType.Tls12
@@ -160,79 +165,45 @@ WaitRetry:
     End Sub
 
     '异常
-    Private IsCritErrored As Boolean = False
     Private Sub Application_DispatcherUnhandledException(sender As Object, e As DispatcherUnhandledExceptionEventArgs) Handles Me.DispatcherUnhandledException
         On Error Resume Next
         e.Handled = True
-        If IsProgramEnded Then Exit Sub
-        If IsCritErrored Then
-            '在汇报错误后继续引发错误，知道这次压不住了
-            FormMain.EndProgramForce(ProcessReturnValues.Exception)
-            Exit Sub
-        End If
-        IsCritErrored = True
-        Dim ExceptionString As String = GetExceptionDetail(e.Exception, True)
-        If ExceptionString.Contains("System.Windows.Threading.Dispatcher.Invoke") OrElse
-           ExceptionString.Contains("MS.Internal.AppModel.ITaskbarList.HrInit") OrElse
-           ExceptionString.Contains(".NET Framework") OrElse ' “自动错误判断” 的结果分析
-           ExceptionString.Contains("未能加载文件或程序集") Then
+        If IsProgramEnded Then Return
+        FeedbackInfo()
+        Dim Detail As String = GetExceptionDetail(e.Exception, True)
+        If Detail.Contains("System.Windows.Threading.Dispatcher.Invoke") OrElse Detail.Contains("MS.Internal.AppModel.ITaskbarList.HrInit") OrElse Detail.Contains("未能加载文件或程序集") OrElse
+           Detail.Contains(".NET Framework") Then ' “自动错误判断” 的结果分析
             OpenWebsite("https://dotnet.microsoft.com/zh-cn/download/dotnet-framework/thank-you/net462-offline-installer")
-            MsgBox("你的 .NET Framework 版本过低或损坏，请下载并重新安装 .NET Framework 4.6.2！", MsgBoxStyle.Information, "运行环境错误")
-            FormMain.EndProgramForce(ProcessReturnValues.Cancel)
+            Log(e.Exception, "你的 .NET Framework 版本过低或损坏，请下载并重新安装 .NET Framework 4.6.2！" & vbCrLf & "若无法安装，可在卸载高版本的 .NET Framework 后再试。", LogLevel.Critical, "运行环境错误")
         Else
-            FeedbackInfo()
-            Log(e.Exception, "程序出现未知错误", LogLevel.Assert, "锟斤拷烫烫烫")
+            Log(e.Exception, "程序出现未知错误", LogLevel.Critical, "锟斤拷烫烫烫")
         End If
     End Sub
 
     '动态 DLL 调用
-    Private Shared AssemblyNAudio As Assembly
-    Private Shared AssemblyJson As Assembly
-    Private Shared AssemblyDialog As Assembly
-    Private Shared AssemblyImazenWebp As Assembly
-    Private Shared ReadOnly AssemblyNAudioLock As New Object
-    Private Shared ReadOnly AssemblyJsonLock As New Object
-    Private Shared ReadOnly AssemblyDialogLock As New Object
-    Private Shared ReadOnly AssemblyImazenWebpLock As New Object
     Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
-    Public Shared Function AssemblyResolve(sender As Object, args As ResolveEventArgs) As Assembly
-        If args.Name.StartsWithF("NAudio") Then
-            SyncLock AssemblyNAudioLock
-                If AssemblyNAudio Is Nothing Then
-                    Log("[Start] 加载 DLL：NAudio")
-                    AssemblyNAudio = Assembly.Load(GetResources("NAudio"))
-                End If
-                Return AssemblyNAudio
-            End SyncLock
-        ElseIf args.Name.StartsWithF("Newtonsoft.Json") Then
-            SyncLock AssemblyJsonLock
-                If AssemblyJson Is Nothing Then
-                    Log("[Start] 加载 DLL：Json")
-                    AssemblyJson = Assembly.Load(GetResources("Json"))
-                End If
-                Return AssemblyJson
-            End SyncLock
-        ElseIf args.Name.StartsWithF("Ookii.Dialogs.Wpf") Then
-            SyncLock AssemblyDialogLock
-                If AssemblyDialog Is Nothing Then
-                    Log("[Start] 加载 DLL：Dialogs")
-                    AssemblyDialog = Assembly.Load(GetResources("Dialogs"))
-                End If
-                Return AssemblyDialog
-            End SyncLock
-        ElseIf args.Name.StartsWithF("Imazen.WebP") Then
-            SyncLock AssemblyImazenWebpLock
-                If AssemblyImazenWebp Is Nothing Then
-                    Log("[Start] 加载 DLL：Imazen.WebP")
-                    AssemblyImazenWebp = Assembly.Load(GetResources("Imazen_WebP"))
-                    SetDllDirectory(PathPure.TrimEnd("\"))
+    Public Shared Function AssemblyResolve(sender As Object, Args As ResolveEventArgs) As Assembly
+        '缓存
+        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "System.Net.Http.Formatting"}
+        Static Locks As New Dictionary(Of String, Object)(StringComparer.Ordinal)
+        Static LoadedAssembly As New Dictionary(Of String, Assembly)(StringComparer.Ordinal)
+        '查找对应的 DLL
+        Dim Prefix As String = Prefixes.FirstOrDefault(Function(p) Args.Name.StartsWithF(p))
+        If Prefix Is Nothing Then Return Nothing
+        '加载 DLL
+        If Not Locks.ContainsKey(Prefix) Then Locks(Prefix) = New Object()
+        SyncLock Locks(Prefix)
+            If Not LoadedAssembly.ContainsKey(Prefix) Then
+                Log($"[Start] 加载 DLL：{Prefix}")
+                LoadedAssembly(Prefix) = Assembly.Load(GetResources(Prefix))
+                'WebP 特判
+                If Prefix = "Imazen.WebP" Then
+                    SetDllDirectory(PathPure.TrimEnd("\"c))
                     WriteFile(PathPure & "libwebp.dll", GetResources("libwebp64"))
                 End If
-                Return AssemblyImazenWebp
-            End SyncLock
-        Else
-            Return Nothing
-        End If
+            End If
+            Return LoadedAssembly(Prefix)
+        End SyncLock
     End Function
 
     '切换窗口

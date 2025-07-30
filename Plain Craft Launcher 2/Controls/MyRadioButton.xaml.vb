@@ -62,7 +62,7 @@ Public Class MyRadioButton
 
             '保证只有一个单选框选中
 
-            If IsNothing(Parent) Then Exit Sub
+            If IsNothing(Parent) Then Return
             Dim RadioboxList As New List(Of MyRadioButton)
             Dim CheckedCount As Integer = 0
             '收集控件列表与选中个数
@@ -101,7 +101,7 @@ Public Class MyRadioButton
 
             '更改动画
 
-            If Not IsChanged Then Exit Sub
+            If Not IsChanged Then Return
             RefreshColor(Nothing, anime)
 
             '触发事件
@@ -147,17 +147,17 @@ Public Class MyRadioButton
     Public Event PreviewClick(sender As Object, e As RouteEventArgs)
     Private IsMouseDown As Boolean = False
     Private Sub Radiobox_MouseUp() Handles Me.MouseLeftButtonUp
-        If Checked Then Exit Sub
-        If Not IsMouseDown Then Exit Sub
+        If Checked Then Return
+        If Not IsMouseDown Then Return
         Log("[Control] 按下单选按钮：" & Text)
         IsMouseDown = False
         Dim e As New RouteEventArgs(True)
         RaiseEvent PreviewClick(Me, e)
-        If e.Handled Then Exit Sub
+        If e.Handled Then Return
         SetChecked(True, True, True)
     End Sub
     Private Sub Radiobox_MouseDown() Handles Me.MouseLeftButtonDown
-        If Checked Then Exit Sub
+        If Checked Then Return
         IsMouseDown = True
         RefreshColor()
     End Sub

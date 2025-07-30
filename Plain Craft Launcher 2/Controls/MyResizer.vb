@@ -301,7 +301,7 @@ Public Class MyResizer
     End Sub
 
     Private Sub updateMouseDown()
-        Dim flag As Boolean = Mouse.LeftButton = MouseButtonState.Released
+        Dim flag = (GetAsyncKeyState(&H1) And &H8000) = 0 '调用原生API判断鼠标是否抬起，如果使用WPF的API的话鼠标不在窗口上时不会更新状态 (#5655)
         If flag Then
             resizeRight = False
             resizeLeft = False
@@ -311,5 +311,5 @@ Public Class MyResizer
     End Sub
 
     Private Declare Function GetCursorPos Lib "user32.dll" (<Out()> ByRef lpPoint As PointAPI) As Boolean
-
+    Private Declare Function GetAsyncKeyState Lib "user32.dll" (vKey As Integer) As Short
 End Class

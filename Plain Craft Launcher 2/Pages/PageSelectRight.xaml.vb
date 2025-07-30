@@ -227,11 +227,11 @@
                         DeleteDirectory(Version.Path)
                         Hint("版本 " & Version.Name & " 已永久删除！", HintType.Finish)
                     Else
-                        FileIO.FileSystem.DeleteDirectory(Version.Path, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                        FileIO.FileSystem.DeleteDirectory(Version.Path, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
                         Hint("版本 " & Version.Name & " 已删除到回收站！", HintType.Finish)
                     End If
                 Case 2
-                    Exit Sub
+                    Return
             End Select
             '从 UI 中移除
             If Version.DisplayType = McVersionCardType.Hidden OrElse Not Version.IsStar Then
