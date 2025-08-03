@@ -1,4 +1,7 @@
-﻿Public Class PageSetupCustom
+﻿Imports System.Net.Http
+Imports Newtonsoft.Json.Linq
+
+Public Class PageSetupCustom
 
     Private Shadows IsLoaded As Boolean = False
 
@@ -11,6 +14,8 @@
         AniControlEnabled += 1
         Reload() '#4826，在每次进入页面时都刷新一下
         AniControlEnabled -= 1
+
+        LoadHomepages()
 
         '非重复加载部分
         If IsLoaded Then Return
@@ -59,28 +64,29 @@
     'Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles Nothing
     '   If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value)
     'End Sub
-    Private Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboCustomPreset.SelectionChanged
+    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboCustomPreset.SelectionChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex)
     End Sub
     'Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles Nothing
     '   If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Checked)
     'End Sub
-    Private Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextCustomNet.ValidatedTextChanged
+    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextCustomNet.ValidatedTextChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Text)
     End Sub
-    Private Sub RadioBoxChange(sender As MyRadioBox, e As Object) Handles RadioCustomType0.Check, RadioCustomType1.Check, RadioCustomType2.Check, RadioCustomType3.Check
+    Private Shared Sub RadioBoxChange(sender As MyRadioBox, e As Object) Handles RadioCustomType0.Check, RadioCustomType1.Check, RadioCustomType2.Check, RadioCustomType3.Check
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag.ToString.Split("/")(0), Val(sender.Tag.ToString.Split("/")(1)))
         UiCustomType(Val(sender.Tag.ToString.Split("/")(1)))
     End Sub
-    Private Sub PresetSelectedFromCard(sender As MyTextButton, e As Object) Handles CustomPreset1.Click
-        RadioCustomType3.SetChecked(True, True)
-        If AniControlEnabled = 0 Then Setup.Set("UiCustomPreset", Val(sender.Tag.ToString.Split("/")(0)))
-        ComboCustomPreset.SelectedItem = ComboCustomPreset.Items(Val(sender.Tag.ToString.Split("/")(0)))
+    Private Sub PresetSelectedFromCard(sender As MyListItem, e As Object)
+        RadioCustomType2.SetChecked(True, True)
+        If AniControlEnabled = 0 Then Setup.Set("UiCustomNet", sender.Tag.ToString)
+        TextCustomNet.Text = sender.Tag.ToString
+        FrmLaunchRight.ForceRefresh()
     End Sub
 
 
     '主页
-    Private Sub BtnCustomFile_Click(sender As Object, e As EventArgs) Handles BtnCustomFile.Click
+    Private Shared Sub BtnCustomFile_Click(sender As Object, e As EventArgs) Handles BtnCustomFile.Click
         Try
             If File.Exists(Path & "PCL\Custom.xaml") Then
                 If MyMsgBox("当前已存在布局文件，继续生成教学文件将会覆盖现有布局文件！", "覆盖确认", "继续", "取消", IsWarn:=True) = 2 Then Return
@@ -106,8 +112,8 @@
     End Sub
 
     '主页
-    Private Shared Sub UiCustomType(Value As Integer)
-        Select Case Value
+    Private Shared Sub UiCustomType(value As Integer)
+        Select Case value
             Case 0 '无
                 FrmSetupCustom.PanCustomPreset.Visibility = Visibility.Collapsed
                 FrmSetupCustom.PanCustomLocal.Visibility = Visibility.Collapsed
@@ -140,6 +146,47 @@
                 FrmSetupCustom.HintCustomWarn.Visibility = Visibility.Collapsed
         End Select
         FrmSetupCustom.CardCustom.TriggerForceResize()
+    End Sub
+    Private Async Sub LoadHomepages()
+        Dim url As String = "http://pclhomeplazaoss.lingyunawa.top:26995/d/Homepages/HomepageList/homepages.json"
+
+        Using httpClient As New HttpClient()
+            ' 获取字节数组而不是字符串
+            Dim responseBytes() As Byte = Await httpClient.GetByteArrayAsync(url)
+
+            ' 使用 GBK 编码解码
+            Dim gbkEncoding As Encoding = Encoding.GetEncoding("GBK")
+            Dim jsonString As String = gbkEncoding.GetString(responseBytes)
+            Dim jsonObj As JObject = JObject.Parse(jsonString)
+            Dim homepages As JObject = jsonObj("homepages")
+
+
+            Dispatcher.Invoke(Sub()
+                                  HomepagesPan.Children.Clear()
+                                  Dim index As Integer = 1
+
+                                  For Each homepage As JProperty In homepages.Properties()
+                                      Dim item As JObject = homepage.Value
+                                      Dim isPreset As Boolean = item("preset").ToObject(Of Boolean)()
+                                      ' 设置图标（直接使用固定路径）
+                                      Dim listItem As New MyListItem With {
+                                          .Margin = New Thickness(10, 8, 10, 8),
+                                          .ToolTip = "预设主页",
+                                          .Title = item("alias").ToString(),
+                                          .Info = item("desc").ToString(),
+                                          .Type = MyListItem.CheckType.Clickable,
+                                          .Logo = "pack://application:,,,/images/Blocks/RedstoneLampOn.png",
+                                          .Tag = item("link")
+                                      }
+
+                                      ' 添加点击事件处理
+                                      AddHandler listItem.Click, AddressOf PresetSelectedFromCard
+
+                                      HomepagesPan.Children.Add(listItem)
+                                      index += 1
+                                  Next
+                              End Sub)
+        End Using
     End Sub
 
 End Class
