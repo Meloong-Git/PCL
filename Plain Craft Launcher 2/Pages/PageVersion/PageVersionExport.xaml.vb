@@ -83,81 +83,92 @@ Public Class PageVersionExport
 #End Region
 
 #Region "选项"
-
     ''' <summary>
     ''' 重新确认是否应该显示每个选项，并将 ExportOption 同步到 UI。
     ''' </summary>
     Private Sub RefreshAllOptionsUI()
-        '预先归纳所有至多二级的文件/文件夹
-        Dim AllEntries As New List(Of String)
-        Dim IsValidDirectory = '检查文件夹不为空
-        Function(Folder As DirectoryInfo) As Boolean
-            Try
-                Return Folder.Exists AndAlso
-                    Folder.EnumerateFileSystemInfos().Any(Function(i) Not SubOptionBlackList.Any(Function(b) i.Name.ContainsF(b)))
-            Catch '一般是由于无法访问，或是一个指向已不存在的文件夹的链接（例如使用 mklink 创造的 resource 文件夹链接）
-                Return False
-            End Try
-        End Function
-        Dim PathInfo As New DirectoryInfo(PageVersionLeft.Version.PathIndie)
-        AllEntries.AddRange(PathInfo.EnumerateFiles().Select(Function(f) f.Name))
-        For Each SubFolder In PathInfo.EnumerateDirectories().Where(IsValidDirectory)
-            AllEntries.Add($"{SubFolder.Name}\")
-            AllEntries.AddRange(SubFolder.EnumerateFiles().Select(Function(f) $"{SubFolder.Name}\{f.Name}"))
-            AllEntries.AddRange(SubFolder.EnumerateDirectories().Where(IsValidDirectory).Select(Function(d) $"{SubFolder.Name}\{d.Name}\"))
-        Next
-        Log($"[Export] 共发现 {AllEntries.Count} 个可行的二级文件/文件夹")
-        '确认选项是否应该被显示
-        Dim IsVisible =
-        Function(TargetOption As ExportOption) As Boolean
-            '检查需要 OptiFine 或 Mod 加载器
-            If TargetOption.RequireOptiFine AndAlso Not PageVersionLeft.Version.Version.HasOptiFine Then Return False
-            If TargetOption.RequireModLoader AndAlso Not PageVersionLeft.Version.Modable Then Return False
-            If TargetOption.RequireModLoaderOrOptiFine AndAlso Not PageVersionLeft.Version.Version.HasOptiFine AndAlso Not PageVersionLeft.Version.Modable Then Return False
-            '粗略检查是否可能有符合规则的文件/文件夹
-            Return StandardizeLines(If(TargetOption.Rules, TargetOption.ShowRules).Split("|"c), True).Any(
-            Function(Rule As String)
-                If Rule.StartsWithF("!") Then Return False '只看正向规则
-                '检查前两级
+        Try
+            '预先归纳所有至多二级的文件/文件夹
+            Dim AllEntries As New List(Of String)
+            Dim IsValidDirectory = '检查文件夹不为空
+            Function(Folder As DirectoryInfo) As Boolean
                 Try
-                    If AllEntries.Any(Function(Entry) Entry Like Rule) Then Return True
-                Catch ex As Exception
-                    Log(ex, $"错误的规则：{Rule}", LogLevel.Hint)
+                    Return Folder.Exists AndAlso
+                        Folder.EnumerateFileSystemInfos().Any(Function(i) Not SubOptionBlackList.Any(Function(b) i.Name.ContainsF(b)))
+                Catch '一般是由于无法访问，或是一个指向已不存在的文件夹的链接（例如使用 mklink 创造的 resource 文件夹链接）
                     Return False
                 End Try
-                '粗略检查所有级
-                Rule = Rule.Trim("*?".ToCharArray)
-                If Rule.Split({"\"c}, StringSplitOptions.RemoveEmptyEntries).Count >= 3 Then
-                    If Rule.EndsWithF("\") Then
-                        Return IsValidDirectory(New DirectoryInfo(PageVersionLeft.Version.PathIndie & Rule)) '文件夹有效
+            End Function
+            Dim PathInfo As New DirectoryInfo(PageVersionLeft.Version.PathIndie)
+            AllEntries.AddRange(PathInfo.EnumerateFiles().Select(Function(f) f.Name))
+            For Each SubFolder In PathInfo.EnumerateDirectories().Where(IsValidDirectory)
+                AllEntries.Add($"{SubFolder.Name}\")
+                AllEntries.AddRange(SubFolder.EnumerateFiles().Select(Function(f) $"{SubFolder.Name}\{f.Name}"))
+                AllEntries.AddRange(SubFolder.EnumerateDirectories().Where(IsValidDirectory).Select(Function(d) $"{SubFolder.Name}\{d.Name}\"))
+            Next
+            Log($"[Export] 共发现 {AllEntries.Count} 个可行的二级文件/文件夹")
+            '确认选项是否应该被显示
+            Dim IsVisible =
+            Function(TargetOption As ExportOption) As Boolean
+                '检查需要 OptiFine 或 Mod 加载器
+                If TargetOption.RequireOptiFine AndAlso Not PageVersionLeft.Version.Version.HasOptiFine Then Return False
+                If TargetOption.RequireModLoader AndAlso Not PageVersionLeft.Version.Modable Then Return False
+                If TargetOption.RequireModLoaderOrOptiFine AndAlso Not PageVersionLeft.Version.Version.HasOptiFine AndAlso Not PageVersionLeft.Version.Modable Then Return False
+                '粗略检查是否可能有符合规则的文件/文件夹
+                Return StandardizeLines(If(TargetOption.Rules, TargetOption.ShowRules).Split("|"c), True).Any(
+                Function(Rule As String)
+                    If Rule.StartsWithF("!") Then Return False '只看正向规则
+                    '检查前两级
+                    Try
+                        If AllEntries.Any(Function(Entry) Entry Like Rule) Then Return True
+                    Catch ex As Exception
+                        Log(ex, $"错误的规则：{Rule}", LogLevel.Hint)
+                        Return False
+                    End Try
+                    '粗略检查所有级
+                    Rule = Rule.Trim("*?".ToCharArray)
+                    If Rule.Split({"\"c}, StringSplitOptions.RemoveEmptyEntries).Count >= 3 Then
+                        If Rule.EndsWithF("\") Then
+                            Return IsValidDirectory(New DirectoryInfo(PageVersionLeft.Version.PathIndie & Rule)) '文件夹有效
+                        Else
+                            Return File.Exists(PageVersionLeft.Version.PathIndie & Rule) '文件有效
+                        End If
                     Else
-                        Return File.Exists(PageVersionLeft.Version.PathIndie & Rule) '文件有效
+                        Return False
                     End If
-                Else
-                    Return False
+                End Function)
+            End Function
+            '逐个检查选项
+            For Each CheckBox In GetAllOptions(True)
+                Dim TargetOption = GetExportOption(CheckBox)
+                '名称与简介
+                CheckBox.Inlines.Clear()
+                CheckBox.Inlines.Add(New Run(TargetOption.Title))
+                If Not String.IsNullOrEmpty(TargetOption.Description) Then
+                    CheckBox.Inlines.Add(New Run("   " & TargetOption.Description) With {.Foreground = ColorGray5})
                 End If
-            End Function)
-        End Function
-        '逐个检查选项
-        For Each CheckBox In GetAllOptions(True)
-            Dim TargetOption = GetExportOption(CheckBox)
-            '名称与简介
-            CheckBox.Inlines.Clear()
-            CheckBox.Inlines.Add(New Run(TargetOption.Title))
-            If Not String.IsNullOrEmpty(TargetOption.Description) Then
-                CheckBox.Inlines.Add(New Run("   " & TargetOption.Description) With {.Foreground = ColorGray5})
+                '可见性、默认勾选
+                If String.IsNullOrEmpty(TargetOption.Rules) AndAlso String.IsNullOrEmpty(TargetOption.ShowRules) Then
+                    CheckBox.Visibility = Visibility.Visible
+                    CheckBox.Checked = TargetOption.DefaultChecked
+                Else
+                    Dim Pass As Boolean = IsVisible(TargetOption)
+                    CheckBox.Visibility = If(Pass, Visibility.Visible, Visibility.Collapsed)
+                    CheckBox.Checked = TargetOption.DefaultChecked AndAlso Pass
+                End If
+            Next
+        Catch ex As ThreadInterruptedException
+            Throw ex
+        Catch ex As Exception
+            Dim NeedFeedback As Boolean = True
+            If TypeOf(ex) Is DirectoryNotFoundException Then
+                NeedFeedback = False
+                FrmMain.PageChange(FormMain.PageType.Launch,0)
             End If
-            '可见性、默认勾选
-            If String.IsNullOrEmpty(TargetOption.Rules) AndAlso String.IsNullOrEmpty(TargetOption.ShowRules) Then
-                CheckBox.Visibility = Visibility.Visible
-                CheckBox.Checked = TargetOption.DefaultChecked
-            Else
-                Dim Pass As Boolean = IsVisible(TargetOption)
-                CheckBox.Visibility = If(Pass, Visibility.Visible, Visibility.Collapsed)
-                CheckBox.Checked = TargetOption.DefaultChecked AndAlso Pass
-            End If
-        Next
+            Log(ex,"刷新整合包选项失败",If(NeedFeedback,LogLevel.Feedback,LogLevel.Msgbox))
+        End Try
     End Sub
+
 
     ''' <summary>
     ''' 对文本行进行标准化处理，以便使用 Like 进行匹配。
