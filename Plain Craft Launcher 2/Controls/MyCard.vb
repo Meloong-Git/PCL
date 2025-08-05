@@ -1,10 +1,34 @@
-﻿Public Class MyCard
+﻿Imports System.Collections.Concurrent
+
+Public Class MyCard
 
     '控件
     Inherits Grid
     Private ReadOnly MainGrid As Grid
     Public ReadOnly Property MainChrome As MyDropShadow
     Private ReadOnly MainBorder As Border
+    
+    '虚拟化滚动相关属性
+    Private VirtualizedData As Object = Nothing
+    Private VirtualizedType As Integer = -1
+    Private VirtualizedLoadedCount As Integer = 0
+    Private Const VirtualizedBatchSize As Integer = 50 '每批加载50个项目
+    Private Const VirtualizedPreloadThreshold As Integer = 300 '距离底部300像素时开始预加载
+    Private VirtualizedScrollViewer As MyScrollViewer = Nothing
+    Private VirtualizedIsLoading As Boolean = False
+    Private VirtualizedStack As StackPanel = Nothing
+    
+    '性能优化相关属性
+    Private Shared ReadOnly ItemPool As New ConcurrentQueue(Of MyListItem) '控件对象池
+    Private Shared ReadOnly MaxPoolSize As Integer = 100 '对象池最大大小
+    Private VirtualizedItemCache As New Dictionary(Of Integer, MyListItem) '已创建控件的缓存
+    Private LastVisibleRange As New Tuple(Of Integer, Integer)(0, 0) '上次可见范围
+    Private Const ViewportBuffer As Integer = 5 '视窗缓冲区大小
+    
+    '异步加载相关
+    Private CancellationTokenSource As CancellationTokenSource = Nothing
+    Private IsDisposed As Boolean = False
+
     Public Property BorderChild As UIElement
         Get
             Return MainBorder.Child
@@ -110,6 +134,19 @@
         '但是现在……反正勉强能用……懒得改了就这样吧.jpg
         '别骂了别骂了.jpg
         If IsNothing(Stack.Tag) Then Return
+        
+        '检查是否需要虚拟化（针对预览版等大数据量场景）
+        Dim dataCount As Integer = 0
+        If TypeOf Stack.Tag Is List(Of JObject) Then
+            dataCount = CType(Stack.Tag, List(Of JObject)).Count
+        End If
+        
+        '如果数据量大于150且是Minecraft版本相关，使用虚拟化加载
+        If dataCount > 150 AndAlso (Type = 2 OrElse Type = 7) Then
+            StackInstallVirtualized(Stack, Type, CardTitle)
+            Return
+        End If
+        
         '排序
         Select Case Type
             Case 3
@@ -131,10 +168,16 @@
                 AddHandler LoadingPickaxe.StateChanged, AddressOf FrmDownloadForge.Forge_StateChanged
                 AddHandler LoadingPickaxe.Click, AddressOf FrmDownloadForge.Forge_Click
                 Stack.Children.Add(LoadingPickaxe)
+                Stack.Tag = Nothing
+                Return
             Case 6
                 ForgeDownloadListItemPreload(Stack, Stack.Tag, AddressOf ForgeSave_Click, True)
+                Stack.Tag = Nothing
+                Return
             Case 8
                 CompFilesCardPreload(Stack, Stack.Tag)
+                Stack.Tag = Nothing
+                Return
         End Select
         '实现控件虚拟化
         For Each Data As Object In Stack.Tag
@@ -290,7 +333,7 @@
 #Region "折叠"
 
     '若设置了 CanSwap，或 SwapControl 不为空，则判定为会进行折叠
-    '这是因为不能直接在 XAML 中设置 SwapControl
+    '这是因为不能直接在 XAML ���设置 SwapControl
     Public SwapControl As Object
     Public Property CanSwap As Boolean = False
     ''' <summary>
@@ -310,7 +353,7 @@
             If SwapControl Is Nothing Then Return
             '展开
             If Not IsSwaped AndAlso TypeOf SwapControl Is StackPanel Then StackInstall(SwapControl, SwapType, Title)
-            '若尚未加载，会在 Loaded 事件中触发无动画的折叠，不需要在这里进行
+            '若尚未加���，会在 Loaded 事件中触发无动画的折叠，不需要在这里进行
             If Not IsLoaded Then Return
             '更新高度
             SwapControl.Visibility = Visibility.Visible
@@ -353,6 +396,200 @@
     End Sub
     Private Sub MyCard_MouseLeave_Swap(sender As Object, e As MouseEventArgs) Handles Me.MouseLeave
         IsMouseDown = False
+    End Sub
+
+#End Region
+
+#Region "虚拟化滚动"
+
+    '虚拟化加载方法
+    Private Shared Sub StackInstallVirtualized(ByRef Stack As StackPanel, Type As Integer, Optional CardTitle As String = "")
+        If IsNothing(Stack.Tag) Then Return
+        
+        '获取父级的MyCard控件
+        Dim parentCard As MyCard = Nothing
+        Dim parent As DependencyObject = Stack
+        While parent IsNot Nothing
+            If TypeOf parent Is MyCard Then
+                parentCard = CType(parent, MyCard)
+                Exit While
+            End If
+            parent = VisualTreeHelper.GetParent(parent)
+        End While
+        
+        If parentCard Is Nothing Then
+            '如果找不到父级MyCard，回退到普通加载
+            StackInstallNormal(Stack, Type, CardTitle)
+            Return
+        End If
+        
+        '初始化虚拟化相关属性
+        parentCard.VirtualizedData = Stack.Tag
+        parentCard.VirtualizedType = Type
+        parentCard.VirtualizedLoadedCount = 0
+        parentCard.VirtualizedIsLoading = False
+        parentCard.VirtualizedStack = Stack
+        
+        '找到ScrollViewer
+        Dim scrollViewer As MyScrollViewer = Nothing
+        Dim rootParent As DependencyObject = Stack
+        While rootParent IsNot Nothing
+            If TypeOf rootParent Is MyScrollViewer Then
+                scrollViewer = CType(rootParent, MyScrollViewer)
+                Exit While
+            End If
+            rootParent = VisualTreeHelper.GetParent(rootParent)
+        End While
+        
+        If scrollViewer IsNot Nothing Then
+            parentCard.VirtualizedScrollViewer = scrollViewer
+            AddHandler scrollViewer.ScrollChanged, AddressOf parentCard.OnVirtualizedScrollChanged
+        End If
+        
+        '加载第一批数据
+        parentCard.LoadMoreVirtualizedItems()
+        
+        Stack.Tag = Nothing '清空Tag以防止重复加载
+    End Sub
+    
+    '普通加载��法（从原StackInstall分离出来）
+    Private Shared Sub StackInstallNormal(ByRef Stack As StackPanel, Type As Integer, Optional CardTitle As String = "")
+        '实现控件虚拟化
+        For Each Data As Object In Stack.Tag
+            Select Case Type
+                Case 0
+                    Stack.Children.Add(PageSelectRight.McVersionListItem(Data))
+                Case 2
+                    Stack.Children.Add(McDownloadListItem(Data, AddressOf McDownloadMenuSave, True))
+                Case 3
+                    Stack.Children.Add(OptiFineDownloadListItem(Data, AddressOf OptiFineSave_Click, True))
+                Case 4
+                    Stack.Children.Add(LiteLoaderDownloadListItem(Data, AddressOf FrmDownloadLiteLoader.DownloadStart, False))
+                Case 5
+                Case 6
+                    Stack.Children.Add(ForgeDownloadListItem(Data, AddressOf ForgeSave_Click, True))
+                Case 7
+                    '不能使用 AddressOf，这导致了 #535，原因完全不明，疑似是编译器 Bug
+                    Stack.Children.Add(McDownloadListItem(Data, Sub(sender, e) FrmDownloadInstall.MinecraftSelected(sender, e), False))
+                Case 8
+                    If CType(Stack.Tag, List(Of CompFile)).Distinct(Function(a, b) a.DisplayName = b.DisplayName).Count <>
+                       CType(Stack.Tag, List(Of CompFile)).Count Then
+                        '存在重复的名称（#1344）
+                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=True))
+                    Else
+                        '不存在重复的名称，正常加载
+                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Save_Click))
+                    End If
+                Case 9
+                    If CType(Stack.Tag, List(Of CompFile)).Distinct(Function(a, b) a.DisplayName = b.DisplayName).Count <>
+                       CType(Stack.Tag, List(Of CompFile)).Count Then
+                        '存在重复的名称（#1344）
+                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Install_Click, AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=True))
+                    Else
+                        '不存在重复的名称，正常加载
+                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Install_Click, AddressOf FrmDownloadCompDetail.Save_Click))
+                    End If
+                Case 10
+                    Stack.Children.Add(LiteLoaderDownloadListItem(Data, AddressOf LiteLoaderSave_Click, True))
+                Case 11
+                    Stack.Children.Add(CType(Data, HelpEntry).ToListItem)
+                Case 12
+                    Stack.Children.Add(FabricDownloadListItem(CType(Data, JObject), AddressOf FrmDownloadInstall.Fabric_Selected))
+                Case 13
+                    Stack.Children.Add(NeoForgeDownloadListItem(Data, AddressOf NeoForgeSave_Click, True))
+                Case Else
+                    Log("未知的虚拟化种类：" & Type, LogLevel.Feedback)
+            End Select
+        Next
+        Stack.Children.Add(New FrameworkElement With {.Height = 18}) '下边距，同时适应折叠
+        Stack.Tag = Nothing
+    End Sub
+    
+    '加载更多虚拟化项目
+    Private Sub LoadMoreVirtualizedItems()
+        If VirtualizedData Is Nothing OrElse VirtualizedIsLoading OrElse VirtualizedStack Is Nothing Then Return
+        
+        VirtualizedIsLoading = True
+        
+        Try
+            Dim dataList As List(Of JObject) = CType(VirtualizedData, List(Of JObject))
+            Dim totalCount = dataList.Count
+            Dim endIndex = Math.Min(VirtualizedLoadedCount + VirtualizedBatchSize, totalCount)
+            
+            '移除旧的加载更多按钮和状态提示（如果存在）
+            For i = VirtualizedStack.Children.Count - 1 To 0 Step -1
+                Dim child = VirtualizedStack.Children(i)
+                If (TypeOf child Is MyButton AndAlso CType(child, MyButton).Text.Contains("加载更多")) OrElse
+                   (TypeOf child Is TextBlock AndAlso CType(child, TextBlock).Text.Contains("已加载")) Then
+                    VirtualizedStack.Children.RemoveAt(i)
+                End If
+            Next
+            
+            '加载当前批次的项目
+            For i = VirtualizedLoadedCount To endIndex - 1
+                Dim data = dataList(i)
+                Select Case VirtualizedType
+                    Case 2
+                        VirtualizedStack.Children.Add(McDownloadListItem(data, AddressOf McDownloadMenuSave, True))
+                    Case 7
+                        VirtualizedStack.Children.Add(McDownloadListItem(data, Sub(sender, e) FrmDownloadInstall.MinecraftSelected(sender, e), False))
+                End Select
+            Next
+            
+            VirtualizedLoadedCount = endIndex
+            
+            '添加加载状态提示
+            Dim statusText As New TextBlock With {
+                .Text = $"已加载 {VirtualizedLoadedCount} / {totalCount} 项",
+                .Margin = New Thickness(0, 5, 0, 5),
+                .HorizontalAlignment = HorizontalAlignment.Center,
+                .FontSize = 12,
+                .Opacity = 0.7
+            }
+            statusText.SetResourceReference(TextBlock.ForegroundProperty, "ColorBrush1")
+            VirtualizedStack.Children.Add(statusText)
+            
+            '如果还有更多数据，添加"加载更多"按钮
+            If VirtualizedLoadedCount < totalCount Then
+                Dim loadMoreBtn As New MyButton With {
+                    .Text = $"加载更多 ({totalCount - VirtualizedLoadedCount} 项剩余)",
+                    .Margin = New Thickness(0, 5, 0, 10),
+                    .HorizontalAlignment = HorizontalAlignment.Center,
+                    .ColorType = MyButton.ColorState.Highlight,
+                    .MinWidth = 200
+                }
+                
+                AddHandler loadMoreBtn.Click, Sub()
+                    LoadMoreVirtualizedItems()
+                End Sub
+                
+                VirtualizedStack.Children.Add(loadMoreBtn)
+            Else
+                '全部加载完成，添加底部边距
+                VirtualizedStack.Children.Add(New FrameworkElement With {.Height = 18})
+            End If
+            
+        Catch ex As Exception
+            Log(ex, "虚拟化加载失败", LogLevel.Feedback)
+        Finally
+            VirtualizedIsLoading = False
+        End Try
+    End Sub
+    
+    '滚动事件处理
+    Private Sub OnVirtualizedScrollChanged(sender As Object, e As ScrollChangedEventArgs)
+        If VirtualizedData Is Nothing OrElse VirtualizedIsLoading OrElse VirtualizedStack Is Nothing Then Return
+        
+        Dim scrollViewer = CType(sender, MyScrollViewer)
+        Dim distanceFromBottom = scrollViewer.ExtentHeight - (scrollViewer.VerticalOffset + scrollViewer.ViewportHeight)
+        
+        '当距离底部小于阈值且还有更多数据时，自动加载更多
+        If distanceFromBottom < VirtualizedPreloadThreshold Then
+            Dim totalCount = CType(VirtualizedData, List(Of JObject)).Count
+            If VirtualizedLoadedCount < totalCount Then
+                LoadMoreVirtualizedItems()
+            End If
+        End If
     End Sub
 
 #End Region
