@@ -333,7 +333,7 @@ Public Class MyCard
 #Region "折叠"
 
     '若设置了 CanSwap，或 SwapControl 不为空，则判定为会进行折叠
-    '这是因为不能直接在 XAML ���设置 SwapControl
+    '这是因为不能直接在 XAML 中设置 SwapControl
     Public SwapControl As Object
     Public Property CanSwap As Boolean = False
     ''' <summary>
@@ -353,7 +353,7 @@ Public Class MyCard
             If SwapControl Is Nothing Then Return
             '展开
             If Not IsSwaped AndAlso TypeOf SwapControl Is StackPanel Then StackInstall(SwapControl, SwapType, Title)
-            '若尚未加���，会在 Loaded 事件中触发无动画的折叠，不需要在这里进行
+            '若尚未加载，会在 Loaded 事件中触发无动画的折叠，不需要在这里进行
             If Not IsLoaded Then Return
             '更新高度
             SwapControl.Visibility = Visibility.Visible
@@ -452,7 +452,7 @@ Public Class MyCard
         Stack.Tag = Nothing '清空Tag以防止重复加载
     End Sub
     
-    '普通加载��法（从原StackInstall分离出来）
+    '普通加载方法（从原StackInstall分离出来）
     Private Shared Sub StackInstallNormal(ByRef Stack As StackPanel, Type As Integer, Optional CardTitle As String = "")
         '实现控件虚拟化
         For Each Data As Object In Stack.Tag
