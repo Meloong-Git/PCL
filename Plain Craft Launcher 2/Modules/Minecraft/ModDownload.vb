@@ -1398,7 +1398,7 @@
                 Return NetGetCodeByRequestOnce(Source.Key, Encode:=Encoding.UTF8, Timeout:=Source.Value * 1000, IsJson:=IsJson, UseBrowserUserAgent:=True)
             Catch ex As Exception
                 ' 镜像源可能随机爆炸，忽略就好
-                If Not ex.Message.ContainsF("mcimirrmr") Then
+                If Not ex.Message.ContainsF("mcimirror") Then
                     Exs += ex.Message + vbCrLf
                 End If
             End Try
