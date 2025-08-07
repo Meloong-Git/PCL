@@ -182,7 +182,7 @@
                     </Grid>
                 </StackPanel>
             </local:MyCard> -->
-            <local:MyCard x:Name="CardDebug" Margin="0,0,0,15" Title="调试选项" CanSwap="True" IsSwaped="True">
+            <local:MyCard x:Name="CardDebug" Margin="0,0,0,15" Title="调试选项" CanSwap="True" IsSwapped="True">
                 <StackPanel Margin="25,40,25,15">
                     <Grid x:Name="PanDebugAnim" Height="22" Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>

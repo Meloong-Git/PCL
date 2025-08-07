@@ -3,7 +3,7 @@
      下列内容均基于 WPF 框架。你可以在继续之前先尝试自学 XAML 与 WPF 的基础，这能让你更轻松地理解下列内容。
      你也可以使用 Ctrl + F 快速查找。例如，若需要改变文本颜色，则搜索 “颜色” 即可。 -->
 
-<local:MyCard Title="纯文本" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="纯文本" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="每个 local:MyCard 代表一张卡片，你可以添加、删除格式类似的 MyCard 来添加多个卡片。每个 TextBlock 代表一段文本，你可以在 Text 属性中书写任何你想写的内容，也可以自行添加更多的 TextBlock。" />
@@ -14,17 +14,17 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="卡片、提示条" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="卡片、提示条" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <local:MyHint Text="local:MyHint 代表提示条。" />
         <local:MyHint Margin="0,8,0,2" Theme="Blue"
                     Text="将提示条的 Theme 属性改为 Blue、Yellow 或 Red 即可修改配色。&#xA;使用左边的那堆字符可以在任意地方手动换行，如果需要使用等号、引号等特殊字符，可以自行百度 XAML 转义字符。" />
         <TextBlock TextWrapping="Wrap" Margin="0,6,0,0"
-                    Text="卡片（local:MyCard）的 Title 属性决定了它的标题。&#xA;为卡片添加 CanSwap 属性让它可以被折叠，True 代表是，False 代表否。在此基础上，再使用 IsSwaped 属性调整它是否默认被折叠。" />
+                    Text="卡片（local:MyCard）的 Title 属性决定了它的标题。&#xA;为卡片添加 CanSwap 属性让它可以被折叠，True 代表是，False 代表否。在此基础上，再使用 IsSwapped 属性调整它是否默认被折叠。" />
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="长宽属性、图片" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="长宽属性、图片" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4" Width="320" HorizontalAlignment="Right"
                     Text="任意项目都可以添加 Width 与 Height 属性来控制宽高。HorizontalAlignment 属性可以控制对齐：Center 代表居中，Right 代表居右，例如这段文本就被居右了。" />
@@ -34,7 +34,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="按钮" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="按钮" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="添加 local:MyButton 即可新建一个按钮。你需要限定它的尺寸与位置，并通过 Padding 属性进一步控制它的内边距。" />
@@ -53,7 +53,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="事件 1：打开网页、弹出窗口" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="事件 1：打开网页、弹出窗口" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
                     Text="将按钮的 EventType 属性设为 打开网页，然后在 EventData 属性中写入网址，即可通过点击按钮打开网页。" />
@@ -70,7 +70,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="事件 2：启动游戏" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="事件 2：启动游戏" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="将 EventType 设置为 启动游戏，EventData 设置为具体的游戏版本，即可通过点击按钮启动游戏。如果当前游戏文件夹没有该版本，则无法启动。" />
@@ -87,7 +87,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="事件 3：执行命令" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="事件 3：执行命令" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="将 EventType 设置为 执行命令（或 打开文件），EventData 设置为文件路径，即可点击打开特定文件或启动程序。" />
@@ -106,7 +106,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="事件 4：其他事件类型" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="事件 4：其他事件类型" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock Margin="0,4,0,6" FontWeight="Bold"
                     Text="EventType 共有以下种类：" />
@@ -141,7 +141,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="StackPanel 横向布局" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="StackPanel 横向布局" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
                     Text="你需要使用 StackPanel 在一行里塞下多个按钮。你可以仅在这个教学卡片的基础上稍作调整，来实现自己的按钮布局。" />
@@ -166,7 +166,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="列表项 1：基础" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="列表项 1：基础" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="你也可以使用列表项 “local:MyListItem” 来替代按钮，其使用方式与按钮类似。" />
@@ -183,7 +183,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="列表项 2：内置图片" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="列表项 2：内置图片" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="PCL 内置了一些 Minecraft 方块与物品图片，可以直接使用。"/>
@@ -221,7 +221,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="主题色" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="主题色" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,15"
                     Text="你可以用类似 {DynamicResource ColorBrush5} 的格式使用 PCL 当前的主题颜色，修改末尾的数字编号以改变颜色浓度。" />
@@ -242,7 +242,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="替换标记" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="替换标记" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="在花括号 {} 中写入特定内容，PCL 会在加载时对其进行替换。&#xa;例如，path 会被替换为 PCL 可执行文件所在文件夹（{path}），用于在 EventData 中指定特定文件，或是加载图片。" />
@@ -253,7 +253,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="进阶：Grid 布局" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="进阶：Grid 布局" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="如果要实现更复杂的布局，则必须使用 Grid。Grid 可以让按钮们自动适应窗口宽度：随意拉伸 PCL 窗口，按钮大小会自动改变。" />
@@ -276,7 +276,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="进阶：图标按钮" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="进阶：图标按钮" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="MyIconTextButton 是一种带有自定义矢量图标的按钮变体，它同样支持 EventType 与 EventData 属性。&#xa;通过设置 Logo 属性来控制它的图标，设置 LogoScale 属性还可以调整图标的缩放比例。" />
@@ -301,7 +301,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="进阶：联网主页" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="进阶：联网主页" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
                     Text="如果你在尝试制作联网更新的主页，可以查看下方的 GitHub 讨论页。&#xa;你可以根据其中的介绍为主页添加版本号检查以节省流量，也可以通过检查 Referer 和 User Agent 来确定对方的 PCL 版本。" />
@@ -336,7 +336,7 @@ local:MyImage（图片）：
 local:MyCard（卡片）：
  - Title：设置显示的标题文本
  - CanSwap：卡片是否可以折叠，True 为是，False 为否
- - IsSwaped：卡片是否默认折叠，要求 CanSwap 必须为 True
+ - IsSwapped：卡片是否默认折叠，要求 CanSwap 必须为 True
  - HorizontalAlignment：若使用，要求 CanSwap 必须为 False
  - UseAnimation：是否在展开等高度改变时触发动画；True 为是（默认），False 为否
  - SwapLogoRight：卡片折叠时的箭头是朝下还是朝右；True 为朝右，False 为朝下（默认）

@@ -54,13 +54,13 @@
 
         DisabledPageAnimControls.Remove(BtnStart)
         BtnStart.Show = True
-        CardOptiFine.IsSwaped = True
-        CardLiteLoader.IsSwaped = True
-        CardForge.IsSwaped = True
-        CardNeoForge.IsSwaped = True
-        CardFabric.IsSwaped = True
-        CardFabricApi.IsSwaped = True
-        CardOptiFabric.IsSwaped = True
+        CardOptiFine.IsSwapped = True
+        CardLiteLoader.IsSwapped = True
+        CardForge.IsSwapped = True
+        CardNeoForge.IsSwapped = True
+        CardFabric.IsSwapped = True
+        CardFabricApi.IsSwapped = True
+        CardOptiFabric.IsSwapped = True
 
         If Not Setup.Get("HintInstallBack") Then
             Setup.Set("HintInstallBack", True)
@@ -318,8 +318,8 @@
         'OptiFine
         Dim OptiFineError As String = LoadOptiFineGetError()
         CardOptiFine.MainSwap.Visibility = If(OptiFineError Is Nothing, Visibility.Visible, Visibility.Collapsed)
-        If OptiFineError IsNot Nothing Then CardOptiFine.IsSwaped = True '例如在同时展开卡片时选择了不兼容项则强制折叠
-        SetOptiFineInfoShow(CardOptiFine.IsSwaped)
+        If OptiFineError IsNot Nothing Then CardOptiFine.IsSwapped = True '例如在同时展开卡片时选择了不兼容项则强制折叠
+        SetOptiFineInfoShow(CardOptiFine.IsSwapped)
         If SelectedOptiFine Is Nothing Then
             BtnOptiFineClear.Visibility = Visibility.Collapsed
             ImgOptiFine.Visibility = Visibility.Collapsed
@@ -338,8 +338,8 @@
             CardLiteLoader.Visibility = Visibility.Visible
             Dim LiteLoaderError As String = LoadLiteLoaderGetError()
             CardLiteLoader.MainSwap.Visibility = If(LiteLoaderError Is Nothing, Visibility.Visible, Visibility.Collapsed)
-            If LiteLoaderError IsNot Nothing Then CardLiteLoader.IsSwaped = True '例如在同时展开卡片时选择了不兼容项则强制折叠
-            SetLiteLoaderInfoShow(CardLiteLoader.IsSwaped)
+            If LiteLoaderError IsNot Nothing Then CardLiteLoader.IsSwapped = True '例如在同时展开卡片时选择了不兼容项则强制折叠
+            SetLiteLoaderInfoShow(CardLiteLoader.IsSwapped)
             If SelectedLiteLoader Is Nothing Then
                 BtnLiteLoaderClear.Visibility = Visibility.Collapsed
                 ImgLiteLoader.Visibility = Visibility.Collapsed
@@ -355,8 +355,8 @@
         'Forge
         Dim ForgeError As String = LoadForgeGetError()
         CardForge.MainSwap.Visibility = If(ForgeError Is Nothing, Visibility.Visible, Visibility.Collapsed)
-        If ForgeError IsNot Nothing Then CardForge.IsSwaped = True
-        SetForgeInfoShow(CardForge.IsSwaped)
+        If ForgeError IsNot Nothing Then CardForge.IsSwapped = True
+        SetForgeInfoShow(CardForge.IsSwapped)
         If SelectedForge Is Nothing Then
             BtnForgeClear.Visibility = Visibility.Collapsed
             ImgForge.Visibility = Visibility.Collapsed
@@ -375,8 +375,8 @@
             CardNeoForge.Visibility = Visibility.Visible
             Dim NeoForgeError As String = LoadNeoForgeGetError()
             CardNeoForge.MainSwap.Visibility = If(NeoForgeError Is Nothing, Visibility.Visible, Visibility.Collapsed)
-            If NeoForgeError IsNot Nothing Then CardNeoForge.IsSwaped = True
-            SetNeoForgeInfoShow(CardNeoForge.IsSwaped)
+            If NeoForgeError IsNot Nothing Then CardNeoForge.IsSwapped = True
+            SetNeoForgeInfoShow(CardNeoForge.IsSwapped)
             If SelectedNeoForge Is Nothing Then
                 BtnNeoForgeClear.Visibility = Visibility.Collapsed
                 ImgNeoForge.Visibility = Visibility.Collapsed
@@ -396,8 +396,8 @@
             CardFabric.Visibility = Visibility.Visible
             Dim FabricError As String = LoadFabricGetError()
             CardFabric.MainSwap.Visibility = If(FabricError Is Nothing, Visibility.Visible, Visibility.Collapsed)
-            If FabricError IsNot Nothing Then CardFabric.IsSwaped = True
-            SetFabricInfoShow(CardFabric.IsSwaped)
+            If FabricError IsNot Nothing Then CardFabric.IsSwapped = True
+            SetFabricInfoShow(CardFabric.IsSwapped)
             If SelectedFabric Is Nothing Then
                 BtnFabricClear.Visibility = Visibility.Collapsed
                 ImgFabric.Visibility = Visibility.Collapsed
@@ -417,8 +417,8 @@
             CardFabricApi.Visibility = Visibility.Visible
             Dim FabricApiError As String = LoadFabricApiGetError()
             CardFabricApi.MainSwap.Visibility = If(FabricApiError Is Nothing, Visibility.Visible, Visibility.Collapsed)
-            If FabricApiError IsNot Nothing OrElse SelectedFabric Is Nothing Then CardFabricApi.IsSwaped = True
-            SetFabricApiInfoShow(CardFabricApi.IsSwaped)
+            If FabricApiError IsNot Nothing OrElse SelectedFabric Is Nothing Then CardFabricApi.IsSwapped = True
+            SetFabricApiInfoShow(CardFabricApi.IsSwapped)
             If SelectedFabricApi Is Nothing Then
                 BtnFabricApiClear.Visibility = Visibility.Collapsed
                 ImgFabricApi.Visibility = Visibility.Collapsed
@@ -438,8 +438,8 @@
             CardOptiFabric.Visibility = Visibility.Visible
             Dim OptiFabricError As String = LoadOptiFabricGetError()
             CardOptiFabric.MainSwap.Visibility = If(OptiFabricError Is Nothing, Visibility.Visible, Visibility.Collapsed)
-            If OptiFabricError IsNot Nothing OrElse SelectedFabric Is Nothing Then CardOptiFabric.IsSwaped = True
-            SetOptiFabricInfoShow(CardOptiFabric.IsSwaped)
+            If OptiFabricError IsNot Nothing OrElse SelectedFabric Is Nothing Then CardOptiFabric.IsSwapped = True
+            SetOptiFabricInfoShow(CardOptiFabric.IsSwapped)
             If SelectedOptiFabric Is Nothing Then
                 BtnOptiFabricClear.Visibility = Visibility.Collapsed
                 ImgOptiFabric.Visibility = Visibility.Collapsed
@@ -639,7 +639,7 @@
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Pair.Value}
                 NewCard.Children.Add(NewStack)
                 NewCard.SwapControl = NewStack
-                NewCard.IsSwaped = True
+                NewCard.IsSwapped = True
                 PanMinecraft.Children.Add(NewCard)
             Next
             '自动选择版本
@@ -755,14 +755,14 @@
         OptiFabric_Loaded()
         Forge_Loaded()
         NeoForge_Loaded()
-        CardOptiFine.IsSwaped = True
+        CardOptiFine.IsSwapped = True
         SelectReload()
     End Sub
     Private Sub OptiFine_Clear(sender As Object, e As MouseButtonEventArgs) Handles BtnOptiFineClear.MouseLeftButtonUp
         SelectedOptiFine = Nothing
         SelectedOptiFabric = Nothing
         AutoSelectedOptiFabric = False
-        CardOptiFine.IsSwaped = True
+        CardOptiFine.IsSwapped = True
         e.Handled = True
         Forge_Loaded()
         NeoForge_Loaded()
@@ -816,12 +816,12 @@
     '选择与清除
     Private Sub LiteLoader_Selected(sender As MyListItem, e As EventArgs)
         SelectedLiteLoader = sender.Tag
-        CardLiteLoader.IsSwaped = True
+        CardLiteLoader.IsSwapped = True
         SelectReload()
     End Sub
     Private Sub LiteLoader_Clear(sender As Object, e As MouseButtonEventArgs) Handles BtnLiteLoaderClear.MouseLeftButtonUp
         SelectedLiteLoader = Nothing
-        CardLiteLoader.IsSwaped = True
+        CardLiteLoader.IsSwapped = True
         e.Handled = True
         SelectReload()
     End Sub
@@ -902,14 +902,14 @@
     '选择与清除
     Private Sub Forge_Selected(sender As MyListItem, e As EventArgs)
         SelectedForge = sender.Tag
-        CardForge.IsSwaped = True
+        CardForge.IsSwapped = True
         If SelectedOptiFine IsNot Nothing AndAlso Not IsOptiFineSuitForForge(SelectedOptiFine, SelectedForge) Then SelectedOptiFine = Nothing
         OptiFine_Loaded()
         SelectReload()
     End Sub
     Private Sub Forge_Clear(sender As Object, e As MouseButtonEventArgs) Handles BtnForgeClear.MouseLeftButtonUp
         SelectedForge = Nothing
-        CardForge.IsSwaped = True
+        CardForge.IsSwapped = True
         e.Handled = True
         OptiFine_Loaded()
         SelectReload()
@@ -964,13 +964,13 @@
     '选择与清除
     Private Sub NeoForge_Selected(sender As MyListItem, e As EventArgs)
         SelectedNeoForge = sender.Tag
-        CardNeoForge.IsSwaped = True
+        CardNeoForge.IsSwapped = True
         OptiFine_Loaded()
         SelectReload()
     End Sub
     Private Sub NeoForge_Clear(sender As Object, e As MouseButtonEventArgs) Handles BtnNeoForgeClear.MouseLeftButtonUp
         SelectedNeoForge = Nothing
-        CardNeoForge.IsSwaped = True
+        CardNeoForge.IsSwapped = True
         e.Handled = True
         OptiFine_Loaded()
         SelectReload()
@@ -1030,7 +1030,7 @@
         SelectedFabric = sender.Tag("version").ToString
         FabricApi_Loaded()
         OptiFabric_Loaded()
-        CardFabric.IsSwaped = True
+        CardFabric.IsSwapped = True
         SelectReload()
     End Sub
     Private Sub Fabric_Clear(sender As Object, e As MouseButtonEventArgs) Handles BtnFabricClear.MouseLeftButtonUp
@@ -1039,7 +1039,7 @@
         AutoSelectedFabricApi = False
         SelectedOptiFabric = Nothing
         AutoSelectedOptiFabric = False
-        CardFabric.IsSwaped = True
+        CardFabric.IsSwapped = True
         e.Handled = True
         SelectReload()
     End Sub
@@ -1151,12 +1151,12 @@
     '选择与清除
     Private Sub FabricApi_Selected(sender As MyListItem, e As EventArgs)
         SelectedFabricApi = sender.Tag
-        CardFabricApi.IsSwaped = True
+        CardFabricApi.IsSwapped = True
         SelectReload()
     End Sub
     Private Sub FabricApi_Clear(sender As Object, e As MouseButtonEventArgs) Handles BtnFabricApiClear.MouseLeftButtonUp
         SelectedFabricApi = Nothing
-        CardFabricApi.IsSwaped = True
+        CardFabricApi.IsSwapped = True
         e.Handled = True
         SelectReload()
     End Sub
@@ -1243,12 +1243,12 @@
     '选择与清除
     Private Sub OptiFabric_Selected(sender As MyListItem, e As EventArgs)
         SelectedOptiFabric = sender.Tag
-        CardOptiFabric.IsSwaped = True
+        CardOptiFabric.IsSwapped = True
         SelectReload()
     End Sub
     Private Sub OptiFabric_Clear(sender As Object, e As MouseButtonEventArgs) Handles BtnOptiFabricClear.MouseLeftButtonUp
         SelectedOptiFabric = Nothing
-        CardOptiFabric.IsSwaped = True
+        CardOptiFabric.IsSwapped = True
         e.Handled = True
         SelectReload()
     End Sub

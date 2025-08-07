@@ -81,15 +81,15 @@
                 PanMain.Children.Add(NewCard)
                 '确定卡片是否展开
                 If Card.Key = McVersionCardType.Rubbish OrElse Card.Key = McVersionCardType.Error OrElse Card.Key = McVersionCardType.Fool Then
-                    NewCard.IsSwaped = True
+                    NewCard.IsSwapped = True
                 Else
                     MyCard.StackInstall(NewStack, 0, CardTitle)
                 End If
             Next
 
             '若只有一个卡片，则强制展开
-            If PanMain.Children.Count = 1 AndAlso CType(PanMain.Children(0), MyCard).IsSwaped Then
-                CType(PanMain.Children(0), MyCard).IsSwaped = False
+            If PanMain.Children.Count = 1 AndAlso CType(PanMain.Children(0), MyCard).IsSwapped Then
+                CType(PanMain.Children(0), MyCard).IsSwapped = False
             End If
 
             '判断应该显示哪一个页面

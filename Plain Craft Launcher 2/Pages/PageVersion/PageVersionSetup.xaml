@@ -192,7 +192,7 @@
                     <local:MyButton x:Name="BtnServerAuthLittle" Height="35" MinWidth="150" Margin="0,12,0,0" Text="设置为 LittleSkin" HorizontalAlignment="Left" ColorType="Highlight" />
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard x:Name="CardAdvance" Margin="0,0,0,15" Title="高级启动选项" IsSwaped="True" CanSwap="True">
+            <local:MyCard x:Name="CardAdvance" Margin="0,0,0,15" Title="高级启动选项" IsSwapped="True" CanSwap="True">
                 <Grid Margin="25,40,25,15">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
