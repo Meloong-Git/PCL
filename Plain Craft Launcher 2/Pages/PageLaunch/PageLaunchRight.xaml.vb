@@ -89,7 +89,7 @@ Download:
                             </local:MyCard>"
                     Case 2
                         Log("[Page] 主页预设：Minecraft 新闻")
-                        Url = "http://pcl.mcnews.thestack.top"
+                        Url = "https://pcl.mcnews.thestack.top"
                         GoTo Download
                     Case 3
                         Log("[Page] 主页预设：简单主页")
