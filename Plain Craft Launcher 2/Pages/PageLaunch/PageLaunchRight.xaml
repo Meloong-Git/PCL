@@ -6,8 +6,7 @@
     xmlns:local="clr-namespace:PCL"> <!-- 不知道为啥只有这个文件不能在 XAML 设置 PanScroll -->
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True">
-            <StackPanel x:Name="PanCustom">
-            </StackPanel>
+            <local:ExceptionCatcherStackPanel x:Name="PanCustom" />
             <local:MyCard Margin="0,0,0,15" Title="快照版提示" x:Name="PanHint">
                 <local:MyIconButton LogoScale="1.1" Logo="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z"
                                     Height="20" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Top"

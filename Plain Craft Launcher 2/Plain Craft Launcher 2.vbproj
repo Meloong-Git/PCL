@@ -205,6 +205,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\ExceptionCatcherStackPanel.vb" />
     <Compile Include="Controls\IMyRadio.vb" />
     <Compile Include="Controls\MyComboBox.vb" />
     <Compile Include="Controls\MyComboBoxItem.vb" />
@@ -218,9 +219,6 @@
     <Compile Include="Controls\MyIconTextButton.xaml.vb">
       <DependentUpon>MyIconTextButton.xaml</DependentUpon>
     </Compile>
-
-
-
     <Compile Include="Modules\Minecraft\ModComp.vb" />
     <Compile Include="Modules\Minecraft\ModJava.vb" />
     <Compile Include="Modules\Minecraft\ModMod.vb" />
@@ -522,7 +520,6 @@
       <DependentUpon>FormMain.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-
     <Page Include="Pages\PageVersion\MyLocalModItem.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -971,7 +968,6 @@
     <Resource Include="Images\Heads\MCBBS.png" />
   </ItemGroup>
   <ItemGroup>
-
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Blocks\NeoForge.png" />

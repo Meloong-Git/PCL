@@ -211,6 +211,22 @@ Download:
         Log("[Page] 已清空主页缓存")
     End Sub
 
+    Private Sub OnCustomMainpageWPFException(sender As Object, e As ExceptionCatcherStackPanel.ExceptionOccuredEventArgs) Handles PanCustom.ExceptionOccured
+        e.Handled = True
+        PanCustom.Children.Clear()
+        RunInNewThread(
+            Sub()
+                If ModeDebug Then
+                    Log(e.Ex, "显示主页界面失败")
+                    If MyMsgBox($"主页内容编写有误，请根据下列错误信息进行检查：{vbCrLf}{GetExceptionSummary(e.Ex)}", "显示主页界面失败", "重试", "取消") = 1 Then
+                        RunInUi(AddressOf ForceRefresh)
+                    End If
+                Else
+                    Log(e.Ex, "显示主页界面失败", LogLevel.Hint)
+                End If
+            End Sub)
+    End Sub
+
     ''' <summary>
     ''' 从文本内容中加载主页。
     ''' 必须在 UI 线程调用。
