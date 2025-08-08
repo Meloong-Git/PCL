@@ -62,11 +62,6 @@
         CardFabricApi.IsSwaped = True
         CardOptiFabric.IsSwaped = True
 
-        If Not Setup.Get("HintInstallBack") Then
-            Setup.Set("HintInstallBack", True)
-            Hint("点击 Minecraft 项即可返回游戏主版本选择页面！")
-        End If
-
         '如果在选择页面按了刷新键，选择页的东西可能会由于动画被隐藏，但不会由于加载结束而再次显示，因此这里需要手动恢复
         For Each Control In GetAllAnimControls(PanSelect)
             Control.Opacity = 1

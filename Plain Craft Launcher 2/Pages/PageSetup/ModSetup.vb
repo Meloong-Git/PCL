@@ -14,7 +14,6 @@
         {"HintDownloadThread", New SetupEntry(False, Source:=SetupSource.Registry)},
         {"HintNotice", New SetupEntry(0, Source:=SetupSource.Registry)},
         {"HintDownload", New SetupEntry(0, Source:=SetupSource.Registry)},
-        {"HintInstallBack", New SetupEntry(False, Source:=SetupSource.Registry)},
         {"HintHide", New SetupEntry(False, Source:=SetupSource.Registry)},
         {"HintHandInstall", New SetupEntry(False, Source:=SetupSource.Registry)},
         {"HintBuy", New SetupEntry(False, Source:=SetupSource.Registry)},
