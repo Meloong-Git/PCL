@@ -1,0 +1,17 @@
+﻿<local:MyPageLeft
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:PCL;assembly=" x:Class="PageLogLeft"
+             AnimatedControl="{Binding ElementName=PanList, Mode=OneWay}">
+    <AdornerDecorator>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
+                <RowDefinition Height="5" />
+            </Grid.RowDefinitions>
+            <local:MyScrollViewer DeltaMult="0.7" Grid.Row="1" MaxWidth="300" MinWidth="250" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Style="{StaticResource ScrollViewerFullMargin}">
+                <StackPanel x:Name="PanList" />
+            </local:MyScrollViewer>
+        </Grid>
+    </AdornerDecorator>
+</local:MyPageLeft>
