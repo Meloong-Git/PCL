@@ -3,6 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:behaviors="clr-namespace:PCL.Controls.Behaviors"
     StartupUri="FormMain.xaml"
     ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
@@ -302,6 +303,7 @@
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+                <Setter Property="behaviors:ClipboardInterceptor.EnableSafeClipboard" Value="True" />
             </Style>
             <Style TargetType="PasswordBox">
                 <Setter Property="FontSize" Value="13" />
