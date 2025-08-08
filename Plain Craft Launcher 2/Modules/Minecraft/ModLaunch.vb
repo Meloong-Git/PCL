@@ -1692,6 +1692,7 @@ NextVersion:
         GameArguments.Add("${access_token}", McLoginLoader.Output.AccessToken)
         GameArguments.Add("${auth_session}", McLoginLoader.Output.AccessToken)
         GameArguments.Add("${user_type}", "msa") '#1221
+        GameArguments.Add("${primary_jar}", Version.Path & Version.Name & ".jar")
 
         '窗口尺寸参数
         Dim GameSize As Size
