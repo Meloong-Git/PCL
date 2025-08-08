@@ -357,6 +357,13 @@
                 Return Not HasIniKey(Version.Path & "PCL\Setup.ini", Key)
         End Select
     End Function
+    ''' <summary>
+    ''' 某个设置项是否加密。
+    ''' </summary>
+    Public Function IsEncoded(Key As String) As Boolean
+        If Not SetupDict.ContainsKey(Key) Then Throw New KeyNotFoundException("未找到设置项：" & Key) With {.Source = Key}
+        Return SetupDict(Key).Encoded
+    End Function
 
     ''' <summary>
     ''' 读取设置。
