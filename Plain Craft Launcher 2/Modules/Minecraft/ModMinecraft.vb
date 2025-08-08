@@ -718,7 +718,7 @@ Recheck:
                     Case Else '根据 API 进行筛选
                         Dim RealJson As String = If(JsonObject, JsonText).ToString
                         '愚人节与快照版本
-                        If If(JsonObject("type"), "").ToString = "fool" OrElse GetMcFoolName(Version.McName) <> "" Then
+                        If If(JsonObject("type"), "").ToString = "fool" OrElse GetMcFoolName(Version.McName, Me.ReleaseTime.ToString("yyyy/M/d")) <> "" Then
                             State = McVersionState.Fool
                         ElseIf Version.McName.ContainsF("w", True) OrElse Name.ContainsF("combat", True) OrElse Version.McName.ContainsF("rc", True) OrElse Version.McName.ContainsF("pre", True) OrElse Version.McName.ContainsF("experimental", True) OrElse If(JsonObject("type"), "").ToString = "snapshot" OrElse If(JsonObject("type"), "").ToString = "pending" Then
                             State = McVersionState.Snapshot
@@ -838,7 +838,7 @@ ExitDataLoad:
                 Case McVersionState.Original, McVersionState.Forge, McVersionState.NeoForge, McVersionState.Fabric, McVersionState.OptiFine, McVersionState.LiteLoader
                     Info = Version.ToString
                 Case McVersionState.Fool
-                    Info = GetMcFoolName(Version.McName)
+                    Info = GetMcFoolName(Version.McName, Me.ReleaseTime.ToString("yyyy/M/d"))
                 Case McVersionState.Error
                     Return Me.Info '已有错误信息
                 Case Else
@@ -1058,7 +1058,7 @@ ExitDataLoad:
     ''' <summary>
     ''' 根据版本名获取对应的愚人节版本描述。非愚人节版本会返回空字符串。
     ''' </summary>
-    Public Function GetMcFoolName(Name As String) As String
+    Public Function GetMcFoolName(Name As String, Optional ReleaseTime As String = Nothing) As String
         Name = Name.ToLower
         If Name.StartsWithF("2.0") Then
             Return "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！"
@@ -1078,6 +1078,8 @@ ExitDataLoad:
             Return "2024 | 毒马铃薯一直都被大家忽视和低估，于是我们超级加强了它！"
         ElseIf Name = "25w14craftmine" Then
             Return "2025 | 你可以合成任何东西——包括合成你的世界！"
+        ElseIf ReleaseTime?.Contains("/4/1") Then
+            Return $"{ReleaseTime.Split("/4/1")(0)} | 这个版本太懒了，所以还没有个人签名。"
         Else
             Return ""
         End If

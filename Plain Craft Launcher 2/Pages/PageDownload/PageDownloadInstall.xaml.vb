@@ -589,14 +589,15 @@
                                 Type = "愚人节版"
                                 Version("id") = "20w14∞"
                                 Version("type") = "special"
-                                Version.Add("lore", GetMcFoolName(Version("id")))
-                            Case "3d shareware v1.34", "1.rv-pre1", "15w14a", "2.0", "22w13oneblockatatime", "23w13a_or_b", "24w14potato", "25w14craftmine"
+                                Version.Add("lore", GetMcFoolName(Version("id"), Version("releaseTime").ToString.Split(" ")(0)))
+                            Case "3d shareware v1.34", "1.rv-pre1", "15w14a", "2.0", "22w13oneblockatatime", "23w13a_or_b", "24w14potato"
                                 Type = "愚人节版"
                                 Version("type") = "special"
-                                Version.Add("lore", GetMcFoolName(Version("id")))
+                                Version.Add("lore", GetMcFoolName(Version("id"), Version("releaseTime").ToString.Split(" ")(0)))
                             Case Else '4/1 自动视作愚人节版
                                 Dim ReleaseDate = Version("releaseTime").Value(Of Date).ToUniversalTime().AddHours(2)
                                 If ReleaseDate.Month = 4 AndAlso ReleaseDate.Day = 1 Then
+                                    Version.Add("lore", GetMcFoolName(Version("id"), Version("releaseTime").ToString.Split(" ")(0)))
                                     Type = "愚人节版"
                                     Version("type") = "special"
                                 End If
