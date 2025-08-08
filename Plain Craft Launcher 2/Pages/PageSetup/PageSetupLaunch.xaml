@@ -254,6 +254,8 @@
                             ToolTipService.Placement="Right" ToolTip="PCL 会使用 Java Launch Wrapper 来修复老版本 Java 在中文路径下无法启动的问题。&#xa;如果这被反作弊拦截，或遇到其他问题，也可以将其关闭。" />
                         <local:MyCheckBox Height="28" Text="要求 Java 使用高性能显卡" x:Name="CheckAdvanceGraphicCard" Tag="LaunchAdvanceGraphicCard"
                             ToolTipService.Placement="Right" ToolTip="自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 Java 改为使用高性能显卡。&#xa;如果电脑同时有集显和独显，这能确保 MC 使用独显进行渲染，以大幅提高性能。" />
+                        <local:MyCheckBox Height="28" Text="使用 java.exe 而不是 javaw.exe" x:Name="CheckAdvanceNoJavaw" Tag="LaunchAdvanceNoJavaw"
+                            ToolTipService.Placement="Right" ToolTip="如果遇到游戏窗口长时间不出现等故障可尝试启用此项，PCL 将使用 java.exe 来运行游戏，这样会让游戏进程拥有标准输入/输出流，以尽可能避免打印日志时出现问题。&#xa;&#xa;取决于不同 Java 发行版的行为，java.exe 可能无法使用 HDR 颜色等依赖操作系统支持的特性。因此，如果正常使用没有问题，请勿启用该选项。" />
                     </StackPanel>
                     <local:MyHint Text="你还可以在版本独立设置中找到更多高级启动选项。" Margin="0,5,0,10" Theme="Blue" Grid.Row="7" Grid.ColumnSpan="2"
                                   CanClose="True" RelativeSetup="HintMoreAdvancedSetup" />
