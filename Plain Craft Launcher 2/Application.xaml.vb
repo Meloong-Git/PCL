@@ -134,6 +134,8 @@ WaitRetry:
             Setup.Load("SystemDebugMode")
             Setup.Load("SystemDebugAnim")
             Setup.Load("ToolDownloadThread")
+            ' 确保动态线程限制正确初始化
+            If NetTaskThreadLimitDynamic = 0 Then NetTaskThreadLimitDynamic = NetTaskThreadLimit
             Setup.Load("ToolDownloadCert")
             Setup.Load("ToolDownloadSpeed")
             '网络配置初始化

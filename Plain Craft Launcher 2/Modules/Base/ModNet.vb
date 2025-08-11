@@ -1706,6 +1706,9 @@ Retry:
 #Region "动态线程限制恢复"
                 ' 如果距离上次系统缓冲区错误已超过 30 秒，逐步恢复线程限制
                 SyncLock NetTaskSocketBufferErrorsLock
+                    ' 安全检查：确保动态限制在合理范围内
+                    NetTaskThreadLimitDynamic = Math.Max(Math.Min(NetTaskThreadLimitDynamic, NetTaskThreadLimit), 1)
+                    
                     If NetTaskLastSocketBufferError > 0 AndAlso GetTimeTick() - NetTaskLastSocketBufferError > 30000 Then
                         If NetTaskThreadLimitDynamic < NetTaskThreadLimit Then
                             NetTaskThreadLimitDynamic = Math.Min(NetTaskThreadLimitDynamic + 1, NetTaskThreadLimit)

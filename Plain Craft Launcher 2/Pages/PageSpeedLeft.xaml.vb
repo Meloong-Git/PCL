@@ -43,7 +43,7 @@ Public Class PageSpeedLeft
                 LabProgress.Text = "100 %"
                 LabSpeed.Text = "0 B/s"
                 LabFile.Text = "0"
-                LabThread.Text = "0 / " & NetTaskThreadLimit
+                LabThread.Text = "0 / " & If(NetTaskThreadLimitDynamic <> NetTaskThreadLimit, $"{NetTaskThreadLimitDynamic}({NetTaskThreadLimit})", NetTaskThreadLimit.ToString())
             Else
                 '有任务，输出基本信息
                 Dim Tasks = LoaderTaskbar.Where(Function(l) l.Show).ToList() '筛选掉启动 MC 的任务（#6270）
@@ -52,7 +52,7 @@ Public Class PageSpeedLeft
                 LabProgress.Text = If(RawPercent > 0.999999, "100 %", PredictText)
                 LabSpeed.Text = GetString(NetManager.Speed) & "/s"
                 LabFile.Text = If(NetManager.FileRemain < 0, "0*", NetManager.FileRemain)
-                LabThread.Text = NetTaskThreadCount & " / " & NetTaskThreadLimit
+                LabThread.Text = NetTaskThreadCount & " / " & If(NetTaskThreadLimitDynamic <> NetTaskThreadLimit, $"{NetTaskThreadLimitDynamic}({NetTaskThreadLimit})", NetTaskThreadLimit.ToString())
             End If
 #End Region
 
