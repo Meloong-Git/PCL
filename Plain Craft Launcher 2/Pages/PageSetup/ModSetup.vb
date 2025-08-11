@@ -116,7 +116,7 @@
         {"LinkHiperCertWarn", New SetupEntry(True, Source:=SetupSource.Registry)},
         {"LinkIoiVersion", New SetupEntry(0, Source:=SetupSource.Registry, Encoded:=True)},
         {"ToolHelpChinese", New SetupEntry(True, Source:=SetupSource.Registry)},
-        {"ToolDownloadThread", New SetupEntry(63, Source:=SetupSource.Registry)},
+        {"ToolDownloadThread", New SetupEntry(15, Source:=SetupSource.Registry)},
         {"ToolDownloadSpeed", New SetupEntry(42, Source:=SetupSource.Registry)},
         {"ToolDownloadSource", New SetupEntry(1, Source:=SetupSource.Registry)},
         {"ToolDownloadVersion", New SetupEntry(1, Source:=SetupSource.Registry)},
@@ -457,6 +457,7 @@
 
     Public Sub ToolDownloadThread(Value As Integer)
         NetTaskThreadLimit = Value + 1
+        NetTaskThreadLimitDynamic = NetTaskThreadLimit ' 初始化动态限制
     End Sub
     Public Sub ToolDownloadCert(Value As Boolean)
         ServicePointManager.ServerCertificateValidationCallback =

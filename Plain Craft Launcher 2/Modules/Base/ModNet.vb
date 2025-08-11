@@ -1,5 +1,6 @@
 ﻿Imports System.Net.Http.Headers
 Imports System.Threading.Tasks
+Imports System.Net.Sockets
 Imports CacheCow.Client
 
 Public Module ModNet
@@ -210,7 +211,8 @@ RequestFinished:
         Try
             Static Client As HttpClient = ClientExtensions.CreateClient(New FileCacheStore.FileStore(PathTemp & "Cache/Http/"), New HttpClientHandler With {
                 .AutomaticDecompression = DecompressionMethods.Deflate Or DecompressionMethods.GZip Or DecompressionMethods.None,
-                .UseCookies = False '不设为 False 就不能从 Header 手动传入 Cookies
+                .UseCookies = False, '不设为 False 就不能从 Header 手动传入 Cookies
+                .MaxConnectionsPerServer = 8 ' 限制每个服务器的最大连接数，减少资源占用
             })
             Url = SecretCdnSign(Url)
             Request = New HttpRequestMessage(Method, Url)
@@ -281,6 +283,19 @@ RequestFinished:
     ''' 最大线程数。
     ''' </summary>
     Public NetTaskThreadLimit As Integer
+    ''' <summary>
+    ''' 动态调整的线程数限制，用于处理系统资源不足的情况。
+    ''' </summary>
+    Public NetTaskThreadLimitDynamic As Integer
+    ''' <summary>
+    ''' 最近发生的系统缓冲区错误次数。
+    ''' </summary>
+    Public NetTaskSocketBufferErrors As Integer = 0
+    Private ReadOnly NetTaskSocketBufferErrorsLock As New Object
+    ''' <summary>
+    ''' 上次发生系统缓冲区错误的时间。
+    ''' </summary>
+    Private NetTaskLastSocketBufferError As Long = 0
     ''' <summary>
     ''' 速度下限。
     ''' </summary>
@@ -769,7 +784,7 @@ RequestFinished:
             Try
 
                 '条件检测
-                If NetTaskThreadCount >= NetTaskThreadLimit OrElse Not HasAvailableSource() OrElse
+                If NetTaskThreadCount >= NetTaskThreadLimitDynamic OrElse Not HasAvailableSource() OrElse
                     (IsNoSplit AndAlso Threads IsNot Nothing AndAlso Threads.State <> NetState.Error) Then Return Nothing
                 If State >= NetState.Merge OrElse State = NetState.WaitForCheck Then Return Nothing
                 SyncLock LockState
@@ -873,7 +888,8 @@ StartThread:
                 Dim ContentLength As Long = 0
                 Using CancelToken As New CancellationTokenSource(Timeout)
                     Static Client As New HttpClient(New HttpClientHandler With {
-                        .AutomaticDecompression = DecompressionMethods.Deflate Or DecompressionMethods.GZip Or DecompressionMethods.None
+                        .AutomaticDecompression = DecompressionMethods.Deflate Or DecompressionMethods.GZip Or DecompressionMethods.None,
+                        .MaxConnectionsPerServer = 8 ' 限制每个服务器的最大连接数，减少资源占用
                     })
                     Using Response As HttpResponseMessage = Client.SendAsync(HttpRequest, HttpCompletionOption.ResponseHeadersRead, CancelToken.Token).GetAwaiter().GetResult()
                         If Not Response.IsSuccessStatusCode Then Throw New Exception($"错误码 {Response.StatusCode} ({CInt(Response.StatusCode)})，{Th.Source.Url}") '状态码检查
@@ -1019,8 +1035,24 @@ SourceBreak:
                     If ModeDebug Then Log($"[Download] {LocalName}：完成，已下载 {Th.DownloadDone}（{Th.DownloadStart}~{Th.DownloadEnd}）")
                 End If
             Catch ex As Exception
+                ' 检查是否为系统缓冲区空间不足的错误
+                Dim isSocketBufferError As Boolean = False
+                If TypeOf ex Is SocketException Then
+                    Dim socketEx = DirectCast(ex, SocketException)
+                    If socketEx.SocketErrorCode = SocketError.NoBufferSpaceAvailable Then
+                        isSocketBufferError = True
+                        Log($"[Download] {LocalName}：检测到系统缓冲区空间不足，等待 500ms 后重试")
+                        Thread.Sleep(500) ' 等待系统资源释放
+                    End If
+                ElseIf ex.Message.Contains("系统缓冲区空间不足") OrElse ex.Message.Contains("队列已满") OrElse 
+                       ex.Message.Contains("NoBufferSpaceAvailable") OrElse ex.Message.Contains("不能执行套接字上的操作") Then
+                    isSocketBufferError = True
+                    Log($"[Download] {LocalName}：检测到系统缓冲区空间不足，等待 500ms 后重试")
+                    Thread.Sleep(500) ' 等待系统资源释放
+                End If
+                
                 Log($"[Download] {LocalName}：出错，{If(TypeOf ex Is TaskCanceledException, $"已超时（{Timeout}ms）", GetExceptionDetail(ex))}")
-                SourceFail(Th, ex, False)
+                SourceFail(Th, ex, False, isSocketBufferError)
             Finally
                 SyncLock NetTaskThreadCountLock
                     NetTaskThreadCount -= 1
@@ -1030,7 +1062,21 @@ SourceBreak:
                 If ((FileSize >= 0 AndAlso DownloadDone >= FileSize) OrElse (FileSize = -1 AndAlso DownloadDone > 0)) AndAlso State < NetState.Merge Then Merge(Th)
             End Try
         End Sub
-        Private Sub SourceFail(Th As NetThread, ex As Exception, IsMergeFailure As Boolean)
+        Private Sub SourceFail(Th As NetThread, ex As Exception, IsMergeFailure As Boolean, Optional IsSocketBufferError As Boolean = False)
+            ' 处理系统缓冲区错误统计和动态线程限制调整
+            If IsSocketBufferError Then
+                SyncLock NetTaskSocketBufferErrorsLock
+                    NetTaskSocketBufferErrors += 1
+                    NetTaskLastSocketBufferError = GetTimeTick()
+                    ' 动态降低线程限制以减少系统资源压力
+                    Dim newLimit As Integer = Math.Max(NetTaskThreadLimit \ 4, 2) ' 降低到原来的1/4，但不少于2个线程
+                    If NetTaskThreadLimitDynamic > newLimit Then
+                        NetTaskThreadLimitDynamic = newLimit
+                        Log($"[Download] 检测到系统缓冲区错误，动态降低下载线程限制至 {NetTaskThreadLimitDynamic}")
+                    End If
+                End SyncLock
+            End If
+            
             '状态变更
             SyncLock LockCount
                 Th.Source.FailCount += 1
@@ -1041,11 +1087,14 @@ SourceBreak:
             Th.State = NetState.Error
             Th.Source.Ex = ex
             '根据情况判断，是否在多线程下禁用下载源（连续错误过多，或不支持断点续传）
+            ' 对于系统缓冲区空间不足的错误，增加重试机会，避免立即禁用下载源
+            Dim socketBufferErrorTolerance As Integer = If(IsSocketBufferError, Math.Max(NetTaskThreadLimit * 2, 20), 0)
+            
             If IsMergeFailure OrElse
                ex.Message.Contains("该下载源不支持") OrElse ex.Message.Contains("未能解析") OrElse ex.Message.Contains("(404)") OrElse
                ex.Message.Contains("(502)") OrElse ex.Message.Contains("无返回数据") OrElse ex.Message.Contains("空间不足") OrElse ex.Message.Contains("获取到的分段大小不一致") OrElse
                (ex.Message.Contains("(403)") AndAlso Not Th.Source.Url.ContainsF("bmclapi")) OrElse 'BMCLAPI 的部分源在高频率请求下会返回 403，所以不应因此禁用下载源
-               (Th.Source.FailCount >= MathClamp(NetTaskThreadLimit, 5, 30) AndAlso DownloadDone < 1) OrElse Th.Source.FailCount > NetTaskThreadLimit + 2 Then
+               (Th.Source.FailCount >= MathClamp(NetTaskThreadLimit, 5, 30) + socketBufferErrorTolerance AndAlso DownloadDone < 1) OrElse Th.Source.FailCount > NetTaskThreadLimit + 2 + socketBufferErrorTolerance Then
                 '当一个下载源有多个线程在下载时，只选择其中一个线程进行后续处理
                 Dim IsThisFail As Boolean = False
                 SyncLock LockSource
@@ -1202,7 +1251,7 @@ Retry:
                 End If
                 '失败，禁用当前下载源并重启下载
                 If File.Exists(LocalPath) Then File.Delete(LocalPath)
-                SourceFail(Th, ex, True)
+                SourceFail(Th, ex, True, False)
             Finally
                 Cache?.Dispose()
             End Try
@@ -1654,6 +1703,23 @@ Retry:
                     Task.RefreshStat()
                 Next
 #End Region
+#Region "动态线程限制恢复"
+                ' 如果距离上次系统缓冲区错误已超过 30 秒，逐步恢复线程限制
+                SyncLock NetTaskSocketBufferErrorsLock
+                    If NetTaskLastSocketBufferError > 0 AndAlso GetTimeTick() - NetTaskLastSocketBufferError > 30000 Then
+                        If NetTaskThreadLimitDynamic < NetTaskThreadLimit Then
+                            NetTaskThreadLimitDynamic = Math.Min(NetTaskThreadLimitDynamic + 1, NetTaskThreadLimit)
+                            If NetTaskThreadLimitDynamic = NetTaskThreadLimit Then
+                                Log($"[Download] 系统缓冲区错误已恢复，下载线程限制恢复至 {NetTaskThreadLimit}")
+                                NetTaskLastSocketBufferError = 0 ' 重置
+                                NetTaskSocketBufferErrors = 0
+                            Else
+                                Log($"[Download] 下载线程限制逐步恢复至 {NetTaskThreadLimitDynamic}")
+                            End If
+                        End If
+                    End If
+                End SyncLock
+#End Region
             Catch ex As Exception
                 Log(ex, "刷新下载公开属性失败")
             End Try
@@ -1689,14 +1755,14 @@ Retry:
                         Next
                         '为等待中的文件开始线程
                         For Each File As NetFile In WaitingFiles
-                            If NetTaskThreadCount >= NetTaskThreadLimit Then Continue While '最大线程数检查
+                            If NetTaskThreadCount >= NetTaskThreadLimitDynamic Then Continue While '最大线程数检查
                             Dim NewThread = File.TryBeginThread()
                             If NewThread IsNot Nothing AndAlso NewThread.Source.Url.Contains("bmclapi") Then Thread.Sleep(30) '减少 BMCLAPI 请求频率（目前每分钟限制 4000 次）
                         Next
                         '为进行中的文件追加线程
                         If Speed >= NetTaskSpeedLimitLow Then Continue While '下载速度足够，无需新增
                         For Each File As NetFile In OngoingFiles
-                            If NetTaskThreadCount >= NetTaskThreadLimit Then Continue While '最大线程数检查
+                            If NetTaskThreadCount >= NetTaskThreadLimitDynamic Then Continue While '最大线程数检查
                             '线程种类计数
                             Dim PreparingCount = 0, DownloadingCount = 0
                             If File.Threads IsNot Nothing Then
