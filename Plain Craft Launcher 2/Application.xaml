@@ -132,10 +132,12 @@
 
             <!-- ToolTip -->
             <Style TargetType="ToolTip">
+                <EventSetter Event="Opened" Handler="OnTooltipOpened" />
+                <EventSetter Event="Closed" Handler="OnTooltipClosed" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate>
-                            <Border Loaded="TooltipLoaded" Unloaded="TooltipUnloaded" BorderBrush="{DynamicResource ColorBrush1}" BorderThickness="1.5" CornerRadius="4" MaxWidth="500" Background="#E5FFFFFF" Margin="0,0,4,4" SnapsToDevicePixels="True">
+                            <Border BorderBrush="{DynamicResource ColorBrush1}" BorderThickness="1.5" CornerRadius="4" MaxWidth="500" Background="#E5FFFFFF" Margin="0,0,4,4" SnapsToDevicePixels="True">
                                 <Border.Effect>
                                     <DropShadowEffect Opacity="0.3" BlurRadius="4" ShadowDepth="2" Color="{DynamicResource ColorObject1}" />
                                 </Border.Effect>
@@ -146,10 +148,12 @@
                 </Setter>
             </Style>
             <Style x:Key="ExtendTextToolTip" TargetType="ToolTip">
+                <EventSetter Event="Opened" Handler="OnTooltipOpened" />
+                <EventSetter Event="Closed" Handler="OnTooltipClosed" />
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate>
-                            <Border Loaded="TooltipLoaded" Unloaded="TooltipUnloaded" BorderBrush="{DynamicResource ColorBrush1}" BorderThickness="1" CornerRadius="3" Background="White" Margin="0,0,4,4" SnapsToDevicePixels="True">
+                            <Border BorderBrush="{DynamicResource ColorBrush1}" BorderThickness="1" CornerRadius="3" Background="White" Margin="0,0,4,4" SnapsToDevicePixels="True">
                                 <TextBlock Text="{TemplateBinding ContentControl.Content}" TextWrapping="Wrap" Foreground="{DynamicResource ColorBrush1}" Margin="7,5" FontSize="12"/>
                             </Border>
                         </ControlTemplate>
