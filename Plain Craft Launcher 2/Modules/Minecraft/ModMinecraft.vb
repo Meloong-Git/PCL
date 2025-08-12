@@ -304,7 +304,7 @@ Public Module ModMinecraft
                             Else
                                 ReleaseTime = JsonObject("releaseTime").ToObject(Of Date)
                             End If
-                            If ReleaseTime.Year > 2000 AndAlso ReleaseTime.Year < 2013 Then
+                            If ReleaseTime.Year > 2000 AndAlso ReleaseTime <= New DateTime(2011, 11, 16) Then ' 2000 年到 2011 年 11 月 16 日之间
                                 _Version.McName = "Old"
                                 GoTo VersionSearchFinish
                             End If
@@ -1060,8 +1060,16 @@ ExitDataLoad:
     ''' </summary>
     Public Function GetMcFoolName(Name As String) As String
         Name = Name.ToLower
-        If Name.StartsWithF("2.0") Then
-            Return "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！"
+        If Name.StartsWithF("2.0") OrElse Name.StartsWithF("2point0") Then
+            Dim Tag = ""
+            If Name.EndsWith("red") Then
+                Tag = "（红色版本）"
+            ElseIf Name.EndsWith("blue") Then
+                Tag = "（蓝色版本）"
+            ElseIf Name.EndsWith("purple") Then
+                Tag = "（紫色版本）"
+            End If
+            Return "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！" & Tag
         ElseIf Name = "15w14a" Then
             Return "2015 | 作为一款全年龄向的游戏，我们需要和平，需要爱与拥抱。"
         ElseIf Name = "1.rv-pre1" Then
