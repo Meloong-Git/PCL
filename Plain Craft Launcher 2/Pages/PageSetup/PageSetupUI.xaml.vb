@@ -358,7 +358,7 @@ Refresh:
             PanMusicDetail.Visibility = Visibility.Visible
             BtnMusicClear.Visibility = Visibility.Visible
             CardMusic.Title = "背景音乐（" &
-                EnumerateFiles(Path & "PCL\Musics\").Count(Function(f) {".ini", ".jpg", ".txt", ".cfg", ".lrc", ".db", ".png"}.Contains(f.Extension.ToLower)) &
+                EnumerateFiles(Path & "PCL\Musics\").Count(Function(f) Not {".ini", ".jpg", ".txt", ".cfg", ".lrc", ".db", ".png"}.Contains(f.Extension.ToLower)) &
                 " 首）"
         Else
             PanMusicVolume.Visibility = Visibility.Collapsed
