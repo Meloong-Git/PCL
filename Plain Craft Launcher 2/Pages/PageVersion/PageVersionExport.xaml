@@ -102,7 +102,7 @@
                                 <local:MyCheckBox.Tag>
                                     <local:ExportOption 
                                 Title="Mod 设置"
-                                Rules="config/|!config/jei/world/|!config/worldedit/|config/worldedit/worldedit.properties|!config/spark/|config/spark/config.json|defaultconfigs/|journeymap/config/|journeymap/server/|TrashSlotSaveState.json|customfov.txt|gg.essential.mod/|essential/|!essential/*/|!essential/*.jar*|!essential/screenshot-checksum-caches.json|!essential/microsoft_accounts.json|paragliderSettings.nbt|local/client_config.json|local/ftbl.json|local/client/sidebar_buttons.json|local/client/ftbutilities.cfg|local/client/ftblib.cfg|local/client/xencraft.cfg|liteloader.properties|default_reference.xml|CustomSkinLoader/CustomSkinLoader.json"
+                                Rules="config/|!config/jei/world/|!config/worldedit/|config/worldedit/worldedit.properties|!config/spark/|config/spark/config.json|defaultconfigs/|journeymap/config/|journeymap/server/|TrashSlotSaveState.json|customfov.txt|gg.essential.mod/|essential/|!essential/*/|!essential/*.jar*|!essential/screenshot-checksum-caches.json|!essential/microsoft_accounts.json|paragliderSettings.nbt|local/client_config.json|local/ftbl.json|local/client/sidebar_buttons.json|local/client/ftbutilities.cfg|local/client/ftblib.cfg|local/client/xencraft.cfg|liteloader.properties|default_reference.xml|CustomSkinLoader/CustomSkinLoader.json|!config/tacz/custom"
                                 DefaultChecked="True" />
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
@@ -130,6 +130,14 @@
                                 Title="EMI 个人信息"
                                 Description="物品收藏夹、默认配方、合成历史记录等"
                                 Rules="emi.json"
+                                DefaultChecked="False" />
+                                </local:MyCheckBox.Tag>
+                            </local:MyCheckBox>
+                            <local:MyCheckBox>
+                                <local:MyCheckBox.Tag>
+                                    <local:ExportOption 
+                                Title="TaCZ 枪包"
+                                Rules="tacz/|config/tacz/custom/"
                                 DefaultChecked="False" />
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
