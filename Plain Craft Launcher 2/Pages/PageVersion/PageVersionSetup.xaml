@@ -219,6 +219,8 @@
                     <local:MyCheckBox Grid.Row="5" Grid.Column="1" x:Name="CheckAdvanceRunWait" Tag="VersionAdvanceRunWait" Visibility="Collapsed"
                                       Text="等待命令执行完成后再继续启动" Margin="0,5,0,0" />
                     <StackPanel Margin="0,12,0,4" Grid.Row="6" Grid.ColumnSpan="2" HorizontalAlignment="Left">
+                        <local:MyCheckBox Height="28" Text="禁止 Mod 更新" x:Name="CheckAdvanceDisableModUpdate" Tag="VersionAdvanceDisableModUpdate"
+                                          ToolTipService.Placement="Right" />
                         <local:MyCheckBox Height="28" Text="忽略 Java 兼容性警告" x:Name="CheckAdvanceJava" Tag="VersionAdvanceJava"
                                           ToolTipService.Placement="Right"
                                           ToolTip="如果手动选择了与当前版本不兼容的 Java，则自动跳过兼容性警告弹窗，强制使用手动选择的 Java。" />
