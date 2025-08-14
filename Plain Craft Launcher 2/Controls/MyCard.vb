@@ -332,7 +332,6 @@
             IsSwapped = value
         End Set
     End Property
-    Public Shared ReadOnly IsSwapedProperty As DependencyProperty = DependencyProperty.Register("IsSwaped", GetType(Boolean), GetType(MyCard), New PropertyMetadata(False))
 
     Public Property SwapLogoRight As Boolean = False
     Private IsMouseDown As Boolean = False
