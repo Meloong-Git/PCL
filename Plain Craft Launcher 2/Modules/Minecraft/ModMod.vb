@@ -890,7 +890,7 @@ Finished:
                 ModList.Add(ModEntry)
                 '读取 Comp 缓存
                 If ModEntry.State = McMod.McModState.Unavailable Then Continue For
-                Dim CacheKey = ModEntry.ModrinthHash & PageVersionLeft.Version.Version.McName & GetTargetModLoaders().Join("")
+                Dim CacheKey = ModEntry.ModrinthHash & PageVersionLeft.Version.Version.McName & GetTargetModLoaders().Join("") & PageVersionLeft.Version.PathIndie
                 If Cache.ContainsKey(CacheKey) Then
                     ModEntry.FromJson(Cache(CacheKey))
                     '如果缓存中的信息在 6 小时以内更新过，则无需重新获取
@@ -1122,7 +1122,7 @@ Finished:
         If Not Mods.Any() Then Return
         For Each Entry In Mods
             Entry.CompLoaded = Not IsFailed
-            Cache(Entry.ModrinthHash & McVersion & ModLoaders.Join("")) = Entry.ToJson()
+            Cache(Entry.ModrinthHash & McVersion & ModLoaders.Join("") & PageVersionLeft.Version.PathIndie) = Entry.ToJson()
         Next
         WriteFile(PathTemp & "Cache\LocalMod.json", Cache.ToString(If(ModeDebug, Newtonsoft.Json.Formatting.Indented, Newtonsoft.Json.Formatting.None)))
         '刷新边栏
