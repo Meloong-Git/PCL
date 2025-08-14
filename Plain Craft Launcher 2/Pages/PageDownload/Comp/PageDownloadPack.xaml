@@ -5,24 +5,24 @@
     mc:Ignorable="d" x:Class="PageDownloadPack"
     PanScroll="{Binding ElementName=Content}">
     <local:PageComp x:Name="Content" PageType="ModPack" TypeName="整合包" TypeNameSpaced="整合包">
-        <local:MyComboBoxItem Tag="" Content="全部" IsSelected="True" />
-        <local:MyComboBoxItem Tag="4484/" Content="多人" />
-        <local:MyComboBoxItem Tag="/optimization" Content="性能优化" />
-        <local:MyComboBoxItem Tag="4479/challenging" Content="硬核" />
-        <local:MyComboBoxItem Tag="4483/combat" Content="战斗" />
-        <local:MyComboBoxItem Tag="4478/quests" Content="任务" />
-        <local:MyComboBoxItem Tag="4472/technology" Content="科技" />
-        <local:MyComboBoxItem Tag="4473/magic" Content="魔法" />
-        <local:MyComboBoxItem Tag="4475/adventure" Content="冒险" />
-        <local:MyComboBoxItem Tag="/kitchen-sink" Content="水槽包" />
-        <local:MyComboBoxItem Tag="4476/" Content="探索" />
-        <local:MyComboBoxItem Tag="4477/" Content="小游戏" />
-        <local:MyComboBoxItem Tag="4471/" Content="科幻" />
-        <local:MyComboBoxItem Tag="4736/" Content="空岛" />
-        <local:MyComboBoxItem Tag="5128/" Content="原版改良" />
-        <local:MyComboBoxItem Tag="4487/" Content="FTB" ToolTip="由 FTB 官方发布" ToolTipService.HorizontalOffset="70" />
-        <local:MyComboBoxItem Tag="4480/" Content="基于地图" />
-        <local:MyComboBoxItem Tag="4481/lightweight" Content="轻量整合" />
-        <local:MyComboBoxItem Tag="4482/" Content="大型整合" />
+        <local:MyComboBoxItem Content="全部" IsSelected="True" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4484/" Content="多人" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="/optimization" Content="性能优化" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4479/challenging" Content="硬核" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4483/combat" Content="战斗" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4478/quests" Content="任务" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4472/technology" Content="科技" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4473/magic" Content="魔法" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4475/adventure" Content="冒险" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="/kitchen-sink" Content="水槽包" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4476/" Content="探索" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4477/" Content="小游戏" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4471/" Content="科幻" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4736/" Content="空岛" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="5128/" Content="原版改良" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4487/" Content="FTB" ToolTip="由 FTB 官方发布" ToolTipService.HorizontalOffset="70" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4480/" Content="基于地图" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4481/lightweight" Content="轻量整合" />
+        <local:MyComboBoxItem local:PageComp.FilterTag="4482/" Content="大型整合" />
     </local:PageComp>
 </local:MyPageRight>

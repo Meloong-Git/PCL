@@ -5,31 +5,31 @@
     mc:Ignorable="d" x:Class="PageDownloadMod"
     PanScroll="{Binding ElementName=Content}">
     <local:PageComp x:Name="Content" PageType="Mod" TypeName="Mod" TypeNameSpaced=" Mod ">
-        <local:MyComboBoxItem Content="全部" Tag="" IsSelected="True" />
-        <local:MyComboBoxItem Content="世界元素" Tag="406/worldgen" />
-        <local:MyComboBoxItem Content="生物群系" Tag="407/" Margin="15,0,0,0" />
-        <local:MyComboBoxItem Content="维度" Tag="410/" Margin="15,0,0,0" />
-        <local:MyComboBoxItem Content="矿物与资源" Tag="408/" Margin="15,0,0,0" />
-        <local:MyComboBoxItem Content="天然结构" Tag="409/" Margin="15,0,0,0" />
-        <local:MyComboBoxItem Content="科技" Tag="412/technology" />
-        <local:MyComboBoxItem Content="管道与物流" Tag="415/" Margin="15,0,0,0" />
-        <local:MyComboBoxItem Content="自动化" Tag="4843/" Margin="15,0,0,0" />
-        <local:MyComboBoxItem Content="能源" Tag="417/" Margin="15,0,0,0" />
-        <local:MyComboBoxItem Content="红石" Tag="4558/" Margin="15,0,0,0" />
-        <local:MyComboBoxItem Content="食物与烹饪" Tag="436/food" />
-        <local:MyComboBoxItem Content="农业" Tag="416/" Margin="15,0,0,0" />
-        <local:MyComboBoxItem Content="游戏机制" Tag="/game-mechanics" />
-        <local:MyComboBoxItem Content="运输" Tag="414/transportation" />
-        <local:MyComboBoxItem Content="仓储" Tag="420/storage" />
-        <local:MyComboBoxItem Content="魔法" Tag="419/magic" />
-        <local:MyComboBoxItem Content="冒险" Tag="422/adventure" />
-        <local:MyComboBoxItem Content="装饰" Tag="424/decoration" />
-        <local:MyComboBoxItem Content="生物" Tag="411/mobs" />
-        <local:MyComboBoxItem Content="实用" Tag="5191/utility" />
-        <local:MyComboBoxItem Content="装备与工具" Tag="434/equipment" />
-        <local:MyComboBoxItem Content="性能优化" Tag="/optimization" />
-        <local:MyComboBoxItem Content="信息显示" Tag="423/" />
-        <local:MyComboBoxItem Content="服务器" Tag="435/social" />
-        <local:MyComboBoxItem Content="支持库" Tag="421/library" />
+        <local:MyComboBoxItem Content="全部" IsSelected="True" />
+        <local:MyComboBoxItem Content="世界元素" local:PageComp.FilterTag="406/worldgen" />
+        <local:MyComboBoxItem Content="生物群系" local:PageComp.FilterTag="407/" Margin="15,0,0,0" />
+        <local:MyComboBoxItem Content="维度" local:PageComp.FilterTag="410/" Margin="15,0,0,0" />
+        <local:MyComboBoxItem Content="矿物与资源" local:PageComp.FilterTag="408/" Margin="15,0,0,0" />
+        <local:MyComboBoxItem Content="天然结构" local:PageComp.FilterTag="409/" Margin="15,0,0,0" />
+        <local:MyComboBoxItem Content="科技" local:PageComp.FilterTag="412/technology" />
+        <local:MyComboBoxItem Content="管道与物流" local:PageComp.FilterTag="415/" Margin="15,0,0,0" />
+        <local:MyComboBoxItem Content="自动化" local:PageComp.FilterTag="4843/" Margin="15,0,0,0" />
+        <local:MyComboBoxItem Content="能源" local:PageComp.FilterTag="417/" Margin="15,0,0,0" />
+        <local:MyComboBoxItem Content="红石" local:PageComp.FilterTag="4558/" Margin="15,0,0,0" />
+        <local:MyComboBoxItem Content="食物与烹饪" local:PageComp.FilterTag="436/food" />
+        <local:MyComboBoxItem Content="农业" local:PageComp.FilterTag="416/" Margin="15,0,0,0" />
+        <local:MyComboBoxItem Content="游戏机制" local:PageComp.FilterTag="/game-mechanics" />
+        <local:MyComboBoxItem Content="运输" local:PageComp.FilterTag="414/transportation" />
+        <local:MyComboBoxItem Content="仓储" local:PageComp.FilterTag="420/storage" />
+        <local:MyComboBoxItem Content="魔法" local:PageComp.FilterTag="419/magic" />
+        <local:MyComboBoxItem Content="冒险" local:PageComp.FilterTag="422/adventure" />
+        <local:MyComboBoxItem Content="装饰" local:PageComp.FilterTag="424/decoration" />
+        <local:MyComboBoxItem Content="生物" local:PageComp.FilterTag="411/mobs" />
+        <local:MyComboBoxItem Content="实用" local:PageComp.FilterTag="5191/utility" />
+        <local:MyComboBoxItem Content="装备与工具" local:PageComp.FilterTag="434/equipment" />
+        <local:MyComboBoxItem Content="性能优化" local:PageComp.FilterTag="/optimization" />
+        <local:MyComboBoxItem Content="信息显示" local:PageComp.FilterTag="423/" />
+        <local:MyComboBoxItem Content="服务器" local:PageComp.FilterTag="435/social" />
+        <local:MyComboBoxItem Content="支持库" local:PageComp.FilterTag="421/library" />
     </local:PageComp>
 </local:MyPageRight>

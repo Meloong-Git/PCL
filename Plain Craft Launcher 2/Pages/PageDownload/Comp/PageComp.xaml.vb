@@ -1,4 +1,6 @@
-﻿Imports System.Windows.Markup
+﻿Imports System.ComponentModel
+Imports System.Globalization
+Imports System.Windows.Markup
 
 <ContentProperty("SearchTags")>
 Public Class PageComp
@@ -112,6 +114,64 @@ Public Class PageComp
         CType(Parent, MyPageRight).PageLoaderInit(Load, PanLoad, PanContent, PanAlways, Loader, AddressOf Load_OnFinish, AddressOf LoaderInput)
         If McVersionHighest = -1 Then McVersionHighest = Math.Max(McVersionHighest, Integer.Parse(CType(TextSearchVersion.Items(1), MyComboBoxItem).Content.ToString.Split(".")(1)))
     End Sub
+
+
+#Region "FilterTag"
+    Public Shared Function GetFilterTag(element As DependencyObject) As FilterTag
+        If element Is Nothing Then Throw New ArgumentNullException("element")
+        Return element.GetValue(FilterTagProperty)
+    End Function
+    Public Shared Sub SetFilterTag(element As DependencyObject, value As FilterTag)
+        If element Is Nothing Then Throw New ArgumentNullException("element")
+        element.SetValue(FilterTagProperty, value)
+    End Sub
+    Public Shared ReadOnly FilterTagProperty As DependencyProperty =
+        DependencyProperty.RegisterAttached("FilterTag", GetType(FilterTag), GetType(PageComp), New PropertyMetadata(New FilterTag))
+    ''' <summary>
+    ''' 搜索工程时的 Tag 筛选器，xaml 中的书写格式例如 "406/worldgen"，分别是 CurseForge 和 Modrinth 的 ID。
+    ''' </summary>
+    <TypeConverter(GetType(FilterTagTypeConverter))>
+    Public Structure FilterTag
+        Public ReadOnly HasFilter As Boolean '调无参构造的时候 HasFilter 就是 False，代表着不做任何筛选
+        Public ReadOnly CfValue As String '调有参构造的话这两个一定非 Nothing，为 String.Empty 时代表着筛选器不支持对应的搜索来源
+        Public ReadOnly MrValue As String
+        Public ReadOnly Property NotSupportCf As Boolean
+            Get
+                Return HasFilter AndAlso String.IsNullOrEmpty(CfValue)
+            End Get
+        End Property
+        Public ReadOnly Property NotSupportMr As Boolean
+            Get
+                Return HasFilter AndAlso String.IsNullOrEmpty(MrValue)
+            End Get
+        End Property
+        Public Sub New(CfValue As String, MrValue As String)
+            HasFilter = True
+            Me.CfValue = If(CfValue, "")
+            Me.MrValue = If(MrValue, "")
+        End Sub
+        Public Overrides Function ToString() As String
+            Return If(HasFilter, $"{CfValue}/{MrValue}", "")
+        End Function
+    End Structure
+    Public Class FilterTagTypeConverter
+        Inherits TypeConverter
+        Public Overrides Function CanConvertFrom(context As ITypeDescriptorContext, sourceType As Type) As Boolean
+            Return (sourceType Is GetType(String)) OrElse MyBase.CanConvertFrom(context, sourceType)
+        End Function
+        Public Overrides Function ConvertFrom(context As ITypeDescriptorContext, culture As CultureInfo, value As Object) As Object
+            If TypeOf value Is String Then
+                With CType(value, String)
+                    If .Length = 0 Then Return New FilterTag
+                    Dim Splited As String() = .Split("/"c)
+                    If Splited.Length = 2 Then Return New FilterTag(Splited(0), Splited(1))
+                End With
+            End If
+            Return MyBase.ConvertFrom(context, culture, value)
+        End Function
+    End Class
+#End Region
+
     Private Function LoaderInput() As CompProjectRequest
         Dim Request As New CompProjectRequest(PageType, Storage, (Page + 1) * PageSize)
         Dim GameVersion As String = If(TextSearchVersion.Text = "全部 (也可自行输入)", Nothing,
@@ -119,7 +179,7 @@ Public Class PageComp
         With Request
             .SearchText = TextSearchName.Text
             .GameVersion = GameVersion
-            .Tag = ComboSearchTag.SelectedItem.Tag
+            .Tag = GetFilterTag(ComboSearchTag.SelectedItem)
             .ModLoader = If(PageType = CompType.Mod, Val(ComboSearchLoader.SelectedItem.Tag), CompModLoaderType.Any)
             .Source = CType(Val(ComboSearchSource.SelectedItem.Tag), CompSourceType)
         End With
