@@ -220,16 +220,18 @@ Public Class ValidateFolderName
     Inherits Validate
     Public Property Path As String
     Public Property UseMinecraftCharCheck As Boolean = True
-    Public Property IgnoreCase As Boolean = True
-    Private ReadOnly PathIgnore As IEnumerable(Of DirectoryInfo)
+    Private ReadOnly PathDirs As IEnumerable(Of DirectoryInfo) = {}
+    Public Property OldName As String = Nothing
     Public Sub New()
     End Sub
-    Public Sub New(Path As String, Optional UseMinecraftCharCheck As Boolean = True, Optional IgnoreCase As Boolean = True)
+    Public Sub New(Path As String, Optional UseMinecraftCharCheck As Boolean = True, Optional OldName As String = Nothing)
         Me.Path = Path
-        Me.IgnoreCase = IgnoreCase
         Me.UseMinecraftCharCheck = UseMinecraftCharCheck
-        On Error Resume Next
-        PathIgnore = New DirectoryInfo(Path).EnumerateDirectories
+        Try
+            PathDirs = New DirectoryInfo(Path).EnumerateDirectories
+        Catch ex As Exception
+        End Try
+        Me.OldName = OldName
     End Sub
     Public Overrides Function Validate(Str As String) As String
         Try
@@ -253,14 +255,17 @@ Public Class ValidateFolderName
             '检查 NTFS 8.3 文件名（#4505）
             If RegexCheck(Str, ".{2,}~\d") Then Return "文件夹名不能包含这一特殊格式！"
             '检查文件夹重名
-            Dim Arr As New List(Of String)
-            If PathIgnore IsNot Nothing Then
-                For Each Folder As DirectoryInfo In PathIgnore
-                    Arr.Add(Folder.Name)
-                Next
+            Dim SameNameCheck = New ValidateExceptSame(PathDirs.Select(Function(di As DirectoryInfo) di.Name).ToArray(), "不可与现有文件夹重名！", IgnoreCase:=True).Validate(Str)
+            If Not SameNameCheck = "" Then
+                '进行重命名相关的特判
+                If OldName?.Equals(Str, StringComparison.OrdinalIgnoreCase) Then
+                    If OldName.Equals(Str) Then
+                        Return "请输入一个不同的名称！"
+                    End If
+                Else
+                    Return SameNameCheck
+                End If
             End If
-            Dim SameNameCheck = New ValidateExceptSame(Arr, "不可与现有文件夹重名！", IgnoreCase).Validate(Str)
-            If Not SameNameCheck = "" Then Return SameNameCheck
             Return ""
         Catch ex As Exception
             Log(ex, "检查文件夹名出错")
