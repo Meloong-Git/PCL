@@ -158,6 +158,7 @@ Retry:
         If File.Exists(OverridesIni) Then
             WriteIni(OverridesIni, "VersionArgumentIndie", 1) '开启版本隔离
             WriteIni(OverridesIni, "VersionArgumentIndieV2", True)
+            WriteIni(OverridesIni, "IsStar", False)
             CopyFile(OverridesIni, VersionIni) '覆写已有的 ini
         Else
             WriteIni(VersionIni, "VersionArgumentIndie", 1) '开启版本隔离
