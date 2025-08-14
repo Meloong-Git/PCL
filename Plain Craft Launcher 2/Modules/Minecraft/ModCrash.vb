@@ -1026,9 +1026,14 @@ NextStack:
                     End If
                 Case CrashReason.特定实体导致崩溃
                     If Additional.Count = 1 Then
-                        Results.Add("游戏似乎因为实体 " & Additional.First & " 出现了问题。\n\n你可以创建一个新世界，并生成一个该实体，然后观察游戏的运行情况。\h")
+                        Dim entityInfo As String = Additional.First
+                        If entityInfo.StartsWith("minecraft:player") Then
+                            Results.Add("游戏似乎因为玩家实体 " & entityInfo & " 出现了问题。\n\n这通常是因为玩家数据损坏或世界存档问题导致的。\n请尝试以下解决方案：\n - 创建一个新世界，观察游戏是否正常运行\n - 如果新世界正常，可能需要删除或修复当前世界的玩家数据文件\n - 也可能是某个 Mod 与玩家实体处理存在冲突，尝试逐个禁用近期安装的 Mod\n - 如果问题持续存在，建议备份重要数据后重新创建世界\h")
+                        Else
+                            Results.Add("游戏似乎因为实体 " & entityInfo & " 出现了问题。\n\n请尝试以下解决方案：\n - 创建一个新世界，并尝试生成该类型的实体，观察游戏运行情况\n - 如果新世界中该实体正常，问题可能在于当前世界的数据损坏\n - 如果新世界中仍然崩溃，可能是某个 Mod 导致了实体处理异常\n - 尝试逐个禁用可能影响实体的 Mod（如生物类、AI 类 Mod）\n - 也可以尝试使用指令删除该坐标附近的实体\h")
+                        End If
                     Else
-                        Results.Add("游戏似乎因为世界中的某些实体出现了问题。\n\n你可以创建一个新世界，并生成各种实体，然后观察游戏的运行情况。\h")
+                        Results.Add("游戏似乎因为世界中的某些实体出现了问题。\n\n请尝试以下解决方案：\n - 创建一个新世界，观察游戏的运行情况\n - 如果新世界正常运行，则是当前世界的实体数据导致出错\n - 可以尝试使用指令清理异常实体\n - 如果问题持续存在，可能是某个处理实体的 Mod 存在问题\n - 建议逐个禁用近期安装的 Mod，特别是涉及生物、AI 或实体处理的 Mod\h")
                     End If
                 Case CrashReason.OptiFine与Forge不兼容
                     Results.Add("由于 OptiFine 与当前版本的 Forge 不兼容，导致了游戏崩溃。\n\n请前往 OptiFine 官网（https://optifine.net/downloads）查看 OptiFine 所兼容的 Forge 版本，并严格按照对应版本重新安装游戏。")
