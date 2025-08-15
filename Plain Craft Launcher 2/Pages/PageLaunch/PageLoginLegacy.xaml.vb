@@ -64,6 +64,7 @@ Public Class PageLoginLegacy
     Private Sub ComboLegacy_TextChanged(sender As Object, e As TextChangedEventArgs) Handles ComboName.TextChanged
         If Setup.Get("LaunchSkinType") = 0 Then PageLaunchLeft.SkinLegacy.Start(IsForceRestart:=True)
         HintChinese.Visibility = If(RegexCheck(ComboName.Text, "^[0-9A-Za-z_]*$"), Visibility.Collapsed, Visibility.Visible)
+        RunInUi(Sub() PanMain.InvalidateMeasure(), True) '由于 WPF 的 Bug，它不一定会自动更新 HintChinese 的大小（#6627）
     End Sub
     Private Sub Skin_Click() Handles Skin.Click
         If (Setup.Get("UiHiddenPageSetup") OrElse Setup.Get("UiHiddenSetupLaunch")) AndAlso Not PageSetupUI.HiddenForceShow Then

@@ -62,16 +62,18 @@
                             <RowDefinition Height="7" />
                             <RowDefinition Height="28" />
                             <RowDefinition Height="7" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="7" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <!--<TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="下载源" Margin="0,0,25,0" />
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="来源" Margin="0,0,25,0" />
                         <local:MyComboBox x:Name="ComboDownloadMod" Grid.Row="0" Grid.ColumnSpan="2" Tag="ToolDownloadMod" Grid.Column="1">
-                            <local:MyComboBoxItem Content="尽量使用镜像源（暂时无效）" />
+                            <local:MyComboBoxItem Content="尽量使用镜像源（可能缺少刚刚更新的版本）" />
                             <local:MyComboBoxItem Content="仅在官方源加载缓慢时改用镜像源" />
                             <local:MyComboBoxItem Content="尽量使用官方源" IsSelected="True" />
-                        </local:MyComboBox>-->
-                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="文件名格式" Margin="0,0,25,0" />
-                        <local:MyComboBox Grid.Row="0" x:Name="ComboDownloadTranslateV2" Grid.ColumnSpan="2" Tag="ToolDownloadTranslateV2" Grid.Column="1" 
+                        </local:MyComboBox>
+                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="文件名格式" Margin="0,0,25,0" />
+                        <local:MyComboBox Grid.Row="2" x:Name="ComboDownloadTranslateV2" Grid.ColumnSpan="2" Tag="ToolDownloadTranslateV2" Grid.Column="1" 
                                           ToolTip="下载社区资源时，其默认文件名的格式">
                             <local:MyComboBoxItem Content="【机械动力】create-1.21.1-6.0.4" />
                             <local:MyComboBoxItem Content="[机械动力] create-1.21.1-6.0.4" IsSelected="True" />
@@ -79,13 +81,13 @@
                             <local:MyComboBoxItem Content="create-1.21.1-6.0.4-机械动力" />
                             <local:MyComboBoxItem Content="create-1.21.1-6.0.4" />
                         </local:MyComboBox>
-                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="Mod 管理样式" Margin="0,0,25,0" />
-                        <local:MyComboBox Grid.Row="2" x:Name="ComboModLocalNameStyle" Grid.ColumnSpan="2" Tag="ToolModLocalNameStyle" Grid.Column="1" 
+                        <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="Mod 管理样式" Margin="0,0,25,0" />
+                        <local:MyComboBox Grid.Row="4" x:Name="ComboModLocalNameStyle" Grid.ColumnSpan="2" Tag="ToolModLocalNameStyle" Grid.Column="1" 
                                           ToolTip="在 Mod 管理页面中，Mod 项的显示方式">
                             <local:MyComboBoxItem Content="标题显示译名，详情显示文件名" IsSelected="True" />
                             <local:MyComboBoxItem Content="标题显示文件名，详情显示译名" />
                         </local:MyComboBox>
-                        <local:MyCheckBox Margin="0,2,0,4" Text="在显示 Mod 加载器时忽略 Quilt" Grid.Row="4" Height="22" Grid.ColumnSpan="2"
+                        <local:MyCheckBox Margin="0,2,0,4" Text="在显示 Mod 加载器时忽略 Quilt" Grid.Row="6" Height="22" Grid.ColumnSpan="2"
                                           x:Name="CheckDownloadIgnoreQuilt" Tag="ToolDownloadIgnoreQuilt" />
                     </Grid>
                 </StackPanel>
@@ -109,7 +111,7 @@
                     <local:MyCheckBox Text="自动设置为中文" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="5" x:Name="CheckHelpChinese" Tag="ToolHelpChinese" />
                 </Grid>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="系统">
+            <local:MyCard Margin="0,0,0,15" Title="启动器">
                 <Grid Margin="25,40,25,20">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
@@ -122,6 +124,7 @@
                         <RowDefinition Height="9" />
                         <RowDefinition Height="28" />
                         <RowDefinition Height="5" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
@@ -145,7 +148,10 @@
                             <local:ValidateFolderPath UseMinecraftCharCheck="False" />
                         </local:MyTextBox.ValidateRules>
                     </local:MyTextBox>
-                    <Grid Height="35" Grid.Row="6" Grid.ColumnSpan="5" Margin="0,12,0,0">
+                    <local:MyCheckBox Margin="0,5,0,4" Text="匿名数据收集" Grid.Row="6" Height="22" Grid.ColumnSpan="2"
+                        x:Name="CheckSystemTelemetry" Tag="SystemSystemTelemetry" 
+                        ToolTip="当下载失败、PCL 出错、游戏崩溃等事件时，PCL 会匿名上报情况，以通知龙猫 “哦吼，出错了”，让龙猫能更好地修 Bug……&#xa;你可以关闭上报，不过龙猫就不知道你遇到了什么 Bug 了……&#13;PCL 不会上传或收集任何个人信息，包括上报的东西里面也没有！" />
+                    <Grid Height="35" Grid.Row="7" Grid.ColumnSpan="5" Margin="0,12,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
@@ -155,7 +161,7 @@
                         <local:MyButton Grid.Column="1" x:Name="BtnSystemSettingExp" MinWidth="140" Text="导出设置" Padding="13,0" Margin="0,0,20,0" />
                         <local:MyButton Grid.Column="2" x:Name="BtnSystemSettingImp" MinWidth="140" Text="导入设置" Padding="13,0" Margin="0,0,20,0" />
                     </Grid>
-                    <Grid Height="35" Grid.Row="7" Grid.ColumnSpan="5" Margin="0,12,0,0" x:Name="PanDonate">
+                    <Grid Height="35" Grid.Row="8" Grid.ColumnSpan="5" Margin="0,12,0,0" x:Name="PanDonate">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
@@ -182,7 +188,7 @@
                     </Grid>
                 </StackPanel>
             </local:MyCard> -->
-            <local:MyCard x:Name="CardDebug" Margin="0,0,0,15" Title="调试选项" CanSwap="True" IsSwaped="True">
+            <local:MyCard x:Name="CardDebug" Margin="0,0,0,15" Title="调试选项" CanSwap="True" IsSwapped="True">
                 <StackPanel Margin="25,40,25,15">
                     <Grid x:Name="PanDebugAnim" Height="22" Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
@@ -198,7 +204,7 @@
                             <ColumnDefinition />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <local:MyCheckBox Grid.Column="0" Text="禁止在下载时复制已存在的文件" Height="22" x:Name="CheckDebugSkipCopy" Tag="SystemDebugSkipCopy" ToolTip="在下载时不直接复制已经存在的文件，而是重新下载每个文件。&#xa;只建议在测试下载速度时开启。" />
+                        <local:MyCheckBox Grid.Column="0" Text="禁止在下载时从其他文件夹复制文件" Height="22" x:Name="CheckDebugSkipCopy" Tag="SystemDebugSkipCopy" ToolTip="在下载时不直接复制其他 MC 文件夹中已经存在的相同文件，而是重新下载文件。&#xa;只建议在测试下载速度时开启。" />
                         <local:MyCheckBox Grid.Column="1" Text="调试模式" Height="22" x:Name="CheckDebugMode" Tag="SystemDebugMode" ToolTip="显示调试信息与更多错误信息。&#xa;这会导致启动器性能略有下降，若无特殊需要不建议开启。" />
                         <local:MyCheckBox Grid.Column="2" Text="添加延迟" Height="22" x:Name="CheckDebugDelay" Tag="SystemDebugDelay" ToolTip="在各个环节添加随机的延迟，拖慢加载速度，以测试部分功能是否正常运行。&#xa;这会严重影响启动器运行，若无特殊需要不建议开启。" />
                     </Grid>

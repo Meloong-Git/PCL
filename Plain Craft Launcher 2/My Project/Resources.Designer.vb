@@ -63,9 +63,9 @@ Namespace My.Resources
         '''<summary>
         '''  查找 System.Byte[] 类型的本地化资源。
         '''</summary>
-        Friend ReadOnly Property Custom() As Byte()
+        Friend ReadOnly Property CacheCow_Client() As Byte()
             Get
-                Dim obj As Object = ResourceManager.GetObject("Custom", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("CacheCow.Client", resourceCulture)
                 Return CType(obj,Byte())
             End Get
         End Property
@@ -73,9 +73,29 @@ Namespace My.Resources
         '''<summary>
         '''  查找 System.Byte[] 类型的本地化资源。
         '''</summary>
-        Friend ReadOnly Property Dialogs() As Byte()
+        Friend ReadOnly Property CacheCow_Client_FileStore() As Byte()
             Get
-                Dim obj As Object = ResourceManager.GetObject("Dialogs", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("CacheCow.Client.FileStore", resourceCulture)
+                Return CType(obj,Byte())
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  查找 System.Byte[] 类型的本地化资源。
+        '''</summary>
+        Friend ReadOnly Property CacheCow_Common() As Byte()
+            Get
+                Dim obj As Object = ResourceManager.GetObject("CacheCow.Common", resourceCulture)
+                Return CType(obj,Byte())
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  查找 System.Byte[] 类型的本地化资源。
+        '''</summary>
+        Friend ReadOnly Property Custom() As Byte()
+            Get
+                Dim obj As Object = ResourceManager.GetObject("Custom", resourceCulture)
                 Return CType(obj,Byte())
             End Get
         End Property
@@ -105,7 +125,7 @@ Namespace My.Resources
         '''</summary>
         Friend ReadOnly Property Imazen_WebP() As Byte()
             Get
-                Dim obj As Object = ResourceManager.GetObject("Imazen_WebP", resourceCulture)
+                Dim obj As Object = ResourceManager.GetObject("Imazen.WebP", resourceCulture)
                 Return CType(obj,Byte())
             End Get
         End Property
@@ -116,16 +136,6 @@ Namespace My.Resources
         Friend ReadOnly Property JavaWrapper() As Byte()
             Get
                 Dim obj As Object = ResourceManager.GetObject("JavaWrapper", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
-        Friend ReadOnly Property Json() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("Json", resourceCulture)
                 Return CType(obj,Byte())
             End Get
         End Property
@@ -156,6 +166,36 @@ Namespace My.Resources
         Friend ReadOnly Property NAudio() As Byte()
             Get
                 Dim obj As Object = ResourceManager.GetObject("NAudio", resourceCulture)
+                Return CType(obj,Byte())
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  查找 System.Byte[] 类型的本地化资源。
+        '''</summary>
+        Friend ReadOnly Property Newtonsoft_Json() As Byte()
+            Get
+                Dim obj As Object = ResourceManager.GetObject("Newtonsoft.Json", resourceCulture)
+                Return CType(obj,Byte())
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  查找 System.Byte[] 类型的本地化资源。
+        '''</summary>
+        Friend ReadOnly Property Ookii_Dialogs_Wpf() As Byte()
+            Get
+                Dim obj As Object = ResourceManager.GetObject("Ookii.Dialogs.Wpf", resourceCulture)
+                Return CType(obj,Byte())
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  查找 System.Byte[] 类型的本地化资源。
+        '''</summary>
+        Friend ReadOnly Property System_Net_Http_Formatting() As Byte()
+            Get
+                Dim obj As Object = ResourceManager.GetObject("System.Net.Http.Formatting", resourceCulture)
                 Return CType(obj,Byte())
             End Get
         End Property

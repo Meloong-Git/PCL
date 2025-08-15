@@ -17,7 +17,7 @@
                         <ColumnDefinition />
                         <ColumnDefinition Width="150" />
                     </Grid.ColumnDefinitions>
-                    <local:MyListItem IsHitTestVisible="False" Title="龙腾猫跃" Margin="-5,0,15,0" Info="Plain Craft Launcher 的作者！" Grid.Row="0" Grid.Column="1" />
+                    <local:MyListItem IsHitTestVisible="False" Title="龙腾猫跃" Margin="-5,0,15,0" Info="Plain Craft Launcher 的开发者！" Grid.Row="0" Grid.Column="1" />
                     <local:MyListItem IsHitTestVisible="False" Title="Plain Craft Launcher 2" Margin="-5,0,15,0" Info="当前版本：%VERSION%（%VERSIONCODE%.%BRANCH%）" Grid.Row="1" Grid.Column="1" x:Name="ItemAboutPcl" />
                     <Image Source="/Plain Craft Launcher 2;component/Images/Heads/Logo.png" Grid.Row="1" Margin="3">
                         <Image.Clip>
@@ -29,7 +29,7 @@
                             <EllipseGeometry Center="17 17" RadiusX="17" RadiusY="17" />
                         </Image.Clip>
                     </Image>
-                    <local:MyButton Text="赞助作者" Grid.Column="2" Grid.Row="0" Height="35" EventType="打开网页" EventData="https://afdian.com/a/LTCat" />
+                    <local:MyButton Text="赞助 PCL !" Grid.Column="2" Grid.Row="0" Height="35" EventType="打开网页" EventData="https://afdian.com/a/LTCat" ColorType="Highlight" />
                     <local:MyButton Text="查看源代码" Grid.Column="2" Grid.Row="1" Height="35" EventType="打开网页" EventData="https://github.com/Hex-Dragon/PCL2" />
                 </Grid>
             </local:MyCard>
@@ -51,11 +51,12 @@
                         <ColumnDefinition Width="150" />
                     </Grid.ColumnDefinitions>
                     <local:MyListItem Title="bangbang93" Margin="-5,0,15,0" IsHitTestVisible="False" Info="提供 BMCLAPI 镜像源和 Forge 安装工具，详见 https://bmclapi.bangbang93.com" Grid.Row="0" Grid.Column="1" />
-                    <local:MyButton x:Name="BtnAboutBmclapi" Text="赞助镜像源" Grid.Row="0" Grid.Column="2" Height="35" />
+                    <local:MyButton Text="赞助镜像源" Grid.Row="0" Grid.Column="2" Height="35" EventType="打开网页" EventData="https://afdian.com/a/bangbang93" />
                     <local:MyListItem Title="MC 百科" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 Mod 名称的中文翻译和更多相关信息！" Grid.Row="1" Grid.Column="1" />
-                    <local:MyButton x:Name="BtnAboutWiki" Text="打开百科" Grid.Row="1" Grid.Column="2" Height="35" />
-                    <local:MyListItem Title="00ll00" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 Java Launch Wrapper 和一些重要服务支持！" Grid.Row="2" Grid.Column="1" />
-                    <local:MyListItem Title="z0z0r4" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 MCIM 中国 Mod 下载镜像源和帮助库图床！" Grid.Row="3" Grid.Column="1" />
+                    <local:MyButton Text="打开百科" Grid.Row="1" Grid.Column="2" Height="35" EventType="打开网页" EventData="https://www.mcmod.cn" />
+                    <local:MyListItem Title="z0z0r4" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 MCIM 社区资源镜像源和帮助库图床！" Grid.Row="2" Grid.Column="1" />
+                    <local:MyButton Text="MCIM 主页" Grid.Row="2" Grid.Column="2" Height="35" EventType="打开网页" EventData="https://github.com/mcmod-info-mirror" />
+                    <local:MyListItem Title="00ll00" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 Java Launch Wrapper 和一些重要服务支持！" Grid.Row="3" Grid.Column="1" />
                     <local:MyListItem Title="Patrick" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="设计并制作了 PCL 图标，让我从做图标的水深火热中得到了解脱……" Grid.Row="4" Grid.Column="1" />
                     <local:MyListItem Title="Hao_Tian" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="在内测中找出了一大堆没人想得到的诡异 Bug，有非同寻常的 Bug 体质" Grid.Row="5" Grid.Column="1" />
                     <local:MyListItem Title="Minecraft 中文论坛" Margin="-5,0,15,0" IsHitTestVisible="False" Info="虽然已经关站了，但感谢此前提供了 MCBBS 镜像源……" Grid.Row="6" Grid.Column="1" />
@@ -70,12 +71,12 @@
                             <EllipseGeometry Center="17 17" RadiusX="17" RadiusY="17" />
                         </Image.Clip>
                     </Image>
-                    <Image Source="/Plain Craft Launcher 2;component/Images/Heads/00ll00.png" Grid.Row="2" Margin="3">
+                    <Image Source="/Plain Craft Launcher 2;component/Images/Heads/z0z0r4.png" Grid.Row="2" Margin="3">
                         <Image.Clip>
                             <EllipseGeometry Center="17 17" RadiusX="17" RadiusY="17" />
                         </Image.Clip>
                     </Image>
-                    <Image Source="/Plain Craft Launcher 2;component/Images/Heads/z0z0r4.png" Grid.Row="3" Margin="3">
+                    <Image Source="/Plain Craft Launcher 2;component/Images/Heads/00ll00.png" Grid.Row="3" Margin="3">
                         <Image.Clip>
                             <EllipseGeometry Center="17 17" RadiusX="17" RadiusY="17" />
                         </Image.Clip>
@@ -104,264 +105,245 @@
             </local:MyCard>
             <local:MyCard Margin="0,0,0,15" Title="赞助者">
                 <StackPanel Margin="25,40,10,20">
-                    <TextBlock HorizontalAlignment="Left" Text="以下是 2025 年 5 月的高级赞助者们！感谢各位对 PCL 和伟大的咕咕咕事业的支持！" Margin="0,0,25,5.5" TextTrimming="None" TextWrapping="WrapWithOverflow" />
-                    <WrapPanel Margin="0,0,0,10">                        <TextBlock Width="120" Margin="0,1.5" Text="Alliance" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="风之轻语" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="大博文" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="狐狸不吃酸葡萄" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="仰望星空的牧星人" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="某个网友" />
+                    <TextBlock HorizontalAlignment="Left" Text="以下是 2025 年 7 月的高级赞助者们！感谢各位对 PCL 和伟大的咕咕咕事业的支持！" Margin="0,0,25,5.5" TextTrimming="None" TextWrapping="WrapWithOverflow" />
+                    <WrapPanel Margin="0,0,0,10">                        <TextBlock Width="120" Margin="0,1.5" Text="ZSF" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="TizhleF" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="方源" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="日月空呵" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="贾明志" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="百瑞" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Flying___pig" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="绝世" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Jwac" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="万玖" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="墨忆" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="天刹" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Cess" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="ender_glass" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="TT" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="白玄.雪狼" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="MUCT" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="崇昀" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="绪" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="吾皇万岁" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Ander·Les" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Eoctopus" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="时光飞逝一下午" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Carl7412" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="ShinyChariot" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="骨故谷" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="?" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Jinji希子" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="自然选择" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="云念" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="钱尹鹏" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="TBONC" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="祈农" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="凤凰院凶真" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="ShuangDaoRen" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="PXZ233" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="二十二今天有没有" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="天魕" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="南华清" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="66112447" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="夏行子" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="周俊成" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="乌漆嘛黑" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="肘击恶魔佐巴扬" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Pari~" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="红云" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Link-an" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="想要钱用不完" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="花宝" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="生于春天的雷电" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="被偷去的睡眠" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="liuxuan" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="寒枫凌" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="雀色时" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="架" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="终成究竟觉" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="S0D1UM" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="吞仔送命" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="白浪宇宙" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Crimson" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Mibo_MkIX" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="G.snine18^7" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="两把雨伞" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="古明地苑" />
+                        <TextBlock Width="240" Margin="0,1.5" Text="MarbleMionshevic" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="：〈" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="紫罗兰" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="asai" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="隔壁小明" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="就爱唱歌" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="沫神鹤" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="风已消逝" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="光意留闪" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="我们长征的路上" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="芸芷" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="函数极限" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="冰川泥" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="XunWei" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="sirous" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="路过某打酱油的" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Gnight07" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="结构德古拉" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="myyukee" />
+                        <TextBlock Width="240" Margin="0,1.5" Text="云之彼端约定的地方" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="苏玖" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="赤沃净" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="YYC" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="晨曦酒庄高冷男" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="herald112" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Foxman" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="KoreQAQ" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="TechOfRevo" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="lqs" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="简某" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="源起于此" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="爱莉希雅" />
+                        <TextBlock Width="120" Margin="0,1.5" Text=" 和忧" />
+                        <TextBlock Width="240" Margin="0,1.5" Text="全明星小面包批发商DIO" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="碎序" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="U" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Dumlet" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="johnqian" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="KANG" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="owod" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="九" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="苑煜" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="壹" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="UA-Ming" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="可爱小探姬" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="霜月" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="bud" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="小虐SAIKYO" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="zealotand" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="comico" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="万山松" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="依梦明天" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="化形彧九尾" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="知崎" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="LOG175" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="绵" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="scp00813" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="宝宝" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="9527" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="ICE_xwx" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="羽笙喵喵" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="ssvgg(☉ x ☉)" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Happymeals" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="shen12244" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="一般路过AAA" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Niko" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="qroiwopqri" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="TringDron" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="有屳則名" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="TX2006" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="滑天下之大稽" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="中东悍匪" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="鬼泣々离殇" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="蒼崎青子" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="wyh114514" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="飞飞在睡觉。" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="柚西" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="XIAOSHUAI" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="saxioh" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="baibaibai" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="事屑Jerry" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Rs32" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="SPDish" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="风早九夜" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Reg" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="hellord" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="时本ki" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="mamana" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="放肆的微笑" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="人没逝" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="wddjww" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="xiao澄" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="银狼碎片" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="OniKata_Kayoko" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="曦" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Echo" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="画卿颜" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="夏 " />
+                        <TextBlock Width="120" Margin="0,1.5" Text="jiege45" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="甜食先生" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="虚莫妄玄" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="天恒" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="我有馄饨" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="布布曼" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="qwqewe" />
                         <TextBlock Width="120" Margin="0,1.5" Text="114514" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Emmanuel" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="云漫雾影" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="**葵" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="吴同学" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Anderson521314" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Alrosa" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="可爱电鳗" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="小野冢小町" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="田坎村西头王二狗" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="令月廿一" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Mrdandan" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="111" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="27733" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="韦韦神父" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="土豆" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="隔岸流年" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="冥吻" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="向阳" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="轻浮" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="小涵0v0" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="祈愿小狐" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="爱莉爱莉爱" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Bydold" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="SMRWXH" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="翷月" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="husky" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Hz_yuki" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="先知" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="2683672592" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="龖龖" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="陨树" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Gripen" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="棒槌" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="北北ovo" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="TombName" />
-                        <TextBlock Width="240" Margin="0,1.5" Text="莳倾梦のshiqingmeng" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Bortor" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="OuO6006" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="MKSeKai" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="清尘墨雨" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="墨染柊" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="福福" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="夕尽暮染" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="光年摆渡人" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="梦清韩" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="孤城辞典" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="灰" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="小周周" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="孤星痕" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="月孤" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="团团" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="J_ONE" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="初尘ya" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="MooBHise" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="凌之芬芳" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="土豆回锅土豆" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Reisen" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Rong" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="FiZone" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="橡素" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="逆光の思" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Edifier" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="迭风" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="mumu" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="欧润几" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="SiberianHusky" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="虫" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="闪电" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Bob_Marcus" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="瘦瘦爱吃呕吼" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="盛夏" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="飞起来的Mine" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="cc" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="简麟" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="郴州火车迷" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="守白" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="天长地忙" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="月无痕" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="HWW" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="樱岛麻衣" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="桌子" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="bushihuankong" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="戏梦simi" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Metal_Yoshika" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="H+H" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="junhuigege" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Kallen" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="x" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="随便玩" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="魇夜星渊" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="taomiao13579" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="无敌大鱼" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="忆兀安" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="无梦" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="SlyBlackCat" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="180" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="总督大人" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="sc99" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Fumi" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="豪放" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Canqiu" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="朱利安" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="白露辰霜" />
-                        <TextBlock Width="240" Margin="0,1.5" Text="点燃心中火的大音乐家" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="度你入魔" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="小宝" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="无" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="青出梦名" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="雾日斋主人" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="鸣纳" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="苏卜辰" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="3827" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="水里游的老鹰" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="雪桜" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Yukiteru" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="零依" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="玻璃糖罐" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="JFF_2005" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="流星" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="ccc" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="PennyLee2023" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="伯劳" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Sy5H" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Fomalhaut" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="PERLICA" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="北冥鱼吃" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="千万别自闭" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="00号玩家" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="亗竹" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="云一梦" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="久念" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="继晷" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="史蒂夫" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="椎罗太难了" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="DiamondSYP" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="木林西" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="雩月" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="6628" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="ZoCc" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="wan_yao" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="White_c" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="尉迟羽晨" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="栀梓" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="YJ_42" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Xricron" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="抛弃大脑" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="10455885" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="羽渡白砂" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="沙" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="sukous" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="册那" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="KMYLS" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="kakadeso" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="懒猫" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="清岚" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Atopos" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="苦尽柑来" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="脑洞大开的血魔" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="ももかわるこ" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="空中的风" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="黑夜幽灵" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="H1saNe" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="故风" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="臭氧化碳" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="云阿云" />
                         <TextBlock Width="120" Margin="0,1.5" Text="小命" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="金" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="倾墨画君颜" />
                         <TextBlock Width="120" Margin="0,1.5" Text="南宫若兮" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="沐言" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="傻预备" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="蒸木" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="那菈" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="suanqiu" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="人见人爱的熊熊" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Furan255" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="MachineCrab" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="五只大花狗" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="威尔特" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="StarNCosmos" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Eason" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="风之幻城" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="王舒晨" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="H" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="咏夕" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="不及君子柒" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="GUAN_SKD" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="雅柏菲卡" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="AtDusk" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="九月想睡觉" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="六七" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="老登" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="wd_xuan" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Wake" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Jannik" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="cybone" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="mc12345zhl123" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="解" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Akights" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="秋刀驴" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="樟涛竹" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="sikuno" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="鬼目" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="拜拜白" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="绮铃kirin" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="洛逍遥" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="文文新闻" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="GM" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="小咪" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Fuxi Fuji" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="?独爱蝉HIA" />
-                        <TextBlock Width="240" Margin="0,1.5" Text="没有咖啡的猫屎咖啡" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="雪风保佑我" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="zhnj" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="火苟" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="梦尽" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="阿泽free" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="阿乐" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="米线" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="依凡" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="涟燃556" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="夏季" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Game_ReAi" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="秦屎皇" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="6" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Zik yeung" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="awawa" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="智慧村村长" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="海中燕" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="就叫我好人吧" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="梦的回响" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="。。" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="墨子吉安" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="有风" />
-                        <TextBlock Width="240" Margin="0,1.5" Text="孙嘉昊まごかひろし" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="C" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Haio" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="陆光" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="chuveiro" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="无名氏34613" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="mr_kevin_x" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="来早点" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="烤肉真香" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Chr0n0s" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="七" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="H?O" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="瑞霖RLD" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="AAcfun" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="鼬嘁" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="名为冉冉的猫" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="hduqggd55379" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="唠叨的土豆" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Lonely_Grey" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="Vergilio" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="このdioた" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="没睡醒的肉啊" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="铃鸢" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="lvke" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="V-Merlin" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="美式加冰?" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="半岛弥音" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="clclFL" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="事与愿违" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="SamXU1322" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="OCEANI" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="shenpli" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="咸鱼嫌鱼咸" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="kirsnow" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="白庶" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="pengyihang" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="憨憨剑踏" />
-                        <TextBlock Width="120" Margin="0,1.5" Text="SinceCN" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Landsilde" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="zzz" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="星期三" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Ashburn" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="123" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="九日" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="古神" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="月宫星耀" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="郁子恒是FW" />
+                        <TextBlock Width="240" Margin="0,1.5" Text="每天吃吃吃吃吃不饱" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Freezhao" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="ZHypocrite" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="十下小雨" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="九 十" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="RuthlessXdream" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="zv-vz" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="汐沄的随记" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="REMOTE" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="昔阳" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="七度ユキノ" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="KNISX" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="RainbowDashRD" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="夢曦" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="跳雨风" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="望言苏" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="四分白Fortenz" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="UUZ" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Ankairis" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Jn1E" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="云山如昨好" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="LYJ0415" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="空?" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="Awfrlu+" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="懒帝" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="北安丶七叔" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="xkw" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="KINO" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="POTATO" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="少昊氏" />
+                        <TextBlock Width="240" Margin="0,1.5" Text="狂踹瘸子那條好腿丶" />
+                        <TextBlock Width="240" Margin="0,1.5" Text="Thallium_Ash【铊尘】（坨坨）" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="陌雨泠涯" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="bajie79" />
+                        <TextBlock Width="120" Margin="0,1.5" Text="紘垰" />
                     </WrapPanel>
                     <Grid Height="35">
                         <Grid.ColumnDefinitions>
@@ -376,11 +358,13 @@
                     </Grid>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="法律信息" IsSwaped="True" CanSwap="True">
+            <local:MyCard Margin="0,0,0,15" Title="法律信息" IsSwapped="True" CanSwap="True">
                 <StackPanel Margin="25,39,23,20">
-                    <TextBlock Text="隐私说明" TextWrapping="Wrap" Margin="0,6,0,4" FontWeight="Bold" />
-                    <TextBlock Margin="0,0,0,2" LineHeight="17" Text="本软件的 User Agent 中包含启动器的版本号，以统计各版本的用户数量。&#13;除此之外，本软件不会向开发者上传任何其他信息。" TextWrapping="Wrap" />
-                    <TextBlock Text="其他信息" TextWrapping="Wrap" Margin="0,12,0,4" FontWeight="Bold" />
+                    <TextBlock Text="匿名数据收集" TextWrapping="Wrap" Margin="0,6,0,4" FontWeight="Bold" />
+                    <TextBlock Margin="0,0,0,2" LineHeight="17" Text="当下载失败、PCL 出错、游戏崩溃等事件时，PCL 会匿名上报信息，以通知龙猫 “哦吼，出错了”，让龙猫能更好地修 Bug……（PCL 不会上传或收集任何个人信息，包括上报的东西里面也没有！）&#xa;你可以在 设置 → 其他 → 启动器 中关闭上报，不过龙猫就不知道你遇到了什么 Bug 了……" TextWrapping="Wrap" />
+                    <TextBlock Text="隐私声明与个人信息保护政策" TextWrapping="Wrap" Margin="0,10,0,4" FontWeight="Bold" />
+                    <TextBlock Margin="0,0,0,2" LineHeight="17" Text="PCL 没有收集个人信息，所以这里其实啥都不用写……&#xa;留个这个其实只是为了让你知道 PCL 没有收集个人信息，诶嘿。" TextWrapping="Wrap" />
+                    <TextBlock Text="其他信息" TextWrapping="Wrap" Margin="0,10,0,4" FontWeight="Bold" />
                     <TextBlock Margin="0,0,0,2" LineHeight="17" Text="Copyright © 龙腾猫跃 2016. All Rights Reserved.&#13;计算机软件著作权登记号：2020SR0875133&#13;违法违规行为举报投诉邮箱：hexdragon@vip.qq.com&#13;非 MINECRAFT 官方产品。未经 MOJANG 或 MICROSOFT 批准，也不与 MOJANG 或 MICROSOFT 关联。" TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Height="35" HorizontalAlignment="Left" Margin="0,12,0,0">
                         <local:MyButton Text="用户协议与免责声明" Width="170" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" EventType="打开网页" EventData="https://shimo.im/docs/rGrd8pY8xWkt6ryW" />
@@ -388,7 +372,7 @@
                     </StackPanel>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="许可与版权声明" IsSwaped="True" CanSwap="True">
+            <local:MyCard Margin="0,0,0,15" Title="许可与版权声明" IsSwapped="True" CanSwap="True">
                 <Grid Margin="25,42,23,4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />

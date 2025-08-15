@@ -88,7 +88,7 @@
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Pair.Value}
                 NewCard.Children.Add(NewStack)
                 NewCard.SwapControl = NewStack
-                NewCard.IsSwaped = True
+                NewCard.IsSwapped = True
                 PanMain.Children.Add(NewCard)
             Next
         Catch ex As Exception

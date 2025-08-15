@@ -117,6 +117,7 @@
                 If Output = "" Then Throw New ApplicationException("尝试运行该 Java 失败")
                 If ModeDebug Then Log("[Java] Java 检查输出：" & PathFolder & "java.exe" & vbCrLf & Output)
                 If Output.Contains("/lib/ext exists") Then Throw New ApplicationException("无法运行该 Java，请在删除 Java 文件夹中的 /lib/ext 文件夹后再试")
+                If Output.Contains("a fatal error") Then Throw New ApplicationException("无法运行该 Java，该 Java 或系统存在问题")
                 '获取详细信息
                 Dim VersionString = If(RegexSeek(Output, "(?<=version "")[^""]+"), If(RegexSeek(Output, "(?<=openjdk )[0-9]+"), "")).Replace("_", ".").Split("-").First
                 If VersionString.Split(".").Count > 4 Then VersionString = VersionString.Replace(".0.", ".") '#3493，VersionString = "21.0.2.0.2"
@@ -459,10 +460,12 @@ NoUserJava:
     ''' 将 Java 按照适用性排序。
     ''' </summary>
     Public Function JavaSorter(Left As JavaEntry, Right As JavaEntry) As Boolean
+        Dim PathInfo As New DirectoryInfo(ShortenPath(Path))
+        Dim PathMcInfo As New DirectoryInfo(ShortenPath(PathMcFolder))
         '1. 尽量在当前文件夹或当前 Minecraft 文件夹
         Dim ProgramPathParent As String, MinecraftPathParent As String = ""
-        ProgramPathParent = If(New DirectoryInfo(Path).Parent, New DirectoryInfo(Path)).FullName
-        If PathMcFolder <> "" Then MinecraftPathParent = If(New DirectoryInfo(PathMcFolder).Parent, New DirectoryInfo(PathMcFolder)).FullName
+        ProgramPathParent = If(PathInfo.Parent, PathInfo).FullName
+        If PathMcFolder <> "" Then MinecraftPathParent = If(PathMcInfo.Parent, PathMcInfo).FullName
         If Left.PathFolder.StartsWithF(ProgramPathParent) AndAlso Not Right.PathFolder.StartsWithF(ProgramPathParent) Then Return True
         If Not Left.PathFolder.StartsWithF(ProgramPathParent) AndAlso Right.PathFolder.StartsWithF(ProgramPathParent) Then Return False
         If PathMcFolder <> "" Then
@@ -529,6 +532,8 @@ NoUserJava:
                 If Disk.DriveType = DriveType.Network Then Continue For '跳过网络驱动器（#3705）
                 JavaSearchFolder(Disk.Name, JavaPreList, False)
             Next
+            '查找 .jdks 文件夹中的 Java
+            JavaSearchFolder(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\.jdks\", JavaPreList, False)
             '查找 APPDATA 文件夹中的 Java
             JavaSearchFolder(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\", JavaPreList, False)
             JavaSearchFolder(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) & "\", JavaPreList, False)
@@ -677,8 +682,8 @@ Wait:
             '若该目录有 Java，则加入结果
             If File.Exists(Path & "javaw.exe") Then Results(Path) = Source
             '查找其下的所有文件夹
-            '不应使用网易的 Java：https://github.com/Hex-Dragon/PCL2/issues/1279#issuecomment-2761489121
-            Dim Keywords = {"java", "jdk", "env", "环境", "run", "软件", "jre", "mc", "dragon",
+            '不应使用网易的 Java：https://github.com/Meloong-Git/PCL/issues/1279#issuecomment-2761489121
+            Dim Keywords = {"java", "jdk", "env", "环境", "run", "软件", "jre", "mc", "dragon", "bin",
                             "soft", "cache", "temp", "corretto", "roaming", "users", "craft", "program", "世界", "net",
                             "游戏", "oracle", "game", "file", "data", "jvm", "服务", "server", "客户", "client", "整合",
                             "应用", "运行", "前置", "mojang", "官启", "新建文件夹", "eclipse", "microsoft", "hotspot",
@@ -745,7 +750,7 @@ Wait:
     Private LastJavaBaseDir As String = Nothing '用于在下载中断或失败时删除未完成下载的 Java 文件夹，防止残留只下了一半但 -version 能跑的 Java
     Private Sub JavaFileList(Loader As LoaderTask(Of Integer, List(Of NetFile)))
         Log("[Java] 开始获取 Java 下载信息")
-        Dim IndexFileStr As String = NetGetCodeByLoader(DlVersionListOrder(
+        Dim IndexFileStr As String = NetRequestByLoader(DlVersionListOrder(
             {"https://piston-meta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"},
             {"https://bmclapi2.bangbang93.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"}
         ), IsJson:=True)
@@ -757,7 +762,7 @@ Wait:
         Dim Address As String = TargetEntry.Value("manifest")("url")
         Log($"[Java] 准备下载 Java {TargetEntry.Value("version")("name")}（{TargetEntry.Key}）：{Address}")
         '获取文件列表
-        Dim ListFileStr As String = NetGetCodeByLoader(DlSourceOrder({Address}, {Address.Replace("piston-meta.mojang.com", "bmclapi2.bangbang93.com")}), IsJson:=True)
+        Dim ListFileStr As String = NetRequestByLoader(DlSourceOrder({Address}, {Address.Replace("piston-meta.mojang.com", "bmclapi2.bangbang93.com")}), IsJson:=True)
         LastJavaBaseDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\runtime\" & TargetEntry.Key & "\"
         Dim Results As New List(Of NetFile)
         For Each File As JProperty In CType(GetJson(ListFileStr), JObject)("files")

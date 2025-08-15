@@ -115,6 +115,10 @@
                         PageOtherTest.StartCustomDownload(Data(0), "未知")
                     End Try
 
+                Case "修改设置"
+                    Setup.Set(Data(0), Data(1))
+                    Hint($"已写入设置：{Data(0)} → {Data(1)}", HintType.Finish)
+
                 Case Else
                     MyMsgBox("未知的事件类型：" & Type & vbCrLf & "请检查事件类型填写是否正确，或者 PCL 是否为最新版本。", "事件执行失败")
             End Select

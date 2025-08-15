@@ -259,12 +259,13 @@ Retry:
                 End Sub)
                 If SelId Is Nothing Then Return
                 '发送请求
-                Dim Result As String = NetRequestRetry("https://api.minecraftservices.com/minecraft/profile/capes/active",
-                    If(SelId = 0, "DELETE", "PUT"),
-                    If(SelId = 0, "", New JObject(New JProperty("capeId", SkinData("capes")(SelId - 1)("id"))).ToString(0)),
-                    "application/json", Headers:=New Dictionary(Of String, String) From {{"Authorization", "Bearer " & AccessToken}})
+                Dim Result As String = NetRequestByClientRetry("https://api.minecraftservices.com/minecraft/profile/capes/active",
+                    If(SelId = 0, HttpMethod.Delete, HttpMethod.Put),
+                    Content:=If(SelId = 0, "", New JObject(New JProperty("capeId", SkinData("capes")(SelId - 1)("id"))).ToString(0)),
+                    ContentType:="application/json",
+                    Headers:={{"Authorization", "Bearer " & AccessToken}})
                 If Result.Contains("""errorMessage""") Then
-                    Hint("更改披风失败：" & GetJson(Result)("errorMessage"), HintType.Critical)
+                    Hint("更改披风失败：" & GetJson(Result)("errorMessage").ToString, HintType.Critical)
                     Return
                 Else
                     Hint("更改披风成功！", HintType.Finish)

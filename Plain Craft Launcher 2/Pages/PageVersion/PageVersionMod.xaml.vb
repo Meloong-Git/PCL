@@ -381,7 +381,9 @@ Install:
     ''' 下载 Mod。
     ''' </summary>
     Private Sub BtnManageDownload_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnManageDownload.Click, BtnHintDownload.Click
-        PageComp.TargetVersion = PageVersionLeft.Version '将当前版本设置为筛选器
+        '预设置当前版本和搜索框内容
+        PageComp.TargetVersion = PageVersionLeft.Version
+        PageComp.TargetName = SearchBox.Text
         FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadMod)
     End Sub
 
@@ -427,6 +429,11 @@ Install:
     Private Sub FrmMain_KeyDown(sender As Object, e As KeyEventArgs) '监听自己的事件的话进入页面后不点击右侧控件就没办法监听到事件 (#4311)
         If FrmMain.PageRight IsNot Me Then Return
         If My.Computer.Keyboard.CtrlKeyDown AndAlso e.Key = Key.A Then ChangeAllSelected(True)
+    End Sub
+    Private Sub SearchBox_PreviewKeyDown(sender As Object, e As KeyEventArgs) Handles SearchBox.PreviewKeyDown
+        'Ctrl + A 会被搜索框捕获，导致无法全选，所以在按下 Ctrl + A 时转移焦点以便捕获
+        If SearchBox.Text.Any Then Return
+        If My.Computer.Keyboard.CtrlKeyDown AndAlso e.Key = Key.A Then PanBack.Focus()
     End Sub
 
 #End Region
@@ -636,14 +643,14 @@ Install:
                 Try
                     For Each Entry As McMod In ModList
                         If File.Exists(Entry.Path) Then
-                            My.Computer.FileSystem.DeleteFile(Entry.Path, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                            My.Computer.FileSystem.DeleteFile(Entry.Path, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
                         Else
                             Log($"[Mod] 未找到更新前的 Mod 文件，跳过对它的删除：{Entry.Path}", LogLevel.Debug)
                         End If
                     Next
                     For Each Entry As KeyValuePair(Of String, String) In FileCopyList
                         If File.Exists(Entry.Value) Then
-                            My.Computer.FileSystem.DeleteFile(Entry.Value, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                            My.Computer.FileSystem.DeleteFile(Entry.Value, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
                             Log($"[Mod] 更新后的 Mod 文件已存在，将会把它放入回收站：{Entry.Value}", LogLevel.Debug)
                         End If
                         If Directory.Exists(GetPathFromFullPath(Entry.Value)) Then
@@ -732,7 +739,7 @@ Install:
                     If IsShiftPressed Then
                         File.Delete(ModEntity.Path)
                     Else
-                        My.Computer.FileSystem.DeleteFile(ModEntity.Path, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                        My.Computer.FileSystem.DeleteFile(ModEntity.Path, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
                     End If
                 Catch ex As OperationCanceledException
                     Log(ex, "删除 Mod 被主动取消")

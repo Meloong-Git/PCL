@@ -97,7 +97,7 @@
         Dim Titles As New List(Of String)
         If FrmMain.PageCurrent.Page = FormMain.PageType.CompDetail Then
             For Each Card As MyCard In FrmDownloadCompDetail.PanResults.Children
-                If Card.Title <> "" AndAlso Not Card.IsSwaped Then Titles.Add(Card.Title)
+                If Card.Title <> "" AndAlso Not Card.IsSwapped Then Titles.Add(Card.Title)
             Next
             Log("[Comp] 记录当前已展开的卡片：" & String.Join("、", Titles))
             FrmMain.PageCurrent.Additional(1) = Titles

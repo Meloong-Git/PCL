@@ -570,7 +570,8 @@ pause"
             '官方源
             Dim PageData As String
             Try
-                PageData = NetGetCodeByClient("https://optifine.net/adloadx?f=" & DownloadInfo.NameFile, New UTF8Encoding(False), 15000, "text/html", True)
+                PageData = NetRequestByClient("https://optifine.net/adloadx?f=" & DownloadInfo.NameFile,
+                    Encoding:=New UTF8Encoding(False), Timeout:=15000, Accept:="text/html", UseBrowserUserAgent:=True)
                 Task.Progress = 0.8
                 Sources.Add("https://optifine.net/" & RegexSearch(PageData, "downloadx\?f=[^""']+")(0))
                 Log("[Download] OptiFine " & DownloadInfo.NameDisplay & " 官方下载地址：" & Sources.Last)
@@ -733,7 +734,8 @@ Retry:
             '官方源
             Dim PageData As String
             Try
-                PageData = NetGetCodeByClient("https://optifine.net/adloadx?f=" & DownloadInfo.NameFile, New UTF8Encoding(False), 15000, "text/html", True)
+                PageData = NetRequestByClient("https://optifine.net/adloadx?f=" & DownloadInfo.NameFile,
+                    Encoding:=New UTF8Encoding(False), Timeout:=15000, Accept:="text/html", UseBrowserUserAgent:=True)
                 Task.Progress = 0.8
                 Sources.Add("https://optifine.net/" & RegexSearch(PageData, "downloadx\?f=[^""']+")(0))
                 Log("[Download] OptiFine " & DownloadInfo.NameDisplay & " 官方下载地址：" & Sources.Last)
@@ -1340,7 +1342,7 @@ Retry:
                     If Json("data") IsNot Nothing AndAlso Json("data")("MOJMAPS") IsNot Nothing Then
                         '下载原版 Json 文件
                         Task.Progress = 0.4
-                        Dim RawJson As JObject = GetJson(NetGetCodeByLoader(DlSourceLauncherOrMetaGet(DlClientListGet(Inherit)), IsJson:=True))
+                        Dim RawJson As JObject = GetJson(NetRequestByLoader(DlSourceLauncherOrMetaGet(DlClientListGet(Inherit)), IsJson:=True))
                         '[net.minecraft:client:1.17.1-20210706.113038:mappings@txt] 或 @tsrg]
                         Dim OriginalName As String = Json("data")("MOJMAPS")("client").ToString.Trim("[]".ToCharArray()).BeforeFirst("@")
                         Dim Address = McLibGet(OriginalName).Replace(".jar", "-mappings." & Json("data")("MOJMAPS")("client").ToString.Trim("[]".ToCharArray()).Split("@")(1))
@@ -1641,30 +1643,31 @@ Retry:
     Public Sub McDownloadForgeRecommendedRefresh()
         If IsForgeRecommendedRefreshed Then Return
         IsForgeRecommendedRefreshed = True
-        RunInNewThread(Sub()
-                           Try
-                               Log("[Download] 刷新 Forge 推荐版本缓存开始")
-                               Dim Result As String = NetGetCodeByLoader("https://bmclapi2.bangbang93.com/forge/promos")
-                               If Result.Length < 1000 Then Throw New Exception("获取的结果过短（" & Result & "）")
-                               Dim ResultJson As JContainer = GetJson(Result)
-                               '获取所有推荐版本列表
-                               Dim RecommendedList As New List(Of String)
-                               For Each Version As JObject In ResultJson
-                                   If Version("name") Is Nothing OrElse Version("build") Is Nothing Then Continue For
-                                   Dim Name As String = Version("name")
-                                   If Not Name.EndsWithF("-recommended") Then Continue For
-                                   '内容为："1.15.2":"31.2.0"
-                                   RecommendedList.Add("""" & Name.Replace("-recommended", """:""" & Version("build")("version").ToString & """"))
-                               Next
-                               If RecommendedList.Count < 5 Then Throw New Exception("获取的推荐版本数过少（" & Result & "）")
-                               '保存
-                               Dim CacheJson As String = "{" & Join(RecommendedList, ",") & "}"
-                               WriteFile(PathTemp & "Cache\ForgeRecommendedList.json", CacheJson)
-                               Log("[Download] 刷新 Forge 推荐版本缓存成功")
-                           Catch ex As Exception
-                               Log(ex, "刷新 Forge 推荐版本缓存失败")
-                           End Try
-                       End Sub, "ForgeRecommendedRefresh")
+        RunInNewThread(
+        Sub()
+            Try
+                Log("[Download] 刷新 Forge 推荐版本缓存开始")
+                Dim Result As String = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/forge/promos")
+                If Result.Length < 1000 Then Throw New Exception("获取的结果过短（" & Result & "）")
+                Dim ResultJson As JContainer = GetJson(Result)
+                '获取所有推荐版本列表
+                Dim RecommendedList As New List(Of String)
+                For Each Version As JObject In ResultJson
+                    If Version("name") Is Nothing OrElse Version("build") Is Nothing Then Continue For
+                    Dim Name As String = Version("name")
+                    If Not Name.EndsWithF("-recommended") Then Continue For
+                    '内容为："1.15.2":"31.2.0"
+                    RecommendedList.Add("""" & Name.Replace("-recommended", """:""" & Version("build")("version").ToString & """"))
+                Next
+                If RecommendedList.Count < 5 Then Throw New Exception("获取的推荐版本数过少（" & Result & "）")
+                '保存
+                Dim CacheJson As String = "{" & Join(RecommendedList, ",") & "}"
+                WriteFile(PathTemp & "Cache\ForgeRecommendedList.json", CacheJson)
+                Log("[Download] 刷新 Forge 推荐版本缓存成功")
+            Catch ex As Exception
+                Log(ex, "刷新 Forge 推荐版本缓存失败")
+            End Try
+        End Sub, "ForgeRecommendedRefresh")
     End Sub
     Private IsForgeRecommendedRefreshed As Boolean = False
 

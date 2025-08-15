@@ -90,7 +90,7 @@
             MainGrid.Children.Add(MainSwap)
         End If
         '改变默认的折叠
-        If IsSwaped AndAlso SwapControl IsNot Nothing Then
+        If IsSwapped AndAlso SwapControl IsNot Nothing Then
             MainSwap.RenderTransform = New RotateTransform(If(SwapLogoRight, 270, 0))
             '取消由于高度变化被迫触发的高度动画
             Dim RawUseAnimation As Boolean = UseAnimation
@@ -224,7 +224,7 @@
     Private ActualUsedHeight As Double '回滚实际高度（例如 NaN）
     Private Sub MySizeChanged(sender As Object, e As SizeChangedEventArgs) Handles Me.SizeChanged
         If Not UseAnimation Then Return
-        Dim DeltaHeight As Double = If(IsSwaped, SwapedHeight, e.NewSize.Height) - e.PreviousSize.Height
+        Dim DeltaHeight As Double = If(IsSwapped, SwapedHeight, e.NewSize.Height) - e.PreviousSize.Height
         '卡片的进入时动画已被页面通用切换动画替代
         If e.PreviousSize.Height = 0 OrElse IsHeightAnimating OrElse Math.Abs(DeltaHeight) < 1 OrElse ActualHeight = 0 Then Return
         StartHeightAnimation(DeltaHeight, e.PreviousSize.Height, False)
@@ -269,18 +269,18 @@
         Sub()
             IsHeightAnimating = False
             Height = ActualUsedHeight
-            If IsSwaped AndAlso SwapControl IsNot Nothing Then SwapControl.Visibility = Visibility.Collapsed
+            If IsSwapped AndAlso SwapControl IsNot Nothing Then SwapControl.Visibility = Visibility.Collapsed
         End Sub,, True))
         AniStart(AnimList, "MyCard Height " & Uuid)
         IsHeightAnimating = True
-        ActualUsedHeight = If(IsSwaped, SwapedHeight, Height)
+        ActualUsedHeight = If(IsSwapped, SwapedHeight, Height)
         Height = PreviousHeight
     End Sub
     ''' <summary>
     ''' 通知 MyCard，控件内容已改变，需要中断动画并更新高度。
     ''' </summary>
     Public Sub TriggerForceResize()
-        Height = If(IsSwaped, SwapedHeight, Double.NaN)
+        Height = If(IsSwapped, SwapedHeight, Double.NaN)
         AniStop("MyCard Height " & Uuid)
         IsHeightAnimating = False
     End Sub
@@ -300,26 +300,39 @@
     ''' <summary>
     ''' 是否已被折叠。
     ''' </summary>
-    Public Property IsSwaped As Boolean
+    Public Property IsSwapped As Boolean
         Get
-            Return _IsSwaped
+            Return _IsSwapped
         End Get
         Set(value As Boolean)
-            If _IsSwaped = value Then Return
-            _IsSwaped = value
+            If _IsSwapped = value Then Return
+            _IsSwapped = value
             If SwapControl Is Nothing Then Return
             '展开
-            If Not IsSwaped AndAlso TypeOf SwapControl Is StackPanel Then StackInstall(SwapControl, SwapType, Title)
+            If Not IsSwapped AndAlso TypeOf SwapControl Is StackPanel Then StackInstall(SwapControl, SwapType, Title)
             '若尚未加载，会在 Loaded 事件中触发无动画的折叠，不需要在这里进行
             If Not IsLoaded Then Return
             '更新高度
             SwapControl.Visibility = Visibility.Visible
             TriggerForceResize()
             '改变箭头
-            AniStart(AaRotateTransform(MainSwap, If(_IsSwaped, If(SwapLogoRight, 270, 0), 180) - CType(MainSwap.RenderTransform, RotateTransform).Angle, 250,, New AniEaseOutFluent(AniEasePower.ExtraStrong)), "MyCard Swap " & Uuid, True)
+            AniStart(AaRotateTransform(MainSwap, If(_IsSwapped, If(SwapLogoRight, 270, 0), 180) - CType(MainSwap.RenderTransform, RotateTransform).Angle, 250,, New AniEaseOutFluent(AniEasePower.ExtraStrong)), "MyCard Swap " & Uuid, True)
         End Set
     End Property
-    Private _IsSwaped As Boolean = False
+    Private _IsSwapped As Boolean = False
+    ''' <summary>
+    ''' 是否已被折叠。(已过时，请使用 IsSwapped)
+    ''' </summary>
+    <Obsolete("IsSwaped 存在拼写错误，请换用 IsSwapped 属性。")>
+    Public Property IsSwaped As Boolean
+        Get
+            Return IsSwapped
+        End Get
+        Set(value As Boolean)
+            IsSwapped = value
+        End Set
+    End Property
+    Public Shared ReadOnly IsSwapedProperty As DependencyProperty = DependencyProperty.Register("IsSwaped", GetType(Boolean), GetType(MyCard), New PropertyMetadata(False))
 
     Public Property SwapLogoRight As Boolean = False
     Private IsMouseDown As Boolean = False
@@ -328,8 +341,8 @@
     Public Const SwapedHeight As Integer = 40
     Private Sub MyCard_MouseLeftButtonDown(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonDown
         Dim Pos As Double = Mouse.GetPosition(Me).Y
-        If Not IsSwaped AndAlso
-            (SwapControl Is Nothing OrElse Pos > If(IsSwaped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return '检测点击位置；或已经不在可视树上的误判
+        If Not IsSwapped AndAlso
+            (SwapControl Is Nothing OrElse Pos > If(IsSwapped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return '检测点击位置；或已经不在可视树上的误判
         IsMouseDown = True
     End Sub
     Private Sub MyCard_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonUp
@@ -337,8 +350,8 @@
         IsMouseDown = False
 
         Dim Pos As Double = Mouse.GetPosition(Me).Y
-        If Not IsSwaped AndAlso
-            (SwapControl Is Nothing OrElse Pos > If(IsSwaped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return '检测点击位置；或已经不在可视树上的误判
+        If Not IsSwapped AndAlso
+            (SwapControl Is Nothing OrElse Pos > If(IsSwapped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return '检测点击位置；或已经不在可视树上的误判
 
         Dim ee = New RouteEventArgs(True)
         RaiseEvent PreviewSwap(Me, ee)
@@ -347,8 +360,8 @@
             Return
         End If
 
-        IsSwaped = Not IsSwaped
-        Log("[Control] " & If(IsSwaped, "折叠卡片", "展开卡片") & If(Title Is Nothing, "", "：" & Title))
+        IsSwapped = Not IsSwapped
+        Log("[Control] " & If(IsSwapped, "折叠卡片", "展开卡片") & If(Title Is Nothing, "", "：" & Title))
         RaiseEvent Swap(Me, ee)
     End Sub
     Private Sub MyCard_MouseLeave_Swap(sender As Object, e As MouseEventArgs) Handles Me.MouseLeave

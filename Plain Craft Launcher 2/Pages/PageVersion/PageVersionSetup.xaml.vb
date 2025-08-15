@@ -355,6 +355,15 @@ PreFin:
 
 #Region "服务器"
 
+    '自动替换标点
+    Private Sub TextServerEnter_Change() Handles TextServerEnter.TextChanged
+        Dim NewText = TextServerEnter.Text.Replace("：", ":").Replace("。", ".")
+        If NewText = TextServerEnter.Text Then Return
+        Dim CurrentPosition = TextServerEnter.SelectionStart '重设焦点
+        TextServerEnter.Text = NewText
+        TextServerEnter.SelectionStart = CurrentPosition
+    End Sub
+
     '全局
     Private ComboServerLoginLast As Integer
     Private Sub ComboServerLogin_Changed() Handles ComboServerLogin.SelectionChanged, TextServerNide.ValidatedTextChanged, TextServerAuthServer.ValidatedTextChanged, TextServerAuthRegister.ValidatedTextChanged

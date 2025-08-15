@@ -564,8 +564,8 @@ Public Class PageVersionExport
             Sub()
                 Try
                     Dim ModrinthHashes = Loader.Input.Select(Function(m) m.ModrinthHash)
-                    Dim ModrinthRaw = CType(GetJson(DlModRequest("https://api.modrinth.com/v2/version_files", "POST",
-                        $"{{""hashes"": [""{ModrinthHashes.Join(""",""")}""], ""algorithm"": ""sha1""}}", "application/json")), JObject)
+                    Dim ModrinthRaw As JObject = DlModRequest("https://api.modrinth.com/v2/version_files", HttpMethod.Post,
+                        $"{{""hashes"": [""{ModrinthHashes.Join(""",""")}""], ""algorithm"": ""sha1""}}", "application/json")
                     For Each ModFile In Loader.Input
                         '查找对应的文件
                         If Not ModrinthRaw.ContainsKey(ModFile.ModrinthHash) Then Continue For
@@ -589,8 +589,8 @@ Public Class PageVersionExport
                 Try
                     If ModrinthUploadMode Then Return 'Modrinth 上传模式下，不能从 CurseForge 获取信息
                     Dim CurseForgeHashes = Loader.Input.Select(Function(m) m.CurseForgeHash)
-                    Dim CurseForgeRaw = CType(CType(GetJson(DlModRequest("https://api.curseforge.com/v1/fingerprints/432/", "POST",
-                        $"{{""fingerprints"": [{CurseForgeHashes.Join(",")}]}}", "application/json")), JObject)("data")("exactMatches"), JContainer)
+                    Dim CurseForgeRaw As JContainer = DlModRequest("https://api.curseforge.com/v1/fingerprints/432/", HttpMethod.Post,
+                        $"{{""fingerprints"": [{CurseForgeHashes.Join(",")}]}}", "application/json")("data")("exactMatches")
                     For Each ResultJson As JObject In CurseForgeRaw
                         If Not ResultJson.ContainsKey("file") Then Continue For
                         Dim File As JObject = ResultJson("file")

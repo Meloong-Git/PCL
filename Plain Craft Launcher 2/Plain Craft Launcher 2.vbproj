@@ -140,6 +140,21 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CacheCow.Client, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\CacheCow.Client.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="CacheCow.Client.FileStore, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\CacheCow.Client.FileStore.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="CacheCow.Common, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\CacheCow.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Imazen.WebP, Version=10.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Resources\Imazen.WebP.dll</HintPath>
@@ -149,8 +164,9 @@
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Ookii.Dialogs.Wpf, Version=1.0.0.0, Culture=neutral, PublicKeyToken=0c15020868fd6249, processorArchitecture=MSIL">
@@ -158,13 +174,20 @@
       <HintPath>Resources\Ookii.Dialogs.Wpf.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Management" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\System.Net.Http.Formatting.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
@@ -182,6 +205,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\Behaviors\ClipboardInterceptor.vb" />
     <Compile Include="Controls\IMyRadio.vb" />
     <Compile Include="Controls\MyComboBox.vb" />
     <Compile Include="Controls\MyComboBoxItem.vb" />
@@ -202,6 +226,7 @@
     <Compile Include="Modules\Minecraft\ModJava.vb" />
     <Compile Include="Modules\Minecraft\ModMod.vb" />
     <Compile Include="Modules\Minecraft\ModModpack.vb" />
+    <Compile Include="Modules\ThirdParty\DragHelper.vb" />
     <Compile Include="Pages\PageVersion\MyLocalModItem.xaml.vb">
       <DependentUpon>MyLocalModItem.xaml</DependentUpon>
     </Compile>
@@ -235,9 +260,6 @@
     <Compile Include="Modules\ModDevelop.vb" />
     <Compile Include="Modules\Minecraft\ModWatcher.vb" />
     <Compile Include="Modules\ModSecret.vb" />
-    <Compile Include="Modules\Reference\CookieWebClient.vb">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Pages\PageDownload\Comp\PageComp.xaml.vb">
       <DependentUpon>PageComp.xaml</DependentUpon>
     </Compile>
@@ -724,6 +746,7 @@
     <Import Include="System.IO" />
     <Import Include="System.Linq" />
     <Import Include="System.Net" />
+    <Import Include="System.Net.Http" />
     <Import Include="System.Text" />
     <Import Include="System.Threading" />
     <Import Include="System.Xml.Linq" />
@@ -961,5 +984,18 @@
     <None Include="Resources\Imazen.WebP.dll" />
     <None Include="Resources\libwebp64.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CacheCow.Client.FileStore.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CacheCow.Common.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CacheCow.Client.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\System.Net.Http.Formatting.dll" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

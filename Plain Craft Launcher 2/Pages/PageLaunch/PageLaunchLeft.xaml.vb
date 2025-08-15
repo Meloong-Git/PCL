@@ -243,19 +243,21 @@
             If Not IsNothing(PageNew) AndAlso Not IsNothing(PageNew.Parent) Then PageNew.SetValue(ContentPresenter.ContentProperty, Nothing)
             If Anim Then
                 '动画
-                Dispatcher.Invoke(Sub()
-                                      '执行动画
-                                      AniStart({
-                                                     AaOpacity(PanLogin, -PanLogin.Opacity, 100,, New AniEaseOutFluent),
-                                                     AaCode(Sub()
-                                                                AniControlEnabled += 1
-                                                                PanLogin.Children.Clear()
-                                                                PanLogin.Children.Add(PageNew)
-                                                                AniControlEnabled -= 1
-                                                            End Sub, 100),
-                                                     AaOpacity(PanLogin, 1, 100, 120, New AniEaseInFluent)
-                                                 }, "FrmLogin PageChange")
-                                  End Sub, Threading.DispatcherPriority.Render)
+                Dispatcher.Invoke(
+                Sub()
+                    '执行动画
+                    AniStart({
+                        AaOpacity(PanLogin, -PanLogin.Opacity, 100,, New AniEaseOutFluent),
+                        AaCode(
+                        Sub()
+                            AniControlEnabled += 1
+                            PanLogin.Children.Clear()
+                            PanLogin.Children.Add(PageNew)
+                            AniControlEnabled -= 1
+                        End Sub, 100),
+                        AaOpacity(PanLogin, 1, 100, 120, New AniEaseInFluent)
+                    }, "FrmLogin PageChange")
+                End Sub, Threading.DispatcherPriority.Render)
             Else
                 '无动画
                 AniControlEnabled += 1

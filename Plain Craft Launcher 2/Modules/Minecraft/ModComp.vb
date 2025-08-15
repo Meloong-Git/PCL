@@ -1076,7 +1076,7 @@ Retry:
                     Try
                         '获取工程列表
                         Log("[Comp] 开始从 CurseForge 获取工程列表：" & CurseForgeUrl)
-                        Dim RequestResult As JObject = DlModRequest(CurseForgeUrl, IsJson:=True)
+                        Dim RequestResult As JObject = DlModRequest(CurseForgeUrl)
                         Task.Progress += 0.2
                         Dim ProjectList As New List(Of CompProject)
                         For Each JsonEntry As JObject In RequestResult("data")
@@ -1107,7 +1107,7 @@ Retry:
                 Sub()
                     Try
                         Log("[Comp] 开始从 Modrinth 获取工程列表：" & ModrinthUrl)
-                        Dim RequestResult As JObject = DlModRequest(ModrinthUrl, IsJson:=True)
+                        Dim RequestResult As JObject = DlModRequest(ModrinthUrl)
                         Task.Progress += 0.2
                         Dim ProjectList As New List(Of CompProject)
                         For Each JsonEntry As JObject In RequestResult("hits")
@@ -1136,6 +1136,11 @@ Retry:
             If Task.IsAborted Then Return '会自动触发 Finally
             If ModrinthThread IsNot Nothing Then ModrinthThread.Join()
             If Task.IsAborted Then Return
+
+            '筛除不是 Forge 的 Mod
+            If IsOldForgeRequest Then
+                RawResults = RawResults.Where(Function(p) Not p.ModLoaders.Any() OrElse p.ModLoaders.Contains(CompModLoaderType.Forge)).ToList
+            End If
 
             '确保存在结果
             Storage.ErrorMessage = Nothing
@@ -1166,11 +1171,6 @@ Retry:
             CurseForgeThread?.Interrupt()
             ModrinthThread?.Interrupt()
         End Try
-
-        '筛除不是 Forge 的 Mod
-        If IsOldForgeRequest Then
-            RawResults = RawResults.Where(Function(p) Not p.ModLoaders.Any() OrElse p.ModLoaders.Contains(CompModLoaderType.Forge)).ToList
-        End If
 
 #End Region
 
@@ -1396,7 +1396,7 @@ Retry:
                     'DownloadAddress
                     Dim Url = Data("downloadUrl").ToString
                     If Url = "" Then Url = $"https://media.forgecdn.net/files/{CInt(Id.ToString.Substring(0, 4))}/{CInt(Id.ToString.Substring(4))}/{FileName}"
-                    Url = Url.Replace(FileName, Net.WebUtility.UrlEncode(FileName)) '对文件名进行编码
+                    Url = Url.Replace(FileName, WebUtility.UrlEncode(FileName)) '对文件名进行编码
                     DownloadUrls = HandleCurseForgeDownloadUrls(Url) '对脑残 CurseForge 的下载地址进行多种修正
                     DownloadUrls.AddRange(DownloadUrls.Select(Function(u) DlSourceModGet(u)).ToList) '添加镜像源，这个写法是为了让镜像源排在后面
                     DownloadUrls = DownloadUrls.Distinct.ToList '最终去重
@@ -1492,9 +1492,8 @@ Retry:
             Return {
                 Url.Replace("-service.overwolf.wtf", ".forgecdn.net").Replace("://edge.", "://mediafilez.").Replace("://media.", "://mediafilez."),
                 Url.Replace("://edge.", "://mediafilez.").Replace("://media.", "://mediafilez."),
-                Url.Replace("-service.overwolf.wtf", ".forgecdn.net").Replace("://edge.", "://media."),
                 Url.Replace("-service.overwolf.wtf", ".forgecdn.net"),
-                Url.Replace("://edge.", "://media."),
+                Url.Replace("://media.", "://edge."),
                 Url
             }.Distinct.ToList
         End Function
@@ -1591,27 +1590,40 @@ Retry:
         If CompProjectCache.ContainsKey(ProjectId) Then '存在缓存
             TargetProject = CompProjectCache(ProjectId)
         ElseIf FromCurseForge Then 'CurseForge
-            TargetProject = New CompProject(DlModRequest("https://api.curseforge.com/v1/mods/" & ProjectId, IsJson:=True)("data"))
+            TargetProject = New CompProject(DlModRequest("https://api.curseforge.com/v1/mods/" & ProjectId)("data"))
         Else 'Modrinth
-            TargetProject = New CompProject(DlModRequest("https://api.modrinth.com/v2/project/" & ProjectId, IsJson:=True))
+            TargetProject = New CompProject(DlModRequest("https://api.modrinth.com/v2/project/" & ProjectId))
         End If
         '获取工程对象的文件列表
         If Not CompFilesCache.ContainsKey(ProjectId) Then '有缓存也不能直接返回，这时候前置可能没获取（#5173）
             Log("[Comp] 开始获取文件列表：" & ProjectId)
-            Dim ResultJsonArray As JArray
+            Dim ResultJsonArray As JArray = Nothing
             If FromCurseForge Then
                 'CurseForge
-                'HMCL 一次性请求了 10000 个文件，虽然不知道会不会出问题但先这样吧……（#5522）
-                ResultJsonArray = DlModRequest($"https://api.curseforge.com/v1/mods/{ProjectId}/files?pageSize=10000", IsJson:=True)("data")
-                '之前只请求一部分文件的方法备份如下：
-                'If TargetProject.Type = CompType.Mod Then 'Mod 使用每个版本最新的文件
-                '    ResultJsonArray = GetJson(DlModRequest("https://api.curseforge.com/v1/mods/files", "POST", "{""fileIds"": [" & Join(TargetProject.CurseForgeFileIds, ",") & "]}", "application/json"))("data")
-                'Else '否则使用全部文件
-                '    ResultJsonArray = DlModRequest($"https://api.curseforge.com/v1/mods/{ProjectId}/files?pageSize=999", IsJson:=True)("data")
-                'End If
+                For RetryCount As Integer = 0 To 2
+                    Dim ResultJson As JObject = DlModRequest($"https://api.curseforge.com/v1/mods/{ProjectId}/files?pageSize=" &
+                        (10000 + RetryCount)) '每次重试多请求一个文件，以避免触发 CDN 缓存
+                    'HMCL 一次性请求了 10000 个文件，虽然不知道会不会出问题但先这样吧……（#5522）
+                    '之前只请求一部分文件的方法备份如下：
+                    'If TargetProject.Type = CompType.Mod Then 'Mod 使用每个版本最新的文件
+                    '    ResultJsonArray = DlModRequest("https://api.curseforge.com/v1/mods/files", HttpMethod.Post, "{""fileIds"": [" & Join(TargetProject.CurseForgeFileIds, ",") & "]}", "application/json")("data")
+                    'Else '否则使用全部文件
+                    '    ResultJsonArray = DlModRequest($"https://api.curseforge.com/v1/mods/{ProjectId}/files?pageSize=999")("data")
+                    'End If
+                    If ResultJson("pagination")("resultCount").ToObject(Of Integer) = ResultJson("pagination")("totalCount").ToObject(Of Integer) Then
+                        ResultJsonArray = ResultJson("data")
+                        Exit For
+                    ElseIf RetryCount < 2 Then
+                        Log($"[Comp] CurseForge 返回的文件列表存在缺失，即将进行第 {RetryCount + 1} 次重试", LogLevel.Debug) '#6224
+                        Log($"[Comp] 返回的原始内容如下：{vbCrLf}{ResultJson}")
+                    Else
+                        Log($"[Comp] CurseForge 返回的文件列表存在缺失，返回的原始内容如下：{vbCrLf}{ResultJson}")
+                        Throw New Exception("CurseForge 返回的文件列表存在缺失")
+                    End If
+                Next
             Else
                 'Modrinth
-                ResultJsonArray = DlModRequest($"https://api.modrinth.com/v2/project/{ProjectId}/version", IsJson:=True)
+                ResultJsonArray = DlModRequest($"https://api.modrinth.com/v2/project/{ProjectId}/version")
             End If
             CompFilesCache(ProjectId) = ResultJsonArray.Select(Function(a) New CompFile(a, TargetProject.Type)).
                 Where(Function(a) a.Available).ToList.
@@ -1625,10 +1637,10 @@ Retry:
             Log($"[Comp] {ProjectId} 文件列表中还需要获取信息的前置：{Join(UndoneDeps, "，")}")
             Dim Projects As JArray
             If TargetProject.FromCurseForge Then
-                Projects = GetJson(DlModRequest("https://api.curseforge.com/v1/mods",
-                    "POST", "{""modIds"": [" & Join(UndoneDeps, ",") & "]}", "application/json"))("data")
+                Projects = DlModRequest("https://api.curseforge.com/v1/mods",
+                    HttpMethod.Post, "{""modIds"": [" & Join(UndoneDeps, ",") & "]}", "application/json")("data")
             Else
-                Projects = DlModRequest($"https://api.modrinth.com/v2/projects?ids=[""{Join(UndoneDeps, """,""")}""]", IsJson:=True)
+                Projects = DlModRequest($"https://api.modrinth.com/v2/projects?ids=[""{Join(UndoneDeps, """,""")}""]")
             End If
             For Each Project In Projects
                 Dim Unused As New CompProject(Project) '在 New 的时候会添加缓存以便之后读取

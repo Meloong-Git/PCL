@@ -38,7 +38,6 @@ jobs:
     
     - name: Update Help
       run:  |
-        $workpath = [System.Environment]::CurrentDirectory
         Set-Location ..
         git clone https://github.com/LTCatt/PCL2Help.git -b master --single-branch --depth 1
         Set-Location PCL2Help
@@ -52,8 +51,8 @@ jobs:
 
     - name: Replace
       run: |
-        (gc "Plain Craft Launcher 2\Modules\ModSecret.vb") -replace 'Public Const OAuthClientId As String = ""', 'Public Const OAuthClientId As String = "${{ secrets.CLIENT_ID }}"' | Out-File "Plain Craft Launcher 2\Modules\ModSecret.vb"
-        (gc "Plain Craft Launcher 2\Modules\ModSecret.vb") -replace 'Public Const CurseForgeAPIKey As String = ""', 'Public Const CurseForgeAPIKey As String = "${{ secrets.CURSEFORGE_API_KEY }}"' | Out-File "Plain Craft Launcher 2\Modules\ModSecret.vb"
+        (gc "Plain Craft Launcher 2\Modules\ModSecret.vb") -replace 'Public OAuthClientId As String = If(Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID"), "")', 'Public OAuthClientId As String = If(Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID"), "${{ secrets.CLIENT_ID }}")' | Out-File "Plain Craft Launcher 2\Modules\ModSecret.vb"
+        (gc "Plain Craft Launcher 2\Modules\ModSecret.vb") -replace 'Public CurseForgeAPIKey As String = If(Environment.GetEnvironmentVariable("PCL_CURSEFORGE_API_KEY"), "")', 'Public CurseForgeAPIKey As String = If(Environment.GetEnvironmentVariable("PCL_CURSEFORGE_API_KEY"), "${{ secrets.CURSEFORGE_API_KEY }}")' | Out-File "Plain Craft Launcher 2\Modules\ModSecret.vb"
         (gc "Plain Craft Launcher 2\Modules\Base\ModBase.vb") -replace 'Public Const CommitHash As String = ""', 'Public Const CommitHash As String = "${{ github.sha }}"' | Out-File "Plain Craft Launcher 2\Modules\Base\ModBase.vb"
         
     - name: Build

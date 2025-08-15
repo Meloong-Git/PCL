@@ -349,14 +349,14 @@
             State = MinecraftState.Crashed
             '崩溃分析
             WatcherLog("Minecraft 已崩溃，将在 2 秒后开始崩溃分析")
-            Hint("检测到 Minecraft 出现错误，错误分析已开始……")
+            Hint("检测到 Minecraft 出现错误，错误分析已开始……", HintType.Critical)
             FeedbackInfo()
             RunInNewThread(
             Sub()
                 Try
                     Thread.Sleep(2000)
                     WatcherLog("崩溃分析开始")
-                    Dim Analyzer As New CrashAnalyzer(PID)
+                    Dim Analyzer As New CrashAnalyzer(Version)
                     Analyzer.Collect(Version.PathIndie, LatestLog.ToList)
                     Analyzer.Prepare()
                     Analyzer.Analyze(Version)

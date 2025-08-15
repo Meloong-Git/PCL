@@ -140,6 +140,7 @@ WaitRetry:
             ServicePointManager.Expect100Continue = True
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 Or SecurityProtocolType.Tls Or SecurityProtocolType.Tls11 Or SecurityProtocolType.Tls12
             ServicePointManager.DefaultConnectionLimit = 1024
+            ServicePointManager.UseNagleAlgorithm = False
             '计时
             Log("[Start] 第一阶段加载用时：" & GetTimeTick() - ApplicationStartTick & " ms")
             ApplicationStartTick = GetTimeTick()
@@ -181,53 +182,29 @@ WaitRetry:
     End Sub
 
     '动态 DLL 调用
-    Private Shared AssemblyNAudio As Assembly
-    Private Shared AssemblyJson As Assembly
-    Private Shared AssemblyDialog As Assembly
-    Private Shared AssemblyImazenWebp As Assembly
-    Private Shared ReadOnly AssemblyNAudioLock As New Object
-    Private Shared ReadOnly AssemblyJsonLock As New Object
-    Private Shared ReadOnly AssemblyDialogLock As New Object
-    Private Shared ReadOnly AssemblyImazenWebpLock As New Object
     Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
-    Public Shared Function AssemblyResolve(sender As Object, args As ResolveEventArgs) As Assembly
-        If args.Name.StartsWithF("NAudio") Then
-            SyncLock AssemblyNAudioLock
-                If AssemblyNAudio Is Nothing Then
-                    Log("[Start] 加载 DLL：NAudio")
-                    AssemblyNAudio = Assembly.Load(GetResources("NAudio"))
-                End If
-                Return AssemblyNAudio
-            End SyncLock
-        ElseIf args.Name.StartsWithF("Newtonsoft.Json") Then
-            SyncLock AssemblyJsonLock
-                If AssemblyJson Is Nothing Then
-                    Log("[Start] 加载 DLL：Json")
-                    AssemblyJson = Assembly.Load(GetResources("Json"))
-                End If
-                Return AssemblyJson
-            End SyncLock
-        ElseIf args.Name.StartsWithF("Ookii.Dialogs.Wpf") Then
-            SyncLock AssemblyDialogLock
-                If AssemblyDialog Is Nothing Then
-                    Log("[Start] 加载 DLL：Dialogs")
-                    AssemblyDialog = Assembly.Load(GetResources("Dialogs"))
-                End If
-                Return AssemblyDialog
-            End SyncLock
-        ElseIf args.Name.StartsWithF("Imazen.WebP") Then
-            SyncLock AssemblyImazenWebpLock
-                If AssemblyImazenWebp Is Nothing Then
-                    Log("[Start] 加载 DLL：Imazen.WebP")
-                    AssemblyImazenWebp = Assembly.Load(GetResources("Imazen_WebP"))
-                    SetDllDirectory(PathPure.TrimEnd("\"))
+    Public Shared Function AssemblyResolve(sender As Object, Args As ResolveEventArgs) As Assembly
+        '缓存
+        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "System.Net.Http.Formatting"}
+        Static Locks As New Dictionary(Of String, Object)(StringComparer.Ordinal)
+        Static LoadedAssembly As New Dictionary(Of String, Assembly)(StringComparer.Ordinal)
+        '查找对应的 DLL
+        Dim Prefix As String = Prefixes.FirstOrDefault(Function(p) Args.Name.StartsWithF(p))
+        If Prefix Is Nothing Then Return Nothing
+        '加载 DLL
+        If Not Locks.ContainsKey(Prefix) Then Locks(Prefix) = New Object()
+        SyncLock Locks(Prefix)
+            If Not LoadedAssembly.ContainsKey(Prefix) Then
+                Log($"[Start] 加载 DLL：{Prefix}")
+                LoadedAssembly(Prefix) = Assembly.Load(GetResources(Prefix))
+                'WebP 特判
+                If Prefix = "Imazen.WebP" Then
+                    SetDllDirectory(PathPure.TrimEnd("\"c))
                     WriteFile(PathPure & "libwebp.dll", GetResources("libwebp64"))
                 End If
-                Return AssemblyImazenWebp
-            End SyncLock
-        Else
-            Return Nothing
-        End If
+            End If
+            Return LoadedAssembly(Prefix)
+        End SyncLock
     End Function
 
     '切换窗口

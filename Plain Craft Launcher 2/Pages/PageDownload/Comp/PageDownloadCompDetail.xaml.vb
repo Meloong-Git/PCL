@@ -73,11 +73,14 @@
     '筛选类型相同的结果（Modrinth 会返回 Mod、服务端插件、数据包混合的列表）
     Private Function GetResults() As List(Of CompFile)
         Dim Results As List(Of CompFile) = CompFileLoader.Output
-        If PageType = CompType.Any Then
-            Results = Results.Where(Function(r) r.Type <> CompType.Plugin).ToList
-        Else
-            Results = Results.Where(Function(r) r.Type = PageType).ToList
-        End If
+        Select Case PageType
+            Case CompType.Any
+                Results = Results.Where(Function(r) r.Type <> CompType.Plugin).ToList
+            Case CompType.Shader, CompType.ResourcePack
+                '不筛选光影和资源包，否则原版光影会因为是资源包格式而被过滤（#6473）
+            Case Else
+                Results = Results.Where(Function(r) r.Type = PageType).ToList
+        End Select
         Return Results
     End Function
     Private Sub Load_OnFinish()
@@ -202,7 +205,7 @@
                    CType(FrmMain.PageCurrent.Additional(1), List(Of String)).Contains(NewCard.Title)) Then
                     MyCard.StackInstall(NewStack, If(PageType = CompType.ModPack, 9, 8), Pair.Key) '9 是安装，8 是另存为
                 Else
-                    NewCard.IsSwaped = True
+                    NewCard.IsSwapped = True
                 End If
                 '增加提示
                 If Pair.Key = "其他版本" Then
@@ -211,7 +214,7 @@
             Next
             '如果只有一张卡片，展开第一张卡片
             If PanResults.Children.Count = 1 Then
-                CType(PanResults.Children(0), MyCard).IsSwaped = False
+                CType(PanResults.Children(0), MyCard).IsSwapped = False
             End If
         Catch ex As Exception
             Log(ex, "可视化工程下载列表出错", LogLevel.Feedback)
@@ -305,7 +308,7 @@
         End Try
     End Sub
     '资源下载；整合包另存为
-    Public Shared CachedFolder As String = Nothing '仅在本次缓存的下载文件夹
+    Public Shared CachedFolder As New Dictionary(Of CompType, String) '仅在本次缓存的下载文件夹
     Public Sub Save_Click(sender As Object, e As EventArgs)
         Dim File As CompFile = If(TypeOf sender Is MyListItem, sender, sender.Parent).Tag
         RunInNewThread(
@@ -356,8 +359,8 @@
                         Return False
                     End Function
                     '获取常规资源默认下载位置
-                    If CachedFolder IsNot Nothing Then
-                        DefaultFolder = CachedFolder
+                    If CachedFolder.ContainsKey(Project.Type) Then
+                        DefaultFolder = CachedFolder(Project.Type)
                         Log($"[Comp] 使用上次下载时的文件夹作为默认下载位置：{DefaultFolder}")
                     ElseIf McVersionCurrent IsNot Nothing AndAlso IsVersionSuitable(McVersionCurrent) Then
                         DefaultFolder = $"{McVersionCurrent.PathIndie}{SubFolder}"
@@ -422,7 +425,7 @@
                     If Not Target.Contains("\") Then Return
                     '构造步骤加载器
                     Dim LoaderName As String = Desc & "下载：" & GetFileNameWithoutExtentionFromPath(Target) & " "
-                    If Target <> DefaultFolder AndAlso File.Type = CompType.Mod Then CachedFolder = GetPathFromFullPath(Target)
+                    If Target <> DefaultFolder Then CachedFolder(Project.Type) = GetPathFromFullPath(Target)
                     Dim Loaders As New List(Of LoaderBase)
                     Loaders.Add(New LoaderDownload("下载文件", New List(Of NetFile) From {File.ToNetFile(Target)}) With {.ProgressWeight = 6, .Block = True})
                     '启动

@@ -107,7 +107,7 @@ Retry:
                     McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
                     GoTo Retry
                 ElseIf Result.Contains("""error""") Then
-                    Hint("更改皮肤失败：" & GetJson(Result)("error"), HintType.Critical)
+                    Hint("更改皮肤失败：" & GetJson(Result)("error").ToString, HintType.Critical)
                     Return
                 End If
                 '获取新皮肤地址

@@ -89,11 +89,11 @@ Download:
                             </local:MyCard>"
                     Case 2
                         Log("[Page] 主页预设：Minecraft 新闻")
-                        Url = "http://pcl.mcnews.thestack.top"
+                        Url = "https://pcl.mcnews.thestack.top"
                         GoTo Download
                     Case 3
                         Log("[Page] 主页预设：简单主页")
-                        Url = "https://raw.gitcode.com/mfn233/PCL-Mainpage/raw/main/Custom.xaml"
+                        Url = "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/MFn233/Custom.xaml"
                         GoTo Download
                     Case 4
                         Log("[Page] 主页预设：每日整合包推荐")
@@ -129,7 +129,7 @@ Download:
                         GoTo Download
                     Case 12
                         Log("[Page] 主页预设：PCL GitHub 仪表盘")
-                        Url = "https://raw.gitcode.com/Deep-Dark-Forest/PCL2-GitHub-Dashboard-Homepage/raw/main/custom.xaml"
+                        Url = "https://ddf.pcl-community.org/Custom.xaml"
                         GoTo Download
                 End Select
         End Select
@@ -156,7 +156,7 @@ Download:
             Dim Version As String = ""
             Dim NeedDownload As Boolean = True
             Try
-                Version = NetGetCodeByRequestOnce(VersionAddress, Timeout:=10000)
+                Version = NetRequestByClientRetry(VersionAddress)
                 If Version.Length > 1000 Then Throw New Exception($"获取的主页版本过长（{Version.Length} 字符）")
                 Dim CurrentVersion As String = Setup.Get("CacheSavedPageVersion")
                 If Version <> "" AndAlso CurrentVersion <> "" AndAlso Version = CurrentVersion Then
@@ -171,7 +171,7 @@ Download:
             End Try
             '实际下载
             If NeedDownload Then
-                Dim FileContent As String = NetGetCodeByRequestRetry(Address)
+                Dim FileContent As String = NetRequestByClientRetry(Address)
                 Log($"[Page] 已联网下载主页，内容长度：{FileContent.Length}，来源：{Address}")
                 Setup.Set("CacheSavedPageUrl", Address)
                 Setup.Set("CacheSavedPageVersion", Version)
@@ -231,7 +231,9 @@ Download:
             Try
                 '修改时应同时修改 PageOtherHelpDetail.Init
                 Content = HelpArgumentReplace(Content)
-                If Content.Contains("xmlns") Then Content = Content.RegexReplace("xmlns[^""']*(""|')[^""']*(""|')", "").Replace("xmlns", "") '禁止声明命名空间
+                Do While Content.Contains("xmlns")
+                    Content = Content.RegexReplace("xmlns[^""']*(""|')[^""']*(""|')", "").Replace("xmlns", "") '禁止声明命名空间
+                Loop
                 Content = "<StackPanel xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:sys=""clr-namespace:System;assembly=mscorlib"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"" xmlns:local=""clr-namespace:PCL;assembly=Plain Craft Launcher 2"">" & Content & "</StackPanel>"
                 Log($"[Page] 实例化：加载主页 UI 开始，最终内容长度：{Content.Count}")
                 PanCustom.Children.Add(GetObjectFromXML(Content))
