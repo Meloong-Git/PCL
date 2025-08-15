@@ -852,7 +852,7 @@ LoginFinish:
                                             If(Data.Input.UserName.Contains("@"), "", " - 登录账号应为邮箱或统一通行证账号，而非游戏角色 ID。" & vbCrLf) &
                                             " - 只注册了账号，但没有加入对应服务器。")
                 End Select
-            ElseIf AllMessage.Contains("超时") OrElse AllMessage.Contains("imeout") OrElse AllMessage.Contains("网络请求失败") Then
+            ElseIf AllMessage.Contains("超时") OrElse AllMessage.Contains("imeout") OrElse AllMessage.Contains("网络请求失败") OrElse AllMessage.Contains("408") OrElse AllMessage.Contains("由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。") Then
                 Throw New Exception("$登录失败：你的网络环境不佳，导致难以连接到海外服务器。" & vbCrLf & "请稍后重试，或使用加速器或 VPN 以改善网络环境。")
             ElseIf ex.Message.StartsWithF("$") Then
                 Throw
