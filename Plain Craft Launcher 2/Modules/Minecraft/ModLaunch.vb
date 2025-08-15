@@ -907,9 +907,16 @@ Retry:
                 Headers:={{"Accept-Language", "en-US,en;q=0.5"}, {"X-Requested-With", "XMLHttpRequest"}},
                 ThreadCount:=2)
         Catch ex As ResponsedWebException
-            If ex.Response.ContainsF("must sign in again", True) OrElse ex.Response.ContainsF("password expired", True) OrElse
-               (ex.Response.Contains("refresh_token") AndAlso ex.Response.Contains("is not valid")) Then '#269
+            Dim Response = ex.Response
+            If Response.ContainsF("must sign in again", True) OrElse Response.ContainsF("password expired", True) OrElse
+               (Response.Contains("refresh_token") AndAlso Response.Contains("is not valid")) Then '#269
                 Return {"Relogin", ""}
+            ElseIf Response.Contains("Account security interrupt") Then
+                MyMsgBox("该账号由于安全问题无法登陆，请前往微软账户页获取更多信息。", "登录失败", "我知道了", IsWarn:=True)
+                Throw New Exception("$$")
+            ElseIf Response.Contains("service abuse") Then
+                MyMsgBox("非常抱歉，该账号已被微软封禁，无法登录。", "登录失败", "我知道了", IsWarn:=True)
+                Throw New Exception("$$")
             Else
                 Throw
             End If
