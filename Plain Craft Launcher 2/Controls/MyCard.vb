@@ -326,13 +326,19 @@
     <Obsolete("IsSwaped 存在拼写错误，请换用 IsSwapped 属性。")>
     Public Property IsSwaped As Boolean
         Get
-            Return IsSwapped
+            Return GetValue(IsSwapedProperty)
         End Get
         Set(value As Boolean)
-            IsSwapped = value
+            SetValue(IsSwapedProperty, value)
         End Set
     End Property
-    Public Shared ReadOnly IsSwapedProperty As DependencyProperty = DependencyProperty.Register("IsSwaped", GetType(Boolean), GetType(MyCard), New PropertyMetadata(False))
+    Public Shared ReadOnly IsSwapedProperty As DependencyProperty = DependencyProperty.Register("IsSwaped", GetType(Boolean), GetType(MyCard), New PropertyMetadata(False, AddressOf OnIsSwapedPropertyChanged))
+    Private Shared Sub OnIsSwapedPropertyChanged(d As DependencyObject, e As DependencyPropertyChangedEventArgs)
+        Dim self = TryCast(d, MyCard)
+        If self IsNot Nothing Then
+            self.IsSwapped = CType(e.NewValue, Boolean)
+        End If
+    End Sub
 
     Public Property SwapLogoRight As Boolean = False
     Private IsMouseDown As Boolean = False
