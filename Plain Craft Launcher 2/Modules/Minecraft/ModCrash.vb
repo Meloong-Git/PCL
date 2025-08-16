@@ -547,6 +547,8 @@ Done:
                     RegexSearch(LogMc, "(?<=Missing or unsupported mandatory dependencies:)([\n\r]+\t(.*))+", RegularExpressions.RegexOptions.IgnoreCase).
                     Select(Function(s) s.Trim((vbCrLf & vbTab & " ").ToCharArray)).Distinct().ToList())
             End If
+            'Mixin 失败可以导致大量 Mod 实例创建失败
+            If LogMc.Contains("Failed to create mod instance.") Then AppendReason(CrashReason.Mod初始化失败, TryAnalyzeModName(If(RegexSeek(LogMc, "(?<=Failed to create mod instance. ModID: )[^,]+"), If(RegexSeek(LogMc, "(?<=Failed to create mod instance. ModId )[^\n]+(?= for )"), "")).TrimEnd(vbCrLf)))
         End If
 
         '虚拟机日志分析
@@ -656,8 +658,6 @@ Done:
             End If
             'Mod 解析错误（常见于 Fabric 前置校验失败）
             If LogMc.Contains("Mod resolution failed") Then AppendReason(CrashReason.Mod加载器报错)
-            'Mixin 失败可以导致大量 Mod 实例创建失败
-            If LogMc.Contains("Failed to create mod instance.") Then AppendReason(CrashReason.Mod初始化失败, TryAnalyzeModName(If(RegexSeek(LogMc, "(?<=Failed to create mod instance. ModID: )[^,]+"), If(RegexSeek(LogMc, "(?<=Failed to create mod instance. ModId )[^\n]+(?= for )"), "")).TrimEnd(vbCrLf)))
             '注意：Fabric 的 Warnings were found! 不一定是崩溃原因，它可能是单纯的警报
         End If
 
