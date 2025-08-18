@@ -1465,8 +1465,10 @@ Retry:
                 "http://hiperauth.tech/api/yggdrasil-hiper/", 'HiPer 登录
                 Setup.Get("VersionServerAuthServer", McVersionCurrent))
             Try
+                Dim AuthlibPath As String = PathPure & "authlib-injector.jar"
+                If Not File.Exist(AuthlibPath) Then Throw new FileNotFoundException("Authlib-Injector 文件缺失")
                 Dim Response As String = NetRequestByClientRetry(Server, Encoding:=Encoding.UTF8)
-                DataList.Insert(0, "-javaagent:""" & PathPure & "authlib-injector.jar""=" & Server &
+                DataList.Insert(0, "-javaagent:""" & AuthlibPath & """=" & Server &
                               " -Dauthlibinjector.side=client" &
                               " -Dauthlibinjector.yggdrasil.prefetched=" & Convert.ToBase64String(Encoding.UTF8.GetBytes(Response)))
             Catch ex As Exception
