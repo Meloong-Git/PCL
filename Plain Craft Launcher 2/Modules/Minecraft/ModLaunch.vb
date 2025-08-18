@@ -1538,7 +1538,9 @@ NextVersion:
                 Setup.Get("VersionServerAuthServer", Version:=McVersionCurrent))
             Try
                 Dim Response As String = NetRequestByClientRetry(Server, Encoding:=Encoding.UTF8)
-                DataList.Insert(0, "-javaagent:""" & PathPure & "authlib-injector.jar""=" & Server &
+                Dim AuthlibPath As String = PathPure & "authlib-injector.jar"
+                If Not File.Exists(AuthlibPath) Then Throw new FileNotFoundException("Authlib-Injector 文件缺失")
+                DataList.Insert(0, "-javaagent:""" & Authlib & """=" & Server &
                               " -Dauthlibinjector.side=client" &
                               " -Dauthlibinjector.yggdrasil.prefetched=" & Convert.ToBase64String(Encoding.UTF8.GetBytes(Response)))
             Catch ex As Exception
