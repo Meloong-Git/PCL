@@ -1466,7 +1466,7 @@ Retry:
                 Setup.Get("VersionServerAuthServer", McVersionCurrent))
             Try
                 Dim AuthlibPath As String = PathPure & "authlib-injector.jar"
-                If Not File.Exist(AuthlibPath) Then Throw new FileNotFoundException("Authlib-Injector 文件缺失")
+                If Not File.Exists(AuthlibPath) Then Throw new FileNotFoundException("Authlib-Injector 文件缺失")
                 Dim Response As String = NetRequestByClientRetry(Server, Encoding:=Encoding.UTF8)
                 DataList.Insert(0, "-javaagent:""" & AuthlibPath & """=" & Server &
                               " -Dauthlibinjector.side=client" &
