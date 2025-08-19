@@ -201,6 +201,10 @@ Retry:
                 If Id.Contains("recommended") Then Throw New Exception("该整合包版本过老，已不支持进行安装！")
                 Log("[ModPack] 整合包 Forge 版本：" & Id)
                 ForgeVersion = Id.Replace("forge-", "")
+                If Val(ForgeVersion.Split(".")(3)) <= 682 OrElse ForgeVersion = "8.9.0.749" OrElse ForgeVersion = "8.9.0.751" Then
+                    Hint("该整合包版本过老，已不支持进行安装！", HintType.Critical)
+                    Throw New CancelledException
+                End If
             ElseIf Id.StartsWithF("neoforge-") Then
                 'NeoForge 指定
                 Log("[ModPack] 整合包 NeoForge 版本：" & Id)
@@ -369,6 +373,10 @@ Retry:
                 Case "forge" 'eg. 14.23.5.2859 / 1.19-41.1.0
                     ForgeVersion = Entry.Value.ToString
                     Log("[ModPack] 整合包 Forge 版本：" & ForgeVersion)
+                    If Val(ForgeVersion.Split(".")(3)) <= 682 OrElse ForgeVersion = "8.9.0.749" OrElse ForgeVersion = "8.9.0.751" Then
+                        Hint("该整合包版本过老，已不支持进行安装！", HintType.Critical)
+                        Throw New CancelledException
+                    End If
                 Case "neoforge", "neo-forge" 'eg. 20.6.98-beta
                     NeoForgeVersion = Entry.Value.ToString
                     Log("[ModPack] 整合包 NeoForge 版本：" & NeoForgeVersion)
@@ -639,6 +647,10 @@ Retry:
                     Request.MinecraftName = Component("version")
                 Case "net.minecraftforge"
                     Request.ForgeVersion = Component("version")
+                    If Val(Request.ForgeVersion.Split(".")(3)) <= 682 OrElse Request.ForgeVersion = "8.9.0.749" OrElse Request.ForgeVersion = "8.9.0.751" Then
+                        Hint("该整合包版本过老，已不支持进行安装！", HintType.Critical)
+                        Throw New CancelledException
+                    End If
                 Case "net.neoforged"
                     Request.NeoForgeVersion = Component("version")
                 Case "net.fabricmc.fabric-loader"
@@ -718,6 +730,12 @@ Retry:
         If Addons.ContainsKey("quilt") Then
             Hint("PCL 暂不支持安装需要 Quilt 的整合包！", HintType.Critical)
             Throw New CancelledException
+        End If
+        If Addons.ContainsKey("forge") Then
+            If Val(Addons("forge").Split(".")(3)) <= 682 OrElse Addons("forge") = "8.9.0.749" OrElse Addons("forge") = "8.9.0.751" Then
+                Hint("该整合包版本过老，已不支持进行安装！", HintType.Critical)
+                Throw New CancelledException
+            End If
         End If
         Dim Request As New McInstallRequest With {
             .TargetVersionName = VersionName,
