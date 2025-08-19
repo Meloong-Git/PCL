@@ -19,9 +19,8 @@
         e.Handled = True
         PerformVerticalOffsetDelta(-e.Delta)
         '关闭 Tooltip (#2552)
-        For Each TooltipBorder In Application.ShowingTooltips
-            AniStart(AaOpacity(TooltipBorder, -1, 100), $"Hide Tooltip {GetUuid()}")
-        Next
+        '通过 IsOpen 关闭 Tooltip 而不是降低 Border 不透明度 (#5744)
+        Application.ShowingTooltips.ForEach(Sub(tooltip) tooltip.IsOpen = False)
     End Sub
     Public Sub PerformVerticalOffsetDelta(Delta As Double)
         AniStart(
