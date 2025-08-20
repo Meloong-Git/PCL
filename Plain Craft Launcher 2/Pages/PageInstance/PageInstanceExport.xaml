@@ -241,6 +241,14 @@
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                         </StackPanel>
+                        <local:MyCheckBox x:Name="CheckOptionsPclVersionCustom">
+                            <local:MyCheckBox.Tag>
+                                <local:ExportOption 
+                                Title="PCL 版本设置"
+                                Description="打包 PCL 版本独立设置"
+                                DefaultChecked="True" />
+                            </local:MyCheckBox.Tag>
+                        </local:MyCheckBox>
                     </StackPanel>
                 </local:MyCard>
                 <local:MyCard Title="高级选项" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">

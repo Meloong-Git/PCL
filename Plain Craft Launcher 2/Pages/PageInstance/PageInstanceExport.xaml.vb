@@ -319,6 +319,9 @@ Public Class PageInstanceExport
             ConfigLines.Add("# 是否打包 PCL 个性化内容，例如功能隐藏设置、主页、背景音乐和图片等。")
             ConfigLines.Add("IncludeLauncherCustom:" & CheckOptionsPclCustom.Checked)
             ConfigLines.Add("")
+            ConfigLines.Add("# 是否打包 PCL 版本独立设置内容")
+            ConfigLines.Add("IncludeLauncherVersionCustom:" & CheckOptionsPclVersionCustom.Checked)
+            ConfigLines.Add("")
             ConfigLines.Add("# 是否将 Mod、资源包、光影包的文件直接放入整合包中，这样在导入时就无需联网下载它们。")
             ConfigLines.Add("# 建议仅在无法稳定连接 CurseForge 或 Modrinth 时才考虑启用。")
             ConfigLines.Add("# 二次分发可能违反使用协议，请尽量不要公开发布包含资源文件的整合包！")
@@ -367,6 +370,7 @@ Public Class PageInstanceExport
             TextExportVersion.Text = Ini.GetOrDefault("Version", "")
             CheckOptionsPcl.Checked = Ini.GetOrDefault("IncludeLauncher", True)
             CheckOptionsPclCustom.Checked = Ini.GetOrDefault("IncludeLauncherCustom", True)
+            CheckOptionsPclVersionCustom.Checked = Ini.GetOrDefault("IncludeLauncherVersionCustom", True)
             CheckAdvancedModrinth.Checked = Ini.GetOrDefault("ModrinthUploadMode", False)
             CheckAdvancedInclude.Checked = Ini.GetOrDefault("DontCheckHostedAssets", False)
             ConfigPackPath = Ini.GetOrDefault("PackPath", Nothing)
@@ -441,6 +445,7 @@ Public Class PageInstanceExport
         Dim ModrinthUploadMode As Boolean = CheckAdvancedModrinth.Checked
         Dim IncludePCL As Boolean = CheckOptionsPcl.Checked
         Dim IncludePCLCustom As Boolean = IncludePCL AndAlso CheckOptionsPclCustom.Checked
+        Dim IncludePCLVersionCustom As Boolean = CheckOptionsPclVersionCustom.Checked
         Dim AllRules = StandardizeLines(GetAllRules(), True).ToList()
         Dim AllExtraFiles = StandardizeLines(GetExtraFileLines(), False).ToList()
         Log($"[Export] 准备导出整合包，共有 {AllRules.Count} 条规则，{AllExtraFiles.Count} 条追加内容行")
@@ -530,7 +535,7 @@ Public Class PageInstanceExport
             Next
             Loader.Progress = 0.97
             '复制 PCL 版本设置
-            CopyDirectory(McVersion.PathVersion & "PCL\", OverridesFolder & "PCL\")
+            If IncludePCLVersionCustom Then CopyDirectory(McVersion.PathVersion & "PCL\", OverridesFolder & "PCL\")
             WriteIni(OverridesFolder & "PCL\Setup.ini", "IsStar", False)
 #If BETA Then
             '复制 PCL 本体
