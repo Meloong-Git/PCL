@@ -1,4 +1,5 @@
-﻿Imports System.Reflection
+Imports System.ComponentModel
+Imports System.Reflection
 Imports System.Windows.Threading
 
 Public Class Application
@@ -260,6 +261,28 @@ WaitRetry:
     End Sub
     Private Sub TooltipUnloaded(sender As Border, e As RoutedEventArgs)
         ShowingTooltips.Remove(sender)
+    End Sub
+
+    'Tooltip 显示位置修正
+
+    Private Shared ReadOnly _menuDropAlignmentField As FieldInfo
+
+    Shared Sub New()
+        _menuDropAlignmentField = GetType(SystemParameters).GetField("_menuDropAlignment", BindingFlags.NonPublic Or BindingFlags.Static)
+        System.Diagnostics.Debug.Assert(_menuDropAlignmentField IsNot Nothing)
+
+        EnsureStandardPopupAlignment()
+        AddHandler SystemParameters.StaticPropertyChanged, AddressOf SystemParameters_StaticPropertyChanged
+    End Sub
+
+    Private Shared Sub SystemParameters_StaticPropertyChanged(sender As Object, e As PropertyChangedEventArgs)
+        EnsureStandardPopupAlignment()
+    End Sub
+
+    Private Shared Sub EnsureStandardPopupAlignment()
+        If SystemParameters.MenuDropAlignment AndAlso _menuDropAlignmentField IsNot Nothing Then
+            _menuDropAlignmentField.SetValue(Nothing, False)
+        End If
     End Sub
 
 End Class
