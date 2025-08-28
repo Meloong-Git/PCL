@@ -4,30 +4,30 @@
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageDownloadShader"
     PanScroll="{Binding ElementName=Content}">
-    <local:PageComp x:Name="Content" PageType="Shader" TypeName="光影包" TypeNameSpaced="光影包">
-        <local:MyComboBoxItem Tag="" Content="全部" IsSelected="True" />
-        
-        <local:MyComboBoxItem Content="风格" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版风" Tag="6555/vanilla-like" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="幻想风" Tag="6554/fantasy" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="写实风" Tag="6553/realistic" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="半写实风" Tag="/semi-realistic" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="卡通风" Tag="/cartoon" />
+    <local:PageComp x:Name="Content" PageType="Shader" TypeName="{StaticResource LangDownloadPageLeftShader}" TypeNameSpaced="{StaticResource LangDownloadPageLeftShaderL}">
+        <local:MyComboBoxItem Tag="" Content="{StaticResource LangDownloadResourceTypeAll}" IsSelected="True" />
 
-        <local:MyComboBoxItem Content="特性" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="彩色光照" Tag="/colored-lighting" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="路径追踪" Tag="/path-tracing" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="PBR" Tag="/pbr" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="反射" Tag="/reflections" />
+        <local:MyComboBoxItem Content="{StaticResource LangDownloadShaderTypeTitleStyle}" IsEnabled="False" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeVanillaLike}" Tag="6555/vanilla-like" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeFantasy}" Tag="6554/fantasy" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeRealistic}" Tag="6553/realistic" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeSemiRealistic}" Tag="/semi-realistic" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeCartoon}" Tag="/cartoon" />
 
-        <local:MyComboBoxItem Content="性能负荷" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="极低" Tag="/potato" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="低" Tag="/low" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="中" Tag="/medium" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="高" Tag="/high" />
+        <local:MyComboBoxItem Content="{StaticResource LangDownloadShaderTypeTitleFeature}" IsEnabled="False" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeColoredLighting}" Tag="/colored-lighting" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypePathTracing}" Tag="/path-tracing" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypePBR}" Tag="/pbr" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeReflections}" Tag="/reflections" />
+
+        <local:MyComboBoxItem Content="{StaticResource LangDownloadShaderTypeTitleLoad}" IsEnabled="False" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypePotato}" Tag="/potato" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeLow}" Tag="/low" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeMedium}" Tag="/medium" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeHigh}" Tag="/high" />
 
         <local:MyComboBoxItem Content="加载器" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版可用" Tag="/vanilla" ToolTip="作为资源包加载，可以直接在原版游戏里使用。" ToolTipService.HorizontalOffset="70" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadShaderTypeVanilla}" Tag="/vanilla" ToolTip="{StaticResource LangDownloadShaderTypeVanillaToolTip}" ToolTipService.HorizontalOffset="70" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="Iris" Tag="/iris" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="OptiFine" Tag="/optifine" />
     </local:PageComp>

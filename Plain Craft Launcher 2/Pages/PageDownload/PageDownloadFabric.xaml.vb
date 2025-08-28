@@ -15,7 +15,7 @@
             For Each Version In Versions
                 PanVersions.Children.Add(FabricDownloadListItem(Version, AddressOf Fabric_Selected))
             Next
-            CardVersions.Title = "版本列表 (" & Versions.Count & ")"
+            CardVersions.Title = GetLang("LangDownloadFabricVersionList") & " (" & Versions.Count & ")"
         Catch ex As Exception
             Log(ex, "可视化 Fabric 版本列表出错", LogLevel.Feedback)
         End Try

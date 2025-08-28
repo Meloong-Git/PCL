@@ -6,20 +6,20 @@
     PanScroll="{Binding ElementName=PanBack}">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel Orientation="Vertical" Margin="5">
-            <local:MyCard Margin="20,20,20,0" Grid.IsSharedSizeScope="True" Title="LiteLoader 简介" x:Name="CardTip">
+            <local:MyCard Margin="20,20,20,0" Grid.IsSharedSizeScope="True" Title="{StaticResource LangDownloadLiteloaderDescTitle}" x:Name="CardTip">
                 <StackPanel Margin="25,40,15,20">
-                    <TextBlock Name="LabConnect" Margin="0,0,0,11" Text="与 Forge 类似，LiteLoader 可以用于加载老版本 Minecraft 中的 LiteLoader 模组。" TextWrapping="Wrap" />
+                    <TextBlock Name="LabConnect" Margin="0,0,0,11" Text="{StaticResource LangDownloadLiteloaderDesc}" TextWrapping="Wrap" />
                     <Grid Height="35">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnWeb" Grid.Column="0" MinWidth="140" Text="打开官网" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
+                        <local:MyButton x:Name="BtnWeb" Grid.Column="0" MinWidth="140" Text="{StaticResource LangDownloadLiteloaderWebsite}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>
             <StackPanel Name="PanMain" Margin="20,15,20,5" Grid.IsSharedSizeScope="True" />
             <local:MyCard HorizontalAlignment="Center" Margin="40,50" SnapsToDevicePixels="True" x:Name="PanLoad" UseAnimation="False">
-                <local:MyLoading Text="正在获取 LiteLoader 列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <local:MyLoading Text="{StaticResource LangDownloadLiteloaderGettingList}" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
             </local:MyCard>
         </StackPanel>
     </local:MyScrollViewer>

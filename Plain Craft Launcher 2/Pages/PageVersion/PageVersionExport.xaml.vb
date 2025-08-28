@@ -216,13 +216,13 @@ Public Class PageVersionExport
                 BtnOverrideCancel.Visibility = Visibility.Collapsed
                 PanOptions.Visibility = Visibility.Visible
                 CardOptions.Inlines.Clear()
-                CardOptions.Inlines.Add(New Run("导出内容列表") With {.FontWeight = FontWeights.Bold})
+                CardOptions.Inlines.Add(New Run(GetLang("LangPageVersionExportContentTitle")) With {.FontWeight = FontWeights.Bold})
             Else
                 BtnOverrideCancel.Visibility = Visibility.Visible
                 PanOptions.Visibility = Visibility.Collapsed
                 CardOptions.Inlines.Clear()
-                CardOptions.Inlines.Add(New Run("导出内容列表:    ") With {.FontWeight = FontWeights.Bold})
-                CardOptions.Inlines.Add(New Run("从配置文件中读取") With {.FontWeight = FontWeights.Normal})
+                CardOptions.Inlines.Add(New Run(GetLang("LangPageVersionExportContentTitle") & ":    ") With {.FontWeight = FontWeights.Bold})
+                CardOptions.Inlines.Add(New Run(GetLang("LangPageVersionExportContentTitleReadFromFile")) With {.FontWeight = FontWeights.Normal})
             End If
         End Set
     End Property
@@ -304,7 +304,7 @@ Public Class PageVersionExport
     '保存配置文件
     Private Sub ExportConfig() Handles BtnAdvancedExport.Click
         Try
-            Dim ConfigPath As String = SelectSaveFile("选择文件位置", "export_config.txt", "整合包导出配置(*.txt)|*.txt", Setup.Get("CacheExportConfig"))
+            Dim ConfigPath As String = SelectSaveFile(GetLang("LangPageVersionExportSelectConfigSave"), "export_config.txt", GetLang("LangPageVersionExportExportConfigSaveAsFormat"), Setup.Get("CacheExportConfig"))
             If String.IsNullOrEmpty(ConfigPath) Then Return
             Setup.Set("CacheExportConfig", ConfigPath)
             Dim ConfigLines As New List(Of String)
@@ -341,16 +341,16 @@ Public Class PageVersionExport
             ConfigLines.AddRange(GetExtraFileLines())
             '结束
             WriteFile(ConfigPath, ConfigLines.Join(vbCrLf))
-            Hint("已保存配置文件：" & ConfigPath, HintType.Finish)
+            Hint(GetLang("LangPageVersionExportHintSavedExportConfig", ConfigPath), HintType.Finish)
             OpenExplorer(ConfigPath)
         Catch ex As Exception
-            Log(ex, "保存配置失败", LogLevel.Msgbox)
+            Log(ex, GetLang("LangPageVersionExportSaveExportConfigFail"), LogLevel.Msgbox)
         End Try
     End Sub
     '读取配置文件
     Private Sub ImportConfig() Handles BtnAdvancedImport.Click
         Try
-            Dim ConfigPath As String = SelectFile("整合包导出配置(*.txt)|*.txt", "选择配置文件", Setup.Get("CacheExportConfig"))
+            Dim ConfigPath As String = SelectFile(GetLang("LangPageVersionExportSelectConfigSaveAsFormat"), GetLang("LangPageVersionExportSelectSavedConfig"), Setup.Get("CacheExportConfig"))
             If String.IsNullOrEmpty(ConfigPath) Then Return
             Setup.Set("CacheExportConfig", ConfigPath)
             Dim Segments As String() = ReadFile(ConfigPath).Split(Sperator)
@@ -378,9 +378,9 @@ Public Class PageVersionExport
                 ExtraFiles = Nothing
             End If
             '结束
-            Hint("已读取配置文件：" & ConfigPath, HintType.Finish)
+            Hint(GetLang("LangPageVersionExportHintReadExportConfig", ConfigPath), HintType.Finish)
         Catch ex As Exception
-            Log(ex, "读取配置失败", LogLevel.Msgbox)
+            Log(ex, GetLang("LangPageVersionExportReadExportConfigFail"), LogLevel.Msgbox)
         End Try
     End Sub
 
@@ -401,7 +401,7 @@ Public Class PageVersionExport
         Dim PackVersion As String = If(String.IsNullOrEmpty(TextExportVersion.Text), "1.0.0", TextExportVersion.Text)
 
         '重复任务检查
-        Dim LoaderName As String = $"导出整合包：" & PackName
+        Dim LoaderName As String = GetLang("LangPageVersionExportTaskName", PackName)
         For Each OngoingLoader In LoaderTaskbar
             If OngoingLoader.Name <> LoaderName Then Continue For
             FrmMain.PageChange(FormMain.PageType.DownloadManager)
@@ -418,14 +418,14 @@ Public Class PageVersionExport
                 Log($"[Export] 使用配置文件中指定的导出路径：{ConfigPackPath}")
             Catch ex As Exception
                 Log(ex, $"无法使用配置文件中指定的导出路径（{ConfigPackPath}）", LogLevel.Debug)
-                If MyMsgBox($"指定的路径：{ConfigPackPath}{vbCrLf}{vbCrLf}{GetExceptionDetail(ex)}", "无法使用配置文件中指定的导出路径", "确定", "取消") = 2 Then Return
+                If MyMsgBox(GetLang("LangPageVersionExportDialogContentConfigInvalid", ConfigPackPath, GetExceptionDetail(ex)), GetLang("LangPageVersionExportDialogTitleConfigInvalid"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then Return
             End Try
         End If
         If PackPath Is Nothing Then
             Dim Extensions As New List(Of String)
-            If Not CheckAdvancedModrinth.Checked Then Extensions.Add("压缩文件(*.zip)|*.zip")
-            If Not CheckOptionsPcl.Checked Then Extensions.Add("Modrinth 整合包文件(*.mrpack)|*.mrpack")
-            PackPath = SelectSaveFile("选择导出位置",
+            If Not CheckAdvancedModrinth.Checked Then Extensions.Add(GetLang("LangPageVersionExportSelectExportPathSaveAsFormat", "zip", "zip"))
+            If Not CheckOptionsPcl.Checked Then Extensions.Add(GetLang("LangPageVersionExportSelectExportPathSaveAsFormat", "mrpack", "mrpack"))
+            PackPath = SelectSaveFile(GetLang("LangPageVersionExportSelectExportPath"),
                 PackName & If(String.IsNullOrEmpty(TextExportVersion.Text), "", " " & TextExportVersion.Text), Extensions.Join("|"))
             Log($"[Export] 手动指定的导出路径：{PackPath}")
         End If
@@ -451,7 +451,7 @@ Public Class PageVersionExport
 
 #If Not BETA Then
         If IncludePCL Then
-            Loaders.Add(New LoaderTask(Of Integer, Integer)("下载 PCL 正式版",
+            Loaders.Add(New LoaderTask(Of Integer, Integer)(GetLang("LangPageVersionExportTaskDownloadPCL"),
             Sub(Loader As LoaderTask(Of Integer, Integer))
                 DownloadLatestPCL(Loader)
                 CopyFile(PathTemp & "Latest.exe", CacheFolder & "Plain Craft Launcher.exe")
@@ -463,7 +463,7 @@ Public Class PageVersionExport
 
 #Region "复制文件"
 
-        Loaders.Add(New LoaderTask(Of Integer, List(Of McMod))("复制导出内容",
+        Loaders.Add(New LoaderTask(Of Integer, List(Of McMod))(GetLang("LangPageVersionExportTaskCopyFiles"),
         Sub(Loader As LoaderTask(Of Integer, List(Of McMod)))
             Loader.Output = New List(Of McMod)
             '复制版本文件
@@ -517,13 +517,13 @@ Public Class PageVersionExport
                     If Directory.Exists(Line) Then
                         CopyDirectory(Line, BaseFolder & GetFolderNameFromPath(Line) & "\")
                     Else
-                        Hint($"未找到配置文件中指定的文件夹：{Line}", HintType.Critical)
+                        Hint(GetLang("LangPageVersionExportHintFolderInConfigNotFound", Line), HintType.Critical)
                     End If
                 Else
                     If File.Exists(Line) Then
                         CopyFile(Line, BaseFolder & GetFileNameFromPath(Line))
                     Else
-                        Hint($"未找到配置文件中指定的单个文件：{Line}", HintType.Critical)
+                        Hint(GetLang("LangPageVersionExportHintFileInConfigNotFound", Line), HintType.Critical)
                     End If
                 End If
             Next
@@ -550,7 +550,7 @@ Public Class PageVersionExport
 
 #Region "联网检查"
 
-        Loaders.Add(New LoaderTask(Of List(Of McMod), Dictionary(Of McMod, List(Of String)))("联网获取文件信息",
+        Loaders.Add(New LoaderTask(Of List(Of McMod), Dictionary(Of McMod, List(Of String)))(GetLang("LangPageVersionExportTaskGetOnlineFileInfo"),
         Sub(Loader As LoaderTask(Of List(Of McMod), Dictionary(Of McMod, List(Of String))))
             Loader.Output = New Dictionary(Of McMod, List(Of String))
             If Not CheckHostedAssets Then Log($"[Export] 要求跳过联网获取步骤") : Return
@@ -621,15 +621,11 @@ Public Class PageVersionExport
 
             '若失败，确认是否继续
             If FailedExceptions.Count = 1 Then
-                If MyMsgBox("联网获取部分文件信息失败，是否继续导出？" & vbCrLf & vbCrLf &
-                            "若继续，无法获取信息的文件将被直接打包。" & vbCrLf &
-                            "由于二次分发可能违反使用协议，请尽量不要公开发布导出的整合包！",
-                            "部分文件信息获取失败", "继续", "取消") = 2 Then Throw FailedExceptions.First
+                If MyMsgBox(GetLang("LangPageVersionExportDialogContentSomeGetFail"),
+                            GetLang("LangPageVersionExportDialogTitleSomeGetFail"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel")) = 2 Then Throw FailedExceptions.First
             ElseIf FailedExceptions.Count > 1 Then
-                If MyMsgBox("联网获取文件信息失败，是否继续导出？" & vbCrLf & vbCrLf &
-                            "若继续，所有文件都将被直接打包。" & vbCrLf &
-                            "由于二次分发可能违反使用协议，请尽量不要公开发布导出的整合包！",
-                            "文件信息获取失败", "继续", "取消") = 2 Then Throw FailedExceptions.First
+                If MyMsgBox(GetLang("LangPageVersionExportDialogContentAllGetFail"),
+                            GetLang("LangPageVersionExportDialogTitleAllGetFail"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel")) = 2 Then Throw FailedExceptions.First
             End If
         End Sub) With {.Show = CheckHostedAssets, .ProgressWeight = If(CheckHostedAssets, 2, 0.01)})
 
@@ -637,7 +633,7 @@ Public Class PageVersionExport
 
 #Region "生成压缩包"
 
-        Loaders.Add(New LoaderTask(Of Dictionary(Of McMod, List(Of String)), Integer)("生成压缩包",
+        Loaders.Add(New LoaderTask(Of Dictionary(Of McMod, List(Of String)), Integer)(GetLang("LangPageVersionExportGenerateArchive"),
         Sub(Loader As LoaderTask(Of Dictionary(Of McMod, List(Of String)), Integer))
             '整理文件列表
             Dim Files As New JArray

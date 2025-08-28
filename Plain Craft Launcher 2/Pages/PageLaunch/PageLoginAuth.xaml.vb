@@ -38,8 +38,8 @@
     ''' 当前页面的登录信息是否有效。
     ''' </summary>
     Public Shared Function IsVaild(LoginData As McLoginServer) As String
-        If LoginData.UserName = "" Then Return "账号不能为空！"
-        If LoginData.Password = "" Then Return "密码不能为空！"
+        If LoginData.UserName = "" Then Return GetLang("LangPageLoginAuthNoEmptyMail")
+        If LoginData.Password = "" Then Return GetLang("LangPageLoginAuthNoEmptyPassword")
         Return ""
     End Function
     Public Function IsVaild() As String
@@ -67,10 +67,10 @@
 
     '链接处理
     Private Sub ComboName_TextChanged() Handles ComboName.TextChanged
-        BtnLink.Content = If(ComboName.Text = "", "注册账号", "找回密码")
+        BtnLink.Content = If(ComboName.Text = "", GetLang("LangPageLoginAuthRegister"), GetLang("LangPageLoginAuthForgetPassword"))
     End Sub
     Private Sub Btn_Click(sender As Object, e As EventArgs) Handles BtnLink.Click
-        If BtnLink.Content = "注册账号" Then
+        If BtnLink.Content = GetLang("LangPageLoginAuthRegister") Then
             OpenWebsite(If(McVersionCurrent IsNot Nothing, Setup.Get("VersionServerAuthRegister", Version:=McVersionCurrent), Setup.Get("CacheAuthServerRegister")))
         Else
             Dim Website As String = If(McVersionCurrent IsNot Nothing, Setup.Get("VersionServerAuthRegister", Version:=McVersionCurrent), Setup.Get("CacheAuthServerRegister"))

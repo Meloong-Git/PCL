@@ -59,10 +59,10 @@
             CheckAdvanceGraphicCard.Checked = Setup.Get("LaunchAdvanceGraphicCard")
 
         Catch ex As NullReferenceException
-            Log(ex, "启动设置项存在异常，已被自动重置", LogLevel.Msgbox)
+            Log(ex, GetLang("LangPageSetupLaunchReloadByError"), LogLevel.Msgbox)
             Reset()
         Catch ex As Exception
-            Log(ex, "重载启动设置时出错", LogLevel.Feedback)
+            Log(ex, GetLang("LangPageSetupLaunchReloadFail"), LogLevel.Feedback)
         End Try
     End Sub
 
@@ -93,9 +93,9 @@
             JavaSearchLoader.Start(IsForceRestart:=True)
 
             Log("[Setup] 已初始化启动设置")
-            Hint("已初始化启动设置！", HintType.Finish, False)
+            Hint(GetLang("LangPageSetupLaunchInit"), HintType.Finish, False)
         Catch ex As Exception
-            Log(ex, "初始化启动设置失败", LogLevel.Msgbox)
+            Log(ex, GetLang("LangPageSetupLaunchInitFail"), LogLevel.Msgbox)
         End Try
 
         Reload()
@@ -159,7 +159,7 @@
             Setup.Set("LaunchSkinSlim", SkinInfo.IsSlim)
             ChangeSkin = True
         Catch ex As Exception
-            Log(ex, "改变离线皮肤失败", LogLevel.Msgbox)
+            Log(ex, GetLang("LangPageSetupLaunchSkinChangeFail"), LogLevel.Msgbox)
             ChangeSkin = False
         Finally
             '设置当前显示
@@ -170,9 +170,9 @@
         Try
             File.Delete(PathAppdata & "CustomSkin.png")
             RadioSkinType0.SetChecked(True, True)
-            Hint("离线皮肤已清空！", HintType.Finish)
+            Hint(GetLang("LangPageSetupLaunchSkinEmptied"), HintType.Finish)
         Catch ex As Exception
-            Log(ex, "清空离线皮肤失败", LogLevel.Msgbox)
+            Log(ex, GetLang("LangPageSetupLaunchSkinEmptyFail"), LogLevel.Msgbox)
         End Try
     End Sub
     Private Sub BtnSkinSave_Click(sender As Object, e As EventArgs) Handles BtnSkinSave.Click
@@ -215,7 +215,7 @@
         End If
         '设置文本
         LabRamGame.Text = If(RamGame = Math.Floor(RamGame), RamGame & ".0", RamGame) & " GB" &
-                          If(RamGame <> RamGameActual, " (可用 " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
+                          If(RamGame <> RamGameActual, " (" & GetLang("LangPageSetupLaunchMemAvailable") & " " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
         LabRamUsed.Text = If(RamUsed = Math.Floor(RamUsed), RamUsed & ".0", RamUsed) & " GB"
         LabRamTotal.Text = " / " & If(RamTotal = Math.Floor(RamTotal), RamTotal & ".0", RamTotal) & " GB"
         LabRamWarn.Visibility = If(RamGame = 1 AndAlso Not JavaIs64Bit() AndAlso Not Is32BitSystem AndAlso JavaList.Any, Visibility.Visible, Visibility.Collapsed)
@@ -412,7 +412,7 @@ PreFin:
         If ComboArgumentJava Is Nothing Then Return
         '初始化列表
         ComboArgumentJava.Items.Clear()
-        ComboArgumentJava.Items.Add(New MyComboBoxItem With {.Content = "自动选择合适的 Java", .Tag = "自动选择"})
+        ComboArgumentJava.Items.Add(New MyComboBoxItem With {.Content = GetLang("LangPageSetupLaunchJavaAutoChoice"), .Tag = "自动选择"})
         '更新列表
         Dim SelectedItem As MyComboBoxItem = Nothing
         Dim SelectedBySetup As String = Setup.Get("LaunchArgumentJavaSelect")
@@ -427,7 +427,7 @@ PreFin:
             Next
         Catch ex As Exception
             Setup.Set("LaunchArgumentJavaSelect", "")
-            Log(ex, "更新设置 Java 下拉框失败", LogLevel.Feedback)
+            Log(ex, GetLang("LangPageSetupLaunchJavaUpdateListFail"), LogLevel.Feedback)
         End Try
         '更新选择项
         If SelectedItem Is Nothing AndAlso JavaList.Any Then SelectedItem = ComboArgumentJava.Items(0) '选中 “自动选择”
@@ -435,13 +435,13 @@ PreFin:
         '结束处理
         If SelectedItem Is Nothing Then
             ComboArgumentJava.Items.Clear()
-            ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = "未找到可用的 Java", .IsSelected = True})
+            ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = GetLang("LangPageSetupLaunchJavaNoAvailableJava"), .IsSelected = True})
         End If
         RefreshRam(True)
     End Sub
     '阻止在特定情况下展开下拉框
     Private Sub ComboArgumentJava_DropDownOpened(sender As Object, e As EventArgs) Handles ComboArgumentJava.DropDownOpened
-        If ComboArgumentJava.SelectedItem Is Nothing OrElse ComboArgumentJava.Items(0).Content = "未找到可用的 Java" OrElse ComboArgumentJava.Items(0).Content = "加载中……" Then
+        If ComboArgumentJava.SelectedItem Is Nothing OrElse ComboArgumentJava.Items(0).Content = GetLang("LangPageSetupLaunchJavaNoAvailableJava") OrElse ComboArgumentJava.Items(0).Content = GetLang("LangPageSetupLaunchLaunchJavaLoading") Then
             ComboArgumentJava.IsDropDownOpen = False
         End If
     End Sub
@@ -468,7 +468,7 @@ PreFin:
     '手动选择
     Private Sub BtnArgumentJavaSelect_Click(sender As Object, e As EventArgs) Handles BtnArgumentJavaSelect.Click
         If JavaSearchLoader.State = LoadState.Loading Then
-            Hint("正在搜索 Java，请稍候！", HintType.Critical)
+            Hint(GetLang("LangPageSetupLaunchJavaSearchingJava"), HintType.Critical)
             Return
         End If
         '选择 Java
@@ -489,26 +489,26 @@ PreFin:
             Setup.Set("LaunchArgumentJavaAll", JavaNewList.ToString(Newtonsoft.Json.Formatting.None))
             '重新加载列表
             JavaSearchLoader.Start(IsForceRestart:=True)
-            Hint("已将该 Java 加入 Java 列表！", HintType.Finish)
+            Hint(GetLang("LangPageSetupLaunchJavaAddedJava"), HintType.Finish)
         Catch ex As Exception
-            Log(ex, "该 Java 存在异常，无法使用", LogLevel.Msgbox, "异常的 Java")
+            Log(ex, GetLang("LangPageSetupLaunchJavaIncorrectJava"), LogLevel.Msgbox, "异常的 Java")
             Return
         End Try
     End Sub
     '自动查找
     Private Sub BtnArgumentJavaSearch_Click(sender As Object, e As EventArgs) Handles BtnArgumentJavaSearch.Click
         If JavaSearchLoader.State = LoadState.Loading Then
-            Hint("正在搜索 Java，请稍候！", HintType.Critical)
+            Hint(GetLang("LangPageSetupLaunchJavaSearchingJava"), HintType.Critical)
             Return
         End If
         RunInThread(
         Sub()
-            Hint("正在搜索 Java！")
+            Hint(GetLang("LangPageSetupLaunchJavaSearchingJava"))
             JavaSearchLoader.WaitForExit(IsForceRestart:=True)
             If Not JavaList.Any() Then
-                Hint("未找到可用的 Java！", HintType.Critical)
+                Hint(GetLang("LangPageSetupLaunchJavaNoAvailableJava"), HintType.Critical)
             Else
-                Hint("已找到 " & JavaList.Count & " 个 Java，请检查下拉框查看列表！", HintType.Finish)
+                Hint(GetLang("LangPageSetupLaunchJavaSearchSuccess", JavaList.Count), HintType.Finish)
             End If
         End Sub)
     End Sub
@@ -534,8 +534,7 @@ PreFin:
     Private Sub ComboArgumentVisibie_SizeChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboArgumentVisibie.SelectionChanged
         If AniControlEnabled <> 0 Then Return
         If ComboArgumentVisibie.SelectedIndex = 0 Then
-            If MyMsgBox("若在游戏启动后立即关闭启动器，崩溃检测、更改游戏标题等功能将失效。" & vbCrLf &
-                        "如果想保留这些功能，可以选择让启动器在游戏启动后隐藏，游戏退出后自动关闭。", "提醒", "继续", "取消") = 2 Then
+            If MyMsgBox(GetLang("LangPageSetupLaunchLaunchDialogCloseOnGameStartContent"), GetLang("LangPageSetupLaunchLaunchDialogCloseOnGameStartTitle"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel")) = 2 Then
                 ComboArgumentVisibie.SelectedItem = e.RemovedItems(0)
             End If
         End If
@@ -545,10 +544,8 @@ PreFin:
     Private Sub CheckArgumentRam_Change() Handles CheckArgumentRam.Change
         If AniControlEnabled <> 0 Then Return
         If Not CheckArgumentRam.Checked Then Return
-        If MyMsgBox("内存优化会显著延长启动耗时，建议仅在内存不足时开启。" & vbCrLf &
-                    "如果你在使用机械硬盘，这还可能导致一小段时间的严重卡顿。" &
-                    If(IsAdmin(), "", $"{vbCrLf}{vbCrLf}每次启动游戏，PCL 都需要申请管理员权限以进行内存优化。{vbCrLf}若想自动授予权限，可以右键 PCL，打开 属性 → 兼容性 → 以管理员身份运行此程序。"),
-                    "提醒", "确定", "取消") = 2 Then
+        If MyMsgBox(GetLang("LangPageSetupLaunchMemReduceDialogEnableContent"),
+                    GetLang("LangPageSetupLaunchMemReduceDialogEnableTitle"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then
             CheckArgumentRam.Checked = False
         End If
     End Sub

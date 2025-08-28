@@ -4,42 +4,42 @@
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageDownloadResourcePack"
     PanScroll="{Binding ElementName=Content}">
-    <local:PageComp x:Name="Content" PageType="ResourcePack" TypeName="资源包" TypeNameSpaced="资源包">
-        <local:MyComboBoxItem Tag="" Content="全部" IsSelected="True" />
+    <local:PageComp x:Name="Content" PageType="ResourcePack" TypeName="{StaticResource LangDownloadPageLeftResourcepack}" TypeNameSpaced="{StaticResource LangDownloadPageLeftResourcepackL}">
+        <local:MyComboBoxItem Tag="" Content="{StaticResource LangDownloadResourceTypeAll}" IsSelected="True" />
 
-        <local:MyComboBoxItem Content="风格" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版风" Tag="403/vanilla-like" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="写实风" Tag="400/realistic" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="现代风" Tag="401/" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="中世纪" Tag="402/" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="蒸汽朋克" Tag="399/" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="主题化" Tag="/themed" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="简洁" Tag="/simplistic" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="装饰" Tag="/decoration" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="战斗" Tag="/combat" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="实用" Tag="/utility" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="改良" Tag="/tweaks" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="鬼畜" Tag="/cursed" />
+        <local:MyComboBoxItem Content="{StaticResource LangDownloadResourcepackTypeTitleStyle}" IsEnabled="False" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeVanillaLike}" Tag="403/vanilla-like" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeRealistic}" Tag="400/realistic" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeModern}" Tag="401/" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeMedieval}" Tag="402/" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeSteampunk}" Tag="399/" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeThemed}" Tag="/themed" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeSimplistic}" Tag="/simplistic" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeDecoration}" Tag="/decoration" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeCombat}" Tag="/combat" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeUtility}" Tag="/utility" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeTweaks}" Tag="/tweaks" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeCursed}" Tag="/cursed" />
 
-        <local:MyComboBoxItem Content="特性" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含实体" Tag="/entities" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含声音" Tag="/audio" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含字体" Tag="5244/fonts" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含模型" Tag="/models" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含语言" Tag="/locale" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="含 UI" Tag="/gui" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="核心着色器" Tag="/core-shaders" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="动态效果" Tag="404/" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="兼容 Mod" Tag="4465/modded" />
+        <local:MyComboBoxItem Content="{StaticResource LangDownloadResourcepackTypeTitleFeature}" IsEnabled="False" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeEntities}" Tag="/entities" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeAudio}" Tag="/audio" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeFonts}" Tag="5244/fonts" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeModels}" Tag="/models" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeLocale}" Tag="/locale" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeGUI}" Tag="/gui" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeCoreShader}" Tag="/core-shaders" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeDynamic}" Tag="404/" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeModed}" Tag="4465/modded" />
 
-        <local:MyComboBoxItem Content="分辨率" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="8x 或更低" Tag="/8x-" />
+        <local:MyComboBoxItem Content="{StaticResource LangDownloadResourcepackTypeTitleResolution}" IsEnabled="False" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeLowerThan8x}" Tag="/8x-" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="16x" Tag="393/16x" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="32x" Tag="394/32x" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="48x" Tag="/48x" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="64x" Tag="395/64x" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="128x" Tag="396/128x" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="256x" Tag="397/256x" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="512x 或更高" Tag="398/512x+" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="{StaticResource LangDownloadResourcepackTypeHigherThan512x}" Tag="398/512x+" />
     </local:PageComp>
 </local:MyPageRight>

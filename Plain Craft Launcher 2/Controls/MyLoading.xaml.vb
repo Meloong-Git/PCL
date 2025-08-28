@@ -41,18 +41,19 @@ Public Class MyLoading
         End Set
     End Property
 
-    Private _Text As String = "加载中"
+    Public Shared ReadOnly TextProperty As DependencyProperty = DependencyProperty.Register("Text", GetType(String), GetType(MyLoading), New PropertyMetadata(GetLang("LangModMyLoadingLoading")))
+
     Public Property Text As String
         Get
-            Return _Text
+            Return GetValue(TextProperty)
         End Get
         Set(value As String)
-            _Text = value
+            SetValue(TextProperty, value)
             RefreshText()
         End Set
     End Property
 
-    Private _TextError As String = "加载失败"
+    Private _TextError As String = GetLang("LangModMyLoadingLoadFail")
     Public Property TextError As String
         Get
             Return _TextError
@@ -74,7 +75,7 @@ Public Class MyLoading
                 If TextErrorInherit AndAlso State.IsLoader Then
                     Dim Ex As Exception = CType(State, Object).Error
                     If Ex Is Nothing Then
-                        LabText.Text = "未知错误"
+                        LabText.Text = GetLang("LangModMyLoadingUnknownError")
                     Else
                         Do While Ex.InnerException IsNot Nothing
                             Ex = Ex.InnerException
@@ -82,7 +83,7 @@ Public Class MyLoading
                         LabText.Text = StrTrim(Ex.Message)
                         If {"远程主机强迫关闭了", "远程方已关闭传输流", "未能解析此远程名称", "由于目标计算机积极拒绝",
                             "操作已超时", "操作超时", "服务器超时", "连接超时"}.Any(Function(s) LabText.Text.Contains(s)) Then
-                            LabText.Text = "网络环境不佳，请稍后重试，或使用 VPN 以改善网络环境"
+                            LabText.Text = GetLang("LangModMyLoadingBadNetwork")
                         End If
                     End If
                 Else

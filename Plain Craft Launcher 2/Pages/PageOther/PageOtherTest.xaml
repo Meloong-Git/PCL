@@ -7,6 +7,6 @@
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     PanScroll="{Binding ElementName=PanBack}">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
-        <TextBlock Text="为便于维护，开源内容中不包含百宝箱功能……" HorizontalAlignment="Center" FontSize="15" Height="30" VerticalAlignment="Center" />
+        <TextBlock Text="{StaticResource LangPageOtherTestNoUtility}" HorizontalAlignment="Center" FontSize="15" Height="30" VerticalAlignment="Center" />
     </local:MyScrollViewer>
 </local:MyPageRight>

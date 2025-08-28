@@ -45,7 +45,7 @@
         OpenWebsite("https://account.live.com/password/Change")
     End Sub
     Public Sub BtnEditName_Click(sender As Object, e As RoutedEventArgs)
-        OpenWebsite("https://www.minecraft.net/zh-hans/msaprofile/mygames/editprofile")
+        OpenWebsite("https://www.minecraft.net/msaprofile/mygames/editprofile")
     End Sub
 
     '退出登录
@@ -73,16 +73,16 @@
     Public Sub BtnSkinEdit_Click(sender As Object, e As RoutedEventArgs)
         '检查条件，获取新皮肤
         If IsChanging Then
-            Hint("正在更改皮肤中，请稍候！")
+            Hint(GetLang("LangPageLoginMsSkinChangingSkinPlzWait"))
             Return
         End If
         If McLoginLoader.State = LoadState.Failed Then
-            Hint("登录失败，无法更改皮肤！", HintType.Critical)
+            Hint(GetLang("LangPageLoginMsSkinChangeSkinFailByLoginFail"), HintType.Critical)
             Return
         End If
         Dim SkinInfo As McSkinInfo = McSkinSelect()
         If Not SkinInfo.IsVaild Then Return
-        Hint("正在更改皮肤……")
+        Hint(GetLang("LangPageLoginMsSkinChangingSkin"))
         IsChanging = True
         '开始实际获取
         RunInNewThread(
@@ -103,11 +103,11 @@ Retry:
                 }
                 Dim Result As String = Await (Await Client.PostAsync(New Uri("https://api.minecraftservices.com/minecraft/profile/skins"), Contents)).Content.ReadAsStringAsync
                 If Result.Contains("request requires user authentication") Then
-                    Hint("正在登录，将在登录完成后继续更改皮肤……")
+                    Hint(GetLang("LangPageLoginMsSkinLoginBeforeChangeSkin"))
                     McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
                     GoTo Retry
                 ElseIf Result.Contains("""error""") Then
-                    Hint("更改皮肤失败：" & GetJson(Result)("error").ToString, HintType.Critical)
+                    Hint(GetLang("LangPageLoginMsSkinChangeSkinFail") & ":" & GetJson(Result)("error").ToString, HintType.Critical)
                     Return
                 End If
                 '获取新皮肤地址
@@ -123,9 +123,9 @@ Retry:
                 Throw New Exception("未知错误（" & Result & "）")
             Catch ex As Exception
                 If ex.GetType.Equals(GetType(Tasks.TaskCanceledException)) Then
-                    Hint("更改皮肤失败：与 Mojang 皮肤服务器的连接超时，请检查你的网络是否通畅！", HintType.Critical)
+                    Hint(GetLang("LangPageLoginMsSkinChangeSkinFailByTimeOut"), HintType.Critical)
                 Else
-                    Log(ex, "更改皮肤失败", LogLevel.Hint)
+                    Log(ex, GetLang("LangPageLoginMsSkinChangeSkinFail"), LogLevel.Hint)
                 End If
             Finally
                 IsChanging = False

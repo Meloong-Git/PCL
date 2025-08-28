@@ -7,7 +7,7 @@
         Dim IndexBefore = ComboAccounts.SelectedIndex
         '刷新下拉框列表
         ComboAccounts.Items.Clear()
-        ComboAccounts.Items.Add(New MyComboBoxItem With {.Content = "添加新账号"})
+        ComboAccounts.Items.Add(New MyComboBoxItem With {.Content = GetLang("LangPageLoginMsAddAccount")})
         Try
             Dim MsJson As JObject = GetJson(Setup.Get("LoginMsJson"))
             For Each Account In MsJson
@@ -55,7 +55,7 @@
     ''' </summary>
     Public Shared Function IsVaild(LoginData As McLoginMs) As String
         If LoginData.OAuthRefreshToken = "" Then
-            Return "请在登录账号后再启动游戏！"
+            Return GetLang("LangPageLoginMsAddAccountBeforeStart")
         Else
             Return ""
         End If
@@ -86,22 +86,22 @@
                     Throw New Exception(McLoginMsLoader.Error.Message, McLoginMsLoader.Error)
                 End If
             Catch ex As ThreadInterruptedException
-                Hint("已取消登录！")
+                Hint(GetLang("LangPageLoginMsAddAccountCancel"))
             Catch ex As Exception
                 If ex.Message = "$$" Then
                 ElseIf ex.Message.StartsWith("$") Then
                     Hint(ex.Message.TrimStart("$"), HintType.Critical)
                 ElseIf TypeOf ex Is Security.Authentication.AuthenticationException AndAlso ex.Message.ContainsF("SSL/TLS") Then
-                    Log(ex, "正版登录验证失败，请考虑在 [设置 → 其他] 中关闭 [在正版登录时验证 SSL 证书]，然后再试。" & vbCrLf & vbCrLf & "原始错误信息：", LogLevel.Msgbox)
+                    Log(ex, GetLang("LangPageLoginMsAddAccountFailA"), LogLevel.Msgbox)
                 Else
-                    Log(ex, "正版登录尝试失败", LogLevel.Msgbox)
+                    Log(ex, GetLang("LangPageLoginMsAddAccountFailB"), LogLevel.Msgbox)
                 End If
             Finally
                 RunInUi(
                 Sub()
                     ComboAccounts.IsEnabled = True
                     BtnLogin.IsEnabled = True
-                    BtnLogin.Text = "登录"
+                    BtnLogin.Text = GetLang("LangPageLoginMsLogin")
                 End Sub)
             End Try
         End Sub, "Ms Login")

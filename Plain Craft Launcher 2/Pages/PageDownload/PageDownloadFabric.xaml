@@ -6,22 +6,22 @@
     PanScroll="{Binding ElementName=PanBack}">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel Orientation="Vertical" Margin="5">
-            <local:MyCard Margin="20,20,20,0" Grid.IsSharedSizeScope="True" Title="Fabric 简介" x:Name="CardTip">
+            <local:MyCard Margin="20,20,20,0" Grid.IsSharedSizeScope="True" Title="{StaticResource LangDownloadFabricDescTitle}" x:Name="CardTip">
                 <StackPanel Margin="25,40,15,20">
-                    <TextBlock Margin="0,0,0,11" Text="Fabric Loader 是新版 Minecraft 下的轻量化 Mod 加载器，你需要先安装它才能安装各种 Fabric 模组。&#xa;本页面提供 Fabric 安装器下载，在下载后你需要手动打开安装器进行安装。" TextWrapping="Wrap" />
+                    <TextBlock Margin="0,0,0,11" Text="{StaticResource LangDownloadFabricDesc}" TextWrapping="Wrap" />
                     <Grid Height="35">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnWeb" Grid.Column="0" MinWidth="140" Text="打开官网" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
+                        <local:MyButton x:Name="BtnWeb" Grid.Column="0" MinWidth="140" Text="{StaticResource LangDownloadFabricWebsite}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard x:Name="CardVersions" Margin="20,15,20,20" Title="版本列表">
+            <local:MyCard x:Name="CardVersions" Margin="20,15,20,20" Title="{StaticResource LangDownloadFabricVersionList}">
                 <StackPanel x:Name="PanVersions" Margin="20,40,18,20" />
             </local:MyCard>
             <local:MyCard HorizontalAlignment="Center" SnapsToDevicePixels="True" x:Name="PanLoad" UseAnimation="False" Margin="40,50">
-                <local:MyLoading Text="正在获取 Fabric 列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <local:MyLoading Text="{StaticResource LangDownloadFabricGettingList}" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
             </local:MyCard>
         </StackPanel>
     </local:MyScrollViewer>

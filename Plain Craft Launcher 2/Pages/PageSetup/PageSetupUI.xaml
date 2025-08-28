@@ -6,7 +6,7 @@
     PanScroll="{Binding ElementName=PanBack}">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel x:Name="PanMain" Margin="25,10">
-            <local:MyCard Margin="0,15" Title="基础" x:Name="CardLauncher">
+            <local:MyCard Margin="0,15" Title="{StaticResource LangSetTheme}" x:Name="CardLauncher">
                 <Grid Margin="25,40,25,17">
                     <StackPanel>
                         <Grid Margin="0,0,0,6">
@@ -22,15 +22,15 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="不透明度" Margin="0,0,20,0" />
+                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetThemeOpacity}" Margin="0,0,20,0" />
                             <local:MySlider Grid.ColumnSpan="5" x:Name="SliderLauncherOpacity" Tag="UiLauncherTransparent" MaxValue="600" ValueByKey="10" Grid.Column="1" />
-                            <TextBlock Grid.Row="1" VerticalAlignment="Center" Name="LabLauncherHue" Visibility="Collapsed" HorizontalAlignment="Left" Text="色调" Margin="0,10,20,0" />
+                            <TextBlock Grid.Row="1" VerticalAlignment="Center" Name="LabLauncherHue" Visibility="Collapsed" HorizontalAlignment="Left" Text="{StaticResource LangSetThemeHue}" Margin="0,10,20,0" />
                             <local:MySlider Grid.Row="1" Grid.Column="1" x:Name="SliderLauncherHue" Tag="UiLauncherHue" Visibility="Collapsed" MaxValue="360" ValueByKey="10" Margin="0,10,0,0" />
-                            <TextBlock Grid.Row="2" VerticalAlignment="Center" Name="LabLauncherDelta" Visibility="Collapsed" HorizontalAlignment="Left" Text="色调渐变" Margin="0,10,20,0" />
+                            <TextBlock Grid.Row="2" VerticalAlignment="Center" Name="LabLauncherDelta" Visibility="Collapsed" HorizontalAlignment="Left" Text="{StaticResource LangSetThemeToneGradient}" Margin="0,10,20,0" />
                             <local:MySlider Grid.Row="2" Grid.Column="1" x:Name="SliderLauncherDelta" Tag="UiLauncherDelta" Visibility="Collapsed" MaxValue="180" ValueByKey="5" Margin="0,10,0,0" />
-                            <TextBlock Grid.Row="1" Grid.Column="3" VerticalAlignment="Center" Name="LabLauncherSat" Visibility="Collapsed" HorizontalAlignment="Left" Text="饱和度" Margin="0,10,20,0" />
+                            <TextBlock Grid.Row="1" Grid.Column="3" VerticalAlignment="Center" Name="LabLauncherSat" Visibility="Collapsed" HorizontalAlignment="Left" Text="{StaticResource LangSetThemeSaturation}" Margin="0,10,20,0" />
                             <local:MySlider Grid.Row="1" Grid.Column="4" x:Name="SliderLauncherSat" Tag="UiLauncherSat" Visibility="Collapsed" MaxValue="100" ValueByKey="5" Margin="0,10,0,0" />
-                            <TextBlock Grid.Row="2" Grid.Column="3" VerticalAlignment="Center" Name="LabLauncherLight" Visibility="Collapsed" HorizontalAlignment="Left" Text="亮度" Margin="0,10,20,0" />
+                            <TextBlock Grid.Row="2" Grid.Column="3" VerticalAlignment="Center" Name="LabLauncherLight" Visibility="Collapsed" HorizontalAlignment="Left" Text="{StaticResource LangSetThemeBrightness}" Margin="0,10,20,0" />
                             <local:MySlider Grid.Row="2" Grid.Column="4" x:Name="SliderLauncherLight" Tag="UiLauncherLight" Visibility="Collapsed" MaxValue="40" ValueByKey="5" Margin="0,10,0,0" />
                         </Grid>
                         <Grid x:Name="PanLauncherTheme" Height="90" Margin="0,0,0,7">
@@ -47,57 +47,57 @@
                                 <RowDefinition />
                                 <RowDefinition />
                             </Grid.RowDefinitions>
-                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="主题" Margin="0,0,20,0" />
-                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="隐藏主题" Margin="0,0,20,0" Grid.Row="1" />
-                            <local:MyRadioBox Grid.Column="1" Grid.Row="0" Text="龙猫蓝" x:Name="RadioLauncherTheme0" Tag="UiLauncherTheme/0" />
-                            <local:MyRadioBox Grid.Column="2" Grid.Row="0" Text="甜柠青" x:Name="RadioLauncherTheme1" Tag="UiLauncherTheme/1" />
-                            <local:MyRadioBox Grid.Column="3" Grid.Row="0" Text="小草绿" x:Name="RadioLauncherTheme2" Tag="UiLauncherTheme/2" />
-                            <local:MyRadioBox Grid.Column="4" Grid.Row="0" Text="菠萝黄" x:Name="RadioLauncherTheme3" Tag="UiLauncherTheme/3" />
-                            <local:MyRadioBox Grid.Column="5" Grid.Row="0" Text="橡木棕" x:Name="RadioLauncherTheme4" Tag="UiLauncherTheme/4" />
-                            <local:MyRadioBox Grid.Column="1" Grid.Row="1" Text="玄素黑" x:Name="RadioLauncherTheme5" Tag="UiLauncherTheme/5" Opacity="0" ToolTip="灰色是个谎言" ToolTipService.Placement="Bottom" />
+                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetThemeTitle}" Margin="0,0,20,0" />
+                            <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetThemeHiddenTitle}" Margin="0,0,20,0" Grid.Row="1" />
+                            <local:MyRadioBox Grid.Column="1" Grid.Row="0" Text="{StaticResource LangSetThemeNameBlue}" x:Name="RadioLauncherTheme0" Tag="UiLauncherTheme/0" />
+                            <local:MyRadioBox Grid.Column="2" Grid.Row="0" Text="{StaticResource LangSetThemeNameCyan}" x:Name="RadioLauncherTheme1" Tag="UiLauncherTheme/1" />
+                            <local:MyRadioBox Grid.Column="3" Grid.Row="0" Text="{StaticResource LangSetThemeNameGreen}" x:Name="RadioLauncherTheme2" Tag="UiLauncherTheme/2" />
+                            <local:MyRadioBox Grid.Column="4" Grid.Row="0" Text="{StaticResource LangSetThemeNameYellow}" x:Name="RadioLauncherTheme3" Tag="UiLauncherTheme/3" />
+                            <local:MyRadioBox Grid.Column="5" Grid.Row="0" Text="{StaticResource LangSetThemeNameBrown}" x:Name="RadioLauncherTheme4" Tag="UiLauncherTheme/4" />
+                            <local:MyRadioBox Grid.Column="1" Grid.Row="1" Text="{StaticResource LangSetThemeNameBlack}" x:Name="RadioLauncherTheme5" Tag="UiLauncherTheme/5" Opacity="0" ToolTip="{StaticResource LangSetThemeNameGreyToolTip}" ToolTipService.Placement="Bottom" />
                             <local:MyRadioBox Grid.Column="1" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme5Gray" IsEnabled="False" Opacity="1" />
-                            <TextBlock Grid.Column="1" Grid.Row="1" x:Name="LabLauncherTheme5Unlock" Background="{StaticResource ColorBrushSemiTransparent}" ToolTip="灰色是个谎言" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="2" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme12" Tag="UiLauncherTheme/12" IsEnabled="False" ToolTip="滑稽树上滑稽果，滑稽树下你和我，滑稽之日搞事情，欢乐多又多" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="3" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme6" Tag="UiLauncherTheme/6" IsEnabled="False" ToolTip="99 次重逢的喜悦" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
+                            <TextBlock Grid.Column="1" Grid.Row="1" x:Name="LabLauncherTheme5Unlock" Background="{StaticResource ColorBrushSemiTransparent}" ToolTip="{StaticResource LangSetThemeNameGreyToolTip}" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox Grid.Column="2" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme12" Tag="UiLauncherTheme/12" IsEnabled="False" ToolTip="{StaticResource LangSetThemeNameFunny}" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox Grid.Column="3" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme6" Tag="UiLauncherTheme/6" IsEnabled="False" ToolTip="{StaticResource LangSetThemeNameHardcoreFan}" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
                             <local:MyRadioBox Grid.Column="4" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme7" Tag="UiLauncherTheme/7" IsEnabled="False" ToolTip="072 101 108 112 032 068 101 118 032 048 046 052 046 052" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="5" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme13" Tag="UiLauncherTheme/13" IsEnabled="False" ToolTip="这就是传说中的欧皇了吧" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox Grid.Column="5" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme13" Tag="UiLauncherTheme/13" IsEnabled="False" ToolTip="{StaticResource LangSetThemeNameLucky}" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
                             <local:MyRadioBox Grid.Column="1" Grid.Row="2" Text="？？？" x:Name="RadioLauncherTheme8" Tag="UiLauncherTheme/8" IsEnabled="False" ToolTipService.Placement="Bottom" />
                             <TextBlock Grid.Column="1" Grid.Row="2" x:Name="LabLauncherTheme8Copy" Background="{StaticResource ColorBrushSemiTransparent}" ToolTipService.Placement="Bottom" />
                             <local:MyRadioBox Grid.Column="2" Grid.Row="2" Text="？？？" x:Name="RadioLauncherTheme9" Tag="UiLauncherTheme/9" IsEnabled="False" ToolTipService.Placement="Bottom" />
                             <TextBlock Grid.Column="2" Grid.Row="2" x:Name="LabLauncherTheme9Copy" Background="{StaticResource ColorBrushSemiTransparent}" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="3" Grid.Row="2" Text="？？？" x:Name="RadioLauncherTheme10" Tag="UiLauncherTheme/10" IsEnabled="False" ToolTip="进行一次正版登录，支持正版游戏！" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="4" Grid.Row="2" Text="？？？" x:Name="RadioLauncherTheme11" Tag="UiLauncherTheme/11" IsEnabled="False" ToolTipService.Placement="Bottom" ToolTip="右键打开解密游戏入口" />
+                            <local:MyRadioBox Grid.Column="3" Grid.Row="2" Text="？？？" x:Name="RadioLauncherTheme10" Tag="UiLauncherTheme/10" IsEnabled="False" ToolTip="{StaticResource LangSetThemeNameMojang}" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox Grid.Column="4" Grid.Row="2" Text="？？？" x:Name="RadioLauncherTheme11" Tag="UiLauncherTheme/11" IsEnabled="False" ToolTipService.Placement="Bottom" ToolTip="{StaticResource LangSetThemeNameGeekToolTip}" />
                             <TextBlock Grid.Column="4" Grid.Row="2" x:Name="LabLauncherTheme11Click" Background="{StaticResource ColorBrushSemiTransparent}" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="5" Grid.Row="2" Text="自定义" x:Name="RadioLauncherTheme14" Tag="UiLauncherTheme/14" IsEnabled="False" ToolTipService.Placement="Bottom" ToolTip="需要解锁五个隐藏主题" ToolTipService.ShowOnDisabled="True" />
+                            <local:MyRadioBox Grid.Column="5" Grid.Row="2" Text="{StaticResource LangSetThemeNameCustom}" x:Name="RadioLauncherTheme14" Tag="UiLauncherTheme/14" IsEnabled="False" ToolTipService.Placement="Bottom" ToolTip="{StaticResource LangSetThemeNameCustomToolTip}" ToolTipService.ShowOnDisabled="True" />
                         </Grid>
-                        <local:MyCheckBox Text="打开启动器时显示 PCL 图标" Margin="-1,0,0,1" Height="22" x:Name="CheckLauncherLogo" Tag="UiLauncherLogo" />
+                        <local:MyCheckBox Text="{StaticResource LangSetThemeShowLogoOnStart}" Margin="-1,0,0,1" Height="22" x:Name="CheckLauncherLogo" Tag="UiLauncherLogo" />
                     </StackPanel>
                     <Border Background="#DDDDDDDD" Margin="-8,23,-5,28" CornerRadius="4" Name="PanLauncherHide" Visibility="Collapsed">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock Text="如果可以小小赞助一下 PCL，就能解锁主题颜色更换功能啦……&#xa;多亏了大家的支持，PCL 才能在免费、无任何广告的情况下维持数年的更新（磕头）！" FontSize="13" Margin="0,0,0,0" />
-                            <local:MyButton Height="32" x:Name="BtnLauncherDonate" MinWidth="140" Text="支持 PCL 开发！" Padding="13,0" HorizontalAlignment="Center" Margin="0,9,0,0" ColorType="Highlight" />
+                            <TextBlock Text="{StaticResource LangSetThemeSponsorship}" FontSize="13" Margin="0,0,0,0" />
+                            <local:MyButton Height="32" x:Name="BtnLauncherDonate" MinWidth="140" Text="{StaticResource LangSetThemeSupport}" Padding="13,0" HorizontalAlignment="Center" Margin="0,9,0,0" ColorType="Highlight" />
                         </StackPanel>
                     </Border>
                 </Grid>
             </local:MyCard>
-            <local:MyCard x:Name="CardBackground" Margin="0,0,0,15" Title="背景图片">
+            <local:MyCard x:Name="CardBackground" Margin="0,0,0,15" Title="{StaticResource LangSetBackgroundPic}">
                 <StackPanel Margin="25,40,25,20">
                     <Grid x:Name="PanBackgroundSuit" Height="28" Margin="0,0,0,10" Visibility="Collapsed">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="自适应方式" Margin="0,0,25,0" />
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetBackgroundPicAdaptive}" Margin="0,0,25,0" />
                         <local:MyComboBox x:Name="ComboBackgroundSuit" Tag="UiBackgroundSuit" Grid.Column="1">
-                            <local:MyComboBoxItem Content="智能" IsSelected="True" ToolTip="当图片较小时选择平铺，较大时选择适应" />
-                            <local:MyComboBoxItem Content="居中" />
-                            <local:MyComboBoxItem Content="适应" ToolTip="拉伸图片并保持长宽比不变，直至填满整个窗口" />
-                            <local:MyComboBoxItem Content="拉伸" ToolTip="拉伸图片使其恰好填满整个窗口，很可能会导致长宽比的改变" />
-                            <local:MyComboBoxItem Content="平铺" />
-                            <local:MyComboBoxItem Content="居于左上" />
-                            <local:MyComboBoxItem Content="居于右上" />
-                            <local:MyComboBoxItem Content="居于左下" />
-                            <local:MyComboBoxItem Content="居于右下" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetBackgroundPicAdaptiveAuto}" IsSelected="True" ToolTip="{StaticResource LangSetBackgroundPicAdaptiveAutoToolTip}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetBackgroundPicAdaptiveCentered}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetBackgroundPicAdaptiveAdapt}" ToolTip="{StaticResource LangSetBackgroundPicAdaptiveAdaptToolTip}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetBackgroundPicAdaptiveStretch}" ToolTip="{StaticResource LangSetBackgroundPicAdaptiveStretchToolTip}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetBackgroundPicAdaptiveTile}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetBackgroundPicAdaptivePosA}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetBackgroundPicAdaptivePosB}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetBackgroundPicAdaptivePosC}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetBackgroundPicAdaptivePosD}" />
                         </local:MyComboBox>
                     </Grid>
                     <Grid x:Name="PanBackgroundOpacity" Height="22" Margin="0,0,0,7" Visibility="Collapsed">
@@ -105,7 +105,7 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="不透明度" Margin="0,0,25,0" />
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetThemeOpacity}" Margin="0,0,25,0" />
                         <local:MySlider x:Name="SliderBackgroundOpacity" Tag="UiBackgroundOpacity" MaxValue="1000" ValueByKey="10" Grid.Column="1" />
                     </Grid>
                     <Grid x:Name="PanBackgroundBlur" Height="22" Margin="0,0,0,10" Visibility="Collapsed">
@@ -113,37 +113,37 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="背景模糊" Margin="0,0,25,0" />
-                        <local:MySlider x:Name="SliderBackgroundBlur" Tag="UiBackgroundBlur" MaxValue="40" Grid.Column="1" ToolTip="较强的模糊会导致启动器严重掉帧，请谨慎使用。&#13;不建议在制作整合包时开启模糊，以确保 PCL 在低性能电脑上可以流畅运行。" />
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetBackgroundPicBlur}" Margin="0,0,25,0" />
+                        <local:MySlider x:Name="SliderBackgroundBlur" Tag="UiBackgroundBlur" MaxValue="40" Grid.Column="1" ToolTip="{StaticResource LangSetBackgroundPicBlurToolTip}" />
                     </Grid>
-                    <local:MyCheckBox Text="叠加彩色背景" Margin="-1,0,0,8" Height="22" x:Name="CheckBackgroundColorful" Tag="UiBackgroundColorful" />
+                    <local:MyCheckBox Text="{StaticResource LangSetBackgroundPicColorfulBack}" Margin="-1,0,0,8" Height="22" x:Name="CheckBackgroundColorful" Tag="UiBackgroundColorful" />
                     <Grid Height="35" Margin="0,2,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnBackgroundOpen" MinWidth="140" Text="打开文件夹" Padding="13,0" Margin="0,0,20,0" ToolTip="将背景图片放到该文件夹，PCL 将会在每次打开时随机加载其中的一张图片"/>
-                        <local:MyButton x:Name="BtnBackgroundRefresh" MinWidth="140" Text="刷新背景图片" Padding="13,0" Margin="0,0,20,0" ToolTip="随机加载文件夹内的一张背景图片" Grid.Column="1"/>
-                        <local:MyButton x:Name="BtnBackgroundClear" MinWidth="140" Text="清空背景图片" Visibility="Collapsed" Padding="13,0" Margin="0,0,20,0" ColorType="Red" Grid.Column="2"/>
+                        <local:MyButton x:Name="BtnBackgroundOpen" MinWidth="140" Text="{StaticResource LangSetOpenFolder}" Padding="13,0" Margin="0,0,20,0" ToolTip="{StaticResource LangSetBackgroundPicOpenFolderToolTip}"/>
+                        <local:MyButton x:Name="BtnBackgroundRefresh" MinWidth="140" Text="{StaticResource LangSetBackgroundPicRefresh}" Padding="13,0" Margin="0,0,20,0" ToolTip="{StaticResource LangSetBackgroundPicRefreshToolTip}" Grid.Column="1"/>
+                        <local:MyButton x:Name="BtnBackgroundClear" MinWidth="140" Text="{StaticResource LangSetBackgroundPicEmpty}" Visibility="Collapsed" Padding="13,0" Margin="0,0,20,0" ColorType="Red" Grid.Column="2"/>
                     </Grid>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard x:Name="CardMusic" Margin="0,0,0,15" Title="背景音乐">
+            <local:MyCard x:Name="CardMusic" Margin="0,0,0,15" Title="{StaticResource LangSetBackgroundMusicTitle}">
                 <StackPanel Margin="25,42,25,20">
                     <Grid x:Name="PanMusicVolume" Visibility="Collapsed" Height="22" Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="音量" Margin="0,0,25,0" />
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetBackgroundMusicVolume}" Margin="0,0,25,0" />
                         <local:MySlider x:Name="SliderMusicVolume" Tag="UiMusicVolume" MaxValue="1000" ValueByKey="10" Grid.Column="1" />
                     </Grid>
                     <StackPanel x:Name="PanMusicDetail" Visibility="Collapsed" Margin="-1,0,0,3">
-                        <local:MyCheckBox Text="随机播放" Margin="0,0,0,5" Height="22" x:Name="CheckMusicRandom" Tag="UiMusicRandom" />
-                        <local:MyCheckBox Text="打开启动器自动开始播放" Margin="0,0,0,5" Height="22" x:Name="CheckMusicAuto" Tag="UiMusicAuto" />
-                        <local:MyCheckBox Text="游戏启动后自动开始播放，游戏退出后自动暂停播放" Margin="0,0,0,5" Height="22" x:Name="CheckMusicStart" Tag="UiMusicStart" />
-                        <local:MyCheckBox Text="游戏启动后自动暂停播放，游戏退出后自动开始播放" Margin="0,0,0,5" Height="22" x:Name="CheckMusicStop" Tag="UiMusicStop" />
+                        <local:MyCheckBox Text="{StaticResource LangSetBackgroundMusicPlayRandom}" Margin="0,0,0,5" Height="22" x:Name="CheckMusicRandom" Tag="UiMusicRandom" />
+                        <local:MyCheckBox Text="{StaticResource LangSetBackgroundMusicPlayOnStart}" Margin="0,0,0,5" Height="22" x:Name="CheckMusicAuto" Tag="UiMusicAuto" />
+                        <local:MyCheckBox Text="{StaticResource LangSetBackgroundMusicPlayDuringGaming}" Margin="0,0,0,5" Height="22" x:Name="CheckMusicStart" Tag="UiMusicStart" />
+                        <local:MyCheckBox Text="{StaticResource LangSetBackgroundMusicPlayDuringLaunching}" Margin="0,0,0,5" Height="22" x:Name="CheckMusicStop" Tag="UiMusicStop" />
                     </StackPanel>
                     <Grid Height="35">
                         <Grid.ColumnDefinitions>
@@ -151,13 +151,13 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnMusicOpen" Text="打开文件夹" MinWidth="140" Padding="13,0" Margin="0,0,20,0" ToolTip="将背景音乐放到该文件夹，PCL 将会播放其中的所有音乐"/>
-                        <local:MyButton x:Name="BtnMusicRefresh" Text="刷新背景音乐" MinWidth="140" Padding="13,0" Margin="0,0,20,0" ToolTip="刷新播放列表，并播放列表中的音乐" Grid.Column="1"/>
-                        <local:MyButton x:Name="BtnMusicClear" Text="清空背景音乐" MinWidth="140" Visibility="Collapsed" Padding="13,0" Margin="0,0,20,0" ColorType="Red" Grid.Column="2"/>
+                        <local:MyButton x:Name="BtnMusicOpen" Text="{StaticResource LangSetOpenFolder}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" ToolTip="{StaticResource LangSetBackgroundMusicOpenFolderToolTip}"/>
+                        <local:MyButton x:Name="BtnMusicRefresh" Text="{StaticResource LangSetBackgroundMusicRefresh}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" ToolTip="{StaticResource LangSetBackgroundMusicRefreshToolTip}" Grid.Column="1"/>
+                        <local:MyButton x:Name="BtnMusicClear" Text="{StaticResource LangSetBackgroundMusicEmpty}" MinWidth="140" Visibility="Collapsed" Padding="13,0" Margin="0,0,20,0" ColorType="Red" Grid.Column="2"/>
                     </Grid>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard x:Name="CardLogo" Margin="0,0,0,15" Title="标题栏">
+            <local:MyCard x:Name="CardLogo" Margin="0,0,0,15" Title="{StaticResource LangSetTitle}">
                 <StackPanel Margin="25,40,25,15">
                     <Grid Margin="-1,0,0,0">
                         <Grid.ColumnDefinitions>
@@ -167,18 +167,18 @@
                             <ColumnDefinition Width="1*" />
                             <ColumnDefinition Width="0.2*" />
                         </Grid.ColumnDefinitions>
-                        <local:MyRadioBox Text="无" x:Name="RadioLogoType0" Height="22" Tag="UiLogoType/0" Grid.Column="0" />
-                        <local:MyRadioBox Text="默认" x:Name="RadioLogoType1" Height="22" Tag="UiLogoType/1" Grid.Column="1" />
-                        <local:MyRadioBox Text="文本" x:Name="RadioLogoType2" Height="22" Tag="UiLogoType/2" Grid.Column="2" />
-                        <local:MyRadioBox Text="图片" x:Name="RadioLogoType3" Height="22" Tag="UiLogoType/3" Grid.Column="3" />
+                        <local:MyRadioBox Text="{StaticResource LangSetNone}" x:Name="RadioLogoType0" Height="22" Tag="UiLogoType/0" Grid.Column="0" />
+                        <local:MyRadioBox Text="{StaticResource LangSetDefault}" x:Name="RadioLogoType1" Height="22" Tag="UiLogoType/1" Grid.Column="1" />
+                        <local:MyRadioBox Text="{StaticResource LangSetText}" x:Name="RadioLogoType2" Height="22" Tag="UiLogoType/2" Grid.Column="2" />
+                        <local:MyRadioBox Text="{StaticResource LangSetPicture}" x:Name="RadioLogoType3" Height="22" Tag="UiLogoType/3" Grid.Column="3" />
                     </Grid>
-                    <local:MyCheckBox Text="标题栏居左" Margin="-1,8,0,3" Height="22" x:Name="CheckLogoLeft" Tag="UiLogoLeft" Visibility="Collapsed" />
+                    <local:MyCheckBox Text="{StaticResource LangSetTitleLeft}" Margin="-1,8,0,3" Height="22" x:Name="CheckLogoLeft" Tag="UiLogoLeft" Visibility="Collapsed" />
                     <Grid x:Name="PanLogoText" Margin="0,14,0,5" Visibility="Collapsed">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="标题栏文本" Margin="0,0,25,0" />
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetTitleContent}" Margin="0,0,25,0" />
                         <local:MyTextBox x:Name="TextLogoText" Tag="UiLogoText" Grid.Column="1" MaxLength="100" />
                     </Grid>
                     <Grid x:Name="PanLogoChange" Margin="0,14,0,5" Height="35" Visibility="Collapsed">
@@ -186,12 +186,12 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnLogoChange" Text="更改图片" MinWidth="140" Padding="13,0" Margin="0,0,20,0" />
-                        <local:MyButton x:Name="BtnLogoDelete" Text="清空图片" MinWidth="140" Padding="13,0" Margin="0,0,20,0" ColorType="Red" Grid.Column="1" />
+                        <local:MyButton x:Name="BtnLogoChange" Text="{StaticResource LangSetTitlePicChange}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" />
+                        <local:MyButton x:Name="BtnLogoDelete" Text="{StaticResource LangSetTitlePicEmpty}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" ColorType="Red" Grid.Column="1" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="主页" x:Name="CardCustom">
+            <local:MyCard Margin="0,0,0,15" Title="{StaticResource LangSetHomePageTitle}" x:Name="CardCustom">
                 <StackPanel Margin="25,40,25,15">
                     <Grid Margin="-1,0,0,0">
                         <Grid.ColumnDefinitions>
@@ -201,13 +201,13 @@
                             <ColumnDefinition Width="1*" />
                             <ColumnDefinition Width="0.2*" />
                         </Grid.ColumnDefinitions>
-                        <local:MyRadioBox Text="空白" x:Name="RadioCustomType0" Height="22" Tag="UiCustomType/0" Grid.Column="0" />
-                        <local:MyRadioBox Text="预设" x:Name="RadioCustomType3" Height="22" Tag="UiCustomType/3" Grid.Column="1" />
-                        <local:MyRadioBox Text="读取本地文件" x:Name="RadioCustomType1" Height="22" Tag="UiCustomType/1" Grid.Column="2" />
-                        <local:MyRadioBox Text="联网更新" x:Name="RadioCustomType2" Height="22" Tag="UiCustomType/2" Grid.Column="3" />
+                        <local:MyRadioBox Text="{StaticResource LangSetHomePageEmpty}" x:Name="RadioCustomType0" Height="22" Tag="UiCustomType/0" Grid.Column="0" />
+                        <local:MyRadioBox Text="{StaticResource LangSetHomePagePreset}" x:Name="RadioCustomType3" Height="22" Tag="UiCustomType/3" Grid.Column="1" />
+                        <local:MyRadioBox Text="{StaticResource LangSetHomePageLocal}" x:Name="RadioCustomType1" Height="22" Tag="UiCustomType/1" Grid.Column="2" />
+                        <local:MyRadioBox Text="{StaticResource LangSetHomePageOnline}" x:Name="RadioCustomType2" Height="22" Tag="UiCustomType/2" Grid.Column="3" />
                     </Grid>
-                    <local:MyHint Margin="0,15,0,-4" Text="内容见 ModSetup" Theme="Blue" x:Name="HintCustom" />
-                    <local:MyHint Margin="0,15,0,6" Text="请谨慎使用陌生人提供的主页，恶意代码可能会造成损害！" Theme="Yellow" x:Name="HintCustomWarn" 
+                    <local:MyHint Margin="0,15,0,-4" Text="See NodSetup.vb" Theme="Blue" x:Name="HintCustom" />
+                    <local:MyHint Margin="0,15,0,6" Text="{StaticResource LangSetHomePageCustomWarn}" Theme="Yellow" x:Name="HintCustomWarn" 
                                   CanClose="True" RelativeSetup="HintCustomWarn" />
                     <Grid Height="35" x:Name="PanCustomLocal" Visibility="Collapsed" Margin="0,10,0,5">
                         <Grid.ColumnDefinitions>
@@ -215,16 +215,16 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnCustomRefresh" Grid.Column="0" MinWidth="140" Text="刷新主页" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
-                        <local:MyButton x:Name="BtnCustomFile" Grid.Column="1" MinWidth="140" Text="生成教学文件" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
-                        <local:MyButton x:Name="BtnCustomTutorial" Grid.Column="2" MinWidth="140" Text="查看教程" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnCustomRefresh" Grid.Column="0" MinWidth="140" Text="{StaticResource LangSetHomePageRefresh}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
+                        <local:MyButton x:Name="BtnCustomFile" Grid.Column="1" MinWidth="140" Text="{StaticResource LangSetHomePageReleaseTeachFile}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnCustomTutorial" Grid.Column="2" MinWidth="140" Text="{StaticResource LangSetHomePageSeeDoc}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
                     </Grid>
                     <Grid x:Name="PanCustomNet" Visibility="Collapsed" Margin="0,10,0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="下载地址" Margin="0,0,25,0" />
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetHomePageDownload}" Margin="0,0,25,0" />
                         <local:MyTextBox x:Name="TextCustomNet" Tag="UiCustomNet" Grid.Column="1" MaxHeight="28">
                             <local:MyTextBox.ValidateRules>
                                 <local:ValidateNullable />
@@ -237,28 +237,28 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="主页预设" Margin="0,0,25,0" />
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetHomePagePresetPage}" Margin="0,0,25,0" />
                         <local:MyComboBox x:Name="ComboCustomPreset" Grid.ColumnSpan="2" Tag="UiCustomPreset" Grid.Column="1">
-                            <local:MyComboBoxItem Content="你知道吗？" IsSelected="True" />
-                            <local:MyComboBoxItem Content="回声洞" />
-                            <local:MyComboBoxItem Content="Minecraft 新闻（作者：最亮的信标）" />
-                            <local:MyComboBoxItem Content="简单主页（作者：MFn233）" />
-                            <local:MyComboBoxItem Content="每日整合包推荐（作者：wkea）" />
-                            <local:MyComboBoxItem Content="Minecraft 皮肤推荐（作者：wkea）" />
-                            <local:MyComboBoxItem Content="OpenBMCLAPI 仪表盘 Lite（作者：Silverteal、Mxmilu666）" />
-                            <local:MyComboBoxItem Content="PCL 主页市场（作者：凌云）" />
-                            <local:MyComboBoxItem Content="PCL 新闻速报（作者：Joker2184）" />
-                            <local:MyComboBoxItem Content="PCL 新功能说明书（作者：WForst-Breeze）" />
-                            <local:MyComboBoxItem Content="OpenMCIM 仪表盘（作者：SALTWOOD）" Visibility="Collapsed" />
-                            <local:MyComboBoxItem Content="杂志主页（作者：CreeperIsASpy）" />
-                            <local:MyComboBoxItem Content="PCL GitHub 仪表盘（作者：Deep-Dark-Forest）" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageA}" IsSelected="True" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageB}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageC}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageD}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageE}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageF}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageG}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageH}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageI}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageJ}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageK}" Visibility="Collapsed" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageL}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangSetHomePagePresetPageM}" />
                         </local:MyComboBox>
                     </Grid>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard x:Name="CardSwitch" Margin="0,0,0,15" Title="功能隐藏">
+            <local:MyCard x:Name="CardSwitch" Margin="0,0,0,15" Title="{StaticResource LangSetFuncHidden}">
                 <StackPanel Margin="25,38,15,15">
-                    <TextBlock Margin="0,1,0,1" Text="你可以隐藏不需要的页面或关闭特定功能。在任意界面按 F12 可以暂时显示被隐藏的功能。" TextWrapping="Wrap" />
+                    <TextBlock Margin="0,1,0,1" Text="{StaticResource LangSetFuncHiddenToolTip}" TextWrapping="Wrap" />
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -277,27 +277,27 @@
                             <RowDefinition Height="30" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left" Text="主页面" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" Text="下载" x:Name="CheckHiddenPageDownload" Tag="UiHiddenPageDownload" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="3" Visibility="Collapsed" Text="联机" x:Name="CheckHiddenPageLink" Tag="UiHiddenPageLink" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="3" Text="设置" x:Name="CheckHiddenPageSetup" Tag="UiHiddenPageSetup" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="4" Text="更多" x:Name="CheckHiddenPageOther" Tag="UiHiddenPageOther" />
-                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="设置 子页面" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="2" Text="启动" x:Name="CheckHiddenSetupLaunch" Tag="UiHiddenSetupLaunch" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="3" Text="个性化" x:Name="CheckHiddenSetupUI" Tag="UiHiddenSetupUi" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4" Text="其他" x:Name="CheckHiddenSetupSystem" Tag="UiHiddenSetupSystem" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="5" Text="联机" x:Name="CheckHiddenSetupLink" Tag="UiHiddenSetupLink" Visibility="Collapsed" />
-                        <TextBlock Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left" Text="更多 子页面" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="2" Text="帮助" x:Name="CheckHiddenOtherHelp" Tag="UiHiddenOtherHelp" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="3" Text="关于与鸣谢" x:Name="CheckHiddenOtherAbout" Tag="UiHiddenOtherAbout" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="4" Text="百宝箱" x:Name="CheckHiddenOtherTest" Tag="UiHiddenOtherTest" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="5" Text="反馈" x:Name="CheckHiddenOtherFeedback" Tag="UiHiddenOtherFeedback" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="6" Text="新功能投票" x:Name="CheckHiddenOtherVote" Tag="UiHiddenOtherVote" />
-                        <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="特定功能" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="2" Text="邮箱隐藏" x:Name="CheckLauncherEmail" Tag="UiLauncherEmail" ToolTip="隐藏第三方登录的账号邮箱显示，以避免隐私泄露。&#xa;此选项的更改将在重启启动器后生效。" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="3" Text="版本管理" x:Name="CheckHiddenFunctionSelect" Tag="UiHiddenFunctionSelect" ToolTip="隐藏启动按钮下方的版本选择与版本设置入口。" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="4" Text="Mod 更新" x:Name="CheckHiddenFunctionModUpdate" Tag="UiHiddenFunctionModUpdate" ToolTip="禁止在 Mod 管理页面更新 Mod。" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="5" Text="功能隐藏" x:Name="CheckHiddenFunctionHidden" Tag="UiHiddenFunctionHidden" ToolTip="仅隐藏本选项卡，设置的禁用内容依然有效。&#xa;可以在保留个性化设置页面的情况下避免隐藏设置被修改。" />
+                        <TextBlock Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetFuncHiddenLaunch}" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" Text="{StaticResource LangSetFuncHiddenDownload}" x:Name="CheckHiddenPageDownload" Tag="UiHiddenPageDownload" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="3" Visibility="Collapsed" Text="{StaticResource LangSetFuncHiddenLink}" x:Name="CheckHiddenPageLink" Tag="UiHiddenPageLink" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="3" Text="{StaticResource LangSetFuncHiddenSettings}" x:Name="CheckHiddenPageSetup" Tag="UiHiddenPageSetup" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="4" Text="{StaticResource LangSetFuncHiddenMore}" x:Name="CheckHiddenPageOther" Tag="UiHiddenPageOther" />
+                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetFuncHiddenSettingsSubPage}" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="2" Text="{StaticResource LangSetFuncHiddenSettingsGame}" x:Name="CheckHiddenSetupLaunch" Tag="UiHiddenSetupLaunch" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="3" Text="{StaticResource LangSetFuncHiddenSettingsPersonalize}" x:Name="CheckHiddenSetupUI" Tag="UiHiddenSetupUi" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4" Text="{StaticResource LangSetFuncHiddenSettingsLaunch}" x:Name="CheckHiddenSetupSystem" Tag="UiHiddenSetupSystem" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="5" Text="{StaticResource LangSetFuncHiddenSettingsLink}" x:Name="CheckHiddenSetupLink" Tag="UiHiddenSetupLink" Visibility="Collapsed" />
+                        <TextBlock Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetFuncHiddenMoreSubPage}" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="2" Text="{StaticResource LangSetFuncHiddenMoreHelp}" x:Name="CheckHiddenOtherHelp" Tag="UiHiddenOtherHelp" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="3" Text="{StaticResource LangSetFuncHiddenMoreAbout}" x:Name="CheckHiddenOtherAbout" Tag="UiHiddenOtherAbout" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="4" Text="{StaticResource LangSetFuncHiddenMoreTool}" x:Name="CheckHiddenOtherTest" Tag="UiHiddenOtherTest" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="5" Text="{StaticResource LangSetFuncHiddenMoreFeedback}" x:Name="CheckHiddenOtherFeedback" Tag="UiHiddenOtherFeedback" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="6" Text="{StaticResource LangSetFuncHiddenMoreVote}" x:Name="CheckHiddenOtherVote" Tag="UiHiddenOtherVote" />
+                        <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangSetFuncHiddenSpecial}" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="2" Text="{StaticResource LangSetFuncHiddenSpecialEmail}" x:Name="CheckLauncherEmail" Tag="UiLauncherEmail" ToolTip="{StaticResource LangSetFuncHiddenSpecialEmailToolTip}" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="3" Text="{StaticResource LangSetFuncHiddenSpecialInstanceSetting}" x:Name="CheckHiddenFunctionSelect" Tag="UiHiddenFunctionSelect" ToolTip="{StaticResource LangSetFuncHiddenSpecialInstanceSettingToolTip}" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="4" Text="{StaticResource LangSetFuncHiddenSpecialModUpdate}" x:Name="CheckHiddenFunctionModUpdate" Tag="UiHiddenFunctionModUpdate" ToolTip="{StaticResource LangSetFuncHiddenSpecialModUpdateToolTip}" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="5" Text="{StaticResource LangSetFuncHiddenSpecialFuncHidden}" x:Name="CheckHiddenFunctionHidden" Tag="UiHiddenFunctionHidden" ToolTip="{StaticResource LangSetFuncHiddenSpecialFuncHiddenToolTip}" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>

@@ -66,14 +66,14 @@
             '清空当前
             PanMain.Children.Clear()
             '添加最新版本
-            Dim CardInfo As New MyCard With {.Title = "最新版本", .Margin = New Thickness(0, 0, 0, 15), .SwapType = 2}
+            Dim CardInfo As New MyCard With {.Title = GetLang("LangDownloadLatest"), .Margin = New Thickness(0, 0, 0, 15), .SwapType = 2}
             Dim TopestVersions As New List(Of JObject)
             Dim Release As JObject = Dict("正式版")(0).DeepClone()
-            Release("lore") = "最新正式版，发布于 " & Release("releaseTime").Value(Of Date).ToString("yyyy'/'MM'/'dd HH':'mm")
+            Release("lore") = GetLang("LangDownloadClientReleaseReleaseOn") & " " & GetLocalTimeFormat(Release("releaseTime").Value(Of Date))
             TopestVersions.Add(Release)
             If Dict("正式版")(0)("releaseTime").Value(Of Date) < Dict("预览版")(0)("releaseTime").Value(Of Date) Then
                 Dim Snapshot As JObject = Dict("预览版")(0).DeepClone()
-                Snapshot("lore") = "最新预览版，发布于 " & Snapshot("releaseTime").Value(Of Date).ToString("yyyy'/'MM'/'dd HH':'mm")
+                Snapshot("lore") = GetLang("LangDownloadClientBetaReleaseOn") & " " & GetLocalTimeFormat(Snapshot("releaseTime").Value(Of Date))
                 TopestVersions.Add(Snapshot)
             End If
             Dim PanInfo As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = TopestVersions}
@@ -84,7 +84,7 @@
             For Each Pair As KeyValuePair(Of String, List(Of JObject)) In Dict
                 If Not Pair.Value.Any() Then Continue For
                 '增加卡片
-                Dim NewCard As New MyCard With {.Title = Pair.Key & " (" & Pair.Value.Count & ")", .Margin = New Thickness(0, 0, 0, 15), .SwapType = 2}
+                Dim NewCard As New MyCard With {.Title = GetLangByWord(Pair.Key) & " (" & Pair.Value.Count & ")", .Margin = New Thickness(0, 0, 0, 15), .SwapType = 2}
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Pair.Value}
                 NewCard.Children.Add(NewStack)
                 NewCard.SwapControl = NewStack
@@ -102,7 +102,7 @@
 
     ''介绍栏
     'Private Sub BtnWeb_Click(sender As Object, e As EventArgs) Handles BtnWeb.Click
-    '    OpenWebsite("https://www.minecraft.net/zh-hans")
+    '    OpenWebsite("https://www.minecraft.net/")
     'End Sub
     'Private Sub BtnInstall_Click(sender As Object, e As EventArgs) Handles BtnInstall.Click
     '    FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadInstall)

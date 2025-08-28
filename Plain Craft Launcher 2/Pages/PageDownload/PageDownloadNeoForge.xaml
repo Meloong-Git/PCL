@@ -6,21 +6,21 @@
     PanScroll="{Binding ElementName=PanBack}">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel Orientation="Vertical" Margin="5">
-            <local:MyCard Margin="20,20,20,0" Grid.IsSharedSizeScope="True" Title="NeoForge 简介" x:Name="CardTip">
+            <local:MyCard Margin="20,20,20,0" Grid.IsSharedSizeScope="True" Title="{StaticResource LangDownloadNeoForgeDescTitle}" x:Name="CardTip">
                 <StackPanel Margin="25,40,15,20">
-                    <TextBlock Margin="0,0,0,11" Text="NeoForge 是 Minecraft 1.20.1+ 的 Mod 加载器，你需要先安装它才能安装各种 NeoForge 模组，它也兼容一些 Forge 模组。&#xa;本页面提供 NeoForge 安装器下载，在下载后你需要手动打开安装器进行安装。" TextWrapping="Wrap" />
+                    <TextBlock Margin="0,0,0,11" Text="{StaticResource LangDownloadNeoForgeDesc}" TextWrapping="Wrap" />
                     <Grid Height="35">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnWeb" Grid.Column="0" MinWidth="140" Text="打开官网" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight"
+                        <local:MyButton x:Name="BtnWeb" Grid.Column="0" MinWidth="140" Text="{StaticResource LangDownloadNeoForgeWebsite}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight"
                                         EventType="打开网页" EventData="https://neoforged.net/" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>
             <StackPanel Name="PanMain" Margin="20,15,20,5" Grid.IsSharedSizeScope="True" />
             <local:MyCard HorizontalAlignment="Center" SnapsToDevicePixels="True" x:Name="PanLoad" UseAnimation="False" Margin="40,50">
-                <local:MyLoading Text="正在获取 NeoForge 列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <local:MyLoading Text="{StaticResource LangDownloadNeoForgeGettingList}" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
             </local:MyCard>
         </StackPanel>
     </local:MyScrollViewer>

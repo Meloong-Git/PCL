@@ -124,7 +124,7 @@
         '控件转换
         Select Case Type
             Case 5
-                Dim LoadingPickaxe As New MyLoading With {.Text = "正在获取版本列表", .Margin = New Thickness(5)}
+                Dim LoadingPickaxe As New MyLoading With {.Text = GetLang("LangSelectGettingVersion"), .Margin = New Thickness(5)}
                 Dim Loader = New LoaderTask(Of String, List(Of DlForgeVersionEntry))("DlForgeVersion Main", AddressOf DlForgeVersionMain)
                 LoadingPickaxe.State = Loader
                 Loader.Start(Stack.Tag)

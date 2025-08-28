@@ -318,7 +318,7 @@
         If SelectedOptiFine Is Nothing Then
             BtnOptiFineClear.Visibility = Visibility.Collapsed
             ImgOptiFine.Visibility = Visibility.Collapsed
-            LabOptiFine.Text = If(OptiFineError, "可以添加")
+            LabOptiFine.Text = If(OptiFineError, GetLang("LangDownloadInstallClickToChose"))
             LabOptiFine.Foreground = ColorGray4
         Else
             BtnOptiFineClear.Visibility = Visibility.Visible
@@ -338,7 +338,7 @@
             If SelectedLiteLoader Is Nothing Then
                 BtnLiteLoaderClear.Visibility = Visibility.Collapsed
                 ImgLiteLoader.Visibility = Visibility.Collapsed
-                LabLiteLoader.Text = If(LiteLoaderError, "可以添加")
+                LabLiteLoader.Text = If(LiteLoaderError, GetLang("LangDownloadInstallClickToChose"))
                 LabLiteLoader.Foreground = ColorGray4
             Else
                 BtnLiteLoaderClear.Visibility = Visibility.Visible
@@ -355,7 +355,7 @@
         If SelectedForge Is Nothing Then
             BtnForgeClear.Visibility = Visibility.Collapsed
             ImgForge.Visibility = Visibility.Collapsed
-            LabForge.Text = If(ForgeError, "可以添加")
+            LabForge.Text = If(ForgeError, GetLang("LangDownloadInstallClickToChose"))
             LabForge.Foreground = ColorGray4
         Else
             BtnForgeClear.Visibility = Visibility.Visible
@@ -375,7 +375,7 @@
             If SelectedNeoForge Is Nothing Then
                 BtnNeoForgeClear.Visibility = Visibility.Collapsed
                 ImgNeoForge.Visibility = Visibility.Collapsed
-                LabNeoForge.Text = If(NeoForgeError, "可以添加")
+                LabNeoForge.Text = If(NeoForgeError, GetLang("LangDownloadInstallClickToChose"))
                 LabNeoForge.Foreground = ColorGray4
             Else
                 BtnNeoForgeClear.Visibility = Visibility.Visible
@@ -396,7 +396,7 @@
             If SelectedFabric Is Nothing Then
                 BtnFabricClear.Visibility = Visibility.Collapsed
                 ImgFabric.Visibility = Visibility.Collapsed
-                LabFabric.Text = If(FabricError, "可以添加")
+                LabFabric.Text = If(FabricError, GetLang("LangDownloadInstallClickToChose"))
                 LabFabric.Foreground = ColorGray4
             Else
                 BtnFabricClear.Visibility = Visibility.Visible
@@ -417,7 +417,7 @@
             If SelectedFabricApi Is Nothing Then
                 BtnFabricApiClear.Visibility = Visibility.Collapsed
                 ImgFabricApi.Visibility = Visibility.Collapsed
-                LabFabricApi.Text = If(FabricApiError, "可以添加")
+                LabFabricApi.Text = If(FabricApiError, GetLang("LangDownloadInstallClickToChose"))
                 LabFabricApi.Foreground = ColorGray4
             Else
                 BtnFabricApiClear.Visibility = Visibility.Visible
@@ -438,7 +438,7 @@
             If SelectedOptiFabric Is Nothing Then
                 BtnOptiFabricClear.Visibility = Visibility.Collapsed
                 ImgOptiFabric.Visibility = Visibility.Collapsed
-                LabOptiFabric.Text = If(OptiFabricError, "可以添加")
+                LabOptiFabric.Text = If(OptiFabricError, GetLang("LangDownloadInstallClickToChose"))
                 LabOptiFabric.Foreground = ColorGray4
             Else
                 BtnOptiFabricClear.Visibility = Visibility.Visible
@@ -612,14 +612,14 @@
             '清空当前
             PanMinecraft.Children.Clear()
             '添加最新版本
-            Dim CardInfo As New MyCard With {.Title = "最新版本", .Margin = New Thickness(0, 15, 0, 15), .SwapType = 2}
+            Dim CardInfo As New MyCard With {.Title = GetLang("LangDownloadLatest"), .Margin = New Thickness(0, 15, 0, 15), .SwapType = 2}
             Dim TopestVersions As New List(Of JObject)
             Dim Release As JObject = Dict("正式版")(0).DeepClone()
-            Release("lore") = "最新正式版，发布于 " & Release("releaseTime").Value(Of Date).ToString("yyyy'/'MM'/'dd HH':'mm")
+            Release("lore") = GetLang("LangDownloadClientReleaseReleaseOn") & " " & GetLocalTimeFormat(Release("releaseTime").Value(Of Date))
             TopestVersions.Add(Release)
             If Dict("正式版")(0)("releaseTime").Value(Of Date) < Dict("预览版")(0)("releaseTime").Value(Of Date) Then
                 Dim Snapshot As JObject = Dict("预览版")(0).DeepClone()
-                Snapshot("lore") = "最新预览版，发布于 " & Snapshot("releaseTime").Value(Of Date).ToString("yyyy'/'MM'/'dd HH':'mm")
+                Snapshot("lore") = GetLang("LangDownloadClientBetaReleaseOn") & " " & GetLocalTimeFormat(Snapshot("releaseTime").Value(Of Date))
                 TopestVersions.Add(Snapshot)
             End If
             Dim PanInfo As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = TopestVersions}
@@ -630,7 +630,7 @@
             For Each Pair As KeyValuePair(Of String, List(Of JObject)) In Dict
                 If Not Pair.Value.Any() Then Continue For
                 '增加卡片
-                Dim NewCard As New MyCard With {.Title = Pair.Key & " (" & Pair.Value.Count & ")", .Margin = New Thickness(0, 0, 0, 15), .SwapType = 7}
+                Dim NewCard As New MyCard With {.Title = GetLangByWord(Pair.Key) & " (" & Pair.Value.Count & ")", .Margin = New Thickness(0, 0, 0, 15), .SwapType = 7}
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Pair.Value}
                 NewCard.Children.Add(NewStack)
                 NewCard.SwapControl = NewStack
@@ -663,18 +663,18 @@
     ''' 获取 OptiFine 的加载异常信息。若正常则返回 Nothing。
     ''' </summary>
     Private Function LoadOptiFineGetError() As String
-        If SelectedNeoForge IsNot Nothing Then Return "与 NeoForge 不兼容"
-        If LoadOptiFine Is Nothing OrElse LoadOptiFine.State.LoadingState = MyLoading.MyLoadingState.Run Then Return "加载中……"
-        If LoadOptiFine.State.LoadingState = MyLoading.MyLoadingState.Error Then Return "获取版本列表失败：" & CType(LoadOptiFine.State, Object).Error.Message
+        If SelectedNeoForge IsNot Nothing Then Return GetLang("LangDownloadInstallNeoForgeIncompatible")
+        If LoadOptiFine Is Nothing OrElse LoadOptiFine.State.LoadingState = MyLoading.MyLoadingState.Run Then Return GetLang("LangDownloadInstallGettingList")
+        If LoadOptiFine.State.LoadingState = MyLoading.MyLoadingState.Error Then Return GetLang("LangDownloadInstallFailGetList") & CType(LoadOptiFine.State, Object).Error.Message
         '检查 Forge 1.13 - 1.14.3：全部不兼容
         If SelectedForge IsNot Nothing AndAlso
             VersionSortInteger(SelectedMinecraftId, "1.13") >= 0 AndAlso VersionSortInteger("1.14.3", SelectedMinecraftId) >= 0 Then
-            Return "与 Forge 不兼容"
+            Return GetLang("LangDownloadInstallForgeIncompatible")
         End If
         '检查 Fabric 1.20.5+：全部不兼容
         If SelectedFabric IsNot Nothing AndAlso
             VersionSortInteger(SelectedMinecraftId, "1.20.4") > 0 Then
-            Return "与 Fabric 不兼容"
+            Return GetLang("LangDownloadInstallFabricIncompatible")
         End If
         '检查 Forge 版本
         Dim HasAny As Boolean = False
@@ -687,11 +687,11 @@
             If OptiFineVersion.RequiredForgeVersion IsNot Nothing Then HasRequiredVersion = True
         Next
         If Not HasAny Then
-            Return "不可用"
+            Return GetLang("LangDownloadInstallNoAvailableVersion")
         ElseIf HasRequiredVersion Then
-            Return "仅兼容特定版本的 Forge"
+            Return GetLang("LangDownloadInstallForgeCompatibleTargetVersion")
         Else
-            Return "与 Forge 不兼容"
+            Return GetLang("LangDownloadInstallForgeIncompatible")
         End If
     End Function
 
@@ -772,13 +772,13 @@
     ''' 获取 LiteLoader 的加载异常信息。若正常则返回 Nothing。
     ''' </summary>
     Private Function LoadLiteLoaderGetError() As String
-        If Not SelectedMinecraftId.Contains("1.") OrElse Val(SelectedMinecraftId.Split(".")(1)) > 12 Then Return "不可用"
-        If LoadLiteLoader Is Nothing OrElse LoadLiteLoader.State.LoadingState = MyLoading.MyLoadingState.Run Then Return "加载中……"
-        If LoadLiteLoader.State.LoadingState = MyLoading.MyLoadingState.Error Then Return "获取版本列表失败：" & CType(LoadLiteLoader.State, Object).Error.Message
+        If Not SelectedMinecraftId.Contains("1.") OrElse Val(SelectedMinecraftId.Split(".")(1)) > 12 Then Return GetLang("LangDownloadInstallNoAvailableVersion")
+        If LoadLiteLoader Is Nothing OrElse LoadLiteLoader.State.LoadingState = MyLoading.MyLoadingState.Run Then Return GetLang("LangDownloadInstallGettingList")
+        If LoadLiteLoader.State.LoadingState = MyLoading.MyLoadingState.Error Then Return GetLang("LangDownloadInstallFailGetList") & CType(LoadLiteLoader.State, Object).Error.Message
         For Each Version As DlLiteLoaderListEntry In DlLiteLoaderListLoader.Output.Value
             If Version.Inherit = SelectedMinecraftId Then Return Nothing
         Next
-        Return "不可用"
+        Return GetLang("LangDownloadInstallNoAvailableVersion")
     End Function
 
     '限制展开
@@ -829,28 +829,28 @@
     ''' 获取 Forge 的加载异常信息。若正常则返回 Nothing。
     ''' </summary>
     Private Function LoadForgeGetError() As String
-        If Not SelectedMinecraftId.StartsWith("1.") Then Return "不可用"
-        If Not LoadForge.State.IsLoader Then Return "加载中……"
+        If Not SelectedMinecraftId.StartsWith("1.") Then Return GetLang("LangDownloadInstallNoAvailableVersion")
+        If Not LoadForge.State.IsLoader Then Return GetLang("LangDownloadInstallGettingList")
         Dim Loader As LoaderTask(Of String, List(Of DlForgeVersionEntry)) = LoadForge.State
-        If SelectedMinecraftId <> Loader.Input Then Return "加载中……"
-        If Loader.State = LoadState.Loading Then Return "加载中……"
+        If SelectedMinecraftId <> Loader.Input Then Return GetLang("LangDownloadInstallGettingList")
+        If Loader.State = LoadState.Loading Then Return GetLang("LangDownloadInstallGettingList")
         If Loader.State = LoadState.Failed Then
             Dim ErrorMessage As String = Loader.Error.Message
-            If ErrorMessage.Contains("不可用") Then
-                Return "不可用"
+            If ErrorMessage.Contains(GetLang("LangDownloadInstallNoAvailableVersion")) Then
+                Return GetLang("LangDownloadInstallNoAvailableVersion")
             Else
-                Return "获取版本列表失败：" & ErrorMessage
+                Return GetLang("LangDownloadInstallFailGetList") & ErrorMessage
             End If
         End If
-        If Loader.State <> LoadState.Finished Then Return "获取版本列表失败：未知错误，状态为 " & GetStringFromEnum(Loader.State)
+        If Loader.State <> LoadState.Finished Then Return GetLang("LangDownloadInstallFailGetListUnknownStatus") & " " & GetStringFromEnum(Loader.State)
         Dim NotSuitForOptiFine As Boolean = False
         For Each Version In Loader.Output
             If Version.Category = "universal" OrElse Version.Category = "client" Then Continue For '跳过无法自动安装的版本
-            If SelectedNeoForge IsNot Nothing Then Return "与 NeoForge 不兼容"
-            If SelectedFabric IsNot Nothing Then Return "与 Fabric 不兼容"
+            If SelectedNeoForge IsNot Nothing Then Return GetLang("LangDownloadInstallNeoForgeIncompatible")
+            If SelectedFabric IsNot Nothing Then Return GetLang("LangDownloadInstallFabricIncompatible")
             If SelectedOptiFine IsNot Nothing AndAlso
                 VersionSortInteger(SelectedMinecraftId, "1.13") >= 0 AndAlso VersionSortInteger("1.14.3", SelectedMinecraftId) >= 0 Then
-                Return "与 OptiFine 不兼容" '1.13 ~ 1.14.3 OptiFine 检查
+                Return GetLang("LangDownloadInstallOptiFineIncompatible") '1.13 ~ 1.14.3 OptiFine 检查
             End If
             If SelectedOptiFine IsNot Nothing AndAlso Not IsOptiFineSuitForForge(SelectedOptiFine, Version) Then
                 NotSuitForOptiFine = True '与 OptiFine 不兼容
@@ -858,7 +858,7 @@
             End If
             Return Nothing
         Next
-        Return If(NotSuitForOptiFine, "与 OptiFine 不兼容", "该版本不支持自动安装")
+        Return If(NotSuitForOptiFine, GetLang("LangDownloadInstallOptiFineIncompatible"), GetLang("LangDownloadInstallNoAutoInstall"))
     End Function
 
     '限制展开
@@ -918,16 +918,16 @@
     ''' 获取 NeoForge 的加载异常信息。若正常则返回 Nothing。
     ''' </summary>
     Private Function LoadNeoForgeGetError() As String
-        If Not SelectedMinecraftId.StartsWith("1.") Then Return "不可用"
-        If SelectedOptiFine IsNot Nothing Then Return "与 OptiFine 不兼容"
-        If SelectedForge IsNot Nothing Then Return "与 Forge 不兼容"
-        If SelectedFabric IsNot Nothing Then Return "与 Fabric 不兼容"
-        If LoadNeoForge Is Nothing OrElse LoadNeoForge.State.LoadingState = MyLoading.MyLoadingState.Run Then Return "加载中……"
-        If LoadNeoForge.State.LoadingState = MyLoading.MyLoadingState.Error Then Return "获取版本列表失败：" & CType(LoadNeoForge.State, Object).Error.Message
+        If Not SelectedMinecraftId.StartsWith("1.") Then Return GetLang("LangDownloadInstallNoAvailableVersion")
+        If SelectedOptiFine IsNot Nothing Then Return GetLang("LangDownloadInstallOptiFineIncompatible")
+        If SelectedForge IsNot Nothing Then Return GetLang("LangDownloadInstallForgeIncompatible")
+        If SelectedFabric IsNot Nothing Then Return GetLang("LangDownloadInstallFabricIncompatible")
+        If LoadNeoForge Is Nothing OrElse LoadNeoForge.State.LoadingState = MyLoading.MyLoadingState.Run Then Return GetLang("LangDownloadInstallGettingList")
+        If LoadNeoForge.State.LoadingState = MyLoading.MyLoadingState.Error Then Return GetLang("LangDownloadInstallFailGetList") & CType(LoadNeoForge.State, Object).Error.Message
         If DlNeoForgeListLoader.Output.Value.Any(Function(v) v.Inherit = SelectedMinecraftId) Then
             Return Nothing
         Else
-            Return "不可用"
+            Return GetLang("LangDownloadInstallNoAvailableVersion")
         End If
     End Function
 
@@ -979,21 +979,21 @@
     ''' 获取 Fabric 的加载异常信息。若正常则返回 Nothing。
     ''' </summary>
     Private Function LoadFabricGetError() As String
-        If LoadFabric Is Nothing OrElse LoadFabric.State.LoadingState = MyLoading.MyLoadingState.Run Then Return "加载中……"
-        If LoadFabric.State.LoadingState = MyLoading.MyLoadingState.Error Then Return "获取版本列表失败：" & CType(LoadFabric.State, Object).Error.Message
+        If LoadFabric Is Nothing OrElse LoadFabric.State.LoadingState = MyLoading.MyLoadingState.Run Then Return GetLang("LangDownloadInstallGettingList")
+        If LoadFabric.State.LoadingState = MyLoading.MyLoadingState.Error Then Return GetLang("LangDownloadInstallFailGetList") & CType(LoadFabric.State, Object).Error.Message
         '检查 OptiFine 1.20.5+：没有 OptiFabric 故全部不兼容
         If SelectedOptiFine IsNot Nothing AndAlso
             VersionSortInteger(SelectedMinecraftId, "1.20.4") > 0 Then
-            Return "与 OptiFine 不兼容"
+            Return GetLang("LangDownloadInstallOptiFineIncompatible")
         End If
         For Each Version As JObject In DlFabricListLoader.Output.Value("game")
             If Version("version").ToString = SelectedMinecraftId.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3") Then
-                If SelectedForge IsNot Nothing Then Return "与 Forge 不兼容"
-                If SelectedNeoForge IsNot Nothing Then Return "与 NeoForge 不兼容"
+                If SelectedForge IsNot Nothing Then Return GetLang("LangDownloadInstallForgeIncompatible")
+                If SelectedNeoForge IsNot Nothing Then Return GetLang("LangDownloadInstallNeoForgeIncompatible")
                 Return Nothing
             End If
         Next
-        Return "不可用"
+        Return GetLang("LangDownloadInstallNoAvailableVersion")
     End Function
 
     '限制展开
@@ -1086,18 +1086,18 @@
     ''' 获取 FabricApi 的加载异常信息。若正常则返回 Nothing。
     ''' </summary>
     Private Function LoadFabricApiGetError() As String
-        If LoadFabricApi Is Nothing OrElse LoadFabricApi.State.LoadingState = MyLoading.MyLoadingState.Run Then Return "加载中……"
-        If LoadFabricApi.State.LoadingState = MyLoading.MyLoadingState.Error Then Return "获取版本列表失败：" & CType(LoadFabricApi.State, Object).Error.Message
+        If LoadFabricApi Is Nothing OrElse LoadFabricApi.State.LoadingState = MyLoading.MyLoadingState.Run Then Return GetLang("LangDownloadInstallGettingList")
+        If LoadFabricApi.State.LoadingState = MyLoading.MyLoadingState.Error Then Return GetLang("LangDownloadInstallFailGetList") & CType(LoadFabricApi.State, Object).Error.Message
         If DlFabricApiLoader.Output Is Nothing Then
-            If SelectedFabric Is Nothing Then Return "需要安装 Fabric"
-            Return "加载中……"
+            If SelectedFabric Is Nothing Then Return GetLang("LangDownloadInstallFabricNeed")
+            Return GetLang("LangDownloadInstallGettingList")
         End If
         For Each Version In DlFabricApiLoader.Output
             If Not IsSuitableFabricApi(Version.DisplayName, SelectedMinecraftId) Then Continue For
-            If SelectedFabric Is Nothing Then Return "需要安装 Fabric"
+            If SelectedFabric Is Nothing Then Return GetLang("LangDownloadInstallFabricNeed")
             Return Nothing
         Next
-        Return "不可用"
+        Return GetLang("LangDownloadInstallNoAvailableVersion")
     End Function
 
     '限制展开
@@ -1178,23 +1178,23 @@
     ''' 获取 OptiFabric 的加载异常信息。若正常则返回 Nothing。
     ''' </summary>
     Private Function LoadOptiFabricGetError() As String
-        If SelectedMinecraftId.StartsWith("1.14") OrElse SelectedMinecraftId.StartsWith("1.15") Then Return "不兼容老版本 Fabric，请手动下载 OptiFabric Origins"
-        If LoadOptiFabric Is Nothing OrElse LoadOptiFabric.State.LoadingState = MyLoading.MyLoadingState.Run Then Return "加载中……"
-        If LoadOptiFabric.State.LoadingState = MyLoading.MyLoadingState.Error Then Return "获取版本列表失败：" & CType(LoadOptiFabric.State, Object).Error.Message
+        If SelectedMinecraftId.StartsWith("1.14") OrElse SelectedMinecraftId.StartsWith("1.15") Then Return GetLang("LangDownloadInstallOptiFabricManually")
+        If LoadOptiFabric Is Nothing OrElse LoadOptiFabric.State.LoadingState = MyLoading.MyLoadingState.Run Then Return GetLang("LangDownloadInstallGettingList")
+        If LoadOptiFabric.State.LoadingState = MyLoading.MyLoadingState.Error Then Return GetLang("LangDownloadInstallFailGetList") & CType(LoadOptiFabric.State, Object).Error.Message
         If DlOptiFabricLoader.Output Is Nothing Then
-            If SelectedFabric Is Nothing AndAlso SelectedOptiFine Is Nothing Then Return "需要安装 OptiFine 与 Fabric"
-            If SelectedFabric Is Nothing Then Return "需要安装 Fabric"
-            If SelectedOptiFine Is Nothing Then Return "需要安装 OptiFine"
-            Return "加载中……"
+            If SelectedFabric Is Nothing AndAlso SelectedOptiFine Is Nothing Then Return GetLang("LangDownloadInstallOptiFineFabricNeed")
+            If SelectedFabric Is Nothing Then Return GetLang("LangDownloadInstallFabricNeed")
+            If SelectedOptiFine Is Nothing Then Return GetLang("LangDownloadInstallOptiFineNeed")
+            Return GetLang("LangDownloadInstallGettingList")
         End If
         For Each Version In DlOptiFabricLoader.Output
             If Not IsSuitableOptiFabric(Version, SelectedMinecraftId) Then Continue For '2135#
-            If SelectedFabric Is Nothing AndAlso SelectedOptiFine Is Nothing Then Return "需要安装 OptiFine 与 Fabric"
-            If SelectedFabric Is Nothing Then Return "需要安装 Fabric"
-            If SelectedOptiFine Is Nothing Then Return "需要安装 OptiFine"
+            If SelectedFabric Is Nothing AndAlso SelectedOptiFine Is Nothing Then Return GetLang("LangDownloadInstallOptiFineFabricNeed")
+            If SelectedFabric Is Nothing Then Return GetLang("LangDownloadInstallFabricNeed")
+            If SelectedOptiFine Is Nothing Then Return GetLang("LangDownloadInstallOptiFineNeed")
             Return Nothing '通过检查
         Next
-        Return "不可用"
+        Return GetLang("LangDownloadInstallNoAvailableVersion")
     End Function
 
     '限制展开

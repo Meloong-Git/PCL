@@ -56,7 +56,7 @@
             <ColumnDefinition x:Name="ColumnVersion3" Width="0.7*" />
             
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="55" />
+            <ColumnDefinition Width="80" />
             <ColumnDefinition Width="1*" />
 
             <ColumnDefinition x:Name="ColumnTime1"  Width="Auto" />

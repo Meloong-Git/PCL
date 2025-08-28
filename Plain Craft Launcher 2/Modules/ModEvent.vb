@@ -57,7 +57,7 @@
                 Case "启动游戏"
                     If Data(0) = "\current" Then
                         If McVersionCurrent Is Nothing Then
-                            Hint("请先选择一个 Minecraft 版本！", HintType.Critical)
+                            Hint(GetLang("LangModEventChoseAnInstance"), HintType.Critical)
                             Return
                         Else
                             Data(0) = McVersionCurrent.Name
@@ -65,7 +65,7 @@
                     End If
                     If McLaunchStart(New McLaunchOptions With
                                      {.ServerIp = If(Data.Length >= 2, Data(1), Nothing), .Version = New McVersion(Data(0))}) Then
-                        Hint("正在启动 " & Data(0) & "……")
+                        Hint(GetLang("LangModEventStartInstance", Data(0)))
                     End If
 
                 Case "复制文本"
@@ -73,7 +73,7 @@
 
                 Case "刷新主页"
                     FrmLaunchRight.ForceRefresh()
-                    If Data(0) = "" Then Hint("已刷新主页！", HintType.Finish)
+                    If Data(0) = "" Then Hint(GetLang("LangModEventHomePageRefreshed"), HintType.Finish)
 
                 Case "刷新帮助"
                     PageOtherLeft.RefreshHelp()
@@ -99,7 +99,7 @@
                 Case "下载文件"
                     Data(0) = Data(0).Replace("\", "/")
                     If Not (Data(0).StartsWithF("http://", True) OrElse Data(0).StartsWithF("https://", True)) Then
-                        MyMsgBox("EventData 必须为以 http:// 或 https:// 开头的网址。" & vbCrLf & "PCL 不支持其他乱七八糟的下载协议。", "事件执行失败")
+                        MyMsgBox(GetLang("LangModEventDialogDownloadIncorrectContent"), GetLang("LangModEventDialogEventFailTitle"))
                         Return
                     End If
                     Try
@@ -120,7 +120,7 @@
                     Hint($"已写入设置：{Data(0)} → {Data(1)}", HintType.Finish)
 
                 Case Else
-                    MyMsgBox("未知的事件类型：" & Type & vbCrLf & "请检查事件类型填写是否正确，或者 PCL 是否为最新版本。", "事件执行失败")
+                    MyMsgBox(GetLang("LangModEventDialogUnknownEventContent", Type), GetLang("LangModEventDialogEventFailTitle"))
             End Select
         Catch ex As Exception
             Log(ex, "事件执行失败", LogLevel.Msgbox)

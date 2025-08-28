@@ -35,7 +35,7 @@
                 Dim CardName As String = ""
                 Select Case Card.Key
                     Case McVersionCardType.OriginalLike
-                        CardName = "常规版本"
+                        CardName = GetLang("LangSelectVersionTypeRegular")
                     Case McVersionCardType.API
                         Dim IsForgeExists As Boolean = False
                         Dim IsNeoForgeExists As Boolean = False
@@ -48,32 +48,32 @@
                             If Version.Version.HasNeoForge Then IsNeoForgeExists = True
                         Next
                         If If(IsLiteExists, 1, 0) + If(IsForgeExists, 1, 0) + If(IsFabricExists, 1, 0) + If(IsNeoForgeExists, 1, 0) > 1 Then
-                            CardName = "可安装 Mod"
+                            CardName = GetLang("LangSelectVersionTypeModAbility")
                         ElseIf IsForgeExists Then
-                            CardName = "Forge 版本"
+                            CardName = GetLang("LangSelectVersionTypeForge")
                         ElseIf IsNeoForgeExists Then
-                            CardName = "NeoForge 版本"
+                            CardName = GetLang("LangSelectVersionTypeNeoForge")
                         ElseIf IsLiteExists Then
-                            CardName = "LiteLoader 版本"
+                            CardName = GetLang("LangSelectVersionTypeLiteloader")
                         Else
-                            CardName = "Fabric 版本"
+                            CardName = GetLang("LangSelectVersionTypeFabric")
                         End If
                     Case McVersionCardType.Error
-                        CardName = "错误的版本"
+                        CardName = GetLang("LangSelectVersionTypeError")
                     Case McVersionCardType.Hidden
-                        CardName = "隐藏的版本"
+                        CardName = GetLang("LangSelectVersionTypeHidden")
                     Case McVersionCardType.Rubbish
-                        CardName = "不常用版本"
+                        CardName = GetLang("LangSelectVersionTypeNotCommonlyUsed")
                     Case McVersionCardType.Star
-                        CardName = "收藏夹"
+                        CardName = GetLang("LangSelectVersionTypeFavorites")
                     Case McVersionCardType.Fool
-                        CardName = "愚人节版本"
+                        CardName = GetLang("LangSelectVersionTypeAprilFool")
                     Case Else
-                        Throw New ArgumentException("未知的卡片种类（" & Card.Key & "）")
+                        Throw New ArgumentException(GetLang("LangSelectVersionTypeUnknown") & "（" & Card.Key & "）")
                 End Select
 #End Region
                 '建立控件
-                Dim CardTitle As String = CardName & If(CardName = "收藏夹", "", " (" & Card.Value.Count & ")")
+                Dim CardTitle As String = CardName & If(CardName = GetLang("LangSelectVersionTypeFavorites"), "", " (" & Card.Value.Count & ")")
                 Dim NewCard As New MyCard With {.Title = CardTitle, .Margin = New Thickness(0, 0, 0, 15), .SwapType = 0}
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Card.Value}
                 NewCard.Children.Add(NewStack)
@@ -97,12 +97,12 @@
                 PanEmpty.Visibility = Visibility.Visible
                 PanBack.Visibility = Visibility.Collapsed
                 If ShowHidden Then
-                    LabEmptyTitle.Text = "无隐藏版本"
-                    LabEmptyContent.Text = "没有版本被隐藏，你可以在版本设置的版本分类选项中隐藏版本。" & vbCrLf & "再次按下 F11 即可退出隐藏版本查看模式。"
+                    LabEmptyTitle.Text = GetLang("LangSelectVersionNoHidden")
+                    LabEmptyContent.Text = GetLang("LangSelectVersionNoHiddenTip")
                     BtnEmptyDownload.Visibility = Visibility.Collapsed
                 Else
-                    LabEmptyTitle.Text = "无可用版本"
-                    LabEmptyContent.Text = "未找到任何版本的游戏，请先下载任意版本的游戏。" & vbCrLf & "若有已存在的游戏，请在左边的列表中选择添加文件夹，选择 .minecraft 文件夹将其导入。"
+                    LabEmptyTitle.Text = GetLang("LangSelectNoAvailableVersion")
+                    LabEmptyContent.Text = GetLang("LangSelectNoAvailableVersionTip")
                     BtnEmptyDownload.Visibility = If(Setup.Get("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow, Visibility.Collapsed, Visibility.Visible)
                 End If
             Else
@@ -111,7 +111,7 @@
             End If
 
         Catch ex As Exception
-            Log(ex, "将版本列表转换显示时失败", LogLevel.Feedback)
+            Log(ex, GetLang("LangSelectVersionListLoadFail"), LogLevel.Feedback)
         End Try
     End Sub
     Public Shared Function McVersionListItem(Version As McVersion) As MyListItem
@@ -123,7 +123,7 @@
                 NewItem.Logo = Version.Logo
             End If
         Catch ex As Exception
-            Log(ex, "加载版本图标失败", LogLevel.Hint)
+            Log(ex, GetLang("LangSelectVersionListLoadIconFail"), LogLevel.Hint)
             NewItem.Logo = "pack://application:,,,/images/Blocks/RedstoneBlock.png"
         End Try
         NewItem.ContentHandler = AddressOf McVersionListContent
@@ -136,14 +136,14 @@
         '图标按钮
         Dim BtnStar As New MyIconButton
         If Version.IsStar Then
-            BtnStar.ToolTip = "取消收藏"
+            BtnStar.ToolTip = GetLang("LangSelectBtnCancelFavorite")
             ToolTipService.SetPlacement(BtnStar, Primitives.PlacementMode.Center)
             ToolTipService.SetVerticalOffset(BtnStar, 30)
             ToolTipService.SetHorizontalOffset(BtnStar, 2)
             BtnStar.LogoScale = 1.1
             BtnStar.Logo = Logo.IconButtonLikeFill
         Else
-            BtnStar.ToolTip = "收藏"
+            BtnStar.ToolTip = GetLang("LangSelectBtnFavorite")
             ToolTipService.SetPlacement(BtnStar, Primitives.PlacementMode.Center)
             ToolTipService.SetVerticalOffset(BtnStar, 30)
             ToolTipService.SetHorizontalOffset(BtnStar, 2)
@@ -156,14 +156,14 @@
                                       LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
                                   End Sub
         Dim BtnDel As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonDelete}
-        BtnDel.ToolTip = "删除"
+        BtnDel.ToolTip = GetLang("LangSelectDelete")
         ToolTipService.SetPlacement(BtnDel, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnDel, 30)
         ToolTipService.SetHorizontalOffset(BtnDel, 2)
         AddHandler BtnDel.Click, Sub() DeleteVersion(sender, Version)
         If Version.State <> McVersionState.Error Then
             Dim BtnCont As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonSetup}
-            BtnCont.ToolTip = "设置"
+            BtnCont.ToolTip = GetLang("LangSelectBtnSet")
             ToolTipService.SetPlacement(BtnCont, Primitives.PlacementMode.Center)
             ToolTipService.SetVerticalOffset(BtnCont, 30)
             ToolTipService.SetHorizontalOffset(BtnCont, 2)
@@ -180,7 +180,7 @@
             sender.Buttons = {BtnStar, BtnDel, BtnCont}
         Else
             Dim BtnCont As New MyIconButton With {.LogoScale = 1.15, .Logo = Logo.IconButtonOpen}
-            BtnCont.ToolTip = "打开文件夹"
+            BtnCont.ToolTip = GetLang("LangSelectBtnOpenFolder")
             ToolTipService.SetPlacement(BtnCont, Primitives.PlacementMode.Center)
             ToolTipService.SetVerticalOffset(BtnCont, 30)
             ToolTipService.SetHorizontalOffset(BtnCont, 2)
@@ -217,21 +217,23 @@
         Try
             Dim IsShiftPressed As Boolean = My.Computer.Keyboard.ShiftKeyDown
             Dim IsHintIndie As Boolean = Version.State <> McVersionState.Error AndAlso Version.PathIndie <> PathMcFolder
-            Select Case MyMsgBox($"你确定要{If(IsShiftPressed, "永久", "")}删除版本 {Version.Name} 吗？" &
-                        If(IsHintIndie, vbCrLf & "由于该版本开启了版本隔离，删除版本时该版本对应的存档、资源包、Mod 等文件也将被一并删除！", ""),
-                        "版本删除确认", , "取消",, True)
+            Dim MsgBoxContent As String = If(IsShiftPressed, GetLang("LangSelectDeleteVersionContentB", Version.Name), GetLang("LangSelectDeleteVersionContentA", Version.Name)) & If(IsHintIndie, vbCrLf & GetLang("LangSelectDeleteVersionContentC"), "")
+            Select Case MyMsgBox(MsgBoxContent, GetLang("LangSelectDeleteVersionTitle"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel"),, True)
+
                 Case 1
                     IniClearCache(Version.PathIndie & "options.txt")
                     IniClearCache(Version.Path & "PCL\Setup.ini")
                     If IsShiftPressed Then
                         DeleteDirectory(Version.Path)
-                        Hint("版本 " & Version.Name & " 已永久删除！", HintType.Finish)
+                        Hint(GetLang("LangSelectVersionDeletedA", Version.Name), HintType.Finish)
                     Else
                         FileIO.FileSystem.DeleteDirectory(Version.Path, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
-                        Hint("版本 " & Version.Name & " 已删除到回收站！", HintType.Finish)
+                        Hint(GetLang("LangSelectVersionDeletedB", Version.Name), HintType.Finish)
                     End If
                 Case 2
                     Return
+                Case Else
+                    Exit Sub
             End Select
             '从 UI 中移除
             If Version.DisplayType = McVersionCardType.Hidden OrElse Not Version.IsStar Then
@@ -256,9 +258,9 @@
                 LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             End If
         Catch ex As OperationCanceledException
-            Log(ex, "删除版本 " & Version.Name & " 被主动取消")
+            Log(ex, GetLang("LangSelectVersionDeleteCancelled", Version.Name))
         Catch ex As Exception
-            Log(ex, "删除版本 " & Version.Name & " 失败", LogLevel.Msgbox)
+            Log(ex, GetLang("LangSelectVersionDeleteFail"), LogLevel.Msgbox)
         End Try
     End Sub
 

@@ -23,17 +23,17 @@
                         <RowDefinition Height="9" />
                         <RowDefinition Height="28" />
                     </Grid.RowDefinitions>
-                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="名称" Margin="0,0,18,0" />
+                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangDownloadCompSearchName}" Margin="0,0,18,0" />
                     <local:MyTextBox x:Name="TextSearchName" Grid.Column="1" Grid.ColumnSpan="2" />
-                    <TextBlock VerticalAlignment="Center" Grid.Column="4" HorizontalAlignment="Left" Text="来源" Margin="0,0,18,0" />
+                    <TextBlock VerticalAlignment="Center" Grid.Column="4" HorizontalAlignment="Left" Text="{StaticResource LangDownloadCompSearchSource}" Margin="0,0,18,0" />
                     <local:MyComboBox x:Name="ComboSearchSource" Grid.Column="5">
-                        <local:MyComboBoxItem Content="全部" Tag="3" IsSelected="True" />
+                        <local:MyComboBoxItem Content="{StaticResource LangDownloadCompSearchSourceAll}" Tag="3" IsSelected="True" />
                         <local:MyComboBoxItem Content="CurseForge" Tag="1" />
                         <local:MyComboBoxItem Content="Modrinth" Tag="2" />
                     </local:MyComboBox>
-                    <TextBlock VerticalAlignment="Center" Grid.Row="2" HorizontalAlignment="Left" Text="版本" Margin="0,0,18,0" />
+                    <TextBlock VerticalAlignment="Center" Grid.Row="2" HorizontalAlignment="Left" Text="{StaticResource LangDownloadCompSearchVersion}" Margin="0,0,18,0" />
                     <local:MyComboBox x:Name="TextSearchVersion" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" IsEditable="True" MaxDropDownHeight="320">
-                        <local:MyComboBoxItem Content="全部 (也可自行输入)" IsSelected="True" />
+                        <local:MyComboBoxItem Content="{StaticResource LangDownloadCompSearchVersionAll}" IsSelected="True" />
                         <local:MyComboBoxItem Content="1.21.8" />
                         <local:MyComboBoxItem Content="1.21.1" />
                         <local:MyComboBoxItem Content="1.20.6" />
@@ -48,13 +48,13 @@
                         <local:MyComboBoxItem Content="1.7.10" />
                     </local:MyComboBox>
                     <local:MyComboBox x:Name="ComboSearchLoader" Visibility="Collapsed" Grid.Row="2" Grid.Column="2" MaxDropDownHeight="320" Margin="10,0,0,0">
-                        <local:MyComboBoxItem Content="任意 Mod 加载器" IsSelected="True" Tag="0" />
+                        <local:MyComboBoxItem Content="{StaticResource LangDownloadCompSearchLoader}" IsSelected="True" Tag="0" />
                         <local:MyComboBoxItem Content="Forge" Tag="1" />
                         <local:MyComboBoxItem Content="NeoForge" Tag="6" />
                         <local:MyComboBoxItem Content="Fabric" Tag="4" />
                         <local:MyComboBoxItem Content="Quilt" Tag="5" />
                     </local:MyComboBox>
-                    <TextBlock VerticalAlignment="Center" Grid.Column="4" Grid.Row="2" HorizontalAlignment="Left" Text="类型" Margin="0,0,18,0" />
+                    <TextBlock VerticalAlignment="Center" Grid.Column="4" Grid.Row="2" HorizontalAlignment="Left" Text="{StaticResource LangDownloadModType}" Margin="0,0,18,0" />
                     <local:MyComboBox x:Name="ComboSearchTag" Grid.Column="5" Grid.Row="2" MaxDropDownHeight="320" />
                 </Grid>
                 <Grid Margin="0,4,0,6" Height="35">
@@ -63,15 +63,15 @@
                         <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                     </Grid.ColumnDefinitions>
-                    <local:MyButton x:Name="BtnSearchRun" Text="搜索" MinWidth="140" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" />
-                    <local:MyButton x:Name="BtnSearchReset" Text="重置条件" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" />
-                    <local:MyButton x:Name="BtnSearchInstallModPack" Text="安装已有整合包" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2"
-                                    ToolTip="在当前选择的 Minecraft 文件夹下安装整合包" ToolTipService.HorizontalOffset="-55" ToolTipService.VerticalOffset="5" />
+                    <local:MyButton x:Name="BtnSearchRun" Text="{StaticResource LangDownloadCompSearch}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" />
+                    <local:MyButton x:Name="BtnSearchReset" Text="{StaticResource LangDownloadModReset}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" />
+                    <local:MyButton x:Name="BtnSearchInstallModPack" Text="{StaticResource LangDownloadModpackInstallFromLocal}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2"
+                                    ToolTip="{StaticResource LangDownloadModpackInstallFromLocalToolTip}" ToolTipService.HorizontalOffset="-55" ToolTipService.VerticalOffset="5" />
                 </Grid>
             </StackPanel>
         </local:MyCard>
         <StackPanel x:Name="PanContent">
-            <local:MyHint x:Name="HintError" HasBorder="True" Text="无法连接到 Modrinth，所以目前仅显示了来自 CurseForge 的内容，搜索结果可能不全。&#xa;请稍后重试，或使用 VPN 以改善网络环境。" Theme="Yellow" Margin="0,0,0,15" />
+            <local:MyHint x:Name="HintError" HasBorder="True" Text="{StaticResource LangDownloadModpackConnectModrinthFail}" Theme="Yellow" Margin="0,0,0,15" />
             <local:MyCard x:Name="CardProjects" UseAnimation="False">
                 <StackPanel x:Name="PanProjects" Margin="12" />
             </local:MyCard>

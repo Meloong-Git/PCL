@@ -22,7 +22,7 @@
     ''' </summary>
     Public Shared Function GetLoginData() As McLoginServer
         Dim Server As String = If(IsNothing(McVersionCurrent), Setup.Get("CacheNideServer"), Setup.Get("VersionServerNide", Version:=McVersionCurrent))
-        Return New McLoginServer(McLoginType.Nide) With {.Token = "Nide", .UserName = Setup.Get("CacheNideUsername"), .Password = Setup.Get("CacheNidePass"), .Description = "统一通行证", .Type = McLoginType.Nide, .BaseUrl = "https://auth.mc-user.com:233/" & Server & "/authserver"}
+        Return New McLoginServer(McLoginType.Nide) With {.Token = "Nide", .UserName = Setup.Get("CacheNideUsername"), .Password = Setup.Get("CacheNidePass"), .Description = GetLang("LangPageLoginNideDesc"), .Type = McLoginType.Nide, .BaseUrl = "https://auth.mc-user.com:233/" & Server & "/authserver"}
     End Function
 
     Private Sub PageLoginNideSkin_MouseEnter(sender As Object, e As MouseEventArgs) Handles PanData.MouseEnter

@@ -136,9 +136,9 @@ RequestFinished:
     ''' </summary>
     Public Function NetRequestByLoader(Urls As IEnumerable(Of String), Optional Timeout As Integer = 45000, Optional IsJson As Boolean = False, Optional UseBrowserUserAgent As Boolean = False) As String
         Dim Temp As String = RequestTaskTempFolder() & "download.txt"
-        Dim NewTask As New LoaderDownload("源码获取 " & GetUuid() & "#", New List(Of NetFile) From {New NetFile(Urls, Temp, New FileChecker With {.IsJson = IsJson}, UseBrowserUserAgent)})
+        Dim NewTask As New LoaderDownload(GetLang("LangModTaskDownloadCode", GetUuid() & "#"), New List(Of NetFile) From {New NetFile(Urls, Temp, New FileChecker With {.IsJson = IsJson}, UseBrowserUserAgent)})
         Try
-            NewTask.WaitForExitTime(Timeout, TimeoutMessage:="连接服务器超时（第一下载源：" & Urls.First & "）")
+            NewTask.WaitForExitTime(Timeout, TimeoutMessage:=GetLang("LangModExceptionDownloadCodeSource", Urls.First))
             NetRequestByLoader = ReadFile(Temp)
             File.Delete(Temp)
         Finally
@@ -161,7 +161,7 @@ RequestFinished:
             Directory.CreateDirectory(GetPathFromFullPath(LocalPath))
             File.Delete(LocalPath)
         Catch ex As Exception
-            Throw New Exception($"预处理下载文件路径失败（{LocalPath}）", ex)
+            Throw New Exception(GetLang("LangModExceptionCreateDirectoryFail", LocalPath), ex)
         End Try
         '下载
         Try
@@ -251,7 +251,7 @@ RequestFinished:
         Catch ex As ResponsedWebException
             Throw
         Catch ex As TaskCanceledException 'CancellationTokenSource 超时
-            Throw New WebException($"连接服务器超时，请检查你的网络环境是否良好（{Method}, {Url}）", WebExceptionStatus.Timeout)
+            Throw New WebException(GetLang("LangModExceptionTimeOutAskCheck", $"{Method}，{Url}"), WebExceptionStatus.Timeout)
         Catch ex As Exception
             Throw New Exception($"网络请求出现意外异常（{Method}, {Url}）", ex)
         Finally
@@ -704,7 +704,7 @@ RequestFinished:
                     Case NetState.Finish, NetState.Error
                         Return 1
                     Case Else
-                        Throw New ArgumentOutOfRangeException("文件状态未知：" & State)
+                        Throw New ArgumentOutOfRangeException(GetLang("LangModExceptionUnknownFileStatus", State))
                 End Select
             End Get
         End Property

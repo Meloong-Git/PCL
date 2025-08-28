@@ -29,11 +29,11 @@
                            Foreground="#FF5C5C5C" FontWeight="Normal" Padding="1" />
             </my:MyScrollViewer>
             <StackPanel Grid.Row="4" Name="PanBtn" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="150,0,8,0" Orientation="Horizontal">
-                <my:MyButton ColorType="Normal" x:FieldModifier="public" Text="重新打开网页" x:Name="Btn1" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False"
+                <my:MyButton ColorType="Normal" x:FieldModifier="public" Text="{StaticResource LangMyMsgLoginDialogBtnReopenWebPage}" x:Name="Btn1" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False"
                              EventType="打开网页" />
-                <my:MyButton ColorType="Normal" x:FieldModifier="public" Text="复制代码" x:Name="Btn2" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False"
+                <my:MyButton ColorType="Normal" x:FieldModifier="public" Text="{StaticResource LangMyMsgLoginDialogBtnCopyCode}" x:Name="Btn2" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False"
                              EventType="复制文本" />
-                <my:MyButton ColorType="Normal" x:FieldModifier="public" Text="取消" x:Name="Btn3" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False" />
+                <my:MyButton ColorType="Normal" x:FieldModifier="public" Text="{StaticResource LangDialogBtnCancel}" x:Name="Btn3" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False" />
             </StackPanel>
         </Grid>
     </Border>

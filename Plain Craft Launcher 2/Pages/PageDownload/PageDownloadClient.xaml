@@ -25,7 +25,7 @@
             </StackPanel>
         </local:MyScrollViewer>
         <local:MyCard HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40,0" SnapsToDevicePixels="True" x:Name="PanLoad" UseAnimation="False">
-            <local:MyLoading Text="正在获取版本列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <local:MyLoading Text="{StaticResource LangDownloadClientLoadingList}" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
         </local:MyCard>
     </Grid>
 </local:MyPageRight>

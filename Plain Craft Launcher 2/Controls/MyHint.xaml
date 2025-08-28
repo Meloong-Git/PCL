@@ -9,7 +9,7 @@
             <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <TextBlock IsHitTestVisible="False" x:Name="LabText" LineHeight="16" Margin="0,0,0,-1" Padding="12,9" VerticalAlignment="Center" TextWrapping="Wrap" />
+        <TextBlock IsHitTestVisible="False" x:Name="LabText" LineHeight="16" Margin="0,0,0,-1" Padding="12,9" VerticalAlignment="Center" TextWrapping="Wrap"  Text="{Binding Path=Text,ElementName=PanBack}"/>
         <local:MyIconButton x:Name="BtnClose" Visibility="Collapsed" Theme="Custom" Margin="0,0,8,0" Grid.Column="1" Height="20" Width="20" VerticalAlignment="Center" Logo="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z"
                            ToolTip="不再提示" ToolTipService.Placement="Center" ToolTipService.VerticalOffset="29" ToolTipService.HorizontalOffset="2" />
     </Grid>
