@@ -1,4 +1,6 @@
-﻿Public Class PageOtherFeedback
+﻿Imports PCL.Core.Utils
+
+Public Class PageOtherFeedback
 
     Public Class Feedback
         Public Property User As String
@@ -99,7 +101,7 @@
 
             Dim clickHandler As Action = Sub()
                                              Select Case MyMsgBoxMarkdown(
-                                                 $"提交者：{item.User}（{GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
+                                                 $"提交者：{item.User}（{TimeUtils.GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
                                                  $"状态：{item.Tags} | 类型：{item.Type}" & vbCrLf & vbCrLf &
                                                  $"{item.Content}",
                                                  $"#{item.ID} {item.Title}",
@@ -124,7 +126,7 @@
                 AddHandler li.Click,
             Sub(sender As Object, e As RoutedEventArgs)
                 Select Case MyMsgBoxMarkdown(
-                    $"提交者：{item.User}（{GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
+                    $"提交者：{item.User}（{TimeUtils.GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
                     $"类型：{item.Type}" & vbCrLf & vbCrLf &
                     $"{item.Content}",
                     $"#{item.ID} {item.Title}",
@@ -152,7 +154,7 @@
                 AddHandler li.Click,
             Sub(sender As Object, e As RoutedEventArgs)
                 Select Case MyMsgBoxMarkdown(
-                    $"提交者：{item.User}（{GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
+                    $"提交者：{item.User}（{TimeUtils.GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
                     $"类型：{item.Type}" & vbCrLf & vbCrLf &
                     $"{item.Content}",
                     $"#{item.ID} {item.Title}",
@@ -180,7 +182,7 @@
                 AddHandler li.Click,
             Sub(sender As Object, e As RoutedEventArgs)
                 Select Case MyMsgBoxMarkdown(
-                    $"提交者：{item.User}（{GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
+                    $"提交者：{item.User}（{TimeUtils.GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
                     $"类型：{item.Type}" & vbCrLf & vbCrLf &
                     $"{item.Content}",
                     $"#{item.ID} {item.Title}",
@@ -208,7 +210,7 @@
                 AddHandler li.Click,
             Sub(sender As Object, e As RoutedEventArgs)
                 Select Case MyMsgBoxMarkdown(
-                    $"提交者：{item.User}（{GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
+                    $"提交者：{item.User}（{TimeUtils.GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
                     $"类型：{item.Type}" & vbCrLf & vbCrLf &
                     $"{item.Content}",
                     $"#{item.ID} {item.Title}",
@@ -236,7 +238,7 @@
                 AddHandler li.Click,
             Sub(sender As Object, e As RoutedEventArgs)
                 Select Case MyMsgBoxMarkdown(
-                    $"提交者：{item.User}（{GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
+                    $"提交者：{item.User}（{TimeUtils.GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
                     $"类型：{item.Type}" & vbCrLf & vbCrLf &
                     $"{item.Content}",
                     $"#{item.ID} {item.Title}",
@@ -264,7 +266,7 @@
                 AddHandler li.Click,
             Sub(sender As Object, e As RoutedEventArgs)
                 Select Case MyMsgBoxMarkdown(
-                    $"提交者：{item.User}（{GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
+                    $"提交者：{item.User}（{TimeUtils.GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
                     $"类型：{item.Type}" & vbCrLf & vbCrLf &
                     $"{item.Content}",
                     $"#{item.ID} {item.Title}",
@@ -292,7 +294,7 @@
                 AddHandler li.Click,
             Sub(sender As Object, e As RoutedEventArgs)
                 Select Case MyMsgBoxMarkdown(
-                    $"提交者：{item.User}（{GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
+                    $"提交者：{item.User}（{TimeUtils.GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
                     $"类型：{item.Type}" & vbCrLf & vbCrLf &
                     $"{item.Content}",
                     $"#{item.ID} {item.Title}",
@@ -320,7 +322,7 @@
                 AddHandler li.Click,
             Sub(sender As Object, e As RoutedEventArgs)
                 Select Case MyMsgBoxMarkdown(
-                    $"提交者：{item.User}（{GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
+                    $"提交者：{item.User}（{TimeUtils.GetTimeSpanString(item.Time - DateTime.Now, False)}）" & vbCrLf &
                     $"类型：{item.Type}" & vbCrLf & vbCrLf &
                     $"{item.Content}",
                     $"#{item.ID} {item.Title}",
@@ -335,7 +337,7 @@
             ele.Info = item.User & " | " & item.Time
             ele.Tags = StatusDesc
             AddHandler ele.Click, Sub()
-                                      Select Case MyMsgBoxMarkdown($"提交者：{item.User}（{GetTimeSpanString(item.Time - DateTime.Now, False)}）{vbCrLf}状态：{StatusDesc}{vbCrLf}{vbCrLf}{item.Content}",
+                                      Select Case MyMsgBoxMarkdown($"提交者：{item.User}（{TimeUtils.GetTimeSpanString(item.Time - DateTime.Now, False)}）{vbCrLf}状态：{StatusDesc}{vbCrLf}{vbCrLf}{item.Content}",
                                                "#" & item.ID & " " & item.Title,
                                                Button2:="查看详情")
                                           Case 2

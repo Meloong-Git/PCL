@@ -2,10 +2,12 @@ Imports System.ComponentModel
 Imports System.Net.Http
 Imports System.Runtime.InteropServices
 Imports System.Threading.Tasks
+Imports System
 Imports System.IO.Compression
 Imports CacheCow.Client
 Imports CacheCow.Common
 Imports PCL.Core.Net
+Imports PCL.Core.Utils
 Imports PCL.Core.Utils.Hash
 
 Public Module ModNet
@@ -202,7 +204,7 @@ Public Module ModNet
     Public Function NetGetCodeByClient(Url As String, Encoding As Encoding, Optional Accept As String = "application/json, text/javascript, */*; q=0.01", Optional UseBrowserUserAgent As Boolean = False) As String
         Dim RetryCount As Integer = 0
         Dim RetryException As Exception = Nothing
-        Dim StartTime As Long = GetTimeTick()
+        Dim StartTime As Long = TimeUtils.GetTimeTick()
         While RetryCount <= 3
             RetryCount += 1
             Try
@@ -213,7 +215,7 @@ Public Module ModNet
                         Thread.Sleep(500)
                         Return NetGetCodeByClient(Url, Encoding, 30000, Accept, UseBrowserUserAgent)
                     Case Else '快速重试
-                        If GetTimeTick() - StartTime > 5500 Then
+                        If TimeUtils.GetTimeTick() - StartTime > 5500 Then
                             '若前两次加载耗费 5 秒以上，才进行重试
                             Thread.Sleep(500)
                             Return NetGetCodeByClient(Url, Encoding, 4000, Accept, UseBrowserUserAgent)
@@ -274,7 +276,7 @@ Public Module ModNet
                                              Optional IsJson As Boolean = False, Optional BackupUrl As String = Nothing, Optional UseBrowserUserAgent As Boolean = False)
         Dim RetryCount As Integer = 0
         Dim RetryException As Exception = Nothing
-        Dim StartTime As Long = GetTimeTick()
+        Dim StartTime As Long = TimeUtils.GetTimeTick()
         While RetryCount <= 3
             RetryCount += 1
             Try
@@ -285,7 +287,7 @@ Public Module ModNet
                         Thread.Sleep(500)
                         Return NetGetCodeByRequestOnce(If(BackupUrl, Url), Encode, 30000, IsJson, Accept, UseBrowserUserAgent)
                     Case Else '快速重试
-                        If GetTimeTick() - StartTime > 5500 Then
+                        If TimeUtils.GetTimeTick() - StartTime > 5500 Then
                             '若前两次加载耗费 5 秒以上，才进行重试
                             Thread.Sleep(500)
                             Return NetGetCodeByRequestOnce(If(BackupUrl, Url), Encode, 4000, IsJson, Accept, UseBrowserUserAgent)
@@ -439,7 +441,7 @@ Public Module ModNet
     Public Function NetRequestRetry(Url As String, Method As String, Data As Object, ContentType As String, Optional DontRetryOnRefused As Boolean = True, Optional Headers As Dictionary(Of String, String) = Nothing) As String
         Dim RetryCount As Integer = 0
         Dim RetryException As Exception = Nothing
-        Dim StartTime As Long = GetTimeTick()
+        Dim StartTime As Long = TimeUtils.GetTimeTick()
         While RetryCount <= 3
             RetryCount += 1
             Try
@@ -450,7 +452,7 @@ Public Module ModNet
                         Thread.Sleep(500)
                         Return NetRequestOnce(Url, Method, Data, ContentType, 25000, Headers)
                     Case Else '快速重试
-                        If GetTimeTick() - StartTime > 5500 Then
+                        If TimeUtils.GetTimeTick() - StartTime > 5500 Then
                             '若前两次加载耗费 5 秒以上，才进行重试
                             Thread.Sleep(500)
                             Return NetRequestOnce(Url, Method, Data, ContentType, 4000, Headers)
@@ -747,7 +749,7 @@ Public Module ModNet
         ''' <summary>
         ''' 上次记速时的时间。
         ''' </summary>
-        Private SpeedLastTime As Long = GetTimeTick()
+        Private SpeedLastTime As Long = TimeUtils.GetTimeTick()
         ''' <summary>
         ''' 上次记速时的已下载大小。
         ''' </summary>
@@ -757,8 +759,8 @@ Public Module ModNet
         ''' </summary>
         Public ReadOnly Property Speed As Long
             Get
-                If GetTimeTick() - SpeedLastTime > 200 Then
-                    Dim DeltaTime As Long = GetTimeTick() - SpeedLastTime
+                If TimeUtils.GetTimeTick() - SpeedLastTime > 200 Then
+                    Dim DeltaTime As Long = TimeUtils.GetTimeTick() - SpeedLastTime
                     _Speed = (DownloadDone - SpeedLastDone) / (DeltaTime / 1000)
                     SpeedLastDone = DownloadDone
                     SpeedLastTime += DeltaTime
@@ -771,7 +773,7 @@ Public Module ModNet
         ''' <summary>
         ''' 线程初始化时的时间。
         ''' </summary>
-        Public InitTime As Long = GetTimeTick()
+        Public InitTime As Long = TimeUtils.GetTimeTick()
         ''' <summary>
         ''' 上次接受到有效数据的时间，-1 表示尚未有有效数据。
         ''' </summary>
@@ -929,7 +931,7 @@ Public Module ModNet
         ''' <summary>
         ''' 上次记速时的时间。
         ''' </summary>
-        Private SpeedLastTime As Long = GetTimeTick()
+        Private SpeedLastTime As Long = TimeUtils.GetTimeTick()
         ''' <summary>
         ''' 上次记速时的已下载大小。
         ''' </summary>
@@ -939,8 +941,8 @@ Public Module ModNet
         ''' </summary>
         Public ReadOnly Property Speed As Long
             Get
-                If GetTimeTick() - SpeedLastTime > 200 Then
-                    Dim DeltaTime As Long = GetTimeTick() - SpeedLastTime
+                If TimeUtils.GetTimeTick() - SpeedLastTime > 200 Then
+                    Dim DeltaTime As Long = TimeUtils.GetTimeTick() - SpeedLastTime
                     _Speed = (DownloadDone - SpeedLastDone) / (DeltaTime / 1000)
                     SpeedLastDone = DownloadDone
                     SpeedLastTime += DeltaTime
@@ -1261,7 +1263,7 @@ NotSupportRange:
                                 SyncLock NetTaskSpeedLimitLeftLock
                                     If NetTaskSpeedLimitHigh > 0 Then NetTaskSpeedLimitLeft -= RealDataCount
                                 End SyncLock
-                                Dim DeltaTime = GetTimeTick() - Info.LastReceiveTime
+                                Dim DeltaTime = TimeUtils.GetTimeTick() - Info.LastReceiveTime
                                 If DeltaTime > 1000000 Then DeltaTime = 1 '时间刻反转导致出现极大值
                                 If RealDataCount > 0 Then
                                     '有数据
@@ -1273,7 +1275,7 @@ NotSupportRange:
                                         End SyncLock
                                         SyncLock LockCount
                                             ConnectCount += 1
-                                            ConnectTime += GetTimeTick() - Info.InitTime
+                                            ConnectTime += TimeUtils.GetTimeTick() - Info.InitTime
                                         End SyncLock
                                     End If
                                     SyncLock LockCount
@@ -1306,7 +1308,7 @@ NotSupportRange:
                                     If DeltaTime > 1500 AndAlso DeltaTime > RealDataCount Then '数据包间隔大于 1.5s，且速度小于 1.5K/s
                                         Throw New TimeoutException("由于速度过慢断开链接，下载 " & RealDataCount & " B，消耗 " & DeltaTime & " ms。")
                                     End If
-                                    Info.LastReceiveTime = GetTimeTick()
+                                    Info.LastReceiveTime = TimeUtils.GetTimeTick()
                                     '已完成
                                     If Info.DownloadUndone = 0 AndAlso Not IsUnknownSize Then Exit While
                                 ElseIf Info.LastReceiveTime > 0 AndAlso DeltaTime > Timeout Then
@@ -2002,7 +2004,7 @@ Retry:
         ''' </summary>
         Private Sub RefreshStat()
             Try
-                Dim DeltaTime As Long = GetTimeTick() - RefreshStatLast
+                Dim DeltaTime As Long = TimeUtils.GetTimeTick() - RefreshStatLast
                 If DeltaTime = 0 Then Return
                 RefreshStatLast += DeltaTime
 #Region "刷新整体速度"
@@ -2102,9 +2104,9 @@ Retry:
             Sub()
                 Try
                     Dim LastLoopTime As Long
-                    NetTaskSpeedLimitLeftLast = GetTimeTick()
+                    NetTaskSpeedLimitLeftLast = TimeUtils.GetTimeTick()
                     While True
-                        Dim TimeNow = GetTimeTick()
+                        Dim TimeNow = TimeUtils.GetTimeTick()
                         LastLoopTime = TimeNow
                         '增加限速余量
                         If NetTaskSpeedLimitHigh > 0 Then NetTaskSpeedLimitLeft = NetTaskSpeedLimitHigh / 1000 * (TimeNow - NetTaskSpeedLimitLeftLast)
@@ -2112,7 +2114,7 @@ Retry:
                         '刷新公开属性
                         RefreshStat()
                         '等待直至 80 ms
-                        Do While GetTimeTick() - LastLoopTime < 80
+                        Do While TimeUtils.GetTimeTick() - LastLoopTime < 80
                             Thread.Sleep(10)
                         Loop
                     End While

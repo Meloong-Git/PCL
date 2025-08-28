@@ -1,5 +1,6 @@
 ﻿'动画引擎模块
 '使用 Ani 作为方法或属性的开头，使用 Aa 作为单个动画对象的开头（便于自动补全）
+Imports PCL.Core.Utils
 
 Public Module ModAnimation
 
@@ -743,9 +744,9 @@ Public Module ModAnimation
     ''' <param name="AniGroup">由 Aa 开头的函数初始化的 AniData 对象集合。</param>
     ''' <param name="Name">动画组的名称。如果重复会直接停止同名动画组。</param>
     Public Sub AniStart(AniGroup As IList, Optional Name As String = "", Optional RefreshTime As Boolean = False)
-        If RefreshTime Then AniLastTick = GetTimeTick() '避免处理动画时已经造成了极大的延迟，导致动画突然结束
+        If RefreshTime Then AniLastTick = TimeUtils.GetTimeTick() '避免处理动画时已经造成了极大的延迟，导致动画突然结束
         '添加到正在执行的动画组
-        Dim NewEntry As New AniGroupEntry With {.Data = GetFullList(Of AniData)(AniGroup), .StartTick = GetTimeTick()}
+        Dim NewEntry As New AniGroupEntry With {.Data = GetFullList(Of AniData)(AniGroup), .StartTick = TimeUtils.GetTimeTick()}
         If Name = "" Then
             Name = NewEntry.Uuid
         Else
@@ -788,7 +789,7 @@ Public Module ModAnimation
     ''' </summary>
     Public Sub AniStart()
         '初始化计时器
-        AniLastTick = GetTimeTick()
+        AniLastTick = TimeUtils.GetTimeTick()
         AniFPSTimer = AniLastTick
         AniRunning = True '标记动画执行开始
 
@@ -800,13 +801,13 @@ Public Module ModAnimation
                                Log("[Animation] 动画线程开始")
                                Do While True
                                    '两帧之间的间隔时间
-                                   Dim DeltaTime As Long = MathClamp(GetTimeTick() - AniLastTick, 0, 100000)
+                                   Dim DeltaTime As Long = MathClamp(TimeUtils.GetTimeTick() - AniLastTick, 0, 100000)
                                    If DeltaTime < MinFrameGap Then
                                        '限制 FPS
                                        Thread.Sleep(1)
                                        Continue Do
                                    End If
-                                   AniLastTick = GetTimeTick()
+                                   AniLastTick = TimeUtils.GetTimeTick()
                                    '记录 FPS
                                    If ModeDebug Then
                                        If MathClamp(AniLastTick - AniFPSTimer, 0, 100000) >= 500 Then

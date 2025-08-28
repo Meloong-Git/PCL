@@ -1,6 +1,8 @@
 ﻿Imports System.Windows.Threading
 Imports PCL.Core.App
+Imports PCL.Core.IO
 Imports PCL.Core.ProgramSetup
+Imports PCL.Core.Utils
 Imports PCL.Core.Utils.OS
 Imports NEWSetup = PCL.Core.ProgramSetup.Setup
 
@@ -77,7 +79,7 @@ Public Class Application
             Directory.CreateDirectory(Path & "PCL\Musics")
             Try
                 Directory.CreateDirectory(PathTemp)
-                If Not CheckPermission(PathTemp) Then Throw New Exception("PCL 没有对 " & PathTemp & " 的访问权限")
+                If Not Files.CheckPermission(PathTemp) Then Throw New Exception("PCL 没有对 " & PathTemp & " 的访问权限")
             Catch ex As Exception
                 If PathTemp = IO.Path.GetTempPath() & "PCL\" Then
                     MyMsgBox("PCL 无法访问缓存文件夹，可能导致程序出错或无法正常使用！" & vbCrLf & "错误原因：" & GetExceptionDetail(ex), "缓存文件夹不可用")
@@ -185,8 +187,8 @@ WaitRetry:
             'Pipe RPC 初始化
             StartEchoPipe()
             '计时
-            Log("[Start] 第一阶段加载用时：" & GetTimeTick() - ApplicationStartTick & " ms")
-            ApplicationStartTick = GetTimeTick()
+            Log("[Start] 第一阶段加载用时：" & TimeUtils.GetTimeTick() - ApplicationStartTick & " ms")
+            ApplicationStartTick = TimeUtils.GetTimeTick()
             '执行测试
 #If DEBUGRESERVED Then
             Test()

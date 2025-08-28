@@ -1,6 +1,7 @@
 Imports System.Windows.Interop
 Imports System.Windows.Threading
 Imports Microsoft.Win32
+Imports PCL.Core.IO
 
 Public Module ModMain
 
@@ -977,14 +978,14 @@ NextFile:
             ResultFolder = $"{PathTemp}TaskTemp\{GetUuid()}-{RandomInteger(0, 1000000)}\"
             If RequireNonSpace AndAlso ResultFolder.Contains(" ") Then Exit Try '带空格
             Directory.CreateDirectory(ResultFolder)
-            CheckPermissionWithException(ResultFolder)
+            Files.CheckPermissionWithException(ResultFolder)
             Return ResultFolder
         Catch
         End Try
         '使用备用路径
         ResultFolder = $"{OsDrive}ProgramData\PCL\TaskTemp\{GetUuid()}-{RandomInteger(0, 1000000)}\"
         Directory.CreateDirectory(ResultFolder)
-        CheckPermission(ResultFolder)
+        Files.CheckPermission(ResultFolder)
         Return ResultFolder
     End Function
 

@@ -10,6 +10,8 @@ Imports Microsoft.Win32
 Imports Newtonsoft.Json
 Imports PCL.Core.App
 Imports PCL.Core.Logging
+Imports PCL.Core.Utils
+Imports System.Windows
 Imports PCL.Core.Utils.OS
 
 Public Module ModBase
@@ -63,7 +65,7 @@ Public Module ModBase
     ''' <summary>
     ''' 程序的打开计时。
     ''' </summary>
-    Public ApplicationStartTick As Long = GetTimeTick()
+    Public ApplicationStartTick As Long = TimeUtils.GetTimeTick()
     ''' <summary>
     ''' 程序打开时的时间。
     ''' </summary>
@@ -911,7 +913,7 @@ Public Module ModBase
             Dim readedContent As New MemoryStream()
             Stream.CopyTo(readedContent)
             Dim Bts = readedContent.ToArray()
-            Return If(Encoding, GetEncoding(Bts)).GetString(Bts)
+            Return If(Encoding, EncodingDetector.DetectEncoding(Bts)).GetString(Bts)
         Catch ex As Exception
             Log(ex, "读取流出错")
             Return ""
@@ -931,7 +933,7 @@ Public Module ModBase
         '写入文件
         If Append Then
             '追加目前文件
-            Using writer As New StreamWriter(FilePath, True, If(Encoding, GetEncoding(ReadFileBytes(FilePath))))
+            Using writer As New StreamWriter(FilePath, True, If(Encoding, EncodingDetector.DetectEncoding(ReadFileBytes(FilePath))))
                 writer.Write(Text)
             End Using
         Else
@@ -975,36 +977,7 @@ Public Module ModBase
             Return False
         End Try
     End Function
-
-    '文件编码
-    ''' <summary>
-    ''' 根据字节数组分析其编码。
-    ''' </summary>
-    Public Function GetEncoding(Bytes As Byte()) As Encoding
-        Dim Length As Integer = Bytes.Count
-        If Length < 3 Then Return New UTF8Encoding(False) '不带 BOM 的 UTF8
-        '根据 BOM 判断编码
-        If Bytes(0) >= &HEF Then
-            '有 BOM 类型
-            If Bytes(0) = &HEF AndAlso Bytes(1) = &HBB Then
-                Return New UTF8Encoding(True) '带 BOM 的 UTF8
-            ElseIf Bytes(0) = &HFE AndAlso Bytes(1) = &HFF Then
-                Return Encoding.BigEndianUnicode
-            ElseIf Bytes(0) = &HFF AndAlso Bytes(1) = &HFE Then
-                Return Encoding.Unicode
-            Else
-                Return Encoding.GetEncoding("GB18030")
-            End If
-        End If
-        '无 BOM 文件：GB18030（ANSI）或 UTF8
-        Dim UTF8 = Encoding.UTF8.GetString(Bytes)
-        Dim ErrorChar As Char = Encoding.UTF8.GetString({239, 191, 189}).ToCharArray()(0)
-        If UTF8.Contains(ErrorChar) Then
-            Return Encoding.GetEncoding("GB18030")
-        Else
-            Return New UTF8Encoding(False) '不带 BOM 的 UTF8
-        End If
-    End Function
+    
     ''' <summary>
     ''' 解码 Bytes。
     ''' </summary>
@@ -1114,36 +1087,6 @@ Public Module ModBase
     End Function
 
     '文件校验
-    ''' <summary>
-    ''' 检查是否拥有某一文件夹的 I/O 权限。如果文件夹不存在，会返回 False。
-    ''' </summary>
-    Public Function CheckPermission(Path As String) As Boolean
-        Try
-            If String.IsNullOrEmpty(Path) Then Return False
-            If Not Path.EndsWithF("\") Then Path += "\"
-            If Path.EndsWithF(":\System Volume Information\") OrElse Path.EndsWithF(":\$RECYCLE.BIN\") Then Return False
-            If Not Directory.Exists(Path) Then Return False
-            Dim FileName As String = "CheckPermission" & GetUuid()
-            If File.Exists(Path & FileName) Then File.Delete(Path & FileName)
-            File.Create(Path & FileName).Dispose()
-            File.Delete(Path & FileName)
-            Return True
-        Catch ex As Exception
-            Log(ex, "没有对文件夹 " & Path & " 的权限，请尝试以管理员权限运行 PCL")
-            Return False
-        End Try
-    End Function
-    ''' <summary>
-    ''' 检查是否拥有某一文件夹的 I/O 权限。如果出错，则抛出异常。
-    ''' </summary>
-    Public Sub CheckPermissionWithException(Path As String)
-        If String.IsNullOrWhiteSpace(Path) Then Throw New ArgumentNullException("文件夹名不能为空！")
-        If Not Path.EndsWithF("\") Then Path += "\"
-        If Not Directory.Exists(Path) Then Throw New DirectoryNotFoundException("文件夹不存在！")
-        If File.Exists(Path & "CheckPermission") Then File.Delete(Path & "CheckPermission")
-        File.Create(Path & "CheckPermission").Dispose()
-        File.Delete(Path & "CheckPermission")
-    End Sub
     ''' <summary>
     ''' 获取文件 MD5，若失败则返回空字符串。
     ''' </summary>
@@ -2339,90 +2282,7 @@ NextElement:
         Next i
         Return ResultArray
     End Function
-
-    ''' <summary>
-    ''' 获取格式类似于“11:08:52.037”的当前时间的字符串。
-    ''' </summary>
-    Public Function GetTimeNow() As String
-        Return Date.Now.ToString("HH':'mm':'ss'.'fff")
-    End Function
-    ''' <summary>
-    ''' 获取系统运行时间（毫秒），保证为正 Long 且大于 1，但可能突变减小。
-    ''' </summary>
-    Public Function GetTimeTick() As Long
-        Return Environment.TickCount + 2147483651L
-    End Function
-    ''' <summary>
-    ''' 将时间间隔转换为类似“5 分 10 秒前”的易于阅读的形式。
-    ''' </summary>
-    Public Function GetTimeSpanString(Span As TimeSpan, IsShortForm As Boolean) As String
-        Dim EndFix = If(Span.TotalMilliseconds > 0, "后", "前")
-        If Span.TotalMilliseconds < 0 Then Span = -Span
-        Dim TotalMonthes = Math.Floor(Span.Days / 30)
-        If IsShortForm Then
-            If TotalMonthes >= 12 Then
-                '1+ 年，“3 年”
-                GetTimeSpanString = Math.Floor(TotalMonthes / 12) & " 年"
-            ElseIf TotalMonthes >= 2 Then
-                '2~11 月，“5 个月”
-                GetTimeSpanString = TotalMonthes & " 个月"
-            ElseIf Span.TotalDays >= 2 Then
-                '2 天 ~ 2 月，“23 天”
-                GetTimeSpanString = Span.Days & " 天"
-            ElseIf Span.TotalHours >= 1 Then
-                '1 小时 ~ 2 天，“15 小时”
-                GetTimeSpanString = Span.Hours & " 小时"
-            ElseIf Span.TotalMinutes >= 1 Then
-                '1 分钟 ~ 1 小时，“49 分钟”
-                GetTimeSpanString = Span.Minutes & " 分钟"
-            ElseIf Span.TotalSeconds >= 1 Then
-                '1 秒 ~ 1 分钟，“23 秒”
-                GetTimeSpanString = Span.Seconds & " 秒"
-            Else
-                '不到 1 秒
-                GetTimeSpanString = "1 秒"
-            End If
-        Else
-            If TotalMonthes >= 61 Then
-                '5+ 年，“5 年”
-                GetTimeSpanString = Math.Floor(TotalMonthes / 12) & " 年"
-            ElseIf TotalMonthes >= 12 Then
-                '12~60 月，“1 年 2 个月”
-                GetTimeSpanString = Math.Floor(TotalMonthes / 12) & " 年" & If((TotalMonthes Mod 12) > 0, " " & (TotalMonthes Mod 12) & " 个月", "")
-            ElseIf TotalMonthes >= 4 Then
-                '4~11 月，“5 个月”
-                GetTimeSpanString = TotalMonthes & " 个月"
-            ElseIf TotalMonthes >= 1 Then
-                '1~4 月，“2 个月 13 天”
-                GetTimeSpanString = TotalMonthes & " 月" & If((Span.Days Mod 30) > 0, " " & (Span.Days Mod 30) & " 天", "")
-            ElseIf Span.TotalDays >= 4 Then
-                '4~30 天，“23 天”
-                GetTimeSpanString = Span.Days & " 天"
-            ElseIf Span.TotalDays >= 1 Then
-                '1~3 天，“2 天 20 小时”
-                GetTimeSpanString = Span.Days & " 天" & If(Span.Hours > 0, " " & Span.Hours & " 小时", "")
-            ElseIf Span.TotalHours >= 10 Then
-                '10 小时 ~ 1 天，“15 小时”
-                GetTimeSpanString = Span.Hours & " 小时"
-            ElseIf Span.TotalHours >= 1 Then
-                '1~10 小时，“1 小时 20 分钟”
-                GetTimeSpanString = Span.Hours & " 小时" & If(Span.Minutes > 0, " " & Span.Minutes & " 分钟", "")
-            ElseIf Span.TotalMinutes >= 10 Then
-                '10 分钟 ~ 1 小时，“49 分钟”
-                GetTimeSpanString = Span.Minutes & " 分钟"
-            ElseIf Span.TotalMinutes >= 1 Then
-                '1~10 分钟，“9 分 23 秒”
-                GetTimeSpanString = Span.Minutes & " 分" & If(Span.Seconds > 0, " " & Span.Seconds & " 秒", "")
-            ElseIf Span.TotalSeconds >= 1 Then
-                '1 秒 ~ 1 分钟，“23 秒”
-                GetTimeSpanString = Span.Seconds & " 秒"
-            Else
-                '不到 1 秒
-                GetTimeSpanString = "1 秒"
-            End If
-        End If
-        GetTimeSpanString += EndFix
-    End Function
+    
     ''' <summary>
     ''' 获取十进制 Unix 时间戳。
     ''' </summary>

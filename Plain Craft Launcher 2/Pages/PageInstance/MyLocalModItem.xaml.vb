@@ -1,4 +1,5 @@
 Imports System.Windows.Forms
+Imports PCL.Core.Utils
 
 Public Class MyLocalCompItem
 
@@ -345,7 +346,7 @@ Public Class MyLocalCompItem
             NewestName = Join(NewestSegs, "-")
             Entry._Version = CurrentName '使用网络信息作为显示的版本号
         End If
-        Return $"当前版本：{CurrentName}（{GetTimeSpanString(Entry.CompFile.ReleaseDate - Date.Now, False)}）{vbCrLf}最新版本：{NewestName}（{GetTimeSpanString(Entry.UpdateFile.ReleaseDate - Date.Now, False)}）"
+        Return $"当前版本：{CurrentName}（{TimeUtils.GetTimeSpanString(Entry.CompFile.ReleaseDate - Date.Now, False)}）{vbCrLf}最新版本：{NewestName}（{TimeUtils.GetTimeSpanString(Entry.UpdateFile.ReleaseDate - Date.Now, False)}）"
     End Function
     Public Sub Refresh() Handles Me.Loaded
         RunInUi(

@@ -1,4 +1,6 @@
-﻿Public Module ModDownload
+﻿Imports PCL.Core.Utils
+
+Public Module ModDownload
 
 #Region "DlClient* | Minecraft 客户端"
 
@@ -201,7 +203,7 @@
     Public DlClientListMojangLoader As New LoaderTask(Of String, DlClientListResult)("DlClientList Mojang", AddressOf DlClientListMojangMain)
     Private IsNewClientVersionHinted As Boolean = False
     Private Sub DlClientListMojangMain(Loader As LoaderTask(Of String, DlClientListResult))
-        Dim StartTime As Long = GetTimeTick()
+        Dim StartTime As Long = TimeUtils.GetTimeTick()
         Dim Json As JObject = NetGetCodeByRequestRetry("https://launchermeta.mojang.com/mc/game/version_manifest.json", IsJson:=True)
         Try
             Dim Versions As JArray = Json("versions")
@@ -224,7 +226,7 @@
             End Try
             '确定官方源是否可用
             If Not DlPreferMojang Then
-                Dim DeltaTime = GetTimeTick() - StartTime
+                Dim DeltaTime = TimeUtils.GetTimeTick() - StartTime
                 DlPreferMojang = DeltaTime < 4000
                 Log($"[Download] Mojang 官方源加载耗时：{DeltaTime}ms，{If(DlPreferMojang, "可优先使用官方源", "不优先使用官方源")}")
             End If

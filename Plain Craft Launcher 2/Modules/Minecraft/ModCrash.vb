@@ -923,7 +923,7 @@ NextStack:
                             FileEncoding = Encoding.UTF8
                         End If
                         If File.Exists(OutputFile) Then
-                            If FileEncoding Is Nothing Then FileEncoding = GetEncoding(ReadFileBytes(OutputFile))
+                            If FileEncoding Is Nothing Then FileEncoding = EncodingDetector.DetectEncoding(ReadFileBytes(OutputFile))
                             Dim FileContent As String = ReadFile(OutputFile, FileEncoding)
                             FileContent = FilterAccessToken(FileContent, If(FileName = "启动脚本.bat", "F", "*"))
                             FileContent = FilterUserName(FileContent, "*")

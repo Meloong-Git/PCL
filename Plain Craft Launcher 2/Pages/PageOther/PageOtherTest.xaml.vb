@@ -84,7 +84,7 @@ Public Class PageOtherTest
             Folder = Folder.Replace("/", "\").TrimEnd(New Char() {"\"c}) + "\"
             Try
                 Directory.CreateDirectory(Folder)
-                CheckPermissionWithException(Folder)
+                Files.CheckPermissionWithException(Folder)
             Catch ex As Exception
                 Log(ex, "访问文件夹失败（" + Folder + "）", ModBase.LogLevel.Hint, "出现错误")
                 Return

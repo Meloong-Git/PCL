@@ -1,4 +1,6 @@
-﻿Public Module ModLoader
+﻿Imports PCL.Core.Utils
+
+Public Module ModLoader
 
     '各类加载器
     ''' <summary>
@@ -291,7 +293,7 @@
             If IsForceRestart Then Return True '强制要求重启
             If ((Input Is Nothing) <> (Me.Input Is Nothing)) OrElse (Input IsNot Nothing AndAlso Not Input.Equals(Me.Input)) Then Return True '输入不同
             If (State = LoadState.Loading OrElse State = LoadState.Finished) AndAlso '正在加载或已结束
-               (IgnoreReloadTimeout OrElse ReloadTimeout = -1 OrElse LastFinishedTime = 0 OrElse GetTimeTick() - LastFinishedTime < ReloadTimeout) Then '没有超时
+               (IgnoreReloadTimeout OrElse ReloadTimeout = -1 OrElse LastFinishedTime = 0 OrElse TimeUtils.GetTimeTick() - LastFinishedTime < ReloadTimeout) Then '没有超时
                 Return False '则不重试
             Else
                 Return True '需要开始
@@ -324,7 +326,7 @@
                     If ModeDebug Then Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已完成")
                     RaisePreviewFinish()
                     State = LoadState.Finished
-                    LastFinishedTime = GetTimeTick() '未中断，本次输出有效
+                    LastFinishedTime = TimeUtils.GetTimeTick() '未中断，本次输出有效
                 Catch ex As CancelledException
                     If ModeDebug Then Log(ex, $"加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已触发取消中断，已完成 {Math.Round(Progress * 100)}%")
                     If Not IsAborted Then State = LoadState.Aborted

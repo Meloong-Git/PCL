@@ -2,6 +2,7 @@
 Imports System.IO.Compression
 Imports System.Text.Json.Nodes
 Imports PCL.Core.Minecraft
+Imports PCL.Core.Utils
 
 Public Module ModLaunch
 
@@ -83,7 +84,7 @@ Public Module ModLaunch
     ''' </summary>
     Public Sub McLaunchLog(Text As String)
         Text = FilterUserName(FilterAccessToken(Text, "*"), "*")
-        RunInUi(Sub() FrmLaunchRight.LabLog.Text += vbCrLf & "[" & GetTimeNow() & "] " & Text)
+        RunInUi(Sub() FrmLaunchRight.LabLog.Text += vbCrLf & "[" & TimeUtils.GetTimeNow() & "] " & Text)
         Log("[Launch] " & Text)
     End Sub
 
@@ -495,7 +496,7 @@ NextInner:
         '检查是否已经登录完成
         If Not Data.IsForceRestarting AndAlso '不要求强行重启
            Not String.IsNullOrEmpty(Input.AccessToken) AndAlso '已经登录过了
-           (McLoginMsRefreshTime > 0 AndAlso GetTimeTick() - McLoginMsRefreshTime < 1000 * 60 * 10) Then '完成时间在 10 分钟内
+           (McLoginMsRefreshTime > 0 AndAlso TimeUtils.GetTimeTick() - McLoginMsRefreshTime < 1000 * 60 * 10) Then '完成时间在 10 分钟内
             Data.Output = New McLoginResult With
                 {.AccessToken = Input.AccessToken, .Name = Input.UserName, .Uuid = Input.Uuid, .Type = "Microsoft", .ClientToken = Input.Uuid, .ProfileJson = Input.ProfileJson}
             GoTo SkipLogin
@@ -586,7 +587,7 @@ Relogin:
             .ProfileJson = Result(2)}
 SkipLogin:
         '结束
-        McLoginMsRefreshTime = GetTimeTick()
+        McLoginMsRefreshTime = TimeUtils.GetTimeTick()
         ProfileLog("正版验证完成")
         Setup.Set("HintBuy", True) '关闭正版购买提示
         If IsSkipAuth Then

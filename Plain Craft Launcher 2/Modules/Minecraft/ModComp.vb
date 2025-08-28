@@ -1,6 +1,7 @@
 ﻿Imports System.Threading.Tasks
 Imports System.Net.Http
 Imports LiteDB
+Imports PCL.Core.Utils
 
 Public Module ModComp
 
@@ -737,7 +738,7 @@ Public Module ModComp
             End If
             NewItem.LabSource.Text = If(FromCurseForge, "CurseForge", "Modrinth")
             If LastUpdate IsNot Nothing Then
-                NewItem.LabTime.Text = GetTimeSpanString(LastUpdate - Date.Now, True)
+                NewItem.LabTime.Text = TimeUtils.GetTimeSpanString(LastUpdate - Date.Now, True)
             Else
                 NewItem.LabTime.Visibility = Visibility.Collapsed
                 NewItem.ColumnTime1.Width = New GridLength(0)
@@ -1649,7 +1650,7 @@ Retry:
             If DownloadCount > 0 Then 'CurseForge 的下载次数经常错误地返回 0
                 Info.Add("下载 " & If(DownloadCount > 100000, Math.Round(DownloadCount / 10000) & " 万次", DownloadCount & " 次"))
             End If
-            Info.Add("更新于 " & GetTimeSpanString(ReleaseDate - Date.Now, False))
+            Info.Add("更新于 " & TimeUtils.GetTimeSpanString(ReleaseDate - Date.Now, False))
             If Status <> CompFileStatus.Release Then Info.Add(StatusDescription)
 
             '建立控件

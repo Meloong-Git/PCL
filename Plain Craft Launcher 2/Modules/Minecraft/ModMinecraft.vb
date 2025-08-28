@@ -2,6 +2,8 @@
 Imports PCL.Core.ProgramSetup
 Imports NEWSetup = PCL.Core.ProgramSetup.Setup
 Imports System.Text.Json.Nodes
+Imports PCL.Core.IO
+Imports PCL.Core.Utils
 
 Public Module ModMinecraft
 
@@ -56,7 +58,7 @@ Public Module ModMinecraft
                 Dim name As String = folder.Split(">")(0)
                 Dim path As String = folder.Split(">")(1)
                 Try
-                    CheckPermissionWithException(path)
+                    Files.CheckPermissionWithException(path)
                     cacheMcFolderList.Add(New McFolder With {.Name = name, .Path = path, .Type = McFolderType.Custom})
                 Catch ex As Exception
                     MyMsgBox("失效的 Minecraft 文件夹：" & vbCrLf & path & vbCrLf & vbCrLf & GetExceptionSummary(ex), "Minecraft 文件夹失效", IsWarn:=True)
@@ -654,7 +656,7 @@ Recheck:
             '检查权限
             Try
                 Directory.CreateDirectory(Path & "PCL\")
-                CheckPermissionWithException(Path & "PCL\")
+                Files.CheckPermissionWithException(Path & "PCL\")
             Catch ex As Exception
                 State = McInstanceState.Error
                 Info = "PCL 没有对该文件夹的访问权限，请右键以管理员身份运行 PCL"
@@ -2460,7 +2462,7 @@ OnLoaded:
             If Version Is Nothing Then Return
             Dim Time As Date = Version("releaseTime")
             Dim MsgBoxText As String = $"新版本：{VersionName}{vbCrLf}" &
-                If((Date.Now - Time).TotalDays > 1, "更新时间：" & Time.ToString, "更新于：" & GetTimeSpanString(Time - Date.Now, False))
+                If((Date.Now - Time).TotalDays > 1, "更新时间：" & Time.ToString, "更新于：" & TimeUtils.GetTimeSpanString(Time - Date.Now, False))
             Dim MsgResult = MyMsgBox(MsgBoxText, "Minecraft 更新提示", "确定", "下载", If((Date.Now - Time).TotalHours > 3, "更新日志", ""),
                 Button3Action:=Sub() McUpdateLogShow(Version))
             '弹窗结果
