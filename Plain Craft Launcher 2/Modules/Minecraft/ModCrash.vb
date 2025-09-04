@@ -341,6 +341,7 @@ Extracted:
     ''' 导致崩溃的原因枚举。
     ''' </summary>
     Private Enum CrashReason
+        Java虚拟机参数有误
         Mod文件被解压
         MixinBootstrap缺失
         内存不足
@@ -489,6 +490,7 @@ Done:
 
         '游戏日志分析
         If LogMc IsNot Nothing Then
+            If LogMc.Contains("Unrecognized option:") Then AppendReason(CrashReason.Java虚拟机参数有误)
             If LogMc.Contains("Found multiple arguments for option fml.forgeVersion, but you asked for only one") Then AppendReason(CrashReason.版本Json中存在多个Forge)
             If LogMc.Contains("The driver does not appear to support OpenGL") Then AppendReason(CrashReason.显卡不支持OpenGL)
             If LogMc.Contains("java.lang.ClassCastException: java.base/jdk") Then AppendReason(CrashReason.使用JDK)
@@ -946,6 +948,8 @@ NextStack:
         For Each Reason In CrashReasons
             Dim Additional As List(Of String) = Reason.Value
             Select Case Reason.Key
+                Case CrashReason.Java虚拟机参数有误
+                    Results.Add("由于 Java 虚拟机参数有误，导致游戏无法继续运行。\n请检查高级启动选项中设置的 Java 虚拟机参数是否有误。")
                 Case CrashReason.Mod文件被解压
                     Results.Add("由于 Mod 文件被解压了，导致游戏无法继续运行。\n直接把整个 Mod 文件放进 Mod 文件夹中即可，若解压就会导致游戏出错。\n\n请删除 Mod 文件夹中已被解压的 Mod，然后再启动游戏。")
                 Case CrashReason.内存不足
