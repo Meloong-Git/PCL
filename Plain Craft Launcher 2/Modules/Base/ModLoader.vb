@@ -577,7 +577,7 @@ Restart:
     Private LoaderTaskbarProgressLast As Shell.TaskbarItemProgressState = Shell.TaskbarItemProgressState.None
 
     Public Sub LoaderTaskbarAdd(Of T)(Loader As LoaderCombo(Of T))
-        If FrmSpeedLeft IsNot Nothing Then FrmSpeedLeft.TaskRemove(Loader)
+        FrmSpeedRight?.TaskRemove(Loader)
         LoaderTaskbar.Add(Loader)
         Log($"[Taskbar] {Loader.Name} 已加入任务列表")
     End Sub
@@ -589,7 +589,7 @@ Restart:
             For Each Task In LoaderTaskbar
                 If LoaderTaskbar.All(Function(l) l.State <> LoadState.Loading) OrElse
                    (Task.State = LoadState.Waiting OrElse Task.State = LoadState.Aborted) Then
-                    FrmSpeedLeft?.TaskRefresh(Task)
+                    FrmSpeedRight?.TaskRefresh(Task)
                     LoaderTaskbar.Remove(Task)
                     Log($"[Taskbar] {Task.Name} 已移出任务列表")
                 End If

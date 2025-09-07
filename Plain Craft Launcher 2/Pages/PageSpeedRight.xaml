@@ -5,36 +5,6 @@
      mc:Ignorable="d" x:Class="PageSpeedRight"
      PanScroll="{Binding ElementName=PanBack}">
      <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
-        <StackPanel x:Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True">
-            <!--<local:MyCard Title="UI 的示例下载任务">
-                <Grid Margin="25,40,15,10" Height="156">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="45" />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="26" />
-                        <RowDefinition Height="26" />
-                        <RowDefinition Height="26" />
-                        <RowDefinition Height="26" />
-                        <RowDefinition Height="26" />
-                        <RowDefinition Height="26" />
-                    </Grid.RowDefinitions>
-                    <Path Stretch="Uniform" Data="F1 M 23.7501,33.25L 34.8334,44.3333L 52.2499,22.1668L 56.9999,26.9168L 34.8334,53.8333L 19.0001,38L 23.7501,33.25 Z" Height="16" Width="16" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0" Fill="{DynamicResource ColorBrush3}" Margin="0,2.5,14,0" VerticalAlignment="Top" />
-                    <TextBlock Text="完成了的分任务" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="0" />
-                    <Path Stretch="Uniform" Data="F1 M2.5,0 L0,2.5 7.5,10 0,17.5 2.5,20 10,12.5 17.5,20 20,17.5 12.5,10 20,2.5 17.5,0 10,7.5 2.5,0Z" Height="15" Width="15" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="1" Fill="{DynamicResource ColorBrush3}" Margin="0,1,14,0" VerticalAlignment="Top" />
-                    <TextBlock Text="搞定" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="1" />
-                    <TextBlock Text="98%" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="2" Foreground="{DynamicResource ColorBrush3}" Margin="0,0.5,14,0" />
-                    <TextBlock Text="正在进行中的分任务示例" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="2" />
-                    <Path Stretch="Uniform" Data="F1 M5,0 a5,5 360 1 0 0,0.0001 m15,0 a5,5 360 1 0 0,0.0001 m15,0 a5,5 360 1 0 0,0.0001 Z" Width="18" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="3" Fill="{DynamicResource ColorBrush3}" Margin="0,7,14,0" VerticalAlignment="Top" Height="6" />
-                    <TextBlock Text="还没开始" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="3" />
-                    <Path Stretch="Uniform" Data="F1 M5,0 a5,5 360 1 0 0,0.0001 m15,0 a5,5 360 1 0 0,0.0001 m15,0 a5,5 360 1 0 0,0.0001 Z" Width="16" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="4" Fill="{DynamicResource ColorBrush3}" Margin="0,7.5,14,0" VerticalAlignment="Top" Height="6" />
-                    <TextBlock Text="等待中 = 摸鱼" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="4" />
-                    <Path Stretch="Uniform" Data="F1 M5,0 a5,5 360 1 0 0,0.0001 m15,0 a5,5 360 1 0 0,0.0001 m15,0 a5,5 360 1 0 0,0.0001 Z" Width="16" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="5" Fill="{DynamicResource ColorBrush3}" Margin="0,7.5,14,0" VerticalAlignment="Top" Height="6" />
-                    <TextBlock Text="摸鱼一时爽，一直摸鱼一直爽" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="5" />
-                </Grid>
-                <local:MyIconButton Logo="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z" Height="20" Margin="0,10,10,0" ToolTipService.Placement="Top" ToolTipService.HorizontalOffset="-10" ToolTip="取消" LogoScale="1.1" HorizontalAlignment="Right" VerticalAlignment="Top" />
-            </local:MyCard> -->
-        </StackPanel>
+        <StackPanel x:Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True" />
     </local:MyScrollViewer>
 </local:MyPageRight>
