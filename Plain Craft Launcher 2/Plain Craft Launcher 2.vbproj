@@ -313,6 +313,16 @@
     <Compile Include="Pages\PageLink\PageLinkHiper.xaml.vb">
       <DependentUpon>PageLinkHiper.xaml</DependentUpon>
     </Compile>
+    <Page Include="Pages\PageLogLeft.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Compile Include="Pages\PageLogLeft.xaml.vb">
+      <DependentUpon>PageLogLeft.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLogRight.xaml.vb">
+      <DependentUpon>PageLogRight.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\PageOther\PageOtherHelpDetail.xaml.vb">
       <DependentUpon>PageOtherHelpDetail.xaml</DependentUpon>
     </Compile>
@@ -583,6 +593,9 @@
     <Page Include="Pages\PageLink\PageLinkHiper.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageLogRight.xaml">
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\PageOther\PageOtherHelpDetail.xaml">
       <SubType>Designer</SubType>
