@@ -646,7 +646,20 @@ Wait:
     Private Sub JavaSearchFolder(OriginalPath As String, ByRef Results As Dictionary(Of String, Boolean), Source As Boolean, Optional IsFullSearch As Boolean = False)
         Try
             Log("[Java] 开始" & If(IsFullSearch, "完全", "部分") & "遍历查找：" & OriginalPath)
-            JavaSearchFolder(New DirectoryInfo(ShortenPath(OriginalPath)), Results, Source, IsFullSearch)
+            Dim Path As String = ShortenPath(OriginalPath)
+            Dim Root = New DirectoryInfo(Path)
+            Dim Info As FileSystemInfo = new FileInfo(Path)
+            If Info.Attributes.HasFlag(FileAttributes.ReparsePoint) Then
+                Log("[Java] 搜索目标为符号链接, 尝试转为真实地址进行搜索!")
+                Try
+                    Dim RealPath = KernelFile.GetSymbolicLinkTarget(Path)
+                    Log("[Java] 搜索目标转换为: "+ RealPath)
+                    Root = New DirectoryInfo(RealPath)
+                Catch ex As Exception
+                    Log(ex, "获取真实地址时异常（" & Path & "）, 直接搜索符号链接")
+                End Try
+            End If
+            JavaSearchFolder(Root, Results, Source, IsFullSearch)
         Catch ex As UnauthorizedAccessException
             Log("[Java] 遍历查找 Java 时遭遇无权限的文件夹：" & OriginalPath)
         Catch ex As Exception

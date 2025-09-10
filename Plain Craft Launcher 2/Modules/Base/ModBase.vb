@@ -2,6 +2,7 @@ Imports System.Globalization
 Imports System.IO.Compression
 Imports System.Net.Sockets
 Imports System.Runtime.CompilerServices
+Imports System.Runtime.InteropServices
 Imports System.Security.Cryptography
 Imports System.Security.Principal
 Imports System.Text.RegularExpressions
@@ -1421,7 +1422,44 @@ RetryDir:
         Return ShortPath.ToString
     End Function
     Private Declare Function GetShortPathName Lib "kernel32" Alias "GetShortPathNameA" (ByVal lpszLongPath As String, ByVal lpszShortPath As StringBuilder, ByVal cchBuffer As Integer) As Integer
+    
+    Public Class KernelFile 
+        <DllImport("kernel32.dll", SetLastError:=True, CharSet:=CharSet.Auto)>
+        Private Shared Function GetFinalPathNameByHandle(hFile As IntPtr, ByVal lpszFilePath As String, ByVal cchFilePath As Integer, ByVal dwFlags As Integer) As Integer
+        End Function
 
+        <DllImport("kernel32.dll", SetLastError:=True)>
+        Private Shared Function CreateFile(lpFileName As String, dwDesiredAccess As Integer, dwShareMode As FileShare, lpSecurityAttributes As IntPtr, dwCreationDisposition As FileMode, dwFlagsAndAttributes As Integer, hTemplateFile As IntPtr) As IntPtr
+        End Function
+        
+        <DllImport("kernel32.dll", SetLastError:=True)>
+        Private Shared Function CloseHandle(hObject As IntPtr) As Boolean
+        End Function
+        
+        Public Shared Function GetSymbolicLinkTarget(path As String) As String
+            Dim hFile As IntPtr = CreateFile(path, &H80000000, FileShare.ReadWrite, IntPtr.Zero, FileMode.Open, &H2000000, IntPtr.Zero)
+            If hFile = IntPtr.Zero Then
+                Throw New IOException("无法打开文件句柄", Marshal.GetLastWin32Error())
+            End If
+
+            Try
+                Dim buffer = New String(Chr(0), 260)
+                Dim length As Integer = GetFinalPathNameByHandle(hFile, buffer, buffer.Length, 0)
+                If length = 0 Then
+                    Throw New IOException("无法获取目标路径", Marshal.GetLastWin32Error())
+                End If
+
+                ' 移除可能的前缀"\\?\"
+                Dim targetPath As String = buffer.Substring(0, length)
+                If targetPath.StartsWith("\\?\") Then
+                    targetPath = targetPath.Substring(4)
+                End If
+                Return targetPath
+            Finally
+                CloseHandle(hFile)
+            End Try
+        End Function
+    End Class
 #End Region
 
 #Region "文本"
