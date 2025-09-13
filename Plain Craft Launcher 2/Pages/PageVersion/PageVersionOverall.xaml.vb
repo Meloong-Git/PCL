@@ -331,7 +331,7 @@
                         DeleteDirectory(PageVersionLeft.Version.Path)
                         Hint("版本 " & PageVersionLeft.Version.Name & " 已永久删除！", HintType.Finish)
                     Else
-                        FileIO.FileSystem.DeleteDirectory(PageVersionLeft.Version.Path, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                        FileIO.FileSystem.DeleteDirectory(PageVersionLeft.Version.Path, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
                         Hint("版本 " & PageVersionLeft.Version.Name & " 已删除到回收站！", HintType.Finish)
                     End If
                 Case 2
