@@ -115,7 +115,7 @@
         End Try
     End Sub
     Public Shared Function McVersionListItem(Version As McVersion) As MyListItem
-        Dim NewItem As New MyListItem With {.Title = Version.Name, .Info = Version.Info, .Height = 42, .Tag = Version, .SnapsToDevicePixels = True, .Type = MyListItem.CheckType.Clickable}
+        Dim NewItem As New MyListItem With {.Title = Version.Name, .Info = Version.Info, .Height = 42, .Tag = Version, .SnapsToDevicePixels = True, .Type = MyListItem.CheckType.Clickable, .ToolTip = Version.Version.ToString()}
         Try
             If Version.Logo.EndsWith("PCL\Logo.png") Then
                 NewItem.Logo = Version.Path & "PCL\Logo.png" '修复老版本中，存储的自定义 Logo 使用完整路径，导致移动后无法加载的 Bug
