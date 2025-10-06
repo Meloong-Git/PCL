@@ -33,6 +33,9 @@
                             <local:MyRadioButton Tag="3" ColorType="Highlight" VerticalAlignment="Center" Margin="2,0" Text="可更新" x:Name="BtnFilterCanUpdate" />
                             <local:MyRadioButton Tag="4" ColorType="Highlight" VerticalAlignment="Center" Margin="2,0" Text="错误" x:Name="BtnFilterError" />
                         </StackPanel>
+                        <StackPanel Margin="0,13,15,0" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right" Height="28">
+                            <local:MyIconTextButton x:Name="BtnSort" Text="排序：文件名" Logo="M673.158095 252.830476v634.026667h-71.923809V172.251429c0-10.142476 4.022857-19.846095 11.215238-26.989715a38.546286 38.546286 0 0 1 54.296381 0L926.47619 403.553524l-50.883047 50.566095-202.435048-201.289143zM350.841905 768.121905V134.095238h71.923809v719.823238l-0.902095 6.460953c-1.26781 8.045714-2.56 9.728-9.703619 18.992761l-8.045714 4.388572c-17.92 9.45981-20.577524 7.996952-43.154286-4.388572L97.52381 617.374476l50.883047-50.541714 202.435048 201.264762z"/>
+                        </StackPanel>
                         <StackPanel Margin="20,48,18,22" Name="PanList" VerticalAlignment="Top" />
                     </local:MyCard>
                 </StackPanel>
