@@ -117,7 +117,19 @@ Public Module ModModpack
         Try
 Retry:
             Loader.Progress = InitialProgress
-            DeleteDirectory(InstallTemp)
+            ' 只删除非隐藏/非系统文件和文件夹
+            If Directory.Exists(InstallTemp) Then
+                For Each entry In Directory.GetFileSystemEntries(InstallTemp)
+                    Dim attr = File.GetAttributes(entry)
+                    If (attr And FileAttributes.Hidden) = 0 AndAlso (attr And FileAttributes.System) = 0 Then
+                        If Directory.Exists(entry) Then
+                            DeleteDirectory(entry)
+                        Else
+                            File.Delete(entry)
+                        End If
+                    End If
+                Next
+            End If
             ExtractFile(FileAddress, InstallTemp, Encode, ProgressIncrementHandler:=Sub(Delta) Loader.Progress += Delta * ProgressIncrement)
         Catch ex As Exception
             Log(ex, "第 " & RetryCount & " 次解压尝试失败")
@@ -766,7 +778,7 @@ Retry:
         MyMsgBox("接下来请选择一个空文件夹，它会被安装到这个文件夹里。", "安装", "继续", ForceWait:=True)
         Dim TargetFolder As String = SelectFolder("选择安装目标（必须是一个空文件夹）")
         If String.IsNullOrEmpty(TargetFolder) Then Throw New CancelledException
-        If Directory.GetFileSystemEntries(TargetFolder).Length > 0 Then Hint("请选择一个空文件夹作为安装目标！", HintType.Critical) : Throw New CancelledException
+        If Not IsDirectoryReallyEmpty(TargetFolder) Then Hint("请选择一个空文件夹作为安装目标！", HintType.Critical) : Throw New CancelledException
         '解压
         Dim Loader As New LoaderCombo(Of String)("解压压缩包", {
             New LoaderTask(Of String, Integer)("解压压缩包",
@@ -865,4 +877,25 @@ Retry:
 
 #End Region
 
+    ' 判断文件夹是否只包含隐藏/系统文件
+    Private Function IsDirectoryReallyEmpty(path As String) As Boolean
+        For Each entry In Directory.GetFileSystemEntries(path)
+            Dim attr = File.GetAttributes(entry)
+            If (attr And FileAttributes.Hidden) = 0 AndAlso (attr And FileAttributes.System) = 0 Then
+                Return False
+            End If
+        Next
+        Return True
+    End Function
+
+    ' 判断文件夹是否只包含隐藏/系统文件（不递归）
+    Private Function IsDirectoryOnlyHidden(path As String) As Boolean
+        For Each entry In Directory.GetFileSystemEntries(path)
+            Dim attr = File.GetAttributes(entry)
+            If (attr And FileAttributes.Hidden) = 0 AndAlso (attr And FileAttributes.System) = 0 Then
+                Return False
+            End If
+        Next
+        Return Directory.GetFileSystemEntries(path).Length > 0
+    End Function
 End Module
