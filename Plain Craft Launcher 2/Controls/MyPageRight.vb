@@ -344,6 +344,7 @@
             Element.Visibility = Visibility.Visible '页面均处于默认的隐藏状态
         Next
         Dim AniList As New List(Of AniData)
+        Dim PanAlwaysAniList As List(Of AniData) = Nothing 'PanAlways的动画将被单独存储以允许使用不同的动画组名称
         Dim Delay As Integer = 0
         '基础动画
         For Each Element In RealElements
@@ -358,9 +359,17 @@
                 Else
                     Control.Opacity = 0
                     Control.RenderTransform = New TranslateTransform(0, -16)
-                    AniList.Add(AaOpacity(Control, 1, 100, Delay, New AniEaseOutFluent(AniEasePower.Weak)))
-                    AniList.Add(AaTranslateY(Control, 5, 250, Delay, New AniEaseOutFluent))
-                    AniList.Add(AaTranslateY(Control, 11, 350, Delay, New AniEaseOutBack))
+                    If Control Is PanAlways Then
+                        PanAlwaysAniList = New List(Of AniData) From {
+                            AaOpacity(Control, 1, 100, Delay, New AniEaseOutFluent(AniEasePower.Weak)),
+                            AaTranslateY(Control, 5, 250, Delay, New AniEaseOutFluent),
+                            AaTranslateY(Control, 11, 350, Delay, New AniEaseOutBack)
+                        }
+                    Else
+                        AniList.Add(AaOpacity(Control, 1, 100, Delay, New AniEaseOutFluent(AniEasePower.Weak)))
+                        AniList.Add(AaTranslateY(Control, 5, 250, Delay, New AniEaseOutFluent))
+                        AniList.Add(AaTranslateY(Control, 11, 350, Delay, New AniEaseOutBack))
+                    End If
                     Delay += 25
                 End If
             Next
@@ -373,6 +382,8 @@
         End If
         '结束
         AniList.Add(AaCode(Sub() PageOnEnterAnimationFinished(),, True))
+        '使用不同的动画组名称以防止PanAlways的Enter动画被刷新打断导致显示不正确 (#5178)
+        If PanAlwaysAniList IsNot Nothing Then AniStart(PanAlwaysAniList, "PageRight PageChange(PanAlways) " & PageUuid)
         AniStart(AniList, "PageRight PageChange " & PageUuid)
     End Sub
 
