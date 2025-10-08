@@ -136,6 +136,17 @@ Public Class MyLocalModItem
         Swiping = True
         SwipToState = Not Checked
     End Sub
+    Private Sub Button_MouseSwipeStateFromOutside(sender As Object, e As Object) Handles Me.MouseEnter
+        If Parent Is Nothing Then Return 'Mod 可能已被删除（#3824）
+        '从外部进入时，设置滑动状态
+        If Mouse.LeftButton = MouseButtonState.Pressed AndAlso Swiping = False Then
+            Swiping = True
+            Dim Index = CType(Parent, StackPanel).Children.IndexOf(Me)
+            SwipeStart = Index
+            SwipeEnd = Index
+            SwipToState = Not Checked
+        End If
+    End Sub
     Private Sub Button_MouseSwipe(sender As Object, e As Object) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonUp
         If Parent Is Nothing Then Return 'Mod 可能已被删除（#3824）
         '结束滑动
