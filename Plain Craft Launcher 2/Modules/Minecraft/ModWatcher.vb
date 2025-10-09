@@ -53,6 +53,54 @@
         End Select
     End Sub
 
+    '实时日志处理
+    Public Class LogOutputEventArgs
+        Inherits EventArgs
+        Public LogText As String
+        Public Color As SolidColorBrush
+        Public Sub New(LogText As String, Color As SolidColorBrush)
+            Me.LogText = LogText
+            Me.Color = Color
+        End Sub
+    End Class
+    Private Enum GameLogLevel
+        Debug = 0
+        Info = 1
+        Warn = 2
+        [Error] = 3
+        Fatal = 4
+    End Enum
+    Private Function GetLevel(line As String, lastLevel As GameLogLevel) As GameLogLevel
+        Dim GetColorBrush As Func(Of String, SolidColorBrush) = Function(name) CType(Application.Current.Resources(name), SolidColorBrush)
+        Dim Starting As String = line.Split(": ")(0)
+        If Starting.ContainsF("FATAL") Then Return GameLogLevel.Fatal
+        If Starting.ContainsF("ERROR") Then Return GameLogLevel.Error
+        If Starting.ContainsF("WARN") Then Return GameLogLevel.Warn
+        If Starting.ContainsF("INFO") Then Return GameLogLevel.Info
+        If Starting.ContainsF("DEBUG") Then Return GameLogLevel.Debug
+        If line.StartsWithF("Exception in thread """) Then Return GameLogLevel.Error
+        If (line.ContainsF("Exception") OrElse line.ContainsF("Realms authentication error with message ")) _
+            AndAlso lastLevel >= GameLogLevel.Warn Then Return lastLevel
+        If line.StartsWithF("	at ") AndAlso lastLevel >= GameLogLevel.Warn Then Return lastLevel
+        Return GameLogLevel.Info
+    End Function
+    Private Function GetColor(level As GameLogLevel) As SolidColorBrush
+        Dim GetColorBrush As Func(Of String, SolidColorBrush) = Function(name) CType(Application.Current.Resources(name), SolidColorBrush)
+        Select Case level
+            Case GameLogLevel.Debug
+                Return GetColorBrush("ColorBrushDebug")
+            Case GameLogLevel.Info
+                Return GetColorBrush("ColorBrushInfo")
+            Case GameLogLevel.Warn
+                Return GetColorBrush("ColorBrushWarn")
+            Case GameLogLevel.Error
+                Return GetColorBrush("ColorBrushError")
+            Case GameLogLevel.Fatal
+                Return GetColorBrush("ColorBrushFatal")
+        End Select
+        Return GetColorBrush("ColorBrushInfo")
+    End Function
+
     '对单个进程的监视
     Public Class Watcher
 
@@ -62,10 +110,11 @@
         Private WindowTitle As String = ""
         Private PID As Integer
         Public Loader As LoaderTask(Of Process, Integer)
-        Public Sub New(Loader As LoaderTask(Of Process, Integer), Version As McVersion, WindowTitle As String)
+        Public Sub New(Loader As LoaderTask(Of Process, Integer), Version As McVersion, WindowTitle As String, Optional OutputRealTime As Boolean = False)
             Me.Loader = Loader
             Me.Version = Version
             Me.WindowTitle = WindowTitle
+            Me.RealTime = OutputRealTime
             Me.PID = Loader.Input.Id
             WatcherLog("开始 Minecraft 日志监控")
             If Me.WindowTitle <> "" Then WatcherLog("要求窗口标题：" & WindowTitle)
@@ -112,6 +161,10 @@
         End Sub
 
         '状态
+        ''' <summary>
+        ''' 游戏退出时触发。
+        ''' </summary>
+        Public Event GameExit()
         Private _State As MinecraftState = MinecraftState.Loading
         Public Property State As MinecraftState
             Get
@@ -138,7 +191,56 @@
             SyncLock WaitingLogLock
                 WaitingLog.Add(e.Data)
             End SyncLock
+            If RealTime Then
+                LogRealTime(e.Data, LastLevel)
+                If e.Data IsNot Nothing Then FullLog.Add(e.Data)
+            End If
         End Sub
+        ''' <summary>
+        ''' 是否处理实时日志。
+        ''' </summary>
+        Private RealTime As Boolean
+        ''' <summary>
+        ''' 游戏的所有日志输出，只有处理实时日志的情况下才会记录。
+        ''' </summary>
+        Public FullLog As New List(Of String)
+        ''' <summary>
+        ''' 上一行日志级别。
+        ''' </summary>
+        Private LastLevel As GameLogLevel = GameLogLevel.Info
+        Public CountFatal As UInteger = 0
+        Public CountError As UInteger = 0
+        Public CountWarn As UInteger = 0
+        Public CountInfo As UInteger = 0
+        Public CountDebug As UInteger = 0
+        ''' <summary>
+        ''' 触发日志改变事件，并统计日志行数。
+        ''' </summary>
+        Private Sub LogRealTime(line As String, ByRef level As GameLogLevel)
+            If line Is Nothing Then Exit Sub '杀游戏进程时有概率传 null
+            level = If(line.StartsWithF("	at ") _
+                OrElse line.StartsWithF("Caused by: ") _
+                OrElse line.StartsWithF("	... "), '“	... 4 more”
+                level, GetLevel(line, level))
+            Dim color = GetColor(level)
+            Select Case level
+                Case GameLogLevel.Debug
+                    CountDebug += 1
+                Case GameLogLevel.Info
+                    CountInfo += 1
+                Case GameLogLevel.Warn
+                    CountWarn += 1
+                Case GameLogLevel.Error
+                    CountError += 1
+                Case GameLogLevel.Fatal
+                    CountFatal += 1
+            End Select
+            RaiseEvent LogOutput(Me, New LogOutputEventArgs(line, color))
+        End Sub
+        ''' <summary>
+        ''' 有新的日志输出，日志计数器发生改变时触发。
+        ''' </summary>
+        Public Event LogOutput(sender As Watcher, e As LogOutputEventArgs)
         Private Sub TimerLog()
             Try
                 '输出文本
@@ -155,6 +257,9 @@
                 '游戏退出检查
                 If GameProcess.HasExited Then
                     WatcherLog("Minecraft 已退出，返回值：" & GameProcess.ExitCode)
+                    '实时日志输出
+                    If RealTime Then LogRealTime($"Minecraft 已退出，返回值：{GameProcess.ExitCode}", GameLogLevel.Info)
+                    RaiseEvent GameExit()
                     'If Process.ExitCode = 1 Then
                     '    '返回值为 1，考虑是任务管理器结束
                     '    WatcherLog("Minecraft 返回值为 1，考虑为任务管理器结束") '并不，崩了照样是 1
@@ -361,7 +466,7 @@
                     Analyzer.Prepare()
                     Analyzer.Analyze(Version)
                     Analyzer.Output(False, New List(Of String) From
-                        {Version.Path & Version.Name & ".json", Path & "PCL\Log1.txt", Path & "PCL\LatestLaunch.bat"})
+                        {Version.Path & Version.Name & ".json", Path & "PCL\Log1.log", Path & "PCL\LatestLaunch.bat"})
                 Catch ex As Exception
                     Log(ex, "崩溃分析失败", LogLevel.Feedback)
                 End Try
@@ -375,11 +480,12 @@
             Try
                 If Not GameProcess.HasExited Then GameProcess.Kill()
                 WatcherLog("已强制结束 Minecraft 进程")
+                If RealTime Then LogRealTime($"Minecraft 已退出，返回值：{GameProcess.ExitCode}", GameLogLevel.Info)
+                RaiseEvent GameExit()
             Catch ex As Exception
                 Log(ex, "强制结束 Minecraft 进程失败", LogLevel.Hint)
             End Try
         End Sub
-
     End Class
 
 End Module

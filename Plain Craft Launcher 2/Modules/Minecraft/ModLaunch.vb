@@ -25,6 +25,11 @@ Public Module ModLaunch
         ''' 额外的启动参数。
         ''' </summary>
         Public ExtraArgs As New List(Of String)
+        ''' <summary>
+        ''' 是否为 “测试游戏” 按钮启动的游戏。
+        ''' 如果是，则显示游戏实时日志。
+        ''' </summary>
+        Public Test As Boolean = False
     End Class
     ''' <summary>
     ''' 尝试启动 Minecraft。必须在 UI 线程调用。
@@ -519,6 +524,7 @@ NextInner:
     End Sub
 
 #End Region
+
 #Region "分方式登录模块"
 
     '各个登录方式的主对象与输入构造
@@ -2293,8 +2299,16 @@ IgnoreCustomSkin:
         WindowTitle = ArgumentReplace(WindowTitle, ReplaceTime:=False)
 
         '初始化等待
-        Dim Watcher As New Watcher(Loader, McVersionCurrent, WindowTitle)
+        Dim Watcher As New Watcher(Loader, McVersionCurrent, WindowTitle, CurrentLaunchOptions.Test)
         McLaunchWatcher = Watcher
+
+        '显示实时日志
+        If CurrentLaunchOptions.Test Then
+            If FrmLogLeft Is Nothing Then RunInUiWait(Sub() FrmLogLeft = New PageLogLeft)
+            If FrmLogRight Is Nothing Then RunInUiWait(Sub() FrmLogRight = New PageLogRight)
+            FrmLogLeft.Add(Watcher)
+            McLaunchLog("已显示游戏实时日志")
+        End If
 
         '等待
         Do While Watcher.State = Watcher.MinecraftState.Loading

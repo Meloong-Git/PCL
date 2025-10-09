@@ -1,0 +1,56 @@
+<local:MyPageRight
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" x:Class="PageLogRight">
+    <Grid>
+        <Grid x:Name="PanAllBack">
+			<!-- TODO(i18n): 文本 @ PageLog 右侧 - 上方卡片标题 -->
+			<local:MyCard Margin="16,16,16,70" x:Name="PanLogCard">
+                <local:MyScrollViewer Margin="12,40,12,20"
+                    VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    x:Name="PanBack">
+					<RichTextBox x:Name="PanLog"
+								  FontSize="14"
+								  FontFamily="Consolas"
+								  HorizontalAlignment="Stretch"
+								  VerticalAlignment="Stretch"
+								  BorderThickness="0"
+								  Background="Transparent"
+								  IsReadOnly="True"
+								  VirtualizingPanel.IsVirtualizing="True"
+								  VirtualizingPanel.VirtualizationMode="Recycling"
+								  VirtualizingPanel.IsContainerVirtualizable="True"
+								  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+								  VirtualizingPanel.ScrollUnit="Pixel"/>
+                </local:MyScrollViewer>
+			</local:MyCard>
+        </Grid>
+
+        <!--<local:MyCard HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40" x:Name="PanEmpty" UseAnimation="False">
+            <StackPanel Margin="20,17">
+                <TextBlock Name="LabEmptyTitle" Margin="0,0,0,9" HorizontalAlignment="Center" Text="无实时日志" FontSize="19" UseLayoutRounding="True" SnapsToDevicePixels="True" Foreground="{DynamicResource ColorBrush3}" />
+                <Rectangle HorizontalAlignment="Stretch" Height="2" Fill="{DynamicResource ColorBrush3}" />
+                <TextBlock Name="LabEmptyContent" Margin="10,15,10,5" Text="请点击 版本设置 → 概览 → 测试游戏 以显示游戏的实时日志。" TextWrapping="Wrap" />
+            </StackPanel>
+        </local:MyCard>-->
+
+		<local:MyCard x:Name="CardOperation" Visibility="Visible" Opacity="0"
+					   HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,15,0,10" UseAnimation="False" HasMouseAnimation="True">
+			<StackPanel x:Name="OperationsContainer" Orientation="Horizontal" Margin="10,8,10,8" VerticalAlignment="Center">
+				<!-- TODO(i18n): 文本 @ PageLog 右侧 - 下方勾选框 # 自动滚屏 -->
+                <local:MyCheckBox x:Name="CheckAutoScroll" Margin="5,0,5,0" Text="自动滚屏" Checked="True" />
+				<!-- TODO(i18n): 文本 @ PageLog 右侧 - 下方按钮1 # 导出 -->
+				<local:MyIconTextButton x:Name="BtnOperationExport" Margin="5,0,0,0" Text="导出"
+                                        LogoScale="1" Logo="M819.392 0L1024 202.752v652.16a168.96 168.96 0 0 1-168.832 168.768h-104.192a47.296 47.296 0 0 1-10.752 0H283.776a47.232 47.232 0 0 1-10.752 0H168.832A168.96 168.96 0 0 1 0 854.912V168.768A168.96 168.96 0 0 1 168.832 0h650.56z m110.208 854.912V242.112l-149.12-147.776H168.896c-41.088 0-74.432 33.408-74.432 74.432v686.144c0 41.024 33.344 74.432 74.432 74.432h62.4v-190.528c0-33.408 27.136-60.544 60.544-60.544h440.448c33.408 0 60.544 27.136 60.544 60.544v190.528h62.4c41.088 0 74.432-33.408 74.432-74.432z m-604.032 74.432h372.864v-156.736H325.568v156.736z m403.52-596.48a47.168 47.168 0 1 1 0 94.336H287.872a47.168 47.168 0 1 1 0-94.336h441.216z m0-153.728a47.168 47.168 0 1 1 0 94.4H287.872a47.168 47.168 0 1 1 0-94.4h441.216z" />
+				<!-- TODO(i18n): 文本 @ PageLog 右侧 - 下方按钮2 # 清空记录 -->
+				<local:MyIconTextButton x:Name="BtnOperationClear" Margin="5,0,0,0" Text="清空记录"
+                                        LogoScale="1.1" Logo="M520.192 0C408.43 0 317.44 82.87 313.563 186.734H52.736c-29.038 0-52.663 21.943-52.663 49.079s23.625 49.152 52.663 49.152h58.075v550.473c0 103.35 75.118 187.757 167.717 187.757h472.43c92.599 0 167.716-83.894 167.716-187.757V285.477h52.59c29.038 0 52.59-21.943 52.663-49.08-0.073-27.135-23.625-49.151-52.663-49.151H726.235C723.237 83.017 631.955 0 520.192 0zM404.846 177.957c3.803-50.03 50.176-89.015 107.447-89.015 57.197 0 103.57 38.985 106.788 89.015H404.92zM284.379 933.669c-33.353 0-69.997-39.351-69.997-95.525v-549.01H833.39v549.522c0 56.247-36.645 95.525-69.998 95.525H284.379v-0.512z M357.23 800.695a48.274 48.274 0 0 0 47.616-49.006V471.7a48.274 48.274 0 0 0-47.543-49.08 48.274 48.274 0 0 0-47.69 49.006V751.69c0 27.282 20.846 49.006 47.617 49.006z m166.62 0a48.274 48.274 0 0 0 47.688-49.006V471.7a48.274 48.274 0 0 0-47.689-49.08 48.274 48.274 0 0 0-47.543 49.006V751.69c0 27.282 21.431 49.006 47.543 49.006z m142.92 0a48.274 48.274 0 0 0 47.543-49.006V471.7a48.274 48.274 0 0 0-47.543-49.08 48.274 48.274 0 0 0-47.616 49.006V751.69c0 27.282 20.773 49.006 47.543 49.006z" />
+				<!-- TODO(i18n): 文本 @ PageLog 右侧 - 下方按钮3 # 结束游戏进程 -->
+				<local:MyIconTextButton x:Name="BtnOperationKill" Margin="5,0,0,0" Text="结束游戏进程"
+                                        LogoScale="0.85" Logo="F1 M 26.9166,22.1667L 37.9999,33.25L 49.0832,22.1668L 53.8332,26.9168L 42.7499,38L 53.8332,49.0834L 49.0833,53.8334L 37.9999,42.75L 26.9166,53.8334L 22.1666,49.0833L 33.25,38L 22.1667,26.9167L 26.9166,22.1667 Z" />
+            </StackPanel>
+        </local:MyCard>
+    </Grid>
+</local:MyPageRight>
