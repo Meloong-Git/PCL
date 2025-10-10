@@ -427,6 +427,10 @@ VersionSearchFinish:
                         _Version.McCodeMain = If(SplitResult.Length <= 2, Val(SplitResult), "0")
                         SplitResult = If(SplitVersion.Count >= 3, SplitVersion(2), "0")
                         _Version.McCodeSub = If(SplitResult.Length <= 2, Val(SplitResult), "0")
+                    ElseIf _Version.McName = "15w14a" '#6703
+                        '“15w14a由1.8.3分叉而来” —— Minecraft Wiki
+                        _Version.McCodeMain = 8
+                        _Version.McCodeSub = 3
                     ElseIf (Not IsVersionNameLikeRelease(_Version.McName)) OrElse _Version.McName = "pending" Then
                         _Version.McCodeMain = 99
                         _Version.McCodeSub = 99
