@@ -178,7 +178,25 @@
             Log(ex, "重命名版本失败", LogLevel.Msgbox)
         End Try
     End Sub
-
+    
+    
+    '#4902 可以不用再切换到别的预设图标才能再次切换自定义图标'
+    Private Sub ItemDisplayLogoCustom_PreviewMouseLeftButtonDown(sender As Object, e As MouseButtonEventArgs) Handles ItemDisplayLogoCustom.PreviewMouseLeftButtonDown
+        Try
+            If ComboDisplayLogo.SelectedItem Is ItemDisplayLogoCustom
+                ComboDisplayLogo.SelectedItem = ItemDisplayLogoCustom  
+                Dim comboBoxItemsList =New List(Of ComboBoxItem)()
+                comboBoxItemsList.Add(ComboDisplayLogo.SelectedItem)
+                Dim removedItems As IList = New List(Of Object)()
+                Dim args As New SelectionChangedEventArgs(ComboBox.SelectionChangedEvent, removedItems, comboBoxItemsList)
+                '事件触发器'
+                ComboDisplayLogo_SelectionChanged(ComboDisplayLogo, args)
+            End If
+        Catch ex As Exception
+            Log(ex, "更改自定义版本图标失败（" & PageVersionLeft.Version.Name & "）", LogLevel.Feedback)
+        End Try
+    End Sub
+    
     '版本图标
     Private Sub ComboDisplayLogo_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboDisplayLogo.SelectionChanged
         If Not (IsLoad AndAlso AniControlEnabled = 0) Then Return
