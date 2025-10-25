@@ -536,11 +536,10 @@ Public Class PageVersionExport
             Loader.Progress = 0.97
             '复制 PCL 版本设置
             If IncludePCLVersionCustom Then CopyDirectory(McVersion.Path & "PCL\", OverridesFolder & "PCL\")
-            '修复 OverridesFolder 未创建时，无法打包
             If Not Directory.Exists(OverridesFolder) Then
                 Directory.CreateDirectory(OverridesFolder)
             End If
-            WriteIni(OverridesFolder & "PCL\Setup.ini", "IsStar", False)
+            If IncludePCLVersionCustom Then WriteIni(OverridesFolder & "PCL\Setup.ini", "IsStar", False)
 #If BETA Then
             '复制 PCL 本体
             If IncludePCL Then CopyFile(PathWithName, CacheFolder & "Plain Craft Launcher.exe")
