@@ -10,7 +10,7 @@
             <local:MyCard Margin="0,15" Title="">
                 <Grid Margin="10,7" Name="PanDisplayItem" />
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="个性化" x:Name="PanDisplay">
+            <local:MyCard Margin="0,0,0,15" Title="{StaticResource LangPageVersionOverallPersonalize}" x:Name="PanDisplay">
                 <StackPanel Margin="25,40,25,15">
                     <Grid x:Name="PanDisplayIcon" HorizontalAlignment="Stretch">
                         <Grid.ColumnDefinitions>
@@ -22,31 +22,31 @@
                             <RowDefinition Height="9" />
                             <RowDefinition Height="28" />
                         </Grid.RowDefinitions>
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="图标" Margin="0,0,25,0" />
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="{StaticResource LangPageVersionOverallIcon}" Margin="0,0,25,0" />
                         <local:MyComboBox Grid.Column="1" x:Name="ComboDisplayLogo">
-                            <local:MyComboBoxItem Content="自动" IsSelected="True" Tag="" />
-                            <local:MyComboBoxItem Content="自定义..." x:Name="ItemDisplayLogoCustom" />
-                            <local:MyComboBoxItem Content="圆石" Tag="pack://application:,,,/images/Blocks/CobbleStone.png" />
-                            <local:MyComboBoxItem Content="命令方块" Tag="pack://application:,,,/images/Blocks/CommandBlock.png" />
-                            <local:MyComboBoxItem Content="金块" Tag="pack://application:,,,/images/Blocks/GoldBlock.png" />
-                            <local:MyComboBoxItem Content="草方块" Tag="pack://application:,,,/images/Blocks/Grass.png" />
-                            <local:MyComboBoxItem Content="土径" Tag="pack://application:,,,/images/Blocks/GrassPath.png" />
-                            <local:MyComboBoxItem Content="铁砧" Tag="pack://application:,,,/images/Blocks/Anvil.png" />
-                            <local:MyComboBoxItem Content="红石块" Tag="pack://application:,,,/images/Blocks/RedstoneBlock.png" />
-                            <local:MyComboBoxItem Content="红石灯（开）" Tag="pack://application:,,,/images/Blocks/RedstoneLampOn.png" />
-                            <local:MyComboBoxItem Content="红石灯（关）" Tag="pack://application:,,,/images/Blocks/RedstoneLampOff.png" />
-                            <local:MyComboBoxItem Content="鸡蛋" Tag="pack://application:,,,/images/Blocks/Egg.png" />
-                            <local:MyComboBoxItem Content="布料（Fabric）" Tag="pack://application:,,,/images/Blocks/Fabric.png" />
-                            <local:MyComboBoxItem Content="狐狸（NeoForge）" Tag="pack://application:,,,/images/Blocks/NeoForge.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconAuto}" IsSelected="True" Tag="" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconCustom}" x:Name="ItemDisplayLogoCustom" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconCobbleStone}" Tag="pack://application:,,,/images/Blocks/CobbleStone.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconCommandBlock}" Tag="pack://application:,,,/images/Blocks/CommandBlock.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconGoldBlock}" Tag="pack://application:,,,/images/Blocks/GoldBlock.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconGrass}" Tag="pack://application:,,,/images/Blocks/Grass.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconGrassPath}" Tag="pack://application:,,,/images/Blocks/GrassPath.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconAnvil}" Tag="pack://application:,,,/images/Blocks/Anvil.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconRedstoneBlock}" Tag="pack://application:,,,/images/Blocks/RedstoneBlock.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconRedstoneLampOn}" Tag="pack://application:,,,/images/Blocks/RedstoneLampOn.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconRedstoneLampOff}" Tag="pack://application:,,,/images/Blocks/RedstoneLampOff.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconEgg}" Tag="pack://application:,,,/images/Blocks/Egg.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconFabric}" Tag="pack://application:,,,/images/Blocks/Fabric.png" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallIconNeoForge}" Tag="pack://application:,,,/images/Blocks/NeoForge.png" />
                         </local:MyComboBox>
-                        <TextBlock VerticalAlignment="Center" Grid.Row="2" HorizontalAlignment="Left" Text="分类" Margin="0,0,25,0" />
+                        <TextBlock VerticalAlignment="Center" Grid.Row="2" HorizontalAlignment="Left" Text="{StaticResource LangPageVersionOverallCategory}" Margin="0,0,25,0" />
                         <local:MyComboBox Grid.Column="1" Grid.Row="2" x:Name="ComboDisplayType">
-                            <local:MyComboBoxItem Content="自动" IsSelected="True" />
-                            <local:MyComboBoxItem Content="从版本列表中隐藏" ToolTip="该版本默认将不会在版本列表中显示。&#xa;在版本列表页面按下 F11，即可查看所有隐藏的版本。" />
-                            <local:MyComboBoxItem Content="可安装 Mod 的版本" />
-                            <local:MyComboBoxItem Content="常规版本" />
-                            <local:MyComboBoxItem Content="不常用版本" />
-                            <local:MyComboBoxItem Content="愚人节版本" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallCategoryAuto}" IsSelected="True" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallCategoryHidden}" ToolTip="{StaticResource LangPageVersionOverallCategoryHiddenToolTip}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallCategoryMod}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallCategoryRegular}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallCategoryUncommon}" />
+                            <local:MyComboBoxItem Content="{StaticResource LangPageVersionOverallCategoryAprilFool}" />
                         </local:MyComboBox>
                     </Grid>
                     <Grid Margin="0,15,0,7" Height="35">
@@ -55,13 +55,13 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnDisplayRename" Text="修改版本名" MinWidth="140" Padding="13,0" Margin="0,0,20,0" />
-                        <local:MyButton x:Name="BtnDisplayDesc" Text="修改版本描述" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" />
-                        <local:MyButton x:Name="BtnDisplayStar" Text="加入收藏夹" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2" />
+                        <local:MyButton x:Name="BtnDisplayRename" Text="{StaticResource LangPageVersionOverallEditName}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" />
+                        <local:MyButton x:Name="BtnDisplayDesc" Text="{StaticResource LangPageVersionOverallEditDesc}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" />
+                        <local:MyButton x:Name="BtnDisplayStar" Text="{StaticResource LangPageVersionOverallFavorite}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="快捷方式" x:Name="PanFolder">
+            <local:MyCard Margin="0,0,0,15" Title="{StaticResource LangPageVersionOverallShortcut}" x:Name="PanFolder">
                 <StackPanel Margin="25,40,25,15">
                     <Grid Margin="0,2,0,7" Height="35">
                         <Grid.ColumnDefinitions>
@@ -69,13 +69,13 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnFolderVersion" Text="版本文件夹" MinWidth="140" Padding="13,0" Margin="0,0,20,0" />
-                        <local:MyButton x:Name="BtnFolderSaves" Text="存档文件夹" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" />
-                        <local:MyButton x:Name="BtnFolderMods" Text="Mod 文件夹" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2" />
+                        <local:MyButton x:Name="BtnFolderVersion" Text="{StaticResource LangPageVersionOverallFolder}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" />
+                        <local:MyButton x:Name="BtnFolderSaves" Text="{StaticResource LangPageVersionOverallFolderSaves}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" />
+                        <local:MyButton x:Name="BtnFolderMods" Text="{StaticResource LangPageVersionOverallFolderMods}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="高级管理" x:Name="PanManage">
+            <local:MyCard Margin="0,0,0,15" Title="{StaticResource LangPageVersionOverallManagement}" x:Name="PanManage">
                 <StackPanel Margin="25,40,25,15">
                     <Grid Margin="0,2,0,7" Height="35">
                         <Grid.ColumnDefinitions>
@@ -83,9 +83,9 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnManageScript" Text="导出启动脚本" MinWidth="140" Padding="13,0" Margin="0,0,20,0" />
-                        <local:MyButton x:Name="BtnManageCheck" Text="补全文件" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" ToolTip="校验版本依赖文件是否完整，并重新下载 Assets 索引与缺失、校验失败的文件。&#xa;若游戏缺失音效，请尝试此项。" />
-                        <local:MyButton x:Name="BtnManageDelete" Text="删除版本" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2" ColorType="Red" />
+                        <local:MyButton x:Name="BtnManageScript" Text="{StaticResource LangPageVersionOverallManagementExportCommand}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" />
+                        <local:MyButton x:Name="BtnManageCheck" Text="{StaticResource LangPageVersionOverallManagementCompleteFile}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" ToolTip="{StaticResource LangPageVersionOverallManagementCompleteFileToolTip}" />
+                        <local:MyButton x:Name="BtnManageDelete" Text="{StaticResource LangPageVersionOverallManagementDelete}" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2" ColorType="Red" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>

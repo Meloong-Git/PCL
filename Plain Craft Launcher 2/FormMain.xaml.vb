@@ -266,7 +266,7 @@ Public Class FormMain
         If SortedFeatures.Count > 10 Then FeatureCount += SortedFeatures.Count - 10
         If FeatureCount > 0 OrElse BugCount > 0 Then
             ContentList.Add(If(FeatureCount > 0, FeatureCount & " 项小调整与修改", "") &
-                If(FeatureCount > 0 AndAlso BugCount > 0, "，", "") &
+                If(FeatureCount > 0 AndAlso BugCount > 0, GetLang("LangComma"), "") &
                 If(BugCount > 0, "修复了 " & BugCount & " 个 Bug", "") &
                 "，详见完整更新日志")
         End If
@@ -274,7 +274,7 @@ Public Class FormMain
         '输出更新日志
         RunInNewThread(
         Sub()
-            If MyMsgBox(Content, "PCL 已更新至 " & VersionDisplayName, "确定", "完整更新日志") = 2 Then
+            If MyMsgBox(Content, GetLang("LangDialogUpdateTo", VersionDisplayName), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnUpdateFullLog")) = 2 Then
                 OpenWebsite("https://afdian.com/a/LTCat?tab=feed")
             End If
         End Sub, "UpdateLog Output")
@@ -343,7 +343,7 @@ Public Class FormMain
 #If DEBUG Then
         Hint("[开发者模式] PCL 正以开发者模式运行，这可能会造成严重的性能下降，请务必立即向开发者反馈此问题！", HintType.Red)
 #End If
-        If ModeDebug Then Hint("[调试模式] PCL 正以调试模式运行，这可能会导致性能下降，若无必要请不要开启！")
+        If ModeDebug Then Hint(GetLang("LangHintDebugWarning"))
         '尽早执行的加载池
         McFolderListLoader.Start(0) '为了让下载已存在文件检测可以正常运行，必须跑一次；为了让启动按钮尽快可用，需要尽早执行；为了与 PageLaunchLeft 联动，需要为 0 而不是 GetUuid
 
@@ -425,9 +425,9 @@ Public Class FormMain
             If Setup.Get("SystemEulaVersion") < EulaVersion Then
                 Select Case MyMsgBox(
                     If(Setup.Get("SystemEulaVersion") = 0,
-                        "在使用 PCL 前，请先阅读用户协议与免责声明。",
-                        $"PCL 的用户协议与免责声明已更新。{vbCrLf}请阅读更新后的用户协议与免责声明。"),
-                        "协议授权", "同意", "拒绝", "查看用户协议与免责声明",
+                        GetLang("LangDialogPolicyContent"),
+                        GetLang("LangDialogPolicyContentModified")),
+                        GetLang("LangDialogPolicyTitle"), GetLang("LangDialogBtnAgree"), GetLang("LangDialogBtnDeny"), GetLang("LangDialogBtnPolicyContent"),
                         Button3Action:=Sub() OpenWebsite("https://shimo.im/docs/rGrd8pY8xWkt6ryW"))
                     Case 1
                         Setup.Set("SystemEulaVersion", EulaVersion)
@@ -470,8 +470,7 @@ Public Class FormMain
         End Select
         If Setup.Get("SystemCount") >= 99 Then
             If ThemeUnlock(6, False) Then
-                MyMsgBox("你已经使用了 99 次 PCL 啦，感谢你长期以来的支持！" & vbCrLf &
-                         "隐藏主题 铁杆粉 已解锁！", "提示")
+                MyMsgBox(GetLang("LangDialogHardcoreFanTheme"), GetLang("LangDialogTitleTip"))
             End If
         End If
 #End If
@@ -577,7 +576,7 @@ Public Class FormMain
     Public Sub EndProgram(SendWarning As Boolean)
         '强行结束下载任务？
         If HasDownloadingTask() Then
-            If SendWarning AndAlso MyMsgBox("还有下载任务尚未完成，是否确定退出？", "提示", "确定", "取消") = 2 Then Return
+            If SendWarning AndAlso MyMsgBox(GetLang("LangDialogCloseOnDownloading"), GetLang("LangDialogTitleTip"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then Return
             RunInNewThread(
             Sub()
                 Log("[System] 正在强行停止任务")
@@ -631,7 +630,7 @@ Public Class FormMain
         If ReturnCode = ProcessReturnValues.Exception Then
             If Not IsLogShown Then
                 FeedbackInfo()
-                Log("请在 https://github.com/Meloong-Git/PCL/issues 提交错误报告，以便于作者解决此问题！")
+                Log(GetLang("LangCrashReport"))
                 IsLogShown = True
                 StartProcess(Path & "PCL\Log1.txt")
             End If
@@ -717,9 +716,9 @@ Public Class FormMain
         If e.Key = Key.F12 Then
             PageSetupUI.HiddenForceShow = Not PageSetupUI.HiddenForceShow
             If PageSetupUI.HiddenForceShow Then
-                Hint("功能隐藏设置已暂时关闭！", HintType.Green)
+                Hint(GetLang("LangHintHideModeOff"), HintType.Green)
             Else
-                Hint("功能隐藏设置已重新开启！", HintType.Green)
+                Hint(GetLang("LangHintHideModeOn"), HintType.Green)
             End If
             PageSetupUI.HiddenRefresh()
             Return
@@ -733,7 +732,7 @@ Public Class FormMain
         '调用启动游戏
         If e.Key = Key.Enter AndAlso PageCurrent = FormMain.PageType.Launch Then
             If IsAprilEnabled AndAlso Not IsAprilGiveup Then
-                Hint("木大！")
+                Hint(GetLang("LangHintIJustWantToStart"))
             Else
                 FrmLaunchLeft.LaunchButtonClick()
             End If
@@ -815,18 +814,17 @@ Public Class FormMain
                         Dim AuthlibServer As String = Net.WebUtility.UrlDecode(Str.Substring("authlib-injector:yggdrasil-server:".Length))
                         Log("[System] Authlib 拖拽：" & AuthlibServer)
                         If Not String.IsNullOrEmpty(New ValidateHttp().Validate(AuthlibServer)) Then
-                            Hint($"输入的 Authlib 验证服务器不符合网址格式（{AuthlibServer}）！", HintType.Red)
+                            Hint(GetLang("LangHintAuthlibUrlIncorrect", AuthlibServer), HintType.Red)
                             Return
                         End If
                         Dim TargetVersion = If(PageCurrent = PageType.VersionSetup, PageVersionLeft.Version, McVersionCurrent)
                         If TargetVersion Is Nothing Then
-                            Hint("请先下载游戏，再设置第三方登录！", HintType.Red)
+                            Hint(GetLang("LangHintAuthlibDownloadGame"), HintType.Red)
                             Return
                         End If
                         If AuthlibServer = "https://littleskin.cn/api/yggdrasil" Then
                             'LittleSkin
-                            If MyMsgBox($"是否要在版本 {TargetVersion.Name} 中开启 LittleSkin 登录？" & vbCrLf &
-                                        "你可以在 版本设置 → 设置 → 服务器选项 中修改登录方式。", "第三方登录开启确认", "确定", "取消") = 2 Then
+                            If MyMsgBox(GetLang("LangDialogAuthlibEnableLittleSkin", TargetVersion.Name), GetLang("LangDialogTitleAuthlibEnableLittleSkin"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then
                                 Return
                             End If
                             Setup.Set("VersionServerLogin", 4, Version:=TargetVersion)
@@ -835,9 +833,7 @@ Public Class FormMain
                             Setup.Set("VersionServerAuthName", "LittleSkin 登录", Version:=TargetVersion)
                         Else
                             '第三方 Authlib 服务器
-                            If MyMsgBox($"是否要在版本 {TargetVersion.Name} 中开启第三方登录？" & vbCrLf &
-                                        $"登录服务器：{AuthlibServer}" & vbCrLf & vbCrLf &
-                                        "你可以在 版本设置 → 设置 → 服务器选项 中修改登录方式。", "第三方登录开启确认", "确定", "取消") = 2 Then
+                            If MyMsgBox(GetLang("LangDialogAuthlibEnableLittleSkinServer", TargetVersion.Name, AuthlibServer), GetLang("LangDialogTitleAuthlibEnableLittleSkin"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then
                                 Return
                             End If
                             Setup.Set("VersionServerLogin", 4, Version:=TargetVersion)
@@ -867,7 +863,7 @@ Public Class FormMain
                 '获取文件并检查
                 Dim FilePathRaw = e.Data.GetData(DataFormats.FileDrop)
                 If FilePathRaw Is Nothing Then '#2690
-                    Hint("请将文件解压后再拖入！", HintType.Red)
+                    Hint(GetLang("LangHintWindowDropExtract"), HintType.Red)
                     Return
                 End If
                 e.Handled = True
@@ -885,10 +881,10 @@ Public Class FormMain
             Log("[System] 接受文件拖拽：" & FilePath & If(FilePathList.Any, $" 等 {FilePathList.Count} 个文件", ""), LogLevel.Developer)
             '基础检查
             If Directory.Exists(FilePathList.First) AndAlso Not File.Exists(FilePathList.First) Then
-                Hint("请拖入一个文件，而非文件夹！", HintType.Red)
+                Hint(GetLang("LangHintWindowDropFolder"), HintType.Red)
                 Return
             ElseIf Not File.Exists(FilePathList.First) Then
-                Hint("拖入的文件不存在：" & FilePathList.First, HintType.Red)
+                Hint(GetLang("LangHintWindowDropFileNotFound", FilePathList.First), HintType.Red)
                 Return
             End If
             '多文件拖拽
@@ -896,7 +892,7 @@ Public Class FormMain
                 '必须要求全部为 jar 文件
                 For Each File In FilePathList
                     If Not {"jar", "litemod", "disabled", "old"}.Contains(File.AfterLast(".").ToLower) Then
-                        Hint("一次请只拖入一个文件！", HintType.Red)
+                        Hint(GetLang("LangHintWindowDropFileOneFileAtATime"), HintType.Red)
                         Return
                     End If
                 Next
@@ -906,7 +902,7 @@ Public Class FormMain
             If Extension = "xaml" Then
                 Log("[System] 文件后缀为 XAML，作为主页加载")
                 If File.Exists(Path & "PCL\Custom.xaml") Then
-                    If MyMsgBox("已存在一个主页文件，是否要将它覆盖？", "覆盖确认", "覆盖", "取消") = 2 Then
+                    If MyMsgBox(GetLang("LangDialogCustomHomePageReplaceContent"), GetLang("LangDialogCustomHomePageReplaceTitle"), GetLang("LangDialogBtnCustomHomePageReplaceConfirm"), GetLang("LangDialogBtnCancel")) = 2 Then
                         Return
                     End If
                 End If
@@ -915,7 +911,7 @@ Public Class FormMain
                 Sub()
                     Setup.Set("UiCustomType", 1)
                     FrmLaunchRight.ForceRefresh()
-                    Hint("已加载主页自定义文件！", HintType.Green)
+                    Hint(GetLang("LangHintLoadedCustomHomePage"), HintType.Green)
                 End Sub)
                 Return
             End If
@@ -935,7 +931,7 @@ Public Class FormMain
             End If
             'RAR 处理
             If Extension = "rar" Then
-                Hint("PCL 无法处理 rar 格式的压缩包，请在解压后重新压缩为 zip 格式再试！")
+                Hint(GetLang("LangHintRarNotSupport"))
                 Return
             End If
             '错误报告分析
@@ -951,7 +947,7 @@ Public Class FormMain
                 Log(ex, "自主错误报告分析失败", LogLevel.Feedback)
             End Try
             '未知操作
-            Hint("PCL 无法确定应当执行的文件拖拽操作……")
+            Hint(GetLang("LangHintWindowDropUnknown"))
         End Sub, "文件拖拽")
     End Sub
 
@@ -1103,13 +1099,13 @@ Public Class FormMain
     Private Function PageNameGet(Stack As PageStackData) As String
         Select Case Stack.Page
             Case PageType.VersionSelect
-                Return "版本选择"
+                Return GetLang("LangPageNameVersionChoose")
             Case PageType.DownloadManager
-                Return "下载管理"
+                Return GetLang("LangPageNameDownloadManagement")
             Case PageType.VersionSetup
-                Return "版本设置 - " & If(PageVersionLeft.Version Is Nothing, "未知版本", PageVersionLeft.Version.Name)
+                Return GetLang("LangPageNameVersionConfiguration") & " - " & If(PageVersionLeft.Version Is Nothing, GetLang("LangPageNameVersionConfigurationUnknownVersion"), PageVersionLeft.Version.Name)
             Case PageType.CompDetail
-                Return "资源下载 - " & CType(Stack.Additional(0), CompProject).TranslatedName
+                Return GetLang("LangPageNameCompDownload") & " - " & CType(Stack.Additional(0), CompProject).TranslatedName
             Case PageType.HelpDetail
                 Return CType(Stack.Additional(0), HelpEntry).Title
             Case Else
@@ -1349,7 +1345,7 @@ Public Class FormMain
 
             Log("[Control] 切换主要页面：" & GetStringFromEnum(Stack) & ", " & SubType)
         Catch ex As Exception
-            Log(ex, "切换主要页面失败（ID " & PageCurrent.Page & "）", LogLevel.Feedback)
+            Log(ex, GetLang("LangDialogFailedToChangePage", PageCurrent.Page), LogLevel.Feedback)
         Finally
             AniControlEnabled -= 1
         End Try
@@ -1530,9 +1526,9 @@ Public Class FormMain
             For Each Watcher In McWatcherList
                 Watcher.Kill()
             Next
-            Hint("已关闭运行中的 Minecraft！", HintType.Green)
+            Hint(GetLang("LangHintCloseMinecraftSuccess"), HintType.Green)
         Catch ex As Exception
-            Log(ex, "强制关闭所有 Minecraft 失败", LogLevel.Feedback)
+            Log(ex, GetLang("LangHintCloseMinecraftFailed"), LogLevel.Feedback)
         End Try
     End Sub
     Public Function BtnExtraShutdown_ShowCheck() As Boolean
@@ -1547,7 +1543,7 @@ Public Class FormMain
         If RealScroll IsNot Nothing Then
             RealScroll.PerformVerticalOffsetDelta(-RealScroll.VerticalOffset)
         Else
-            Log("[UI] 无法返回顶部，未找到合适的 RealScroll", LogLevel.Hint)
+            Log("[UI] " + GetLang("LangHintBackToTopFailed"), LogLevel.Hint)
         End If
     End Sub
     Private Function BtnExtraBack_ShowCheck() As Boolean

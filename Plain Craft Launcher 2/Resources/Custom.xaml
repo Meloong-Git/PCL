@@ -241,7 +241,7 @@
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="MyIconTextButton 是一种带有自定义矢量图标的按钮变体，它同样支持 EventType 与 EventData 属性。&#xa;通过设置 Logo 属性来控制它的图标，设置 LogoScale 属性还可以调整图标的缩放比例。" />
         <local:MyIconTextButton Margin="0,4,0,8" Height="35" HorizontalAlignment="Center"
-                    Text="查看 SVG Path 简介" EventType="打开网页" EventData="https://developer.mozilla.org/zh-CN/docs/Web/SVG/Tutorial/Paths"
+                    Text="查看 SVG Path 简介" EventType="打开网页" EventData="https://developer.mozilla.org/docs/Web/SVG/Tutorial/Paths"
                     LogoScale="1.02" Logo="M1091 0H78C35 0 0 35 0 78v863c0 43 35 78 78 78H1091c43 0 78-35 78-78V78C1170 35 1134 0 1091 0z m-8 87v78H87v-78h994zM87 933V254h994v679H87v0zM724 340l-206 547a43 43 0 0 1-82-31l206-547a43 43 0 0 1 82 30zM369 545l-85 85 85 85a43 43 0 0 1-62 62l-116-116a43 43 0 0 1 0-62l116-116a43 43 0 0 1 62 61z m610-37a43 43 0 0 1 0 62l-116 116a43 43 0 0 1-62 0 43 43 0 0 1 0-62l85-85-85-85a43 43 0 0 1 62-62l116 116z" />
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="Logo 属性的内容是 SVG Path 的值，你需要使用 SVG 编辑器或者从图标资源网站（如 IconFont）查找它。不要自己写，写不懂的。&#xa;此外，它还有两种 ColorType：Black（默认）和 Highlight。" />

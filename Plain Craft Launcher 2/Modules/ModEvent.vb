@@ -190,7 +190,7 @@ Public Class CustomEvent
                 Case EventType.启动游戏
                     If Args(0) = "\current" Then
                         If McVersionCurrent Is Nothing Then
-                            Hint("请先选择一个 Minecraft 版本！", HintType.Red)
+                            Hint(GetLang("LangModEventChoseAnInstance"), HintType.Red)
                             Return
                         Else
                             Args(0) = McVersionCurrent.Name
@@ -200,7 +200,7 @@ Public Class CustomEvent
                     Sub()
                         If McLaunchStart(New McLaunchOptions With
                                 {.ServerIp = If(Args.Length >= 2, Args(1), Nothing), .Version = New McVersion(Args(0))}) Then
-                            Hint($"正在启动 {Args(0)}……")
+                            Hint(GetLang("LangModEventStartInstance", Args(0)))
                         End If
                     End Sub)
 
@@ -217,14 +217,14 @@ Public Class CustomEvent
                 Case EventType.刷新页面
                     If TypeOf FrmMain.PageRight Is IRefreshable Then
                         RunInUiWait(Sub() CType(FrmMain.PageRight, IRefreshable).Refresh())
-                        If String.IsNullOrEmpty(Arg) Then Hint("已刷新！", HintType.Green)
+                        If String.IsNullOrEmpty(Arg) Then Hint(GetLang("LangRefreshed"), HintType.Green)
                     Else
-                        Hint("当前页面不支持刷新操作！", HintType.Red)
+                        Hint(GetLang("LangModEventNoRefreshSupport"), HintType.Red)
                     End If
 
                 Case EventType.刷新帮助
                     RunInUiWait(Sub() PageOtherLeft.RefreshHelp())
-                    If String.IsNullOrEmpty(Arg) Then Hint("已刷新！", HintType.Green)
+                    If String.IsNullOrEmpty(Arg) Then Hint(GetLang("LangRefreshed"), HintType.Green)
 
                 Case EventType.今日人品
                     PageOtherTest.Jrrp()
@@ -253,7 +253,7 @@ Public Class CustomEvent
                 Case EventType.下载文件
                     Args(0) = Args(0).Replace("\", "/")
                     If Not (Args(0).StartsWithF("http://", True) OrElse Args(0).StartsWithF("https://", True)) Then
-                        MyMsgBox("EventData 必须为以 http:// 或 https:// 开头的网址。" & vbCrLf & "PCL 不支持其他乱七八糟的下载协议。", "事件执行失败")
+                        MyMsgBox(GetLang("LangModEventDialogDownloadIncorrectContent"), GetLang("LangModEventDialogEventFailTitle"))
                         Return
                     End If
                     If Not EventSafetyConfirm("即将从该网址下载文件：" & vbCrLf & Args(0)) Then Return
@@ -284,7 +284,7 @@ Public Class CustomEvent
                     If Args.Length = 2 Then Hint($"已写入变量：{Args(0)} → {Args(1)}", HintType.Green)
 
                 Case Else
-                    MyMsgBox("未知的事件类型：" & Type & vbCrLf & "请检查事件类型填写是否正确，或者 PCL 是否为最新版本。", "事件执行失败")
+                    MyMsgBox(GetLang("LangModEventDialogUnknownEventContent", Type), GetLang("LangModEventDialogEventFailTitle"))
             End Select
         Catch ex As Exception
             Log(ex, $"事件执行失败（{Type}, {Arg}）", LogLevel.Msgbox)

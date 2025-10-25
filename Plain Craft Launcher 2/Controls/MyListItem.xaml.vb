@@ -191,19 +191,24 @@ Public Class MyListItem
     Public Shared ReadOnly FontSizeProperty As DependencyProperty = DependencyProperty.Register("FontSize", GetType(Double), GetType(MyListItem), New PropertyMetadata(CType(14, Double)))
 
     '信息
-    Private _Info As String = ""
     Public Property Info As String
         Get
-            Return _Info
+            Return GetValue(InfoProperty)
         End Get
         Set(value As String)
-            If _Info = value Then Return
+            SetValue(InfoProperty, value)
             value = value.Replace(vbCr, "").Replace(vbLf, "")
-            _Info = value
+            If LabInfo Is Nothing Then Exit Property
             LabInfo.Text = value
-            LabInfo.Visibility = If(value = "", Visibility.Collapsed, Visibility.Visible)
+            LabInfo.Visibility = If(String.IsNullOrWhiteSpace(value), Visibility.Collapsed, Visibility.Visible)
         End Set
     End Property
+    Public Shared ReadOnly InfoProperty As DependencyProperty = DependencyProperty.Register("Info", GetType(String), GetType(MyListItem), New PropertyMetadata(New PropertyChangedCallback(
+                                                                                                                                                               Sub(sender As DependencyObject, e As DependencyPropertyChangedEventArgs)
+                                                                                                                                                                   If Not IsNothing(sender) Then
+                                                                                                                                                                       CType(sender, MyListItem).Info = e.NewValue
+                                                                                                                                                                   End If
+                                                                                                                                                               End Sub)))
 
     '图片
     Private _Logo As String = ""

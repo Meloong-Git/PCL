@@ -6,7 +6,7 @@
     PanScroll="PanBack" RenderOptions.BitmapScalingMode="LowQuality">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel x:Name="PanMain" Margin="25,10" Grid.IsSharedSizeScope="True">
-            <local:MyCard Margin="0,15" Title="关于">
+            <local:MyCard Margin="0,15" Title="{StaticResource LangPageOtherAboutAbout}">
                 <Grid Margin="21,40,21,16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="45" />
@@ -17,8 +17,8 @@
                         <ColumnDefinition />
                         <ColumnDefinition Width="150" />
                     </Grid.ColumnDefinitions>
-                    <local:MyListItem IsHitTestVisible="False" Title="龙腾猫跃" Margin="-5,0,15,0" Info="Plain Craft Launcher 的开发者！" Grid.Row="0" Grid.Column="1" />
-                    <local:MyListItem IsHitTestVisible="False" Title="Plain Craft Launcher 2" Margin="-5,0,15,0" Info="当前版本：%VERSION%（%VERSIONCODE%.%BRANCH%）" Grid.Row="1" Grid.Column="1" x:Name="ItemAboutPcl" />
+                    <local:MyListItem IsHitTestVisible="False" Title="{StaticResource LangPageOtherAboutAboutAuthor}" Margin="-5,0,15,0" Info="{StaticResource LangPageOtherAboutAboutAuthorSubtitle}" Grid.Row="0" Grid.Column="1" />
+                    <local:MyListItem IsHitTestVisible="False" Title="Plain Craft Launcher 2" Margin="-5,0,15,0" Info="{StaticResource LangPageOtherAboutAboutVersionSubtitle}" Grid.Row="1" Grid.Column="1" x:Name="ItemAboutPcl" />
                     <Image Source="/Plain Craft Launcher 2;component/Images/Heads/Logo.png" Grid.Row="1" Margin="3">
                         <Image.Clip>
                             <EllipseGeometry Center="17 17" RadiusX="17" RadiusY="17" />
@@ -29,13 +29,13 @@
                             <EllipseGeometry Center="17 17" RadiusX="17" RadiusY="17" />
                         </Image.Clip>
                     </Image>
-                    <local:MyButton Text="赞助 PCL !" Grid.Column="2" Grid.Row="0" Height="35" ColorType="Highlight"
-                                    local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://afdian.com/a/LTCat" />
-                    <local:MyButton Text="查看源代码" Grid.Column="2" Grid.Row="1" Height="35" 
+                    <local:MyButton Text="{StaticResource LangPageOtherAboutAboutAuthorBtn}" Grid.Column="2" Grid.Row="0" Height="35" ColorType="Highlight"
+                                    local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://afdian.com/a/LTCat"/>
+                    <local:MyButton Text="{StaticResource LangPageOtherAboutAboutVersionBtn}" Grid.Column="2" Grid.Row="1" Height="35" 
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/Hex-Dragon/PCL2" />
                 </Grid>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="特别鸣谢">
+            <local:MyCard Margin="0,0,0,15" Title="{StaticResource LangPageOtherAboutThanks}">
                 <Grid Margin="21,40,21,16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="45" />
@@ -52,17 +52,17 @@
                         <ColumnDefinition />
                         <ColumnDefinition Width="150" />
                     </Grid.ColumnDefinitions>
-                    <local:MyListItem Title="bangbang93" Margin="-5,0,15,0" IsHitTestVisible="False" Info="提供 BMCLAPI 镜像源和 Forge 安装工具，详见 https://bmclapi.bangbang93.com" Grid.Row="0" Grid.Column="1" />
-                    <local:MyButton Text="赞助镜像源" Grid.Row="0" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://afdian.com/a/bangbang93" />
-                    <local:MyListItem Title="MC 百科" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 Mod 名称的中文翻译和更多相关信息！" Grid.Row="1" Grid.Column="1" />
-                    <local:MyButton Text="打开百科" Grid.Row="1" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.mcmod.cn" />
-                    <local:MyListItem Title="z0z0r4" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 MCIM 社区资源镜像源和帮助库图床！" Grid.Row="2" Grid.Column="1" />
-                    <local:MyButton Text="MCIM 主页" Grid.Row="2" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/mcmod-info-mirror" />
-                    <local:MyListItem Title="00ll00" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="提供了 Java Launch Wrapper 和一些重要服务支持！" Grid.Row="3" Grid.Column="1" />
-                    <local:MyListItem Title="Patrick" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="设计并制作了 PCL 图标，让我从做图标的水深火热中得到了解脱……" Grid.Row="4" Grid.Column="1" />
-                    <local:MyListItem Title="Hao_Tian" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="在内测中找出了一大堆没人想得到的诡异 Bug，有非同寻常的 Bug 体质" Grid.Row="5" Grid.Column="1" />
-                    <local:MyListItem Title="Minecraft 中文论坛" Margin="-5,0,15,0" IsHitTestVisible="False" Info="虽然已经关站了，但感谢此前提供了 MCBBS 镜像源……" Grid.Row="6" Grid.Column="1" />
-                    <local:MyListItem Title="PCL 内群的各位" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="感谢内群的沙雕网友们这么久以来对我和 PCL 的支持与鼓励！" Grid.Row="7" Grid.Column="1" />
+                    <local:MyListItem Title="bangbang93" Margin="-5,0,15,0" IsHitTestVisible="False" Info="{StaticResource LangPageOtherAboutThanksbangbang93}" Grid.Row="0" Grid.Column="1" />
+                    <local:MyButton Text="{StaticResource LangPageOtherAboutThanksbangbang93Btn}" Grid.Row="0" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://afdian.com/a/bangbang93" />
+                    <local:MyListItem Title="{StaticResource LangPageOtherAboutThanksMCModTitle}" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="{StaticResource LangPageOtherAboutThanksMCMod}" Grid.Row="1" Grid.Column="1" />
+                    <local:MyButton Text="{StaticResource LangPageOtherAboutThanksMCModBtn}" Grid.Row="1" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.mcmod.cn" />
+                    <local:MyListItem Title="z0z0r4" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="{StaticResource LangPageOtherAboutThanksz0z0r4}" Grid.Row="2" Grid.Column="1" />
+                    <local:MyButton Text="{StaticResource LangPageOtherAboutThanksz0z0r4Detail}" Grid.Row="2" Grid.Column="2" Height="35" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/mcmod-info-mirror" />
+                    <local:MyListItem Title="00ll00" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="{StaticResource LangPageOtherAboutThanks00ll00}" Grid.Row="3" Grid.Column="1" />
+                    <local:MyListItem Title="Patrick" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="{StaticResource LangPageOtherAboutThanksPatrick}" Grid.Row="4" Grid.Column="1" />
+                    <local:MyListItem Title="Hao_Tian" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="{StaticResource LangPageOtherAboutThanksHao_Tian}" Grid.Row="5" Grid.Column="1" />
+                    <local:MyListItem Title="{StaticResource LangPageOtherAboutThanksMCBBSTitle}" Margin="-5,0,15,0" IsHitTestVisible="False" Info="{StaticResource LangPageOtherAboutThanksMCBBS}" Grid.Row="6" Grid.Column="1" />
+                    <local:MyListItem Title="{StaticResource LangPageOtherAboutThanksUsersTitle}" Margin="-5,0,0,0" IsHitTestVisible="False" Grid.ColumnSpan="2" Info="{StaticResource LangPageOtherAboutThanksUsers}" Grid.Row="7" Grid.Column="1" />
                     <Image Source="/Plain Craft Launcher 2;component/Images/Heads/bangbang93.png" Grid.Row="0" Margin="3">
                         <Image.Clip>
                             <EllipseGeometry Center="17 17" RadiusX="17" RadiusY="17" />
@@ -105,10 +105,11 @@
                     </Image>
                 </Grid>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="赞助者">
+            <local:MyCard Margin="0,0,0,15" Title="{StaticResource LangPageOtherAboutSponsors}">
                 <StackPanel Margin="25,40,10,20">
-                    <TextBlock HorizontalAlignment="Left" Text="以下是 2025 年 9 月的高级赞助者们！感谢各位对 PCL 和伟大的咕咕咕事业的支持！" Margin="0,0,25,5.5" TextTrimming="None" TextWrapping="WrapWithOverflow" />
-                    <WrapPanel Margin="0,0,0,10">                        <TextBlock Width="120" Margin="0,1.5" Text="lecoe" />
+                    <TextBlock HorizontalAlignment="Left" Text="{StaticResource LangPageOtherAboutSponsorsSubtitle}" Margin="0,0,25,5.5" TextTrimming="None" TextWrapping="WrapWithOverflow" />
+                    <WrapPanel Margin="0,0,0,10">
+                        <TextBlock Width="120" Margin="0,1.5" Text="lecoe" />
                         <TextBlock Width="120" Margin="0,1.5" Text="QIUQI" />
                         <TextBlock Width="120" Margin="0,1.5" Text="Aquadtr" />
                         <TextBlock Width="120" Margin="0,1.5" Text="stb" />
@@ -325,28 +326,28 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnDonateOutput" Grid.Column="0" MinWidth="140" Text="生成解锁码" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" Visibility="Collapsed" />
-                        <local:MyButton x:Name="BtnDonateDonate" Grid.Column="0" MinWidth="140" Text="赞助作者" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://afdian.com/a/LTCat" />
-                        <local:MyButton x:Name="BtnDonateCopy" Grid.Column="1" MinWidth="140" Text="复制识别码" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
-                        <local:MyButton x:Name="BtnDonateInput" Grid.Column="2" MinWidth="140" Text="输入解锁码" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnDonateOutput" Grid.Column="0" MinWidth="140" Text="{StaticResource LangPageOtherAboutSponsorsCreateUnlockCode}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" Visibility="Collapsed" />
+                        <local:MyButton x:Name="BtnDonateDonate" Grid.Column="0" MinWidth="140" Text="{StaticResource LangPageOtherAboutSponsorsDonate}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://afdian.com/a/LTCat" />
+                        <local:MyButton x:Name="BtnDonateCopy" Grid.Column="1" MinWidth="140" Text="{StaticResource LangPageOtherAboutSponsorsCopyUUID}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnDonateInput" Grid.Column="2" MinWidth="140" Text="{StaticResource LangPageOtherAboutSponsorsSetUnlockCode}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="法律信息" IsSwapped="True" CanSwap="True">
+            <local:MyCard Margin="0,0,0,15" Title="{StaticResource LangPageOtherAboutLawInfo}" IsSwapped="True" CanSwap="True">
                 <StackPanel Margin="25,39,23,20">
-                    <TextBlock Text="匿名数据收集" TextWrapping="Wrap" Margin="0,6,0,4" FontWeight="Bold" />
-                    <TextBlock Margin="0,0,0,2" LineHeight="17" Text="当下载失败、PCL 出错、游戏崩溃等事件时，PCL 会匿名上报信息，以通知龙猫 “哦吼，出错了”，让龙猫能更好地修 Bug……（PCL 不会上传或收集任何个人信息，包括上报的东西里面也没有！）&#xa;你可以在 设置 → 其他 → 启动器 中关闭上报，不过龙猫就不知道你遇到了什么 Bug 了……&#xa;详情：https://github.com/Meloong-Git/PCL/discussions/7036" TextWrapping="Wrap" />
-                    <TextBlock Text="隐私声明与个人信息保护政策" TextWrapping="Wrap" Margin="0,10,0,4" FontWeight="Bold" />
-                    <TextBlock Margin="0,0,0,2" LineHeight="17" Text="PCL 没有收集个人信息，包括联机功能也没有收集，所以这里其实啥都不用写……&#xa;留个这个其实只是为了让你知道 PCL 没有收集个人信息，诶嘿。" TextWrapping="Wrap" />
-                    <TextBlock Text="其他信息" TextWrapping="Wrap" Margin="0,10,0,4" FontWeight="Bold" />
-                    <TextBlock Margin="0,0,0,2" LineHeight="17" Text="Copyright © 龙腾猫跃 2016. All Rights Reserved.&#13;计算机软件著作权登记号：2020SR0875133&#13;违法违规行为举报投诉邮箱：hexdragon@vip.qq.com&#13;非 MINECRAFT 官方产品。未经 MOJANG 或 MICROSOFT 批准，也不与 MOJANG 或 MICROSOFT 关联。" TextWrapping="Wrap" />
+                    <TextBlock Text="{StaticResource LangPageOtherAboutLawInfoTelemetryTitle}" TextWrapping="Wrap" Margin="0,6,0,4" FontWeight="Bold" />
+                    <TextBlock Margin="0,0,0,2" LineHeight="17" Text="{StaticResource LangPageOtherAboutLawInfoTelemetryContent}" TextWrapping="Wrap" />
+                    <TextBlock Text="{StaticResource LangPageOtherAboutLawInfoPrivacyTitle}" TextWrapping="Wrap" Margin="0,10,0,4" FontWeight="Bold" />
+                    <TextBlock Margin="0,0,0,2" LineHeight="17" Text="{StaticResource LangPageOtherAboutLawInfoPrivacyContent}" TextWrapping="Wrap" />
+                    <TextBlock Text="{StaticResource LangPageOtherAboutLawInfoOtherTitle}" TextWrapping="Wrap" Margin="0,10,0,4" FontWeight="Bold" />
+                    <TextBlock Margin="0,0,0,2" LineHeight="17" Text="{StaticResource LangPageOtherAboutLawInfoOtherContent}" TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Height="35" HorizontalAlignment="Left" Margin="0,12,0,0">
-                        <local:MyButton Text="用户协议与免责声明" Width="170" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://shimo.im/docs/rGrd8pY8xWkt6ryW" />
-                        <local:MyButton Text="开源代码" Width="140" Padding="13,0" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/Hex-Dragon/PCL2" />
+                        <local:MyButton Text="{StaticResource LangPageOtherAboutLawInfoAgreement}" Width="170" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://shimo.im/docs/rGrd8pY8xWkt6ryW" />
+                        <local:MyButton Text="{StaticResource LangPageOtherAboutAboutVersionBtn}" Width="140" Padding="13,0" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/Hex-Dragon/PCL2" />
                     </StackPanel>
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="许可与版权声明" IsSwapped="True" CanSwap="True">
+            <local:MyCard Margin="0,0,0,15" Title="{StaticResource LangPageOtherAboutLicenseCopyright}" IsSwapped="True" CanSwap="True">
                 <Grid Margin="25,42,23,4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -372,52 +373,54 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="60" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="60" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Java Launch Wrapper" TextWrapping="Wrap" FontWeight="Bold" />
                     <TextBlock Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2022 00ll00&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="1" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="1" Grid.Column="2" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseWeb}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/00ll00/java_launch_wrapper" />
-                    <local:MyButton Grid.Row="1" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="1" Grid.Column="3" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseDoc}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/00ll00/java_launch_wrapper?tab=MIT-1-ov-file#readme" />
 
                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Newtonsoft.Json" TextWrapping="Wrap" FontWeight="Bold" />
                     <TextBlock Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2007 James Newton-King&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="3" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="3" Grid.Column="2" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseWeb}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.newtonsoft.com/json" />
-                    <local:MyButton Grid.Row="3" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="3" Grid.Column="3" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseDoc}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://opensource.org/licenses/MIT" />
                     
                     <TextBlock Grid.Row="4" Grid.Column="0" Text="NAudio" TextWrapping="Wrap" FontWeight="Bold" />
                     <TextBlock Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2015 Mark Heath (mark.heath@gmail.com)&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="5" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="5" Grid.Column="2" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseWeb}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/naudio/NAudio" />
-                    <local:MyButton Grid.Row="5" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left" 
+                    <local:MyButton Grid.Row="5" Grid.Column="3" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseDoc}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left" 
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/naudio/NAudio/blob/master/license.txt" />
 
                     <TextBlock Grid.Row="6" Grid.Column="0" Text="Ookii.Dialogs" TextWrapping="Wrap" FontWeight="Bold" />
                     <TextBlock Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2009 Sven Groot (Ookii.org)" TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="7" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="7" Grid.Column="2" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseWeb}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.ookii.org/Software/Dialogs/" />
-                    <local:MyButton Grid.Row="7" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="7" Grid.Column="3" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseDoc}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/caioproiete/ookii-dialogs-wpf/blob/master/LICENSE" />
                     
                     <TextBlock Grid.Row="8" Grid.Column="0" Text="Iconmonstr" TextWrapping="Wrap" FontWeight="Bold" />
                     <TextBlock Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2019 iconmonstr (Alexander Kahlkopf)" TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="9" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="9" Grid.Column="2" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseWeb}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://iconmonstr.com/" />
-                    <local:MyButton Grid.Row="9" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="9" Grid.Column="3" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseDoc}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://iconmonstr.com/license/" />
                     
                     <TextBlock Grid.Row="10" Grid.Column="0" Text="libwebp wrapper for .NET" TextWrapping="Wrap" FontWeight="Bold" />
                     <TextBlock Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2012 Imazen&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="11" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="11" Grid.Column="2" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseWeb}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/imazen/libwebp-net" />
-                    <local:MyButton Grid.Row="11" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="11" Grid.Column="3" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseDoc}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/imazen/libwebp-net/blob/master/LICENSE.txt" />
 
                     <TextBlock Grid.Row="12" Grid.Column="0" Text="Iconfont" TextWrapping="Wrap" FontWeight="Bold" />
                     <TextBlock Grid.Row="12" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © ALIMAMA MUX, powered by alimama THX." TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="13" Grid.Column="2" MinWidth="140" Text="查看原网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="13" Grid.Column="2" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseWeb}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.iconfont.cn/" />
 
                     <TextBlock Grid.Row="14" Grid.Column="0" Text="EasyTier" TextWrapping="Wrap" FontWeight="Bold" />
@@ -426,6 +429,12 @@
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://easytier.cn/" />
                     <local:MyButton Grid.Row="15" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left" 
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/EasyTier/EasyTier/blob/main/LICENSE" />
+                    
+                    <TextBlock Grid.Row="16" Grid.Column="0" Text="Costura.Fody" TextWrapping="Wrap" FontWeight="Bold" />
+                    <TextBlock Grid.Row="16" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2012 Simon Cropp and contributors" TextWrapping="Wrap" />
+                    <local:MyButton Grid.Row="17" Grid.Column="2" MinWidth="140" Text="{StaticResource LangPageOtherAboutLicenseWeb}" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                                    local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/Fody/Costura" />
+
                 </Grid>
             </local:MyCard>
         </StackPanel>

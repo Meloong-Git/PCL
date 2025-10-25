@@ -45,9 +45,9 @@ Public Module ModMinecraft
 
             '扫描当前文件夹
             Try
-                If Directory.Exists(Path & "versions\") Then CacheMcFolderList.Add(New McFolder With {.Name = "当前文件夹", .Path = Path, .Type = McFolderType.Original})
+                If Directory.Exists(Path & "versions\") Then CacheMcFolderList.Add(New McFolder With {.Name = GetLang("LangModMinecraftCurrentFolder"), .Path = Path, .Type = McFolderType.Original})
                 For Each Folder As DirectoryInfo In New DirectoryInfo(Path).GetDirectories
-                    If Directory.Exists(Folder.FullName & "versions\") OrElse Folder.Name = ".minecraft" Then CacheMcFolderList.Add(New McFolder With {.Name = "当前文件夹", .Path = Folder.FullName & "\", .Type = McFolderType.Original})
+                    If Directory.Exists(Folder.FullName & "versions\") OrElse Folder.Name = ".minecraft" Then CacheMcFolderList.Add(New McFolder With {.Name = GetLang("LangModMinecraftCurrentFolder"), .Path = Folder.FullName & "\", .Type = McFolderType.Original})
                 Next
             Catch ex As Exception
                 Log(ex, "扫描 PCL 所在文件夹中是否有 MC 文件夹失败")
@@ -57,7 +57,7 @@ Public Module ModMinecraft
             Dim MojangPath As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\"
             If (Not CacheMcFolderList.Any OrElse MojangPath <> CacheMcFolderList(0).Path) AndAlso '当前文件夹不是官启文件夹
                 Directory.Exists(MojangPath & "versions\") Then '具有权限且存在 versions 文件夹
-                CacheMcFolderList.Add(New McFolder With {.Name = "官方启动器文件夹", .Path = MojangPath, .Type = McFolderType.Original})
+                CacheMcFolderList.Add(New McFolder With {.Name = GetLang("LangModMinecraftOfficialFolder"), .Path = MojangPath, .Type = McFolderType.Original})
             End If
 
 #End Region
@@ -68,7 +68,7 @@ Public Module ModMinecraft
             For Each Folder As String In Setup.Get("LaunchFolders").Split("|")
                 If Folder = "" Then Continue For
                 If Not Folder.Contains(">") OrElse Not Folder.EndsWithF("\") Then
-                    Hint("无效的 Minecraft 文件夹：" & Folder, HintType.Red)
+                    Hint(GetLang("LangModMinecraftInvalidMcFolder", Folder), HintType.Red)
                     Continue For
                 End If
                 Dim Name As String = Folder.Split(">")(0)
@@ -86,7 +86,7 @@ Public Module ModMinecraft
                     Next
                     If Not Renamed Then CacheMcFolderList.Add(New McFolder With {.Name = Name, .Path = Path, .Type = McFolderType.Custom})
                 Catch ex As Exception
-                    MyMsgBox("失效的 Minecraft 文件夹：" & vbCrLf & Path & vbCrLf & vbCrLf & ex.GetBrief(), "Minecraft 文件夹失效", IsWarn:=True)
+                    MyMsgBox(GetLang("LangModMinecraftInvalidMcFolder", Path, ex.GetBrief()), GetLang("LangModMinecraftDialogTitleInvalidMcFolder"), IsWarn:=True)
                     Log(ex, $"无法访问 Minecraft 文件夹 {Path}")
                 End Try
             Next
@@ -104,7 +104,7 @@ Public Module ModMinecraft
             '若没有可用文件夹，则创建 .minecraft
             If Not CacheMcFolderList.Any() Then
                 Directory.CreateDirectory(Path & ".minecraft\versions\")
-                CacheMcFolderList.Add(New McFolder With {.Name = "当前文件夹", .Path = Path & ".minecraft\", .Type = McFolderType.Original})
+                CacheMcFolderList.Add(New McFolder With {.Name = GetLang("LangModMinecraftCurrentFolder"), .Path = Path & ".minecraft\", .Type = McFolderType.Original})
             End If
 
             For Each Folder As McFolder In CacheMcFolderList
@@ -260,7 +260,7 @@ Public Module ModMinecraft
         ''' <summary>
         ''' 显示的描述文本。
         ''' </summary>
-        Public Info As String = "该版本未被加载，请向作者反馈此问题"
+        Public Info As String = GetLang("LangModMinecraftNotLoaded")
         Public ReadOnly Property HasCustomInfo As Boolean
             Get
                 Return ReadIni(Path & "PCL\Setup.ini", "CustomInfo") <> ""
@@ -411,11 +411,11 @@ Public Module ModMinecraft
                         End If
                         '无法获取
                         _Version.McName = "Unknown"
-                        Info = "PCL 无法识别该版本的 MC 版本号"
+                        Info = GetLang("LangModMinecraftUnableGetVersion")
                     Catch ex As Exception
                         Log(ex, "识别 Minecraft 版本时出错")
                         _Version.McName = "Unknown"
-                        Info = "无法识别：" & ex.Message
+                        Info = GetLang("LangModMinecraftGetVersionFail", ex.Message)
                     End Try
 VersionSearchFinish:
                     '获取版本号
@@ -561,7 +561,7 @@ Recheck:
                             If InheritVersion <> "" Then
                                 Dim Inherit As New McVersion(InheritVersion)
                                 '继续循环
-                                If Inherit.InheritVersion = InheritVersion Then Throw New Exception("版本依赖项出现嵌套：" & InheritVersion)
+                                If Inherit.InheritVersion = InheritVersion Then Throw New Exception(GetLang("LangModMinecraftExceptionDependencyNestingAppears", InheritVersion))
                                 InheritVersion = Inherit.InheritVersion
                                 '合并 Libraries 项：子版本放在前面，父版本放在后面（5978#：如果多个 jar 包中含有相同的类，Java 8 和之前的版本按照 -cp 指定的顺序选择第一个）
                                 Dim CurrentLib As JArray = _JsonObject("libraries").DeepClone()
@@ -665,7 +665,7 @@ Recheck:
             '检查文件夹
             If Not Directory.Exists(Path) Then
                 State = McVersionState.Error
-                Info = "未找到版本 " & Name
+                Info = GetLang("LangModMinecraftCheckStatusInstanceNotFound") & " " & Name
                 Return False
             End If
             '检查权限
@@ -674,7 +674,7 @@ Recheck:
                 CheckPermissionWithException(Path & "PCL\")
             Catch ex As Exception
                 State = McVersionState.Error
-                Info = "PCL 没有对该文件夹的访问权限，请右键以管理员身份运行 PCL"
+                Info = GetLang("LangModMinecraftCheckStatusNoPermission")
                 Log(ex, "没有访问版本文件夹的权限")
                 Return False
             End Try
@@ -694,14 +694,14 @@ Recheck:
                 If Not InheritVersion = "" Then
                     If Not File.Exists(GetPathFromFullPath(Path) & InheritVersion & "\" & InheritVersion & ".json") Then
                         State = McVersionState.Error
-                        Info = "需要安装 " & InheritVersion & " 作为前置版本"
+                        Info = GetLang("LangModMinecraftCheckStatusNeedDependency") & InheritVersion
                         Return False
                     End If
                 End If
             Catch ex As Exception
                 Log(ex, "依赖版本检查出错（" & Name & "）")
                 State = McVersionState.Error
-                Info = "未知错误：" & ex.GetBrief()
+                Info = GetLang("LangModMinecraftCheckStatusUnknownError") & ex.GetBrief()
                 Return False
             End Try
 
@@ -824,7 +824,7 @@ ExitDataLoad:
                     WriteIni(Path & "PCL\Setup.ini", "VersionOriginalSub", Version.McCodeSub)
                 End If
             Catch ex As Exception
-                Info = "未知错误：" & ex.GetBrief()
+                Info = GetLang("LangModMinecraftCheckStatusUnknownError") & ex.GetBrief()
                 Logo = PathImage & "Blocks/RedstoneBlock.png"
                 State = McVersionState.Error
                 Log(ex, "加载版本失败（" & Name & "）", LogLevel.Feedback)
@@ -843,16 +843,16 @@ ExitDataLoad:
             Select Case State
                 Case McVersionState.Snapshot
                     If Version.McName.ContainsF("pre", True) Then
-                        Info = "预发布版 " & Version.McName
+                        Info = GetLang("LangModMinecraftVersionPre") & " " & Version.McName
                     ElseIf Version.McName.ContainsF("rc", True) Then
-                        Info = "发布候选 " & Version.McName
+                        Info = GetLang("LangModMinecraftVersionRC") & " " & Version.McName
                     ElseIf Version.McName.Contains("experimental") OrElse Version.McName = "pending" Then
-                        Info = "实验性快照"
+                        Info = GetLang("LangModMinecraftVersionExperimental")
                     Else
-                        Info = "快照 " & Version.McName
+                        Info = GetLang("LangModMinecraftVersionSnapshot") & " " & Version.McName
                     End If
                 Case McVersionState.Old
-                    Info = "远古版本"
+                    Info = GetLang("LangModMinecraftVersionOld")
                 Case McVersionState.Original, McVersionState.Forge, McVersionState.NeoForge, McVersionState.Fabric, McVersionState.OptiFine, McVersionState.LiteLoader
                     Info = Version.ToString
                 Case McVersionState.Fool
@@ -860,7 +860,7 @@ ExitDataLoad:
                 Case McVersionState.Error
                     Return Me.Info '已有错误信息
                 Case Else
-                    Info = "发生了未知错误，请向作者反馈此问题"
+                    Info = GetLang("LangModMinecraftUnknownError")
             End Select
             Return Info
         End Function
@@ -1021,7 +1021,7 @@ ExitDataLoad:
             If HasOptiFine Then ToString += ", OptiFine" & If(OptiFineVersion = "未知版本", "", " " & OptiFineVersion)
             If HasLiteLoader Then ToString += ", LiteLoader"
             If ToString = "" Then
-                Return "原版 " & McName
+                Return GetLang("LangModMinecraftVersionVanilla") & " " & McName
             Else
                 Return McName & ToString
             End If
@@ -1041,7 +1041,7 @@ ExitDataLoad:
                             If SubVersions.Length >= 3 Then
                                 _SortCode = Val(SubVersions(0)) * 10000 + Val(SubVersions(1)) * 100 + Val(SubVersions(2))
                             Else
-                                Throw New Exception("无效的 Fabric 版本：" & ForgeVersion)
+                                Throw New Exception(GetLang("LangModMinecraftInvalidFabricVersion", FabricVersion))
                             End If
                         ElseIf HasForge OrElse HasNeoForge Then
                             If ForgeVersion = "未知版本" AndAlso NeoForgeVersion = "未知版本" Then Return 0
@@ -1051,7 +1051,7 @@ ExitDataLoad:
                             ElseIf SubVersions.Length = 3 Then
                                 _SortCode = Val(SubVersions(0)) * 1000000 + Val(SubVersions(1)) * 10000 + Val(SubVersions(2))
                             Else
-                                Throw New Exception("无效的 Neo/Forge 版本：" & ForgeVersion)
+                                Throw New Exception(GetLang("LangModMinecraftInvalidForgeVersion", ForgeVersion))
                             End If
                         ElseIf HasOptiFine Then
                             If OptiFineVersion = "未知版本" Then Return 0
@@ -1095,23 +1095,23 @@ ExitDataLoad:
     Public Function GetMcFoolName(Name As String) As String
         Name = Name.ToLower
         If Name.StartsWithF("2.0") Then
-            Return "2013 | 这个秘密计划了两年的更新将游戏推向了一个新高度！"
+            Return "2013 | " & GetLang("LangModMinecraftFoolName2.0")
         ElseIf Name = "15w14a" Then
-            Return "2015 | 作为一款全年龄向的游戏，我们需要和平，需要爱与拥抱。"
+            Return "2015 | " & GetLang("LangModMinecraftFoolName15w14a")
         ElseIf Name = "1.rv-pre1" Then
-            Return "2016 | 是时候将现代科技带入 Minecraft 了！"
+            Return "2016 | " & GetLang("LangModMinecraftFoolName1.rv-pre1")
         ElseIf Name = "3d shareware v1.34" Then
-            Return "2019 | 我们从地下室的废墟里找到了这个开发于 1994 年的杰作！"
+            Return "2019 | " & GetLang("LangModMinecraftFoolName3dshareware")
         ElseIf Name.StartsWithF("20w14inf") OrElse Name = "20w14∞" Then
-            Return "2020 | 我们加入了 20 亿个新的维度，让无限的想象变成了现实！"
+            Return "2020 | " & GetLang("LangModMinecraftFoolName20w14inf")
         ElseIf Name = "22w13oneblockatatime" Then
-            Return "2022 | 一次一个方块更新！迎接全新的挖掘、合成与骑乘玩法吧！"
+            Return "2022 | " & GetLang("LangModMinecraftFoolName22w13oneblockatatime")
         ElseIf Name = "23w13a_or_b" Then
-            Return "2023 | 研究表明：玩家喜欢作出选择——越多越好！"
+            Return "2023 | " & GetLang("LangModMinecraftFoolName23w13ab")
         ElseIf Name = "24w14potato" Then
-            Return "2024 | 毒马铃薯一直都被大家忽视和低估，于是我们超级加强了它！"
+            Return "2024 | " & GetLang("LangModMinecraftFoolName24w14potato")
         ElseIf Name = "25w14craftmine" Then
-            Return "2025 | 你可以合成任何东西——包括合成你的世界！"
+            Return "2025 | " & GetLang("LangModMinecraftFoolName25w14craftmine")
         Else
             Return ""
         End If
@@ -1159,7 +1159,7 @@ ExitDataLoad:
                         FolderList.Add(Folder.Name)
                     Next
                 Catch ex As Exception
-                    Throw New Exception("无法读取版本文件夹，可能是由于没有权限（" & Path & "versions）", ex)
+                    Throw New Exception(GetLang("LangModMinecraftExceptionGetFolderListFail", Path), ex)
                 End Try
             End If
             '不可用
@@ -1594,30 +1594,30 @@ OnLoaded:
     ''' 要求玩家选择一个皮肤文件，并进行相关校验。
     ''' </summary>
     Public Function McSkinSelect() As McSkinInfo
-        Dim FileName As String = SelectFile("皮肤文件(*.png;*.jpg;*.jpeg;*.webp)|*.png;*.jpg;*.jpeg;*.webp", "选择皮肤文件")
+        Dim FileName As String = SelectFile(GetLang("LangModMinecraftSelectTypeSkin") & "(*.png;*.jpg;*.jpeg;*.webp)|*.png;*.jpg;*.jpeg;*.webp", GetLang("LangModMinecraftSelectTitleSkin"))
 
         '验证有效性
         If FileName = "" Then Return New McSkinInfo With {.IsVaild = False}
         Try
             Dim Image As New MyBitmap(FileName)
             If Image.Pic.Width <> 64 OrElse Not (Image.Pic.Height = 32 OrElse Image.Pic.Height = 64) Then
-                Hint("皮肤图片大小应为 64x32 像素或 64x64 像素！", HintType.Red)
+                Hint(GetLang("LangModMinecraftSkinSizeErrorA"), HintType.Red)
                 Return New McSkinInfo With {.IsVaild = False}
             End If
             Dim FileInfo As New FileInfo(FileName)
             If FileInfo.Length > 24 * 1024 Then
-                Hint("皮肤文件大小需小于 24 KB，而所选文件大小为 " & Math.Round(FileInfo.Length / 1024, 2) & " KB", HintType.Red)
+                Hint(GetLang("LangModMinecraftSkinSizeErrorB") & " " & Math.Round(FileInfo.Length / 1024, 2) & " KB", HintType.Red)
                 Return New McSkinInfo With {.IsVaild = False}
             End If
         Catch ex As Exception
-            Log(ex, "皮肤文件存在错误", LogLevel.Hint)
+            Log(ex, GetLang("LangModMinecraftSkinErrorFile"), LogLevel.Hint)
             Return New McSkinInfo With {.IsVaild = False}
         End Try
 
         '获取皮肤种类
-        Dim IsSlim As Integer = MyMsgBox("此皮肤为 Steve 模型（粗手臂）还是 Alex 模型（细手臂）？", "选择皮肤种类", "Steve 模型", "Alex 模型", "我不知道", HighLight:=False)
+        Dim IsSlim As Integer = MyMsgBox(GetLang("LangModMinecraftSkinDialogSkinTypeContent"), GetLang("LangModMinecraftSkinDialogSkinTypeTitle"), GetLang("LangModMinecraftSkinDialogSkinTypeSteve"), GetLang("LangModMinecraftSkinDialogSkinTypeAlex"), GetLang("LangModMinecraftSkinDialogSkinTypeIDK"), HighLight:=False)
         If IsSlim = 3 Then
-            Hint("请在皮肤下载页面确认皮肤种类后再使用此皮肤！")
+            Hint(GetLang("LangModMinecraftSkinSkinTypeIDK"))
             Return New McSkinInfo With {.IsVaild = False}
         End If
 
@@ -1628,8 +1628,8 @@ OnLoaded:
     ''' 获取 Uuid 对应的皮肤文件地址，失败将抛出异常。
     ''' </summary>
     Public Function McSkinGetAddress(UUID As String, Type As String) As String
-        If UUID = "" Then Throw New Exception("UUID 为空。")
-        If UUID.StartsWithF("00000") AndAlso Type <> "Auth" Then Throw New Exception("离线 UUID 无正版皮肤文件：" & UUID)
+        If UUID = "" Then Throw New Exception(GetLang("LangModMinecraftExceptionEmptyUuid"))
+        If UUID.StartsWithF("00000") AndAlso Type <> "Auth" Then Throw New Exception(GetLang("LangModMinecraftExceptionUuidNoOnlineProfile", UUID))
         '尝试读取缓存
         Dim CacheSkinAddress As String = ReadIni(PathTemp & "Cache\Skin\Index" & Type & ".ini", UUID)
         If Not CacheSkinAddress = "" Then Return CacheSkinAddress
@@ -1643,10 +1643,10 @@ OnLoaded:
             Case "Auth"
                 Url = If(McVersionCurrent Is Nothing, Setup.Get("CacheAuthServerServer"), Setup.Get("VersionServerAuthServer", Version:=McVersionCurrent)) & "/sessionserver/session/minecraft/profile/"
             Case Else
-                Throw New ArgumentException("皮肤地址种类无效：" & If(Type, "null"))
+                Throw New ArgumentException(GetLang("LangModMinecraftExceptionSkinTypeInvalid", If(Type, "null")))
         End Select
         Dim SkinString = NetRequestByClientRetry(Url & UUID, RequireJson:=True)
-        If SkinString = "" Then Throw New Exception("皮肤返回值为空，可能是未设置自定义皮肤的用户")
+        If SkinString = "" Then Throw New Exception(GetLang("LangModMinecraftExceptionEmptySkin"))
         '处理皮肤地址
         Dim SkinValue As String
         Try
@@ -1656,15 +1656,15 @@ OnLoaded:
                     Exit Try
                 End If
             Next
-            Throw New Exception("未从皮肤返回值中找到符合条件的 Property")
+            Throw New Exception(GetLang("LangModMinecraftExceptionSkinPropertyNotFound"))
         Catch ex As Exception
             Log(ex, "无法完成解析的皮肤返回值，可能是未设置自定义皮肤的用户：" & SkinString, LogLevel.Developer)
-            Throw New Exception("皮肤返回值中不包含皮肤数据项，可能是未设置自定义皮肤的用户", ex)
+            Throw New Exception(GetLang("LangModMinecraftExceptionSkinNoData"), ex)
         End Try
         SkinString = Encoding.GetEncoding("utf-8").GetString(Convert.FromBase64String(SkinValue))
         Dim SkinJson As JObject = GetJson(SkinString.ToLower)
         If SkinJson("textures") Is Nothing OrElse SkinJson("textures")("skin") Is Nothing OrElse SkinJson("textures")("skin")("url") Is Nothing Then
-            Throw New Exception("用户未设置自定义皮肤")
+            Throw New Exception(GetLang("LangModMinecraftExceptionSkinNotSet"))
         Else
             Dim SkinUrl As String = SkinJson("textures")("skin")("url").ToString
             SkinValue = If(SkinUrl.Contains("minecraft.net/"), SkinUrl.Replace("http://", "https://"), SkinUrl)
@@ -2196,7 +2196,7 @@ OnLoaded:
             }")
             'End If
         Else
-            Throw New Exception("该版本不存在资源文件索引信息")
+            Throw New Exception(GetLang("LangModMinecraftExceptionNoAssetsIndexInfo"))
         End If
     End Function
     ''' <summary>
@@ -2251,7 +2251,7 @@ OnLoaded:
         Try
 
             '初始化
-            If Not File.Exists($"{PathMcFolder}assets\indexes\{IndexName}.json") Then Throw New FileNotFoundException("未找到 Asset Index", PathMcFolder & "assets\indexes\" & IndexName & ".json")
+            If Not File.Exists($"{PathMcFolder}assets\indexes\{IndexName}.json") Then Throw New FileNotFoundException(GetLang("LangModMinecraftExceptionAssetsIndexFileNotFound"), PathMcFolder & "assets\indexes\" & IndexName & ".json")
             Dim Result As New List(Of McAssetsToken)
             Dim Json As JObject = GetJson(ReadFile($"{PathMcFolder}assets\indexes\{IndexName}.json"))
 
@@ -2333,9 +2333,9 @@ OnLoaded:
             '进行提示
             If Version Is Nothing Then Return
             Dim Time As Date = Version("releaseTime")
-            Dim MsgBoxText As String = $"新版本：{VersionName}{vbCrLf}" &
-                If((Date.Now - Time).TotalDays > 1, "更新时间：" & Time.ToString, "更新于：" & GetTimeSpanString(Time - Date.Now, False))
-            Dim MsgResult = MyMsgBox(MsgBoxText, "Minecraft 更新提示", "确定", "下载", If((Date.Now - Time).TotalHours > 3, "更新日志", ""),
+            Dim MsgBoxText As String = GetLang("LangModMinecraftDialogNewVersionContentA") & $"{VersionName}{vbCrLf}" &
+                If((Date.Now - Time).TotalDays > 1, GetLang("LangModMinecraftDialogNewVersionContentB") & Time.ToString, GetLang("LangModMinecraftDialogNewVersionContentC") & GetTimeSpanString(Time - Date.Now, False))
+            Dim MsgResult = MyMsgBox(MsgBoxText, GetLang("LangModMinecraftDialogNewVersionTitle"), GetLang("LangDialogBtnOK"), GetLang("LangModMinecraftDialogNewVersionBtnDownload"), If((Date.Now - Time).TotalHours > 3, GetLang("LangModMinecraftDialogNewVersionBtnLog"), ""),
                 Button3Action:=Sub() McUpdateLogShow(Version))
             '弹窗结果
             If MsgResult = 2 Then

@@ -25,6 +25,14 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Setup NuGet
+      uses: nuget/setup-nuget@v2
+      with:
+        nuget-version: latest
+
+    - name: Restore NuGet Packages
+      run: nuget restore "Plain Craft Launcher 2.sln"
+
     - name: Set Describe
       shell: bash
       run: |

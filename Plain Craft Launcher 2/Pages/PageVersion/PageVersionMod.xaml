@@ -1,4 +1,4 @@
-﻿<local:MyPageRight
+<local:MyPageRight
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -8,7 +8,7 @@
         <Grid x:Name="PanAllBack">
             <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
                 <StackPanel x:Name="PanMain" Margin="25,10,25,10" Grid.IsSharedSizeScope="True"> <!-- 若显示多选模块则为 92 -->
-                    <local:MySearchBox Margin="0,15" HintText="搜索 Mod 名称 / 描述 / 标签" x:Name="SearchBox" />
+                    <local:MySearchBox Margin="0,15" HintText="{StaticResource LangPageVersionModSearchTip}" x:Name="SearchBox" />
                     <local:MyCard Grid.Row="0" Margin="0,0,0,15" x:Name="PanManage">
                         <Grid Margin="15,15,0,15" Height="35">
                             <Grid.ColumnDefinitions>
@@ -18,11 +18,11 @@
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                                 <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             </Grid.ColumnDefinitions>
-                            <local:MyButton x:Name="BtnManageOpen" Grid.Column="0" MinWidth="110" Text="打开文件夹" Padding="13,0" Margin="0,0,15,0" HorizontalAlignment="Left" ColorType="Highlight" />
-                            <local:MyButton x:Name="BtnManageInstall" Grid.Column="1" MinWidth="110" Text="从文件安装" Padding="13,0" Margin="0,0,15,0" HorizontalAlignment="Left" />
-                            <local:MyButton x:Name="BtnManageDownload" Grid.Column="2" MinWidth="110" Text="下载新 Mod" Padding="13,0" Margin="0,0,15,0" HorizontalAlignment="Left" />
-                            <local:MyButton x:Name="BtnManageSelectAll" Grid.Column="3" MinWidth="110" Text="全选" Padding="13,0" Margin="0,0,15,0" HorizontalAlignment="Left" />
-                            <local:MyButton x:Name="BtnManageCheck" Grid.Column="4" MinWidth="110" Text="检查 Mod" Padding="13,0" Margin="0,0,15,0" HorizontalAlignment="Left" ToolTip="快速检查 Mod 的版本要求、重复、前置缺失等问题。&#xa;结果仅供参考，由于部分 Mod 标注的信息有误，可能并不准确。" Visibility="Collapsed" />
+                            <local:MyButton x:Name="BtnManageOpen" Grid.Column="0" MinWidth="110" Text="{StaticResource LangPageVersionModOpenFolder}" Padding="13,0" Margin="0,0,15,0" HorizontalAlignment="Left" ColorType="Highlight" />
+                            <local:MyButton x:Name="BtnManageInstall" Grid.Column="1" MinWidth="110" Text="{StaticResource LangPageVersionModInstallModFromFile}" Padding="13,0" Margin="0,0,15,0" HorizontalAlignment="Left" />
+                            <local:MyButton x:Name="BtnManageDownload" Grid.Column="2" MinWidth="110" Text="{StaticResource LangPageVersionModInstallMod}" Padding="13,0" Margin="0,0,15,0" HorizontalAlignment="Left" />
+                            <local:MyButton x:Name="BtnManageSelectAll" Grid.Column="3" MinWidth="110" Text="{StaticResource LangPageVersionModSelectAll}" Padding="13,0" Margin="0,0,15,0" HorizontalAlignment="Left" />
+                            <local:MyButton x:Name="BtnManageCheck" Grid.Column="4" MinWidth="110" Text="{StaticResource LangPageVersionModCheckMod}" Padding="13,0" Margin="0,0,15,0" HorizontalAlignment="Left" ToolTip="{StaticResource LangPageVersionModCheckModToolTip}" Visibility="Collapsed" />
                         </Grid>
                     </local:MyCard>
                     <local:MyCard x:Name="PanListBack" VerticalAlignment="Top" Opacity="0" Margin="0,0,0,14" Title=" " MinHeight="55">
@@ -39,9 +39,9 @@
             </local:MyScrollViewer>
             <local:MyCard HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40" x:Name="PanEmpty">
                 <StackPanel Margin="20,17">
-                    <TextBlock Margin="0,0,0,9" HorizontalAlignment="Center" Text="尚未安装 Mod" FontSize="19" UseLayoutRounding="True" SnapsToDevicePixels="True" Foreground="{DynamicResource ColorBrush3}" />
+                    <TextBlock Margin="0,0,0,9" HorizontalAlignment="Center" Text="{StaticResource LangPageVersionModNoModFile}" FontSize="19" UseLayoutRounding="True" SnapsToDevicePixels="True" Foreground="{DynamicResource ColorBrush3}" />
                     <Rectangle HorizontalAlignment="Stretch" Height="2" Fill="{DynamicResource ColorBrush3}" />
-                    <TextBlock Margin="10,10,10,0" Text="你可以下载新的 Mod，或者从已经下载好的文件安装 Mod。&#xa;如果你已经安装了 Mod，可能是版本隔离设置有误，请在设置中调整版本隔离选项。" TextWrapping="Wrap" />
+                    <TextBlock Margin="10,10,10,0" Text="{StaticResource LangPageVersionModDropToInstallModTip}" TextWrapping="Wrap" />
                     <Grid Margin="15,20,0,5" Height="35" HorizontalAlignment="Center">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
@@ -56,24 +56,24 @@
             </local:MyCard>
         </Grid>
         <local:MyCard HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40,0" SnapsToDevicePixels="True" x:Name="PanLoad" UseAnimation="False">
-            <local:MyLoading Text="正在加载 Mod 列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <local:MyLoading Text="{StaticResource LangPageVersionModLoadingList}" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
         </local:MyCard>
         <local:MyCard x:Name="CardSelect" Visibility="Collapsed" Opacity="0"
                       HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="25,25,25,0" UseAnimation="False">
             <local:MyCard.RenderTransform>
                 <TranslateTransform x:Name="TransSelect" Y="-10" />
             </local:MyCard.RenderTransform>
-            <TextBlock x:Name="LabSelect" Text="已选择 8 个文件" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="9" Foreground="{DynamicResource ColorBrush2}" />
+            <TextBlock x:Name="LabSelect" Text="{StaticResource LangPageVersionModSelectedFile}" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="9" Foreground="{DynamicResource ColorBrush2}" />
             <StackPanel Orientation="Horizontal" Margin="5,28,5,5">
-                <local:MyIconTextButton x:Name="BtnSelectUpdate" Text="更新"
+                <local:MyIconTextButton x:Name="BtnSelectUpdate" Text="{StaticResource LangPageVersionModOperationUpdate}"
                                         LogoScale="1" Logo="M640 768H384l-32-32V509H213L190 454l298-298h45l298 298L810 509h-138v226z m-224-64h192V477l32-32h93L512 223 290 445H384l32 32zM352 831h320v64h-320z" />
-                <local:MyIconTextButton x:Name="BtnSelectEnable" Text="启用"
+                <local:MyIconTextButton x:Name="BtnSelectEnable" Text="{StaticResource LangPageVersionModOperationEnable}"
                                         LogoScale="1.05" Logo="M512 0a512 512 0 1 0 512 512A512 512 0 0 0 512 0z m0 921.6a409.6 409.6 0 1 1 409.6-409.6 409.6 409.6 0 0 1-409.6 409.6z M716.8 339.968l-256 253.44L328.192 460.8A51.2 51.2 0 0 0 256 532.992l168.448 168.96a51.2 51.2 0 0 0 72.704 0l289.28-289.792A51.2 51.2 0 0 0 716.8 339.968z" />
-                <local:MyIconTextButton x:Name="BtnSelectDisable" Text="禁用"
+                <local:MyIconTextButton x:Name="BtnSelectDisable" Text="{StaticResource LangPageVersionModOperationDisable}"
                                         LogoScale="1" Logo="M508 990.4c-261.6 0-474.4-212-474.4-474.4S246.4 41.6 508 41.6s474.4 212 474.4 474.4S769.6 990.4 508 990.4zM508 136.8c-209.6 0-379.2 169.6-379.2 379.2 0 209.6 169.6 379.2 379.2 379.2s379.2-169.6 379.2-379.2C887.2 306.4 717.6 136.8 508 136.8zM697.6 563.2 318.4 563.2c-26.4 0-47.2-21.6-47.2-47.2 0-26.4 21.6-47.2 47.2-47.2l379.2 0c26.4 0 47.2 21.6 47.2 47.2C744.8 542.4 724 563.2 697.6 563.2z" />
-                <local:MyIconTextButton x:Name="BtnSelectDelete" Text="删除"
+                <local:MyIconTextButton x:Name="BtnSelectDelete" Text="{StaticResource LangPageVersionModOperationDelete}"
                                         LogoScale="0.96" Logo="M520.192 0C408.43 0 317.44 82.87 313.563 186.734H52.736c-29.038 0-52.663 21.943-52.663 49.079s23.625 49.152 52.663 49.152h58.075v550.473c0 103.35 75.118 187.757 167.717 187.757h472.43c92.599 0 167.716-83.894 167.716-187.757V285.477h52.59c29.038 0 52.59-21.943 52.663-49.08-0.073-27.135-23.625-49.151-52.663-49.151H726.235C723.237 83.017 631.955 0 520.192 0zM404.846 177.957c3.803-50.03 50.176-89.015 107.447-89.015 57.197 0 103.57 38.985 106.788 89.015H404.92zM284.379 933.669c-33.353 0-69.997-39.351-69.997-95.525v-549.01H833.39v549.522c0 56.247-36.645 95.525-69.998 95.525H284.379v-0.512z M357.23 800.695a48.274 48.274 0 0 0 47.616-49.006V471.7a48.274 48.274 0 0 0-47.543-49.08 48.274 48.274 0 0 0-47.69 49.006V751.69c0 27.282 20.846 49.006 47.617 49.006z m166.62 0a48.274 48.274 0 0 0 47.688-49.006V471.7a48.274 48.274 0 0 0-47.689-49.08 48.274 48.274 0 0 0-47.543 49.006V751.69c0 27.282 21.431 49.006 47.543 49.006z m142.92 0a48.274 48.274 0 0 0 47.543-49.006V471.7a48.274 48.274 0 0 0-47.543-49.08 48.274 48.274 0 0 0-47.616 49.006V751.69c0 27.282 20.773 49.006 47.543 49.006z" />
-                <local:MyIconTextButton x:Name="BtnSelectCancel" Text="取消选择"
+                <local:MyIconTextButton x:Name="BtnSelectCancel" Text="{StaticResource LangPageVersionModOperationDeselect}"
                                         LogoScale="0.8" Logo="M867.648 951.296 512 595.648l-355.648 355.648c-11.52 11.52-30.272 11.52-41.856 0L72.64 909.44c-11.52-11.52-11.52-30.272 0-41.856L428.352 512 72.64 156.352c-11.52-11.52-11.52-30.272 0-41.856l41.856-41.856c11.52-11.52 30.272-11.52 41.856 0L512 428.288l355.648-355.648c11.52-11.52 30.272-11.52 41.856 0l41.856 41.856c11.52 11.52 11.52 30.272 0 41.856L595.648 512l355.648 355.648c11.52 11.52 11.52 30.272 0 41.856l-41.856 41.856C897.984 962.88 879.168 962.88 867.648 951.296L867.648 951.296z" />
             </StackPanel>
         </local:MyCard>

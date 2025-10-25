@@ -18,14 +18,14 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="20" />
             <ColumnDefinition Width="1*" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="10" />
         </Grid.ColumnDefinitions>
         <Grid.RenderTransform>
             <ScaleTransform />
         </Grid.RenderTransform>
-        <local:MyButton Grid.Row="3" Grid.Column="2" x:Name="BtnVersion" Height="35" Margin="0,10,10,0" Text="版本选择" IsEnabled="False" />
-        <local:MyButton Grid.Row="3" Grid.Column="3" x:Name="BtnMore" Visibility="Collapsed" Height="35" Margin="0,10,10,0" TextPadding="36" Text="版本设置" />
+        <local:MyButton Grid.Row="3" Grid.Column="2" x:Name="BtnVersion" Height="35" Margin="0,10,10,0" Text="{StaticResource LangLaunchLeftInstanceChoose}" IsEnabled="False" />
+        <local:MyButton Grid.Row="3" Grid.Column="3" x:Name="BtnMore" Visibility="Collapsed" Height="35" Margin="0,10,10,0" TextPadding="36" Text="{StaticResource LangLaunchLeftInstanceConfig}" />
         <Grid Grid.ColumnSpan="5" Grid.Row="1" Margin="20,0" VerticalAlignment="Center" x:Name="PanLogin" />
         <Grid Grid.ColumnSpan="5" Margin="20,24,20,-4" Name="PanTypeOne">
             <Border HorizontalAlignment="Center" VerticalAlignment="Center" Background="{StaticResource ColorBrushSemiTransparent}" CornerRadius="13" MinHeight="27" MaxHeight="27">
@@ -48,9 +48,9 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
-            <local:MyRadioButton x:Name="RadioLoginType5" Tag="LoginType/5" Grid.Column="2" Grid.ColumnSpan="1" ColorType="Highlight" Text="正版" Margin="4,0"
+            <local:MyRadioButton x:Name="RadioLoginType5" Tag="LoginType/5" Grid.Column="2" Grid.ColumnSpan="1" ColorType="Highlight" Text="{StaticResource LangLaunchLeftAccountMicrosoft}" Margin="4,0"
                              LogoScale="1" Logo="M511.488256 95.184408c35.310345 22.516742 95.184408 55.78011 167.34033 84.437781 75.738131 29.681159 148.405797 40.93953 191.392304 45.033483v353.615193c0 73.691154-50.662669 164.781609-136.123938 244.101949C649.65917 901.181409 558.568716 942.12094 512 942.12094c-46.568716 0-137.65917-40.93953-222.096952-119.748126C204.441779 742.54073 153.77911 651.450275 153.77911 577.247376v-353.103448c42.474763-4.093953 116.165917-15.352324 191.904048-45.545227 75.226387-30.192904 133.565217-63.456272 165.805098-83.414293M512 0c-4.093953 0-8.187906 1.535232-11.258371 3.582209l-14.84058 10.234882c-1.023488 0.511744-67.550225 47.592204-170.410794 88.531735-100.813593 39.916042-198.556722 41.963018-199.58021 41.963018l-25.075462 0.511744c-10.746627 0.511744-18.934533 8.187906-18.934533 18.422789v414.000999c0 216.97951 286.064968 446.24088 440.09995 446.24088s440.09995-229.261369 440.09995-445.729136V163.758121c0-10.234883-8.69965-18.422789-18.934533-18.422789l-24.563718-0.511744c-1.023488 0-98.766617-2.046977-199.58021-41.963018-103.372314-40.93953-170.410795-88.01999-170.922538-88.531734L523.258371 3.582209c-3.070465-2.558721-7.164418-3.582209-11.258371-3.582209z M743.308346 410.930535l-260.477761 260.477761c-15.864068 15.864068-41.963018 15.864068-57.827087 0l-144.823588-144.823588c-15.864068-15.864068-15.864068-41.963018 0-57.827087 8.187906-8.187906 18.422789-11.770115 29.169415-11.770115 10.234883 0 20.981509 4.093953 29.169416 11.770115l115.654173 115.654173L685.993003 352.591704c15.864068-15.864068 41.963018-15.864068 57.827087 0 15.352324 16.375812 15.352324 42.474763-0.511744 58.338831z" />
-            <local:MyRadioButton x:Name="RadioLoginType0" Tag="LoginType/0" Grid.Column="3" Grid.ColumnSpan="1" ColorType="Highlight" Text="离线"  Margin="4,0"
+            <local:MyRadioButton x:Name="RadioLoginType0" Tag="LoginType/0" Grid.Column="3" Grid.ColumnSpan="1" ColorType="Highlight" Text="{StaticResource LangLaunchLeftAccountOffline}"  Margin="4,0"
                              LogoScale="0.85" Logo="M533.293176 788.841412a60.235294 60.235294 0 1 1 85.202824 85.202823l-42.616471 42.586353c-129.355294 129.385412-339.124706 129.385412-468.510117 0-129.385412-129.385412-129.385412-339.124706 0-468.510117l42.586353-42.616471a60.235294 60.235294 0 1 1 85.202823 85.202824l-42.61647 42.586352a210.823529 210.823529 0 1 0 298.164706 298.164706l42.586352-42.61647z m255.548236-255.548236l42.61647-42.586352a210.823529 210.823529 0 1 0-298.164706-298.164706l-42.586352 42.61647a60.235294 60.235294 0 1 1-85.202824-85.202823l42.616471-42.586353c129.355294-129.385412 339.124706-129.385412 468.510117 0 129.385412 129.385412 129.385412 339.124706 0 468.510117l-42.586353 42.616471a60.235294 60.235294 0 1 1-85.202823-85.202824zM192.542118 192.542118a60.235294 60.235294 0 0 1 85.202823 0l553.712941 553.712941a60.235294 60.235294 0 0 1-85.202823 85.202823L192.542118 277.744941a60.235294 60.235294 0 0 1 0-85.202823z" />
             <!--<local:MyRadioButton x:Name="RadioLoginType2" Tag="LoginType/2" Grid.Column="4" ColorType="Highlight" Text="统一通行证" Visibility="Collapsed"
                              LogoScale="1.1" Logo="M834.5 684.1c-31.2-70.4-98.9-120.9-179.1-127.3 63.5-8.5 112.6-63 112.6-128.8 0-71.8-58.2-130-130-130s-130 58.2-130 130c0 65.9 49 120.3 112.6 128.8-80.2 6.4-148 57-179.1 127.3-8.7 19.7 6 42 27.6 42 12.1 0 22.7-7.5 27.7-18.5 24.3-53.9 78.5-91.5 141.3-91.5s117 37.6 141.3 91.5c5 11.1 15.6 18.5 27.7 18.5 21.4 0 36.1-22.3 27.4-42zM567.9 427.9c0-38.6 31.4-70 70-70s70 31.4 70 70-31.4 70-70 70-70-31.4-70-70zM460.3 347.9H216.9c-16.6 0-30 13.4-30 30s13.4 30 30 30h243.3c16.6 0 30-13.4 30-30 0.1-16.5-13.4-30-29.9-30zM367.4 459.6H216.9c-16.6 0-30 13.4-30 30s13.4 30 30 30h150.4c16.6 0 30-13.4 30-30 0.1-16.6-13.4-30-29.9-30zM297.4 571.2H217c-16.6 0-30 13.4-30 30s13.4 30 30 30h80.4c16.6 0 30-13.4 30-30 0-16.5-13.5-30-30-30zM900 236v552H124V236h776m0-60H124c-33.1 0-60 26.9-60 60v552c0 33.1 26.9 60 60 60h776c33.1 0 60-26.9 60-60V236c0-33.1-26.9-60-60-60z" />-->
@@ -62,8 +62,8 @@
                     <TranslateTransform x:Name="AprilPosTrans" />
                 </TransformGroup>
             </Grid.RenderTransform>
-            <local:MyButton x:Name="BtnLaunch" Height="54" Margin="20,0" Text="正在加载" ColorType="Highlight" Padding="30,0,30,15" IsEnabled="False" />
-            <TextBlock x:Name="LabVersion" Text="正在加载版本列表，请稍候" Margin="35,0,35,10" IsHitTestVisible="False" VerticalAlignment="Bottom" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{DynamicResource ColorBrushGray3}" RenderTransformOrigin="0.5,-0.2">
+            <local:MyButton x:Name="BtnLaunch" Height="54" Margin="20,0" Text="{StaticResource LangLaunchLeftLoadingInstance}" ColorType="Highlight" Padding="30,0,30,15" IsEnabled="False" />
+            <TextBlock x:Name="LabVersion" Text="{StaticResource LangLaunchLeftLoadingInstanceTip}" Margin="35,0,35,10" IsHitTestVisible="False" VerticalAlignment="Bottom" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{DynamicResource ColorBrushGray3}" RenderTransformOrigin="0.5,-0.2">
                 <TextBlock.RenderTransform>
                     <ScaleTransform ScaleX="{Binding RealRenderTransform.ScaleX, ElementName=BtnLaunch, Mode=OneWay}" ScaleY="{Binding RealRenderTransform.ScaleY, ElementName=BtnLaunch, Mode=OneWay}" />
                 </TextBlock.RenderTransform>
@@ -86,7 +86,7 @@
                 <DropShadowBitmapEffect Color="{StaticResource ColorObjectGray2}" ShadowDepth="1.5" Direction="270" Opacity="0.15" Softness="0.15" />
             </StackPanel.BitmapEffect>
             <local:MyLoading x:Name="LoadLaunching" AutoRun="False" Height="50" Margin="0,10,0,5" />
-            <TextBlock Name="LabLaunchingTitle" Margin="15,10,15,0" Text="正在启动游戏" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource ColorBrush3}">
+            <TextBlock Name="LabLaunchingTitle" Margin="15,10,15,0" Text="{StaticResource LangLaunchLeftStartingInstance}" HorizontalAlignment="Center" FontSize="20" Foreground="{DynamicResource ColorBrush3}">
                 <TextBlock.RenderTransform>
                     <SkewTransform AngleX="-3"/>
                 </TextBlock.RenderTransform>
@@ -125,13 +125,13 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="当前步骤" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Opacity="0.5" />
-                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="下载支持" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Left" Name="LabLaunchingStage" />
-                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="登录方式" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Opacity="0.5" />
-                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="正版登录" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Left" Name="LabLaunchingMethod" />
-                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="启动进度" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Opacity="0.5" Name="LabLaunchingProgressLeft" />
+                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="{StaticResource LangLaunchLeftStartingStage}" Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Opacity="0.5" />
+                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="{StaticResource LangLaunchLeftStageDownloadLib}" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Left" Name="LabLaunchingStage" />
+                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="{StaticResource LangLaunchLeftStageLogin}" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Opacity="0.5" />
+                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="{StaticResource LangLaunchLeftStageMicrosoftAccount}" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Left" Name="LabLaunchingMethod" />
+                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="{StaticResource LangLaunchLeftStageStarting}" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Opacity="0.5" Name="LabLaunchingProgressLeft" />
                 <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="69.28 %" Grid.Row="2" Grid.Column="3" HorizontalAlignment="Left" Name="LabLaunchingProgress" />
-                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="下载速度" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Right" Opacity="0" Name="LabLaunchingDownloadLeft" Visibility="Collapsed" />
+                <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="{StaticResource LangLaunchLeftStageDownload}" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Right" Opacity="0" Name="LabLaunchingDownloadLeft" Visibility="Collapsed" />
                 <TextBlock FontSize="12.5" Margin="0,0,0,5" Text="5.2 M/s" Grid.Row="3" Grid.Column="3" HorizontalAlignment="Left" Name="LabLaunchingDownload" Opacity="0" Visibility="Collapsed" />
                 <Grid x:Name="PanLaunchingHint" HorizontalAlignment="Center" Grid.Row="2" Grid.ColumnSpan="5" Grid.RowSpan="2" Width="260" Margin="0,16,0,2" Visibility="Collapsed" Opacity="0">
                     <Border Margin="0,8,0,0" BorderThickness="1" CornerRadius="3" BorderBrush="{StaticResource ColorBrushGray1}" Opacity="0.5">
@@ -146,11 +146,11 @@
                             </CombinedGeometry>
                         </Border.Clip>
                     </Border>
-                    <TextBlock FontSize="12.5" Text="你知道吗" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="{StaticResource ColorBrushGray1}" Opacity="0.5" />
+                    <TextBlock FontSize="12.5" Text="{StaticResource LangLaunchLeftTip}" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="{StaticResource ColorBrushGray1}" Opacity="0.5" />
                     <TextBlock x:Name="LabLaunchingHint" FontSize="12.5" Text="这是一段测试用的小提示文本，它应该足够长以让它有两行。" Margin="11,21,11,10" TextWrapping="Wrap" HorizontalAlignment="Center" />
                 </Grid>
             </Grid>
         </StackPanel>
-        <local:MyButton Grid.Row="4" x:Name="BtnCancel" Height="35" Margin="20,0,20,20" VerticalAlignment="Bottom" Text="取消" />
+        <local:MyButton Grid.Row="4" x:Name="BtnCancel" Height="35" Margin="20,0,20,20" VerticalAlignment="Bottom" Text="{StaticResource LangDialogBtnCancel}" />
     </Grid>
 </local:MyPageLeft>

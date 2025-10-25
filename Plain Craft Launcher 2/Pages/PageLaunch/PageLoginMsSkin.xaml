@@ -13,36 +13,36 @@
             <RowDefinition Height="30" />
             <RowDefinition Height="19" />
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="1" VerticalAlignment="Center" Name="TextName" Text="加载中" Margin="8,0" FontSize="17" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
+        <TextBlock Grid.Row="1" VerticalAlignment="Center" Name="TextName" Text="{StaticResource LangPageLoginMsLoading}" Margin="8,0" FontSize="17" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
         <Border Grid.Row="3" HorizontalAlignment="Center" x:Name="PanButtons" Opacity="0"
                 CornerRadius="5" Background="{DynamicResource ColorBrush8}" Padding="10,3,9,3">
             <StackPanel Orientation="Horizontal">
                 <local:MyIconButton Height="24" Margin="0,0.5,9,0"  x:Name="BtnSkin"
-                                ToolTip="皮肤与披风" ToolTipService.Placement="Center" ToolTipService.VerticalOffset="35" ToolTipService.HorizontalOffset="1" ToolTipService.InitialShowDelay="50" 
+                                ToolTip="{StaticResource LangPageLoginMsSkinSkin}" ToolTipService.Placement="Center" ToolTipService.VerticalOffset="35" ToolTipService.HorizontalOffset="1" ToolTipService.InitialShowDelay="50" 
                                 LogoScale="1.08" Logo="M764.0003 0.076794a215.433442 215.433442 0 0 0-76.282279 13.950954l-9.06172 3.686123c-49.148314 20.734445-88.518161 30.53851-115.498538 30.53851-27.031573 0-66.478214-9.855261-116.676049-31.050471a217.583681 217.583681 0 0 0-72.186586-16.766743l-9.138515-0.307177-3.839712-0.051196-8.626553 0.307177-4.223683 0.281579A160.755943 160.755943 0 0 0 250.477214 45.385396l-219.32435 212.438467a102.392321 102.392321 0 0 0-11.263156 134.210734l106.360023 144.552359 3.378947 4.351674a102.469115 102.469115 0 0 0 112.810739 31.690423l5.657176-2.175837V883.210559a140.789441 140.789441 0 0 0 140.789441 140.789441h372.170487l5.657175-0.102392a140.789441 140.789441 0 0 0 135.132266-140.687049l-0.025599-318.6705 1.177512 0.716747a102.392321 102.392321 0 0 0 141.941355-44.233483l70.906682-144.39877a102.392321 102.392321 0 0 0-20.657651-118.647101L875.86391 45.385396A160.730345 160.730345 0 0 0 764.0003 0.076794z m-357.349199 111.454041C468.444867 137.615279 520.562558 150.644702 563.157763 150.644702c42.492813 0 94.584906-12.978227 156.199485-38.985876A112.580356 112.580356 0 0 1 764.0003 102.469115c15.154063 0 29.693773 5.887558 40.598555 16.433967L1023.923206 331.495138l-70.906682 144.39877-93.023423-65.684674a38.39712 38.39712 0 0 0-60.53946 31.383247V883.210559a38.39712 38.39712 0 0 1-38.39712 38.39712H388.886034a38.39712 38.39712 0 0 1-38.397121-38.39712V445.176212a38.39712 38.39712 0 0 0-61.691373-30.487314l-80.070795 61.20501L102.392321 331.341549l219.32435-212.438467a58.363623 58.363623 0 0 1 35.581332-16.229183L362.110442 102.469115l6.322726 0.179186a115.191361 115.191361 0 0 1 38.217933 8.882534z">
                     <local:MyIconButton.ContextMenu>
                         <ContextMenu Closed="HidePanel" HorizontalOffset="10" VerticalOffset="18">
-                            <local:MyMenuItem Click="BtnSkinEdit_Click" Header="修改皮肤"/>
-                            <local:MyMenuItem Click="BtnSkinSave_Click" Header="保存皮肤文件"/>
+                            <local:MyMenuItem Click="BtnSkinEdit_Click" Header="{StaticResource LangPageLoginMsSkinSkinChange}"/>
+                            <local:MyMenuItem Click="BtnSkinSave_Click" Header="{StaticResource LangPageLoginMsSkinSkinSave}"/>
                             <Separator />
-                            <local:MyMenuItem Click="BtnSkinCape_Click" Header="修改披风"/>
+                            <local:MyMenuItem Click="BtnSkinCape_Click" Header="{StaticResource LangPageLoginMsSkinCapeChange}"/>
                             <Separator />
-                            <local:MyMenuItem Click="BtnSkinRefresh_Click" Header="刷新"/>
+                            <local:MyMenuItem Click="BtnSkinRefresh_Click" Header="{StaticResource LangRefresh}"/>
                         </ContextMenu>
                     </local:MyIconButton.ContextMenu>
                 </local:MyIconButton>
                 <local:MyIconButton Height="24" Margin="0,0,9,0" x:Name="BtnEdit"
-                                ToolTip="修改信息" ToolTipService.Placement="Center" ToolTipService.VerticalOffset="35" ToolTipService.HorizontalOffset="1" ToolTipService.InitialShowDelay="50" 
+                                ToolTip="{StaticResource LangPageLoginMsSkinInfoChange}" ToolTipService.Placement="Center" ToolTipService.VerticalOffset="35" ToolTipService.HorizontalOffset="1" ToolTipService.InitialShowDelay="50" 
                                 LogoScale="1.1" Logo="M462.336 924.891429L73.142857 950.857143l25.965714-389.193143 467.017143-467.017143a73.398857 73.398857 0 0 1 103.789715 0l259.437714 259.437714a73.398857 73.398857 0 0 1 0 103.789715l-467.017143 467.017143z m155.684571-778.349715L202.861714 561.664l259.474286 259.474286L877.458286 405.942857 618.057143 146.541714zM151.003429 873.033143l233.508571-25.965714-207.579429-207.579429-25.965714 233.545143z m544.841142-492.982857l51.894858 51.894857-233.508572 233.508571-51.931428-51.894857 233.545142-233.508571z">
                     <local:MyIconButton.ContextMenu>
                         <ContextMenu Closed="HidePanel" HorizontalOffset="10" VerticalOffset="18">
-                            <local:MyMenuItem Click="BtnEditPassword_Click" Header="修改密码" />
-                            <local:MyMenuItem Click="BtnEditName_Click" Header="修改玩家名" />
+                            <local:MyMenuItem Click="BtnEditPassword_Click" Header="{StaticResource LangPageLoginMsSkinInfoChangePassword}" />
+                            <local:MyMenuItem Click="BtnEditName_Click" Header="{StaticResource LangPageLoginMsSkinInfoChangeID}" />
                         </ContextMenu>
                     </local:MyIconButton.ContextMenu>
                 </local:MyIconButton>
                 <local:MyIconButton Height="24" x:Name="BtnExit" Margin="0,0,0,0"
-                                ToolTip="切换账号" ToolTipService.Placement="Center" ToolTipService.VerticalOffset="35" ToolTipService.HorizontalOffset="1" ToolTipService.InitialShowDelay="50" 
+                                ToolTip="{StaticResource LangPageLoginMsSkinSwitchID}" ToolTipService.Placement="Center" ToolTipService.VerticalOffset="35" ToolTipService.HorizontalOffset="1" ToolTipService.InitialShowDelay="50" 
                                 LogoScale="1.15" Logo="M512 0A512 512 0 1 0 1024 512 512 512 0 0 0 512 0z m0 941.407086A429.407086 429.407086 0 1 1 941.407086 512 429.407086 429.407086 0 0 1 512 941.407086z m235.139657-368.64H264.045714a43.505371 43.505371 0 0 0-31.246628 72.060343l159.305143 166.765714a41.281829 41.281829 0 1 0 59.626057-56.788114l-94.997943-99.474286H747.227429a41.311086 41.311086 0 1 0 0-82.622172zM262.670629 450.940343H745.764571a43.505371 43.505371 0 0 0 31.246629-72.352914l-159.305143-166.765715a41.281829 41.281829 0 1 0-59.713828 57.022172l94.968685 99.474285H262.670629a41.281829 41.281829 0 0 0 0 82.563658z" />
             </StackPanel>
         </Border>

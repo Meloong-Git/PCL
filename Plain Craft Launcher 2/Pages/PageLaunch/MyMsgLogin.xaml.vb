@@ -20,7 +20,7 @@
             Data = Converter.Content
             Init()
         Catch ex As Exception
-            Log(ex, "登录弹窗初始化失败", LogLevel.Hint)
+            Log(ex, GetLang("LangMyMsgLoginHintInitFail"), LogLevel.Hint)
         End Try
     End Sub
 
@@ -84,11 +84,8 @@
         DeviceCode = Data("device_code")
         Website = Data("verification_uri")
         '设置 UI
-        LabTitle.Text = "登录 Minecraft"
-        LabCaption.Text =
-            $"登录网页将自动开启，请在网页中输入 {UserCode}（已自动复制）。" & vbCrLf & vbCrLf &
-            $"如果网络环境不佳，网页可能一直加载不出来，届时请使用加速器或 VPN 改善网络环境。" & vbCrLf &
-            $"你也可以用其他设备打开 {Website} 并输入上述代码。"
+        LabTitle.Text = GetLang("LangMyMsgLoginDialogTitleLoginMc")
+        LabCaption.Text = GetLang("LangMyMsgLoginDialogContent", UserCode, Website)
         CustomEventService.SetEventData(Btn1, Website)
         CustomEventService.SetEventData(Btn2, UserCode)
         '启动工作线程
@@ -118,7 +115,7 @@
                 '获取结果
                 Dim ResultJson As JObject = GetJson(Result)
                 McLaunchLog($"令牌过期时间：{ResultJson("expires_in")} 秒")
-                Hint("网页登录成功！", HintType.Green)
+                Hint(GetLang("LangMyMsgLoginHintLoginSuccess"), HintType.Green)
                 Finished({ResultJson("access_token").ToString, ResultJson("refresh_token").ToString})
                 Return
             Catch ex As Exception
@@ -126,10 +123,10 @@
                 If TypeOf ex Is ResponsedWebException Then
                     Dim Response = CType(ex, ResponsedWebException).Response
                     If Response.Contains("authorization_declined") Then
-                        Finished(New Exception("$你拒绝了 PCL 申请的权限……"))
+                        Finished(New Exception("$" & GetLang("LangMyMsgLoginExceptionDecline")))
                         Return
                     ElseIf Response.Contains("expired_token") Then
-                        Finished(New Exception("$登录用时太长啦，重新试试吧！"))
+                        Finished(New Exception("$" & GetLang("LangMyMsgLoginExceptionTimeout")))
                         Return
                     ElseIf Response.Contains("Account security interrupt") Then
                         Finished(New Exception("$该账号由于安全问题无法登陆，请前往微软账户页获取更多信息。"))
@@ -150,7 +147,7 @@
                     Log(ex, $"登录轮询第 {UnknownFailureCount} 次失败")
                     Thread.Sleep(2000)
                 Else
-                    Finished(New Exception("登录轮询失败", ex))
+                    Finished(New Exception(GetLang("LangMyMsgLoginExceptionCheckFail"), ex))
                     Return
                 End If
             End Try

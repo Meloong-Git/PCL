@@ -114,11 +114,11 @@
         {"LinkOfflineHint", New SetupEntry(False, Source:=SetupSource.Registry)},
         {"LinkShareMode", New SetupEntry(True, Source:=SetupSource.Registry)},
         {"LinkEasyTierVersion", New SetupEntry(-1, Source:=SetupSource.Registry)},
-        {"ToolHelpChinese", New SetupEntry(True, Source:=SetupSource.Registry)},
+        {"ToolHelpLanguage", New SetupEntry(True, Source:=SetupSource.Registry)},
         {"ToolDownloadThread", New SetupEntry(63, Source:=SetupSource.Registry)},
         {"ToolDownloadSpeed", New SetupEntry(42, Source:=SetupSource.Registry)},
-        {"ToolDownloadSource", New SetupEntry(1, Source:=SetupSource.Registry)},
-        {"ToolDownloadVersion", New SetupEntry(1, Source:=SetupSource.Registry)},
+        {"ToolDownloadSource", New SetupEntry(If(IsLocationZH(), 1, 2), Source:=SetupSource.Registry)},
+        {"ToolDownloadVersion", New SetupEntry(If(IsLocationZH(), 1, 2), Source:=SetupSource.Registry)},
         {"ToolDownloadTranslate", New SetupEntry(0, Source:=SetupSource.Registry)},
         {"ToolDownloadTranslateV2", New SetupEntry(1, Source:=SetupSource.Registry)},
         {"ToolDownloadIgnoreQuilt", New SetupEntry(True, Source:=SetupSource.Registry)},
@@ -190,7 +190,7 @@
         {"VersionArgumentIndieV2", New SetupEntry(False, Source:=SetupSource.Version)},
         {"VersionArgumentJavaSelect", New SetupEntry("使用全局设置", Source:=SetupSource.Version)},
         {"VersionServerEnter", New SetupEntry("", Source:=SetupSource.Version)},
-        {"VersionServerLogin", New SetupEntry(0, Source:=SetupSource.Version)},
+        {"VersionServerLogin", New SetupEntry(If(IsLocationZH(), 0, 1), Source:=SetupSource.Version)},
         {"VersionServerNide", New SetupEntry("", Source:=SetupSource.Version)},
         {"VersionServerAuthRegister", New SetupEntry("", Source:=SetupSource.Version)},
         {"VersionServerAuthName", New SetupEntry("", Source:=SetupSource.Version)},
@@ -613,7 +613,7 @@
                 FrmSetupUI.PanCustomNet.Visibility = Visibility.Collapsed
                 FrmSetupUI.HintCustom.Visibility = Visibility.Visible
                 FrmSetupUI.HintCustomWarn.Visibility = If(Setup.Get("HintCustomWarn"), Visibility.Collapsed, Visibility.Visible)
-                FrmSetupUI.HintCustom.Text = $"从 PCL 文件夹下的 Custom.xaml 读取主页内容。{vbCrLf}你可以手动编辑该文件，向主页添加文本、图片、常用网站、快捷启动等功能。"
+                FrmSetupUI.HintCustom.Text = GetLang("LangSetHomePageTipLocal")
                 CustomEventService.SetEventType(FrmSetupUI.HintCustom, CustomEvent.EventType.None)
             Case 2 '联网
                 FrmSetupUI.PanCustomPreset.Visibility = Visibility.Collapsed
@@ -621,14 +621,19 @@
                 FrmSetupUI.PanCustomNet.Visibility = Visibility.Visible
                 FrmSetupUI.HintCustom.Visibility = Visibility.Visible
                 FrmSetupUI.HintCustomWarn.Visibility = If(Setup.Get("HintCustomWarn"), Visibility.Collapsed, Visibility.Visible)
-                FrmSetupUI.HintCustom.Text = $"从指定网址联网获取主页内容。服主也可以用于动态更新服务器公告。{vbCrLf}如果你制作了稳定运行的联网主页，可以点击这条提示投稿，若合格即可加入预设！"
+                FrmSetupUI.HintCustom.Text = GetLang("LangSetHomePageTipOnline")
                 CustomEventService.SetEventType(FrmSetupUI.HintCustom, CustomEvent.EventType.打开网页)
                 CustomEventService.SetEventData(FrmSetupUI.HintCustom, "https://github.com/Meloong-Git/PCL/discussions/2528")
             Case 3 '预设
                 FrmSetupUI.PanCustomPreset.Visibility = Visibility.Visible
                 FrmSetupUI.PanCustomLocal.Visibility = Visibility.Collapsed
                 FrmSetupUI.PanCustomNet.Visibility = Visibility.Collapsed
-                FrmSetupUI.HintCustom.Visibility = Visibility.Collapsed
+                If Lang.Equals("zh-CN") Then
+                    FrmSetupUI.HintCustom.Visibility = Visibility.Collapsed
+                Else
+                    FrmSetupUI.HintCustom.Visibility = Visibility.Visible
+                    FrmSetupUI.HintCustom.Text = GetLang("LangSetHomePagePresetSCOnly")
+                End If
                 FrmSetupUI.HintCustomWarn.Visibility = Visibility.Collapsed
         End Select
         FrmSetupUI.CardCustom.TriggerForceResize()
