@@ -540,7 +540,7 @@ Public Class PageInstanceExport
             If Not Directory.Exists(OverridesFolder) Then
                 Directory.CreateDirectory(OverridesFolder)
             End If
-            WriteIni(OverridesFolder & "PCL\Setup.ini", "IsStar", False)
+            If IncludePCLVersionCustom Then WriteIni(OverridesFolder & "PCL\Setup.ini", "IsStar", False)
 #If BETA Then
             '复制 PCL 本体
             If IncludePCL Then CopyFile(PathWithName, CacheFolder & "Plain Craft Launcher.exe")
