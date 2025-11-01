@@ -203,6 +203,7 @@
     ''' </summary>
     Public DlClientListMojangLoader As New LoaderTask(Of String, DlClientListResult)("DlClientList Mojang", AddressOf DlClientListMojangMain)
     Private IsNewClientVersionHinted As Boolean = False
+    Private ReadOnly HintLock As New Object() ' 线程安全锁
     Private Sub DlClientListMojangMain(Loader As LoaderTask(Of String, DlClientListResult))
         Dim StartTime As Long = GetTimeTick()
         Dim Json As JObject = GetJson(NetRequestByClientRetry("https://launchermeta.mojang.com/mc/game/version_manifest.json", RequireJson:=True))
@@ -222,15 +223,24 @@
             '解析更新提示（Release）
             Dim Version As String = Json("latest")("release")
             If Setup.Get("ToolUpdateRelease") AndAlso Not Setup.Get("ToolUpdateReleaseLast") = "" AndAlso Version IsNot Nothing AndAlso Not Setup.Get("ToolUpdateReleaseLast") = Version Then
-                McDownloadClientUpdateHint(Version, Json)
-                IsNewClientVersionHinted = True
+                SyncLock HintLock
+                    If Not IsNewClientVersionHinted Then ' 在锁内再次检查
+                        McDownloadClientUpdateHint(Version, Json)
+                        IsNewClientVersionHinted = True
+                    End If
+                End SyncLock
             End If
             McVersionHighest = Version.Split(".")(1)
             Setup.Set("ToolUpdateReleaseLast", Version)
             '解析更新提示（Snapshot）
             Version = Json("latest")("snapshot")
-            If Setup.Get("ToolUpdateSnapshot") AndAlso Not Setup.Get("ToolUpdateSnapshotLast") = "" AndAlso Version IsNot Nothing AndAlso Not Setup.Get("ToolUpdateSnapshotLast") = Version AndAlso Not IsNewClientVersionHinted Then
-                McDownloadClientUpdateHint(Version, Json)
+            If Setup.Get("ToolUpdateSnapshot") AndAlso Not Setup.Get("ToolUpdateSnapshotLast") = "" AndAlso Version IsNot Nothing AndAlso Not Setup.Get("ToolUpdateSnapshotLast") = Version Then
+                SyncLock HintLock
+                    If Not IsNewClientVersionHinted Then ' 在锁内再次检查
+                        McDownloadClientUpdateHint(Version, Json)
+                        IsNewClientVersionHinted = True
+                    End If
+                End SyncLock
             End If
             Setup.Set("ToolUpdateSnapshotLast", If(Version, "Nothing"))
         Catch ex As Exception
