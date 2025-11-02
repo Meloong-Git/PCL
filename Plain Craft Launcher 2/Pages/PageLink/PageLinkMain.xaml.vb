@@ -759,7 +759,7 @@ Public Class PageLinkMain
                 Type = Types.Misc
             End If
             '基础信息
-            Double.TryParse(Info("lat_ms),Ping))
+            Double.TryParse(Info("lat_ms"),Ping)
             Name = PeerName
             Cost = Info("cost")
         End Sub
