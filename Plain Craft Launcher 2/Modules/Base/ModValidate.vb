@@ -113,9 +113,9 @@ Public Class ValidateInteger
         Me.Max = Max
     End Sub
     Public Overrides Function Validate(Str As String) As String
+        If Str.Length > 9 Then Return "请输入一个大小合理的数字！"
         Dim Valed As Integer
         If Not Integer.TryParse(Str, Valed) Then Return "请输入一个整数！"
-        If Str.Length > 9 Then Return "请输入一个大小合理的数字！"
         If Valed > Max Then Return "不可超过 " & Max & "！"
         If Valed < Min Then Return "不可低于 " & Min & "！"
         Return ""
