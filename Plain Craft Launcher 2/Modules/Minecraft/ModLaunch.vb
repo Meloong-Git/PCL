@@ -865,9 +865,9 @@ LoginFinish:
     Private Function MsLoginStep1New(Data As LoaderTask(Of McLoginMs, McLoginResult)) As String()
         '参考：https://learn.microsoft.com/zh-cn/entra/identity-platform/v2-oauth2-device-code
 
-        '初始请求
         Select Case Setup.Get("SystemSystemAuth")
             Case 0 '设备代码流
+                '初始请求
 Retry:
                 McLaunchLog("开始微软登录步骤 1/6（原始登录）")
                 Dim PrepareJson As JObject = GetJson(NetRequestByClientRetry("https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode", HttpMethod.Post,
