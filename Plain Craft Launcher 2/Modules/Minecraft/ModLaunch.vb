@@ -895,6 +895,7 @@ Retry:
                     Return Converter.Result
                 End If
             Case 1 '授权代码流
+                McLaunchLog("开始微软登录步骤 1/6（授权代码流）")
                 Dim Random As New Random
                 Dim RedirectUri As String = $"http://localhost:{Random.Next(1024, 65535)}/"
                 Dim State As String = Random.Next(10000, 99999)
