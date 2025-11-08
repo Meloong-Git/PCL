@@ -924,6 +924,8 @@ Retry:
                 Thread.Sleep(1000)
                 FrmMain.ShowWindowToTop()
                 Return Result
+            Case Else
+                Throw New Exception("未知授权方式")
         End Select
     End Function
     '微软登录步骤 1，刷新登录：从 OAuth Code 或 OAuth RefreshToken 获取 {OAuth AccessToken, OAuth RefreshToken}
