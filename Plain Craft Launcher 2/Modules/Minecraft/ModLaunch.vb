@@ -1,5 +1,4 @@
 ﻿Imports System.IO.Compression
-Imports System.Resources.ResXFileRef
 
 Public Module ModLaunch
 
