@@ -921,6 +921,7 @@ Retry:
                 Context.Response.ContentLength64 = Buffer.Length
                 Context.Response.OutputStream.Write(Buffer, 0, Buffer.Length)
                 Context.Response.Dispose()
+                Context.Response.Dispose()
                 HttpListener.Stop()
                 Thread.Sleep(1000)
                 FrmMain.ShowWindowToTop()
