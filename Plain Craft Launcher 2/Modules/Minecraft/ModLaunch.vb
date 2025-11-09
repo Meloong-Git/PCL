@@ -920,7 +920,7 @@ Retry:
                 Dim Buffer = Encoding.UTF8.GetBytes(ResponseString)
                 Context.Response.ContentLength64 = Buffer.Length
                 Context.Response.OutputStream.Write(Buffer, 0, Buffer.Length)
-                Context.Response.OutputSteram.Dispose()
+                Context.Response.OutputStream.Dispose()
                 HttpListener.Stop()
                 Thread.Sleep(1000)
                 FrmMain.ShowWindowToTop()
