@@ -817,7 +817,7 @@ LoginFinish:
                 Dim ErrorMessage As String = Nothing
                 Try
                     Dim Response = DirectCast(ex, ResponsedWebException).Response
-                    If Response.ContainsF("errorMessage", True) Then ErrorMessage = GetJson(Response)("errorMessage")
+                    If Response.ContainsF("errorMessage", True) Then ErrorMessage = GetJson(Response)("errorMessage").ToString()
                 Catch
                 End Try
                 If Not String.IsNullOrWhiteSpace(ErrorMessage) Then
