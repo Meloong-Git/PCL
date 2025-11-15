@@ -895,9 +895,8 @@ Retry:
                 End If
             Case 1 '授权代码流
                 McLaunchLog("开始微软登录步骤 1/6（授权代码流）")
-                Dim Random As New Random
                 Dim RedirectUri As String = $"http://localhost:{FindFreePort()}/"
-                Dim State As String = Random.Next(10000, 99999)
+                Dim State As String = RandomInteger(10000, 99999)
                 Dim HttpListener As New HttpListener
                 HttpListener.Prefixes.Add(RedirectUri)
                 HttpListener.Start()
