@@ -791,6 +791,7 @@ LoginFinish:
                     McLaunchLog("玩家选择的角色：" & SelectedName)
                 End If
             Else
+                Setup.Set("CacheAuthDisallowChangePlayer", True)
                 SelectedName = LoginJson("selectedProfile")("name").ToString
                 SelectedId = LoginJson("selectedProfile")("id").ToString
             End If

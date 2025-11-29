@@ -65,6 +65,7 @@
         {"CacheNideUsername", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
         {"CacheNidePass", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
         {"CacheNideServer", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
+        {"CacheAuthDisallowChangePlayer", New SetupEntry(False, Source:=SetupSource.Registry)},
         {"CacheAuthAccess", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
         {"CacheAuthClient", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
         {"CacheAuthUuid", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
