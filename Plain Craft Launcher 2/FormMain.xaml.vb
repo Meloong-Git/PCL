@@ -1124,6 +1124,8 @@ Public Class FormMain
         OtherHelp = 0
         OtherAbout = 1
         OtherTest = 2
+        OtherFeedback = 3
+        OtherVote = 4
         VersionOverall = 0
         VersionSetup = 1
         VersionMod = 2
@@ -1241,6 +1243,7 @@ Public Class FormMain
     ''' 切换页面，并引起对应选择 UI 的改变。
     ''' </summary>
     Public Sub PageChange(Stack As PageStackData, Optional SubType As PageSubType = PageSubType.Default)
+        If ProcessMsgSubPage(Stack.Page, SubType) Then Exit Sub
         If PageNameGet(Stack) = "" Then
             '切换到主页面
             PageChangeExit()
@@ -1269,6 +1272,16 @@ Public Class FormMain
             PageChangeActual(Stack, SubType)
         End If
     End Sub
+    ''' <summary>
+    ''' 处理打开仅为一个消息框的子页面的逻辑
+    ''' </summary>
+    ''' <returns>True - 如果已经执行了对应页面的打开逻辑</returns>
+    Private Function ProcessMsgSubPage(Page As PageType, SubType As PageSubType) As Boolean
+        If Page = PageType.Other Then
+            Return PageOtherLeft.TryOpenMsgSubPage(SubType)
+        End If
+        Return False
+    End Function
     ''' <summary>
     ''' 通过点击导航栏改变页面。
     ''' </summary>

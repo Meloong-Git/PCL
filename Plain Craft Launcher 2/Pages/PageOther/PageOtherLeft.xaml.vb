@@ -55,6 +55,22 @@
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
     End Sub
 
+    ''' <summary>
+    ''' 处理打开仅为一个消息框的子页面的逻辑
+    ''' </summary>
+    ''' <returns>True - 如果已经执行了对应页面的打开逻辑</returns>
+    Public Shared Function TryOpenMsgSubPage(SubType As FormMain.PageSubType) As Boolean
+        Select Case SubType
+            Case FormMain.PageSubType.OtherFeedback
+                TryFeedback()
+            Case FormMain.PageSubType.OtherVote
+                TryVote()
+            Case Else
+                Return False
+        End Select
+        Return True
+    End Function
+
     Public Function PageGet(Optional ID As FormMain.PageSubType = -1)
         If ID = -1 Then ID = PageID
         Select Case ID
