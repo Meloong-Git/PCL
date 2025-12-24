@@ -2293,7 +2293,8 @@ IgnoreCustomSkin:
         WindowTitle = ArgumentReplace(WindowTitle, ReplaceTime:=False)
 
         '初始化等待
-        Dim Watcher As New Watcher(Loader, McVersionCurrent, WindowTitle)
+        Dim JStack As String = McLaunchJavaSelected.PathFolder & "jstack.exe"
+        Dim Watcher As New Watcher(Loader, McVersionCurrent, WindowTitle, If(File.Exists(JStack), JStack, ""))
         McLaunchWatcher = Watcher
 
         '等待

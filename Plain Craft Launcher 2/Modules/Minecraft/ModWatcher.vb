@@ -62,11 +62,13 @@
         Private WindowTitle As String = ""
         Private PID As Integer
         Public Loader As LoaderTask(Of Process, Integer)
-        Public Sub New(Loader As LoaderTask(Of Process, Integer), Version As McVersion, WindowTitle As String)
+        Private JSatckPath As String = ""
+        Public Sub New(Loader As LoaderTask(Of Process, Integer), Version As McVersion, WindowTitle As String, Optional JSatckPath As String = "")
             Me.Loader = Loader
             Me.Version = Version
             Me.WindowTitle = WindowTitle
             Me.PID = Loader.Input.Id
+            Me.JSatckPath = JSatckPath
             WatcherLog("开始 Minecraft 日志监控")
             If Me.WindowTitle <> "" Then WatcherLog("要求窗口标题：" & WindowTitle)
 
@@ -86,7 +88,6 @@
             GameProcess.BeginErrorReadLine()
             AddHandler GameProcess.OutputDataReceived, AddressOf LogReceived
             AddHandler GameProcess.ErrorDataReceived, AddressOf LogReceived
-
             '初始化时钟
             RunInNewThread(
             Sub()
@@ -94,6 +95,7 @@
                     Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Crashed OrElse State = MinecraftState.Canceled OrElse Loader.State = LoadState.Aborted
                         TimerWindow()
                         TimerLog()
+                        TimerStack()
                         '设置窗口标题
                         For i = 1 To 3
                             If IsWindowFinished AndAlso IsWindowAppeared AndAlso WindowTitle <> "" AndAlso State = MinecraftState.Running AndAlso Not GameProcess.HasExited Then
@@ -130,6 +132,34 @@
             Ended
             Canceled
         End Enum
+
+        Private _IsStackInRecord As Boolean = False
+        Private ExportedStackInfo As String = ""
+        '栈记录
+        Private Sub TimerStack()
+            If (Not String.IsNullOrWhiteSpace(Me.JSatckPath)) Then
+                If (Not GameProcess.Responding) AndAlso (Not _IsStackInRecord) Then
+                    _IsStackInRecord = True
+                    RunInNewThread(Sub()
+                                       Try
+                                           Dim output = ShellAndGetOutput(JSatckPath, GameProcess.Id)
+                                           If output.Length < 64 Then Exit Sub '访问可能被拒绝了
+                                           Dim path = Version.Path & "PCL\JStackRecord\"
+                                           Directory.CreateDirectory(path)
+                                           Dim fileName = path & "jstack_" & Guid.NewGuid().ToString() & ".log"
+                                           File.WriteAllText(fileName, output)
+                                           If File.Exists(ExportedStackInfo) Then File.Delete(ExportedStackInfo)
+                                           ExportedStackInfo = fileName
+                                       Catch ex As Exception
+                                           Log(ex, "[Watcher] 导出 JStack 信息失败……")
+                                       End Try
+                                   End Sub, "GameStack Export")
+                End If
+                If GameProcess.Responding Then
+                    _IsStackInRecord = False
+                End If
+            End If
+        End Sub
 
         '日志
         Public WaitingLog As New List(Of String)(1000)
@@ -360,8 +390,10 @@
                     Analyzer.Collect(Version.PathIndie, LatestLog.ToList)
                     Analyzer.Prepare()
                     Analyzer.Analyze(Version)
-                    Analyzer.Output(False, New List(Of String) From
-                        {Version.Path & Version.Name & ".json", Path & "PCL\Log1.txt", Path & "PCL\LatestLaunch.bat"})
+                    Dim output As New List(Of String) From
+                        {Version.Path & Version.Name & ".json", Path & "PCL\Log1.txt", Path & "PCL\LatestLaunch.bat"}
+                    If Not String.IsNullOrWhiteSpace(ExportedStackInfo) Then output.Add(ExportedStackInfo)
+                    Analyzer.Output(False, output)
                 Catch ex As Exception
                     Log(ex, "崩溃分析失败", LogLevel.Feedback)
                 End Try
