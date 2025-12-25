@@ -41,27 +41,6 @@ Public Module ModMinecraft
             '初始化
             Dim CacheMcFolderList = New List(Of McFolder)
 
-#Region "读取默认（Original）文件夹，即当前、官启文件夹，可能没有结果"
-
-            '扫描当前文件夹
-            Try
-                If Directory.Exists(Path & "versions\") Then CacheMcFolderList.Add(New McFolder With {.Name = "当前文件夹", .Path = Path, .Type = McFolderType.Original})
-                For Each Folder As DirectoryInfo In New DirectoryInfo(Path).GetDirectories
-                    If Directory.Exists(Folder.FullName & "versions\") OrElse Folder.Name = ".minecraft" Then CacheMcFolderList.Add(New McFolder With {.Name = "当前文件夹", .Path = Folder.FullName & "\", .Type = McFolderType.Original})
-                Next
-            Catch ex As Exception
-                Log(ex, "扫描 PCL 所在文件夹中是否有 MC 文件夹失败")
-            End Try
-
-            '扫描官启文件夹
-            Dim MojangPath As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\"
-            If (Not CacheMcFolderList.Any OrElse MojangPath <> CacheMcFolderList(0).Path) AndAlso '当前文件夹不是官启文件夹
-                Directory.Exists(MojangPath & "versions\") Then '具有权限且存在 versions 文件夹
-                CacheMcFolderList.Add(New McFolder With {.Name = "官方启动器文件夹", .Path = MojangPath, .Type = McFolderType.Original})
-            End If
-
-#End Region
-
 #Region "读取自定义（Custom）文件夹，可能没有结果"
 
             '格式：TMZ 12>C://xxx/xx/|Test>D://xxx/xx/|名称>路径
@@ -91,6 +70,30 @@ Public Module ModMinecraft
                 End Try
             Next
 
+#End Region
+
+#Region "读取默认（Original）文件夹，即当前、官启文件夹，可能没有结果"
+
+            '扫描当前文件夹
+            Try
+                If Directory.Exists(Path & "versions\") Then CacheMcFolderList.Add(New McFolder With {.Name = "当前文件夹", .Path = Path, .Type = McFolderType.Original})
+                For Each Folder As DirectoryInfo In New DirectoryInfo(Path).GetDirectories
+                    If Directory.Exists(Folder.FullName & "versions\") OrElse Folder.Name = ".minecraft" Then CacheMcFolderList.Add(New McFolder With {.Name = "当前文件夹", .Path = Folder.FullName & "\", .Type = McFolderType.Original})
+                Next
+            Catch ex As Exception
+                Log(ex, "扫描 PCL 所在文件夹中是否有 MC 文件夹失败")
+            End Try
+
+            '扫描官启文件夹
+            Dim MojangPath As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\"
+            If (Not CacheMcFolderList.Any OrElse MojangPath <> CacheMcFolderList(0).Path) AndAlso '当前文件夹不是官启文件夹
+                Directory.Exists(MojangPath & "versions\") AndAlso  '具有权限且存在 versions 文件夹
+                Not CacheMcFolderList.Any(Function(f) f.Path = MojangPath) Then '没有重复添加
+                CacheMcFolderList.Add(New McFolder With {.Name = "官方启动器文件夹", .Path = MojangPath, .Type = McFolderType.Original})
+            End If
+
+#End Region
+
             '将自定义文件夹情况同步到设置
             Dim NewSetup As New List(Of String)
             For Each Folder As McFolder In CacheMcFolderList
@@ -98,8 +101,6 @@ Public Module ModMinecraft
             Next
             If Not NewSetup.Any() Then NewSetup.Add("") '防止 0 元素 Join 返回 Nothing
             Setup.Set("LaunchFolders", Join(NewSetup, "|"))
-
-#End Region
 
             '若没有可用文件夹，则创建 .minecraft
             If Not CacheMcFolderList.Any() Then
