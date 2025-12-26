@@ -871,33 +871,69 @@ LoginFinish:
     Private Function MsLoginStep1New(Data As LoaderTask(Of McLoginMs, McLoginResult)) As String()
         '参考：https://learn.microsoft.com/zh-cn/entra/identity-platform/v2-oauth2-device-code
 
-        '初始请求
+        Select Case Setup.Get("SystemSystemAuth")
+            Case 0 '设备代码流
+                '初始请求
 Retry:
-        McLaunchLog("开始微软登录步骤 1/6（原始登录）")
-        Dim PrepareJson As JObject = GetJson(NetRequestByClientRetry("https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode", HttpMethod.Post,
-            Content:=$"client_id={OAuthClientId}&tenant=/consumers&scope=XboxLive.signin%20offline_access",
-            ContentType:="application/x-www-form-urlencoded", RequireJson:=True))
-        McLaunchLog("网页登录地址：" & PrepareJson("verification_uri").ToString)
+                McLaunchLog("开始微软登录步骤 1/6（原始登录）")
+                Dim PrepareJson As JObject = GetJson(NetRequestByClientRetry("https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode", HttpMethod.Post,
+                    Content:=$"client_id={OAuthClientId}&tenant=/consumers&scope=XboxLive.signin%20offline_access",
+                    ContentType:="application/x-www-form-urlencoded", RequireJson:=True))
+                McLaunchLog("网页登录地址：" & PrepareJson("verification_uri").ToString)
 
-        '弹窗
-        Dim Converter As New MyMsgBoxConverter With {.Content = PrepareJson, .ForceWait = True, .Type = MyMsgBoxType.Login}
-        WaitingMyMsgBox.Add(Converter)
-        While Converter.Result Is Nothing
-            Thread.Sleep(100)
-        End While
-        If TypeOf Converter.Result Is RestartException Then
-            If MyMsgBox($"请在登录时选择 {vbLQ}其他登录方法{vbRQ}，然后选择 {vbLQ}使用我的密码{vbRQ}。{vbCrLf}如果没有该选项，请选择 {vbLQ}设置密码{vbRQ}，设置完毕后再登录。",
-                "需要使用密码登录", "重新登录", "设置密码", "取消",
-                Button2Action:=Sub() OpenWebsite("https://account.live.com/password/Change")) = 1 Then
-                GoTo Retry
-            Else
-                Throw New Exception("$$")
-            End If
-        ElseIf TypeOf Converter.Result Is Exception Then
-            Throw CType(Converter.Result, Exception)
-        Else
-            Return Converter.Result
-        End If
+                '弹窗
+                Dim Converter As New MyMsgBoxConverter With {.Content = PrepareJson, .ForceWait = True, .Type = MyMsgBoxType.Login}
+                WaitingMyMsgBox.Add(Converter)
+                While Converter.Result Is Nothing
+                    Thread.Sleep(100)
+                End While
+                If TypeOf Converter.Result Is RestartException Then
+                    If MyMsgBox($"请在登录时选择 {vbLQ}其他登录方法{vbRQ}，然后选择 {vbLQ}使用我的密码{vbRQ}。{vbCrLf}如果没有该选项，请选择 {vbLQ}设置密码{vbRQ}，设置完毕后再登录。",
+                        "需要使用密码登录", "重新登录", "设置密码", "取消",
+                        Button2Action:=Sub() OpenWebsite("https://account.live.com/password/Change")) = 1 Then
+                        GoTo Retry
+                    Else
+                        Throw New Exception("$$")
+                    End If
+                ElseIf TypeOf Converter.Result Is Exception Then
+                    Throw CType(Converter.Result, Exception)
+                Else
+                    Return Converter.Result
+                End If
+            Case 1 '授权代码流
+                McLaunchLog("开始微软登录步骤 1/6（授权代码流）")
+                Dim RedirectUri As String = $"http://localhost:{FindFreePort()}/"
+                Dim State As String = RandomInteger(10000, 99999)
+                Dim HttpListener As New HttpListener
+                HttpListener.Prefixes.Add(RedirectUri)
+                HttpListener.Start()
+                OpenWebsite($"https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?client_id={OAuthClientId}&response_type=code&redirect_uri={WebUtility.UrlEncode(RedirectUri)}&scope=XboxLive.signin%20offline_access&response_mode=query&state={State}&prompt=select_account")
+                Dim Context As HttpListenerContext = HttpListener.GetContext()
+                Dim Code = Context.Request.QueryString("code")
+                Dim ResponseString As String
+                Dim Result As String() = {"Ignore", ""}
+                If (Code <> Nothing AndAlso Context.Request.QueryString("state") = State) Then
+                    Context.Response.StatusCode = 200
+                    ResponseString = "<html><head><meta charset=""UTF-8""></head><body><h1>成功！</h1><h2>你现在可以关闭此页面。</h2></body></html>"
+                    Dim ResultJson As JObject = GetJson(NetRequestByClientRetry("https://login.microsoftonline.com/consumers/oauth2/v2.0/token", HttpMethod.Post, Content:=$"client_id={OAuthClientId}&scope=XboxLive.signin%20offline_access&code={Code}&redirect_uri={WebUtility.UrlEncode(RedirectUri)}&grant_type=authorization_code", ContentType:="application/x-www-form-urlencoded", RequireJson:=True))
+                    Dim AccessToken As String = ResultJson("access_token").ToString
+                    Dim RefreshToken As String = ResultJson("refresh_token").ToString
+                    Result = {AccessToken, RefreshToken}
+                Else
+                    Context.Response.StatusCode = 400
+                    ResponseString = $"<html><head><meta charset=""UTF-8""></head><body><h1>{Context.Request.QueryString("error")}</h1><h2>{Context.Request.QueryString("error_description")}</h2></body></html>"
+                End If
+                Dim Buffer = Encoding.UTF8.GetBytes(ResponseString)
+                Context.Response.ContentLength64 = Buffer.Length
+                Context.Response.OutputStream.Write(Buffer, 0, Buffer.Length)
+                Context.Response.OutputStream.Dispose()
+                HttpListener.Stop()
+                Thread.Sleep(1000)
+                FrmMain.ShowWindowToTop()
+                Return Result
+            Case Else
+                Throw New Exception("未知授权方式")
+        End Select
     End Function
     '微软登录步骤 1，刷新登录：从 OAuth Code 或 OAuth RefreshToken 获取 {OAuth AccessToken, OAuth RefreshToken}
     Private Function MsLoginStep1Refresh(Code As String) As String()
