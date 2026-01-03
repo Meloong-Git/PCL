@@ -269,6 +269,7 @@ Retry:
                     Return
                 Else
                     Hint("更改披风成功！", HintType.Green)
+                    McLoginMsLoader.Start(PageLoginMsSkin.GetLoginData(), IsForceRestart:=True) '#7894，更换披风后需更新当前选择的披风
                 End If
             Catch ex As Exception
                 Log(ex, "更改披风失败", LogLevel.Hint)
