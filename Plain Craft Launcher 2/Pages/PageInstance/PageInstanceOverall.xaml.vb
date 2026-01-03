@@ -329,7 +329,7 @@
                     If IsShiftPressed Then
                         DeleteDirectory(PageInstanceLeft.Instance.PathVersion)
                     Else
-                        FileIO.FileSystem.DeleteDirectory(PageInstanceLeft.Instance.PathVersion, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
+                        FileIO.FileSystem.DeleteDirectory(PageInstanceLeft.Instance.PathVersion, FileIO.UIOption.OnlyErrorDialogs, FileIO.RecycleOption.SendToRecycleBin)
                     End If
                     Hint("已删除版本 " & PageInstanceLeft.Instance.Name & "！", HintType.Green)
                 Case 2
