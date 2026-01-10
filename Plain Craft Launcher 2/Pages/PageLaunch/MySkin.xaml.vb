@@ -233,6 +233,8 @@ Retry:
                 Dim SkinData As JObject = GetJson(McLoginMsLoader.Output.ProfileJson)
                 '获取玩家的所有披风
                 Dim SelId As Integer? = Nothing
+                '获取玩家当前的披风
+                Dim CurId As Integer? = Nothing
                 RunInUiWait(
                 Sub()
                     Try
@@ -247,9 +249,12 @@ Retry:
                             {"Common", "普通披风"}, {"Pan", "薄煎饼披风"}, {"Founder's", "创始人披风"}, {"Copper", "铜披风"}, {"Zombie Horse", "僵尸马披风"}
                         }
                         Dim SelectionControl As New List(Of IMyRadio) From {New MyRadioBox With {.Text = "无披风"}}
+                        Dim Id As Integer = 0
                         For Each Cape In SkinData("capes")
+                            Id += 1
                             Dim CapeName As String = Cape("alias").ToString
                             If CapeNames.ContainsKey(CapeName) Then CapeName = CapeNames(CapeName)
+                            If Cape("state")?.ToString = "ACTIVE" Then CurId = Id
                             SelectionControl.Add(New MyRadioBox With {.Text = CapeName, .Checked = Cape("state")?.ToString = "ACTIVE"})
                         Next
                         SelId = MyMsgBoxSelect(SelectionControl, "选择披风", "确定", "取消")
@@ -269,6 +274,12 @@ Retry:
                     Return
                 Else
                     Hint("更改披风成功！", HintType.Green)
+                    '#7894，更换披风后需更新当前选择的披风
+                    SkinData("capes")(SelId - 1)("state") = "ACTIVE"
+                    If CurId IsNot Nothing Then
+                        SkinData("capes")(CurId - 1)("state") = "INACTIVE"
+                    End If
+                    McLoginMsLoader.Output.ProfileJson = SkinData.ToString()
                 End If
             Catch ex As Exception
                 Log(ex, "更改披风失败", LogLevel.Hint)
