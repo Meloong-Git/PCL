@@ -167,6 +167,7 @@ Public Class CustomEvent
         修改变量
         写入变量
         加入房间
+        检查更新
     End Enum
 
     ''' <summary>
@@ -319,6 +320,9 @@ Public Class CustomEvent
                             PageLinkMain.Join(Arg)
                         End If
                     End Sub)
+
+                Case EventType.检查更新
+                    UpdateCheckByButton()
 
                 Case Else
                     MyMsgBox("未知的事件类型：" & Type & vbCrLf & "请检查事件类型填写是否正确，或者 PCL 是否为最新版本。", "事件执行失败")
