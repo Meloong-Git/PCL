@@ -33,7 +33,7 @@
                             Grid.Column="0" />
             <local:MyTextButton Text="»  前往官网" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.minecraft.net/zh-hans"
                             Grid.Column="2" />
-            <local:MyTextButton Text="»  兑换 CDK" EventType="打开网页" EventData="https://www.minecraft.net/zh-hans/redeem"
+            <local:MyTextButton Text="»  兑换 CDK" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.minecraft.net/zh-hans/redeem"
                             Grid.Column="4" />
         </Grid>
     </Grid>
