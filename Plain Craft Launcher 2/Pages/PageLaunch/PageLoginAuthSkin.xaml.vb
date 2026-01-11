@@ -21,7 +21,7 @@
     ''' 获取当前页面的登录信息。
     ''' </summary>
     Public Shared Function GetLoginData() As McLoginServer
-        Dim Server As String = If(IsNothing(McVersionCurrent), Setup.Get("CacheAuthServerServer"), Setup.Get("VersionServerAuthServer", Version:=McVersionCurrent)) & "/authserver"
+        Dim Server As String = If(IsNothing(McInstanceSelected), Setup.Get("CacheAuthServerServer"), Setup.Get("VersionServerAuthServer", Instance:=McInstanceSelected)) & "/authserver"
         Return New McLoginServer(McLoginType.Auth) With {.Token = "Auth", .BaseUrl = Server, .UserName = Setup.Get("CacheAuthUsername"), .Password = Setup.Get("CacheAuthPass"), .Description = "Authlib-Injector", .Type = McLoginType.Auth}
     End Function
 
@@ -49,11 +49,10 @@
             Log("[Launch] 要求更换角色，但登录加载器繁忙", LogLevel.Debug)
             If CType(McLoginLoader.Input, McLoginServer).ForceReselectProfile Then
                 Hint("正在尝试更换，请稍候！")
-                Exit Sub
             Else
-                Hint("正在登录中，请稍后再更换角色！", HintType.Critical)
-                Exit Sub
+                Hint("正在登录中，请稍后再更换角色！", HintType.Red)
             End If
+            Return
         End If
         Hint("正在尝试更换，请稍候！")
         Setup.Set("CacheAuthUuid", "") '清空选择缓存
@@ -79,7 +78,7 @@
     End Sub
 
     Private Sub Skin_Click(sender As Object, e As MouseButtonEventArgs) Handles Skin.Click
-        Dim Address As String = If(McVersionCurrent IsNot Nothing, Setup.Get("VersionServerAuthRegister", Version:=McVersionCurrent), Setup.Get("CacheAuthServerRegister"))
+        Dim Address As String = If(McInstanceSelected IsNot Nothing, Setup.Get("VersionServerAuthRegister", Instance:=McInstanceSelected), Setup.Get("CacheAuthServerRegister"))
         If String.IsNullOrEmpty(New ValidateHttp().Validate(Address)) Then OpenWebsite(Address.Replace("/auth/register", "/user/closet"))
     End Sub
 

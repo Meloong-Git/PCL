@@ -21,7 +21,9 @@
             ShapeLine.StrokeThickness = GetWPFSize(1)
             '添加选择控件
             Btn1.IsEnabled = False
-            For Each Selection As IMyRadio In Converter.Content
+            For Each Content In Converter.Content
+                Content = MyVirtualizingElement.TryInit(Content)
+                Dim Selection As IMyRadio = Content
                 PanSelection.Children.Add(Selection)
                 AddHandler Selection.Check, AddressOf OnChecked
                 If TypeOf Selection Is MyListItem Then
@@ -77,13 +79,13 @@
     End Sub
 
     Public Sub Btn1_Click() Handles Btn1.Click
-        If MyConverter.IsExited OrElse SelectedIndex = -1 Then Exit Sub
+        If MyConverter.IsExited OrElse SelectedIndex = -1 Then Return
         MyConverter.IsExited = True
         MyConverter.Result = SelectedIndex
         Close()
     End Sub
     Public Sub Btn2_Click() Handles Btn2.Click
-        If MyConverter.IsExited Then Exit Sub
+        If MyConverter.IsExited Then Return
         MyConverter.IsExited = True
         MyConverter.Result = Nothing
         Close()

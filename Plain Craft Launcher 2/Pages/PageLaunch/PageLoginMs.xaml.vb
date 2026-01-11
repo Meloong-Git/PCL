@@ -25,7 +25,7 @@
         ComboAccounts.SelectedIndex = If(KeepInput, Math.Max(0, IndexBefore), 0)
     End Sub
     Private Sub ComboAccounts_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboAccounts.SelectionChanged
-        If AniControlEnabled <> 0 OrElse ComboAccounts.SelectedItem Is Nothing OrElse ComboAccounts.ContentPresenter Is Nothing Then Exit Sub
+        If AniControlEnabled <> 0 OrElse ComboAccounts.SelectedItem Is Nothing OrElse ComboAccounts.ContentPresenter Is Nothing Then Return
         If TypeOf ComboAccounts.SelectedItem Is MyListItem Then
             ComboAccounts.ContentPresenter.Content = CType(ComboAccounts.SelectedItem, MyListItem).Title
         ElseIf TypeOf ComboAccounts.SelectedItem Is MyComboBoxItem Then
@@ -90,7 +90,7 @@
             Catch ex As Exception
                 If ex.Message = "$$" Then
                 ElseIf ex.Message.StartsWith("$") Then
-                    Hint(ex.Message.TrimStart("$"), HintType.Critical)
+                    Hint(ex.Message.TrimStart("$"), HintType.Red)
                 ElseIf TypeOf ex Is Security.Authentication.AuthenticationException AndAlso ex.Message.ContainsF("SSL/TLS") Then
                     Log(ex, "正版登录验证失败，请考虑在 [设置 → 其他] 中关闭 [在正版登录时验证 SSL 证书]，然后再试。" & vbCrLf & vbCrLf & "原始错误信息：", LogLevel.Msgbox)
                 Else

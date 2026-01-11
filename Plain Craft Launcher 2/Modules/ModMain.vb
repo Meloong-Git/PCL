@@ -7,23 +7,12 @@ Public Module ModMain
 
     ''' <summary>
     ''' 提示信息的种类。
+    ''' 该枚举在自定义事件中使用，是公开 API 的一部分。
     ''' </summary>
     Public Enum HintType
-        ''' <summary>
-        ''' 信息，通常是蓝色的“i”。
-        ''' </summary>
-        ''' <remarks></remarks>
-        Info
-        ''' <summary>
-        ''' 已完成，通常是绿色的“√”。
-        ''' </summary>
-        ''' <remarks></remarks>
-        Finish
-        ''' <summary>
-        ''' 错误，通常是红色的“×”。
-        ''' </summary>
-        ''' <remarks></remarks>
-        Critical
+        Blue
+        Green
+        Red
     End Enum
     Private Structure HintMessage
         Public Text As String
@@ -34,12 +23,12 @@ Public Module ModMain
     ''' <summary>
     ''' 等待弹出的提示列表。以 {String, HintType, Log As Boolean} 形式存储为数组。
     ''' </summary>
-    Private HintWaiting As List(Of HintMessage) = If(HintWaiting, New List(Of HintMessage))
+    Private HintWaiting As SafeList(Of HintMessage) = If(HintWaiting, New SafeList(Of HintMessage))
     ''' <summary>
     ''' 在窗口左下角弹出提示文本。
     ''' </summary>
-    Public Sub Hint(Text As String, Optional Type As HintType = HintType.Info, Optional Log As Boolean = True)
-        If HintWaiting Is Nothing Then HintWaiting = New List(Of HintMessage)
+    Public Sub Hint(Text As String, Optional Type As HintType = HintType.Blue, Optional Log As Boolean = True)
+        If HintWaiting Is Nothing Then HintWaiting = New SafeList(Of HintMessage)
         HintWaiting.Add(New HintMessage With {.Text = If(Text, ""), .Type = Type, .Log = Log})
     End Sub
 
@@ -47,7 +36,7 @@ Public Module ModMain
         Try
 
             'Tag 存储了：{ 是否可以重用, Uuid }
-            If Not HintWaiting.Any() Then Exit Sub
+            If Not HintWaiting.Any() Then Return
             Do While HintWaiting.Any
                 ''清除空提示
                 'If IsNothing(HintWaiting(0)) OrElse IsNothing(HintWaiting(0)(0)) Then
@@ -68,13 +57,13 @@ Public Module ModMain
                 Dim TargetColor0, TargetColor1 As MyColor
                 Dim Percent As Double = 0.3
                 Select Case CurrentHint.Type
-                    Case HintType.Info
+                    Case HintType.Blue
                         TargetColor0 = New MyColor(215, 37, 155, 252)
                         TargetColor1 = New MyColor(215, 10, 142, 252)
-                    Case HintType.Finish
+                    Case HintType.Green
                         TargetColor0 = New MyColor(215, 33, 177, 33)
                         TargetColor1 = New MyColor(215, 29, 160, 29)
-                    Case Else 'HintType.Critical
+                    Case Else 'HintType.Red
                         TargetColor0 = New MyColor(215, 255, 53, 11)
                         TargetColor1 = New MyColor(215, 255, 43, 0)
                 End Select
@@ -248,10 +237,6 @@ EndHint:
         '将弹窗列入队列
         Dim Converter As New MyMsgBoxConverter With {.Type = MyMsgBoxType.Text, .Button1 = Button1, .Button2 = Button2, .Button3 = Button3, .Text = Caption, .IsWarn = IsWarn, .Title = Title, .HighLight = HighLight, .ForceWait = True, .Button1Action = Button1Action, .Button2Action = Button2Action, .Button3Action = Button3Action}
         WaitingMyMsgBox.Add(Converter)
-        If RunInUi() Then
-            '若为 UI 线程，立即执行弹窗刻， 避免快速（连点器）点击时多次弹窗
-            MyMsgBoxTick()
-        End If
         If Button2.Length > 0 OrElse ForceWait Then
             '若有多个按钮则开始等待
             If FrmMain Is Nothing OrElse FrmMain.PanMsg Is Nothing AndAlso RunInUi() Then
@@ -275,6 +260,7 @@ EndHint:
             Else
                 Try
                     FrmMain.DragStop()
+                    If RunInUi() Then MyMsgBoxTick()
                     ComponentDispatcher.PushModal()
                     Dispatcher.PushFrame(Converter.WaitFrame)
                 Finally
@@ -306,6 +292,7 @@ EndHint:
         '虽然我也不知道这是啥但是能用就成了 :)
         Try
             If FrmMain IsNot Nothing Then FrmMain.DragStop()
+            If RunInUi() Then MyMsgBoxTick()
             ComponentDispatcher.PushModal()
             Dispatcher.PushFrame(Converter.WaitFrame)
         Finally
@@ -328,6 +315,7 @@ EndHint:
         '虽然我也不知道这是啥但是能用就成了 :)
         Try
             If FrmMain IsNot Nothing Then FrmMain.DragStop()
+            If RunInUi() Then MyMsgBoxTick()
             ComponentDispatcher.PushModal()
             Dispatcher.PushFrame(Converter.WaitFrame)
         Finally
@@ -343,14 +331,14 @@ EndHint:
     Public WaitingMyMsgBox As List(Of MyMsgBoxConverter) = If(WaitingMyMsgBox, New List(Of MyMsgBoxConverter))
     Public Sub MyMsgBoxTick()
         Try
-            If FrmMain Is Nothing OrElse FrmMain.PanMsg Is Nothing OrElse FrmMain.WindowState = WindowState.Minimized Then Exit Sub
+            If FrmMain Is Nothing OrElse FrmMain.PanMsg Is Nothing OrElse FrmMain.WindowState = WindowState.Minimized Then Return
             If FrmMain.PanMsg.Children.Count > 0 Then
                 '弹窗中
                 FrmMain.PanMsg.Visibility = Visibility.Visible
             ElseIf WaitingMyMsgBox.Any Then
                 '没有弹窗，显示一个等待的弹窗
                 FrmMain.PanMsg.Visibility = Visibility.Visible
-                Select Case CType(WaitingMyMsgBox(0), MyMsgBoxConverter).Type
+                Select Case WaitingMyMsgBox(0).Type
                     Case MyMsgBoxType.Input
                         FrmMain.PanMsg.Children.Add(New MyMsgInput(WaitingMyMsgBox(0)))
                     Case MyMsgBoxType.Select
@@ -363,7 +351,7 @@ EndHint:
                 WaitingMyMsgBox.RemoveAt(0)
             Else
                 '没有弹窗，没有等待的弹窗
-                If Not FrmMain.PanMsg.Visibility = Visibility.Collapsed Then FrmMain.PanMsg.Visibility = Visibility.Collapsed
+                If FrmMain.PanMsg.Visibility <> Visibility.Collapsed Then FrmMain.PanMsg.Visibility = Visibility.Collapsed
             End If
         Catch ex As Exception
             Log(ex, "处理等待中的弹窗失败", LogLevel.Feedback)
@@ -388,21 +376,11 @@ EndHint:
     Public FrmSpeedRight As PageSpeedRight
 
     '联机页面声明
-    Public FrmLinkLeft As PageLinkLeft
-    Public FrmLinkIoi As PageLinkIoi
-    Public FrmLinkHiper As PageLinkHiper
-    Public FrmLinkHelp As PageOtherHelpDetail
-    Public FrmLinkFeedback As PageLinkFeedback
+    Public FrmLinkMain As PageLinkMain
 
     '下载页面声明
     Public FrmDownloadLeft As PageDownloadLeft
     Public FrmDownloadInstall As PageDownloadInstall
-    Public FrmDownloadClient As PageDownloadClient
-    Public FrmDownloadOptiFine As PageDownloadOptiFine
-    Public FrmDownloadLiteLoader As PageDownloadLiteLoader
-    Public FrmDownloadForge As PageDownloadForge
-    Public FrmDownloadNeoForge As PageDownloadNeoForge
-    Public FrmDownloadFabric As PageDownloadFabric
     Public FrmDownloadMod As PageDownloadMod
     Public FrmDownloadPack As PageDownloadPack
     Public FrmDownloadDataPack As PageDownloadDataPack
@@ -432,12 +410,12 @@ EndHint:
     Public FrmLoginMsSkin As PageLoginMsSkin
 
     '版本设置页面声明
-    Public FrmVersionLeft As PageVersionLeft
-    Public FrmVersionOverall As PageVersionOverall
-    Public FrmVersionMod As PageVersionMod
-    Public FrmVersionModDisabled As PageVersionModDisabled
-    Public FrmVersionSetup As PageVersionSetup
-    Public FrmVersionExport As PageVersionExport
+    Public FrmInstanceLeft As PageInstanceLeft
+    Public FrmInstanceOverall As PageInstanceOverall
+    Public FrmInstanceMod As PageInstanceMod
+    Public FrmInstanceModDisabled As PageInstanceModDisabled
+    Public FrmInstanceSetup As PageInstanceSetup
+    Public FrmInstanceExport As PageInstanceExport
 
     '资源信息分页声明
     Public FrmDownloadCompDetail As PageDownloadCompDetail
@@ -496,7 +474,7 @@ EndHint:
         ''' 是否为 “执行事件”。
         ''' </summary>
         Public IsEvent As Boolean
-        Public EventType As String
+        Public EventType As CustomEvent.EventType
         Public EventData As String
         ''' <summary>
         ''' 若非执行事件，其对应的 .xaml 本地文件内容。
@@ -510,7 +488,7 @@ EndHint:
         ''' </summary>
         Public Sub New(FilePath As String)
             RawPath = FilePath
-            Dim JsonData As JObject = GetJson(HelpArgumentReplace(ReadFile(FilePath)))
+            Dim JsonData As JObject = GetJson(ArgumentReplace(ReadFile(FilePath), AddressOf EscapeXML))
             If JsonData Is Nothing Then Throw New FileNotFoundException("未找到帮助文件：" & FilePath, FilePath)
             '加载常规信息
             If JsonData("Title") IsNot Nothing Then
@@ -530,8 +508,7 @@ EndHint:
             Next
             '加载事件信息
             If If(JsonData("IsEvent"), False) Then
-                EventType = JsonData("EventType")
-                If EventType Is Nothing Then Throw New ArgumentException("未找到 EventType 项")
+                EventType = [Enum].Parse(GetType(CustomEvent.EventType), JsonData("EventType").ToString)
                 EventData = If(JsonData("EventData"), "")
                 IsEvent = True
             Else
@@ -556,7 +533,7 @@ EndHint:
         Public Function SetToListItem(Item As MyListItem) As MyListItem
             Dim Logo As String
             If IsEvent Then
-                If EventType = "弹出窗口" Then
+                If EventType = CustomEvent.EventType.弹出窗口 Then
                     Logo = PathImage & "Blocks/GrassPath.png"
                 Else
                     Logo = PathImage & "Blocks/CommandBlock.png"
@@ -573,9 +550,9 @@ EndHint:
                 .Height = 42
                 .Type = MyListItem.CheckType.Clickable
                 .Tag = Me
-                .EventType = Nothing
-                .EventData = Nothing
             End With
+            CustomEventService.SetEventType(Item, CustomEvent.EventType.None) '清空自定义事件属性，它们会被下面的点击事件处理
+            CustomEventService.SetEventData(Item, Nothing)
             '项目的点击事件
             AddHandler Item.Click, Sub(sender, e) PageOtherHelp.OnItemClick(sender.Tag)
             Return Item
@@ -637,7 +614,7 @@ NextFile:
                 Catch ex As Exception
                     Log(ex, "检查帮助文件夹失败", LogLevel.Msgbox)
                 End Try
-                If Loader.IsAborted Then Exit Sub
+                If Loader.IsAborted Then Return
 
                 '将文件实例化
                 Dim Dict As New List(Of HelpEntry)
@@ -653,7 +630,7 @@ NextFile:
 
                 '回设
                 If Not Dict.Any() Then Throw New Exception("未找到可用的帮助；若不需要帮助页面，可以在 设置 → 个性化 → 功能隐藏 中将其隐藏")
-                If Loader.IsAborted Then Exit Sub
+                If Loader.IsAborted Then Return
                 Loader.Output = Dict
 
             Catch ex As Exception
@@ -675,15 +652,6 @@ NextFile:
             Log("[Help] 已解压内置帮助文件，目前状态：" & File.Exists(PathTemp & "Help\启动器\备份设置.xaml"), LogLevel.Debug)
         End If
     End Sub
-    ''' <summary>
-    ''' 对帮助文件约定的替换标记进行处理，如果遇到需要转义的字符会进行转义。
-    ''' </summary>
-    Public Function HelpArgumentReplace(Xaml As String) As String
-        Dim Result = Xaml.Replace("{path}", EscapeXML(Path))
-        Result = Result.RegexReplaceEach("\{hint\}", Function() EscapeXML(PageOtherTest.GetRandomHint()))
-        Result = Result.RegexReplaceEach("\{cave\}", Function() EscapeXML(PageOtherTest.GetRandomCave()))
-        Return Result
-    End Function
 
 #End Region
 
@@ -696,8 +664,8 @@ NextFile:
     Private AprilDistance As Integer = 0
     Private Sub TimerFool()
         Try
-            If FrmLaunchLeft Is Nothing OrElse FrmLaunchLeft.AprilPosTrans Is Nothing OrElse FrmMain.lastMouseArg Is Nothing Then Exit Sub
-            If IsAprilGiveup OrElse FrmMain.PageCurrent <> FormMain.PageType.Launch OrElse AniControlEnabled <> 0 OrElse Not FrmLaunchLeft.BtnLaunch.IsLoaded Then Exit Sub
+            If FrmLaunchLeft Is Nothing OrElse FrmLaunchLeft.AprilPosTrans Is Nothing OrElse FrmMain.lastMouseArg Is Nothing Then Return
+            If IsAprilGiveup OrElse FrmMain.PageCurrent <> FormMain.PageType.Launch OrElse AniControlEnabled <> 0 OrElse Not FrmLaunchLeft.BtnLaunch.IsLoaded Then Return
 
             '计算是否空闲
             Dim MousePos = FrmMain.lastMouseArg.GetPosition(FrmMain)
@@ -766,7 +734,7 @@ NextFile:
             '移动
             AprilSpeed = AprilSpeed * 0.8 + Acc
             Dim SpeedValue = Math.Min(60, AprilSpeed.Length)
-            If SpeedValue < 0.01 Then Exit Sub
+            If SpeedValue < 0.01 Then Return
             AprilSpeed.Normalize()
             AprilSpeed *= SpeedValue
             AprilDistance += SpeedValue
@@ -824,8 +792,7 @@ NextFile:
         '查看现有设置
         Using ReadOnlyKey = My.Computer.Registry.CurrentUser.OpenSubKey(REG_KEY, False)
             If ReadOnlyKey IsNot Nothing Then
-                Dim CurrentValue = ReadOnlyKey.GetValue(Executeable)
-                If REG_VALUE = CurrentValue?.ToString() Then
+                If REG_VALUE = ReadOnlyKey.GetValue(Executeable)?.ToString() Then
                     Log($"[System] 无需调整显卡设置：{Executeable}")
                     Return
                 End If
@@ -841,6 +808,79 @@ NextFile:
             Log($"[System] 已调整显卡设置：{Executeable}")
         End Using
     End Sub
+
+    ''' <summary>
+    ''' 对替换标记进行处理。会对替换内容使用 EscapeHandler 进行转义。
+    ''' </summary>
+    Public Function ArgumentReplace(Text As String, Optional EscapeHandler As Func(Of String, String) = Nothing, Optional ReplaceTime As Boolean = True) As String
+        '预处理
+        If Text Is Nothing Then Return Nothing
+        Dim Replacer =
+        Function(s As String) As String
+            If s Is Nothing Then Return ""
+            If EscapeHandler Is Nothing Then Return s
+            If s.Contains(":\") Then s = ShortenPath(s)
+            Return EscapeHandler(s)
+        End Function
+        '基础
+        Text = Text.Replace("{pcl_version}", Replacer(VersionBaseName))
+        Text = Text.Replace("{pcl_version_code}", Replacer(VersionCode))
+        Text = Text.Replace("{pcl_version_branch}", Replacer(VersionBranchName))
+        Text = Text.Replace("{pcl_branch}", Replacer(VersionBranchMain))
+        Text = Text.Replace("{identify}", Replacer(Identify))
+        Text = Text.Replace("{path}", Replacer(Path))
+        Text = Text.Replace("{path_with_name}", Replacer(PathWithName))
+        Text = Text.Replace("{path_temp}", Replacer(PathTemp))
+        '时间
+        If ReplaceTime Then '在窗口标题中，时间会被后续动态替换，所以此时不应该替换
+            Text = Text.Replace("{date}", Replacer(Date.Now.ToString("yyyy'/'M'/'d")))
+            Text = Text.Replace("{time}", Replacer(Date.Now.ToString("HH':'mm':'ss")))
+        End If
+        'Minecraft
+        Text = Text.Replace("{java}", Replacer(McLaunchJavaSelected?.PathFolder))
+        Text = Text.Replace("{minecraft}", Replacer(McFolderSelected))
+        If McInstanceSelected?.IsLoaded Then
+            Text = Text.Replace("{version_path}", Replacer(McInstanceSelected.PathVersion)) : Text = Text.Replace("{verpath}", Replacer(McInstanceSelected.PathVersion))
+            Text = Text.Replace("{version_indie}", Replacer(McInstanceSelected.PathIndie)) : Text = Text.Replace("{verindie}", Replacer(McInstanceSelected.PathIndie))
+            Text = Text.Replace("{name}", Replacer(McInstanceSelected.Name))
+            If {"unknown", "old", "pending"}.Contains(McInstanceSelected.Version.VanillaName.ToLower) Then
+                Text = Text.Replace("{version}", Replacer(McInstanceSelected.Name))
+            Else
+                Text = Text.Replace("{version}", Replacer(McInstanceSelected.Version.VanillaName))
+            End If
+        Else
+            Text = Text.Replace("{version_path}", Replacer(Nothing)) : Text = Text.Replace("{verpath}", Replacer(Nothing))
+            Text = Text.Replace("{version_indie}", Replacer(Nothing)) : Text = Text.Replace("{verindie}", Replacer(Nothing))
+            Text = Text.Replace("{name}", Replacer(Nothing))
+            Text = Text.Replace("{version}", Replacer(Nothing))
+        End If
+        '登录信息
+        If McLoginLoader.State = LoadState.Finished Then
+            Text = Text.Replace("{user}", Replacer(McLoginLoader.Output.Name))
+            Text = Text.Replace("{uuid}", Replacer(McLoginLoader.Output.Uuid?.ToLower))
+            Select Case McLoginLoader.Input.Type
+                Case McLoginType.Legacy
+                    Text = Text.Replace("{login}", Replacer("离线"))
+                Case McLoginType.Ms
+                    Text = Text.Replace("{login}", Replacer("正版"))
+                Case McLoginType.Nide
+                    Text = Text.Replace("{login}", Replacer("统一通行证"))
+                Case McLoginType.Auth
+                    Text = Text.Replace("{login}", Replacer("Authlib-Injector"))
+            End Select
+        Else
+            Text = Text.Replace("{user}", Replacer(Nothing))
+            Text = Text.Replace("{uuid}", Replacer(Nothing))
+            Text = Text.Replace("{login}", Replacer(Nothing))
+        End If
+        '高级
+        Text = Text.RegexReplaceEach("\{hint\}", Function() Replacer(PageOtherTest.GetRandomHint()))
+        Text = Text.RegexReplaceEach("\{cave\}", Function() Replacer(PageOtherTest.GetRandomCave()))
+        Text = Text.RegexReplaceEach("\{setup:([a-zA-Z0-9]+)\}", Function(m) Replacer(Setup.GetSafe(m.Groups(1).Value, McInstanceSelected)))
+        Text = Text.RegexReplaceEach("\{varible:([^:\}]+)(?::([^\}]+))?\}", Function(m) Replacer(ReadReg("CustomEvent" & m.Groups(1).Value, m.Groups(2).Value)))
+        Text = Text.RegexReplaceEach("\{variable:([^:\}]+)(?::([^\}]+))?\}", Function(m) Replacer(ReadReg("CustomEvent" & m.Groups(1).Value, m.Groups(2).Value)))
+        Return Text
+    End Function
 
 #End Region
 
@@ -913,7 +953,7 @@ NextFile:
             If ThemeDontClick = 2 Then ThemeRefresh()
 #End Region
         Catch ex As Exception
-            Log(ex, "短程主时钟执行异常", LogLevel.Assert)
+            Log(ex, "短程主时钟执行异常", LogLevel.Critical)
         End Try
         Timer4Count += 1
         If Timer4Count = 4 Then
@@ -933,15 +973,16 @@ NextFile:
 #Region "每 7.5s 执行一次的代码"
                 If FrmMain.BtnExtraApril_ShowCheck AndAlso AprilDistance <> 0 Then FrmMain.BtnExtraApril.Ribble()
                 '以未知原因窗口被丢到一边去的修复（Top、Left = -25600），还有 #745
-                RunInUi(Sub()
-                            If Not FrmMain.Hidden Then
-                                If FrmMain.Top < -9000 Then FrmMain.Top = 100
-                                If FrmMain.Left < -9000 Then FrmMain.Left = 100 '窗口拉至最大时 Left = -18.8
-                            End If
-                        End Sub)
+                RunInUi(
+                Sub()
+                    If Not FrmMain.Hidden Then
+                        If FrmMain.Top < -9000 Then FrmMain.Top = 100
+                        If FrmMain.Left < -9000 Then FrmMain.Left = 100 '窗口拉至最大时 Left = -18.8
+                    End If
+                End Sub)
 #End Region
             Catch ex As Exception
-                Log(ex, "长程主时钟执行异常", LogLevel.Assert)
+                Log(ex, "长程主时钟执行异常", LogLevel.Critical)
             End Try
         End If
     End Sub
@@ -957,7 +998,7 @@ NextFile:
                 Log(ex, "程序主时钟出错", LogLevel.Feedback)
             End Try
         End Sub, "Timer Main")
-        If Not IsAprilEnabled Then Exit Sub
+        If Not IsAprilEnabled Then Return
         RunInNewThread(
         Sub()
             Try

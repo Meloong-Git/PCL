@@ -1,18 +1,13 @@
 ﻿<Application x:Class="Application"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:PCL.Controls.Behaviors"
     xmlns:local="clr-namespace:PCL"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     StartupUri="FormMain.xaml"
     ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
         <ResourceDictionary>
-            
-            <!-- 本地化 -->
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/Resources/Language/zh_CN.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/Resources/Language/zh_CN.xaml" />
-            </ResourceDictionary.MergedDictionaries>
             
             <!-- Converter -->
             <local:AdditionConverter x:Key="AdditionConverter"/>
@@ -66,7 +61,7 @@
             <SolidColorBrush x:Key="ColorBrushWhite" Color="#ffffff" />
             <SolidColorBrush x:Key="ColorBrushTransparent" Color="Transparent" />
             <SolidColorBrush x:Key="ColorBrushSemiTransparent">#01eaf2fe</SolidColorBrush>
-            <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="#D2FFFFFF" />
+            <SolidColorBrush x:Key="ColorBrushBackgroundTransparentSidebar" Color="#F1FFFFFF" />
 
             <!-- Window -->
             <Style TargetType="{x:Type Window}" x:Key="MyWindow">
@@ -308,6 +303,7 @@
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+                <Setter Property="behaviors:ClipboardInterceptor.EnableSafeClipboard" Value="True" />
             </Style>
             <Style TargetType="PasswordBox">
                 <Setter Property="FontSize" Value="13" />
@@ -349,6 +345,7 @@
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
+                <Setter Property="behaviors:ClipboardInterceptor.EnableSafeClipboard" Value="True" />
             </Style>
 
             <!-- ComboBox -->

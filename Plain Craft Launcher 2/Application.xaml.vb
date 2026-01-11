@@ -19,6 +19,9 @@ Public Class Application
     '开始
     Private Sub Application_Startup(sender As Object, e As StartupEventArgs) Handles Me.Startup
         Try
+            '动态 DLL 调用（必须尽量在前面，否则模块加载 CacheCow 等 DLL 就可能导致崩溃）
+            AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf AssemblyResolve
+            '开始
             SecretOnApplicationStart()
             '检查参数调用
             If e.Args.Length > 0 Then
@@ -67,15 +70,14 @@ Public Class Application
                 If Not CheckPermission(PathTemp) Then Throw New Exception("PCL 没有对 " & PathTemp & " 的访问权限")
             Catch ex As Exception
                 If PathTemp = IO.Path.GetTempPath() & "PCL\" Then
-                    MyMsgBox("PCL 无法访问缓存文件夹，可能导致程序出错或无法正常使用！" & vbCrLf & "错误原因：" & GetExceptionDetail(ex), "缓存文件夹不可用")
+                    MyMsgBox("PCL 无法访问缓存文件夹，可能导致程序出错或无法正常使用！" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDetail(), "缓存文件夹不可用")
                 Else
-                    MyMsgBox("手动设置的缓存文件夹不可用，PCL 将使用默认缓存文件夹。" & vbCrLf & "错误原因：" & GetExceptionDetail(ex), "缓存文件夹不可用")
+                    MyMsgBox("手动设置的缓存文件夹不可用，PCL 将使用默认缓存文件夹。" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDetail(), "缓存文件夹不可用")
                     Setup.Set("SystemSystemCache", "")
                     PathTemp = IO.Path.GetTempPath() & "PCL\"
                 End If
             End Try
             Directory.CreateDirectory(PathTemp & "Cache")
-            Directory.CreateDirectory(PathTemp & "Download")
             Directory.CreateDirectory(PathAppdata)
             '检测单例
 #If Not DEBUG Then
@@ -104,28 +106,34 @@ WaitRetry:
             ToolTipService.PlacementProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(Primitives.PlacementMode.Bottom))
             ToolTipService.HorizontalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(8.0))
             ToolTipService.VerticalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(4.0))
+            '设置网络配置默认值
+            ServicePointManager.Expect100Continue = False
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 Or SecurityProtocolType.Tls Or SecurityProtocolType.Tls11 Or SecurityProtocolType.Tls12
+            ServicePointManager.DefaultConnectionLimit = 10000
+            ServicePointManager.UseNagleAlgorithm = False
+            ServicePointManager.EnableDnsRoundRobin = True
+            ServicePointManager.ReusePort = True
             '设置初始窗口
             If Setup.Get("UiLauncherLogo") Then
                 FrmStart = New SplashScreen("Images\icon.ico")
                 FrmStart.Show(False, True)
             End If
-            '动态 DLL 调用
-            AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf AssemblyResolve
             '日志初始化
             LogStart()
             '添加日志
             Log($"[Start] 程序版本：{VersionDisplayName} ({VersionCode}{If(CommitHash = "", "", $"，#{CommitHash}")})")
 #If RELEASE Then
-            Log($"[Start] 识别码：{UniqueAddress}{If(ThemeCheckOne(9), "，正式版", "")}")
+            Log($"[Start] 识别码：{Identify}{If(ThemeCheckOne(9), "，正式版", "")}")
 #Else
-            Log($"[Start] 识别码：{UniqueAddress}{If(ThemeCheckOne(9), "，已解锁反馈主题", "")}")
+            Log($"[Start] 识别码：{Identify}{If(ThemeCheckOne(9), "，已解锁反馈主题", "")}")
 #End If
             Log($"[Start] 程序路径：{PathWithName}")
             Log($"[Start] 系统编码：{Encoding.Default.HeaderName} ({Encoding.Default.CodePage}, GBK={IsGBKEncoding})")
             Log($"[Start] 管理员权限：{IsAdmin()}")
             '检测异常环境
             If Path.Contains(IO.Path.GetTempPath()) OrElse Path.Contains("AppData\Local\Temp\") Then
-                MyMsgBox("请将 PCL 从压缩包中解压之后再使用！" & vbCrLf & "在当前环境下运行可能会导致丢失游戏存档或设置，部分功能也可能无法使用！", "环境警告", "我知道了", IsWarn:=True)
+                MyMsgBox("请将 PCL 从压缩包中解压后再使用！" & vbCrLf & "如果不会解压，可以在网上寻找教程。", "尚未解压", "我知道了", IsWarn:=True)
+                FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
             If Is32BitSystem Then
                 MyMsgBox("PCL 和新版 Minecraft 均不再支持 32 位系统，部分功能将无法使用。" & vbCrLf & "非常建议重装为 64 位系统后再进行游戏！", "环境警告", "我知道了", IsWarn:=True)
@@ -136,10 +144,6 @@ WaitRetry:
             Setup.Load("ToolDownloadThread")
             Setup.Load("ToolDownloadCert")
             Setup.Load("ToolDownloadSpeed")
-            '网络配置初始化
-            ServicePointManager.Expect100Continue = True
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 Or SecurityProtocolType.Tls Or SecurityProtocolType.Tls11 Or SecurityProtocolType.Tls12
-            ServicePointManager.DefaultConnectionLimit = 1024
             '计时
             Log("[Start] 第一阶段加载用时：" & GetTimeTick() - ApplicationStartTick & " ms")
             ApplicationStartTick = GetTimeTick()
@@ -154,7 +158,7 @@ WaitRetry:
                 FilePath = PathWithName
             Catch
             End Try
-            MsgBox(GetExceptionDetail(ex, True) & vbCrLf & "PCL 所在路径：" & If(String.IsNullOrEmpty(FilePath), "获取失败", FilePath), MsgBoxStyle.Critical, "PCL 初始化错误")
+            MsgBox(ex.GetDetail(True) & vbCrLf & "PCL 所在路径：" & If(String.IsNullOrEmpty(FilePath), "获取失败", FilePath), MsgBoxStyle.Critical, "PCL 初始化错误")
             FormMain.EndProgramForce(ProcessReturnValues.Exception)
         End Try
     End Sub
@@ -165,79 +169,55 @@ WaitRetry:
     End Sub
 
     '异常
-    Private IsCritErrored As Boolean = False
     Private Sub Application_DispatcherUnhandledException(sender As Object, e As DispatcherUnhandledExceptionEventArgs) Handles Me.DispatcherUnhandledException
         On Error Resume Next
-        e.Handled = True
-        If IsProgramEnded Then Exit Sub
-        If IsCritErrored Then
-            '在汇报错误后继续引发错误，知道这次压不住了
-            FormMain.EndProgramForce(ProcessReturnValues.Exception)
-            Exit Sub
+        '触发页面的 Dispatcher
+        If FrmMain?.PageLeft IsNot Nothing AndAlso TypeOf FrmMain.PageLeft Is IDispatcherUnhandledException Then
+            CType(FrmMain.PageLeft, IDispatcherUnhandledException).DispatcherUnhandledException(sender, e)
+            If e.Handled Then Return
         End If
-        IsCritErrored = True
-        Dim ExceptionString As String = GetExceptionDetail(e.Exception, True)
-        If ExceptionString.Contains("System.Windows.Threading.Dispatcher.Invoke") OrElse
-           ExceptionString.Contains("MS.Internal.AppModel.ITaskbarList.HrInit") OrElse
-           ExceptionString.Contains(".NET Framework") OrElse ' “自动错误判断” 的结果分析
-           ExceptionString.Contains("未能加载文件或程序集") Then
+        If FrmMain?.PageRight IsNot Nothing AndAlso TypeOf FrmMain.PageRight Is IDispatcherUnhandledException Then
+            CType(FrmMain.PageRight, IDispatcherUnhandledException).DispatcherUnhandledException(sender, e)
+            If e.Handled Then Return
+        End If
+        '正常处理
+        e.Handled = True
+        If IsProgramEnded Then Return
+        FeedbackInfo()
+        Dim Detail As String = e.Exception.GetDetail(True)
+        If Detail.Contains("System.Windows.Threading.Dispatcher.Invoke") OrElse Detail.Contains("MS.Internal.AppModel.ITaskbarList.HrInit") OrElse Detail.Contains("未能加载文件或程序集") OrElse
+           Detail.Contains(".NET Framework") Then ' “自动错误判断” 的结果分析
             OpenWebsite("https://dotnet.microsoft.com/zh-cn/download/dotnet-framework/thank-you/net462-offline-installer")
-            MsgBox("你的 .NET Framework 版本过低或损坏，请下载并重新安装 .NET Framework 4.6.2！", MsgBoxStyle.Information, "运行环境错误")
-            FormMain.EndProgramForce(ProcessReturnValues.Cancel)
+            Log(e.Exception, "你的 .NET Framework 版本过低或损坏，请下载并重新安装 .NET Framework 4.6.2！" & vbCrLf & "若无法安装，可在卸载高版本的 .NET Framework 后再试。", LogLevel.Critical, "运行环境错误")
         Else
-            FeedbackInfo()
-            Log(e.Exception, "程序出现未知错误", LogLevel.Assert, "锟斤拷烫烫烫")
+            Log(e.Exception, "程序出现未知错误", LogLevel.Critical, "锟斤拷烫烫烫")
         End If
     End Sub
 
     '动态 DLL 调用
-    Private Shared AssemblyNAudio As Assembly
-    Private Shared AssemblyJson As Assembly
-    Private Shared AssemblyDialog As Assembly
-    Private Shared AssemblyImazenWebp As Assembly
-    Private Shared ReadOnly AssemblyNAudioLock As New Object
-    Private Shared ReadOnly AssemblyJsonLock As New Object
-    Private Shared ReadOnly AssemblyDialogLock As New Object
-    Private Shared ReadOnly AssemblyImazenWebpLock As New Object
     Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
-    Public Shared Function AssemblyResolve(sender As Object, args As ResolveEventArgs) As Assembly
-        If args.Name.StartsWithF("NAudio") Then
-            SyncLock AssemblyNAudioLock
-                If AssemblyNAudio Is Nothing Then
-                    Log("[Start] 加载 DLL：NAudio")
-                    AssemblyNAudio = Assembly.Load(GetResources("NAudio"))
-                End If
-                Return AssemblyNAudio
-            End SyncLock
-        ElseIf args.Name.StartsWithF("Newtonsoft.Json") Then
-            SyncLock AssemblyJsonLock
-                If AssemblyJson Is Nothing Then
-                    Log("[Start] 加载 DLL：Json")
-                    AssemblyJson = Assembly.Load(GetResources("Json"))
-                End If
-                Return AssemblyJson
-            End SyncLock
-        ElseIf args.Name.StartsWithF("Ookii.Dialogs.Wpf") Then
-            SyncLock AssemblyDialogLock
-                If AssemblyDialog Is Nothing Then
-                    Log("[Start] 加载 DLL：Dialogs")
-                    AssemblyDialog = Assembly.Load(GetResources("Dialogs"))
-                End If
-                Return AssemblyDialog
-            End SyncLock
-        ElseIf args.Name.StartsWithF("Imazen.WebP") Then
-            SyncLock AssemblyImazenWebpLock
-                If AssemblyImazenWebp Is Nothing Then
-                    Log("[Start] 加载 DLL：Imazen.WebP")
-                    AssemblyImazenWebp = Assembly.Load(GetResources("Imazen_WebP"))
-                    SetDllDirectory(PathPure.TrimEnd("\"))
+    Public Shared Function AssemblyResolve(sender As Object, Args As ResolveEventArgs) As Assembly
+        '缓存
+        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "System.Net.Http.Formatting", "System.ValueTuple"}
+        Static Locks As New Dictionary(Of String, Object)(StringComparer.Ordinal)
+        Static LoadedAssembly As New Dictionary(Of String, Assembly)(StringComparer.Ordinal)
+        '查找对应的 DLL
+        Dim Prefix As String = Prefixes.FirstOrDefault(Function(p) Args.Name.StartsWithF(p))
+        If Prefix Is Nothing Then Return Nothing
+        '加载 DLL
+        If Not Locks.ContainsKey(Prefix) Then Locks(Prefix) = New Object()
+        SyncLock Locks(Prefix)
+            If Not LoadedAssembly.ContainsKey(Prefix) Then
+                Log($"[Start] 加载 DLL：{Prefix}")
+                LoadedAssembly(Prefix) = Assembly.Load(GetResources(Prefix))
+                'WebP 特判
+                If Prefix = "Imazen.WebP" Then
+                    SetDllDirectory(PathPure.TrimEnd("\"c))
                     WriteFile(PathPure & "libwebp.dll", GetResources("libwebp64"))
                 End If
-                Return AssemblyImazenWebp
-            End SyncLock
-        Else
-            Return Nothing
-        End If
+            End If
+            Return LoadedAssembly(Prefix)
+        End SyncLock
     End Function
 
     '切换窗口

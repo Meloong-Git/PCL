@@ -6,7 +6,7 @@
 
     Private RealOffset As Double
     Private Sub MyScrollViewer_PreviewMouseWheel(sender As Object, e As MouseWheelEventArgs) Handles Me.PreviewMouseWheel
-        If e.Delta = 0 OrElse ActualHeight = 0 OrElse ScrollableHeight = 0 Then Exit Sub
+        If e.Delta = 0 OrElse ActualHeight = 0 OrElse ScrollableHeight = 0 Then Return
         Dim SourceType = e.Source.GetType
         If Content.TemplatedParent Is Nothing AndAlso (
                 (GetType(ComboBox).IsAssignableFrom(SourceType) AndAlso CType(e.Source, ComboBox).IsDropDownOpen) OrElse
@@ -14,7 +14,7 @@
                 GetType(ComboBoxItem).IsAssignableFrom(SourceType) OrElse
                 TypeOf e.Source Is CheckBox) Then
             '如果当前是在对有滚动条的下拉框或文本框执行，则不接管操作
-            Exit Sub
+            Return
         End If
         e.Handled = True
         PerformVerticalOffsetDelta(-e.Delta)

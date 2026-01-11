@@ -1,0 +1,242 @@
+﻿<local:MyPageRight
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:System="clr-namespace:System;assembly=mscorlib" 
+    mc:Ignorable="d" x:Class="PageInstanceSetup"
+    PanScroll="PanBack">
+    <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <StackPanel x:Name="PanMain" Margin="25,25,25,25">
+            <local:MyHint Text="这些设置只对该游戏版本生效，不影响其他版本。" Theme="Blue" Margin="0,0,0,15"
+                          CanClose="True" RelativeSetup="HintIndieSetup"  />
+            <local:MyCard x:Name="CardArgument" Margin="0,0,0,15" Title="启动选项">
+                <StackPanel Margin="25,40,25,21">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="60" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="版本隔离" Margin="0,0,25,0" />
+                        <local:MyComboBox x:Name="ComboArgumentIndieV2" Grid.Row="0" Grid.ColumnSpan="2" Tag="VersionArgumentIndieV2" Grid.Column="1">
+                            <local:MyComboBoxItem Content="开启" ToolTipService.InitialShowDelay="0" ToolTipService.BetweenShowDelay="0"
+                                                  ToolTip="与其他版本的存档、Mod 等文件相互独立，互不干涉。&#xa;这会使你无法跨版本共享存档，但可以规避 Mod 冲突问题。" ToolTipService.HorizontalOffset="100"/>
+                            <local:MyComboBoxItem Content="关闭" ToolTipService.InitialShowDelay="0" ToolTipService.BetweenShowDelay="0"
+                                                  ToolTip="与其余关闭隔离的版本共享存档、Mod 等文件。&#xa;若存在多个安装了 Mod 的版本，可能会由于 Mod 冲突而导致崩溃。" ToolTipService.HorizontalOffset="100"/>
+                        </local:MyComboBox>
+                        <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="游戏窗口标题" Margin="0,0,25,0" />
+                        <local:MyTextBox x:Name="TextArgumentTitle" Grid.Row="2" Grid.ColumnSpan="2" Tag="VersionArgumentTitle" Grid.Column="1" ToolTip="自定义游戏窗口的标题，若留空则跟随全局设置的值。&#xa;你可以用替换标记来动态改变其内容，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。" HintText="跟随全局设置" MaxLength="100" />
+                        <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="自定义信息" Margin="0,0,25,0" />
+                        <local:MyTextBox x:Name="TextArgumentInfo" Grid.Row="4" Grid.ColumnSpan="2" Tag="VersionArgumentInfo" Grid.Column="1" HintText="跟随全局设置" ToolTip="该信息会显示在游戏主界面的左下角，与 F3 调试页面的左上角。&#xa;若留空，则跟随全局设置的值。&#xa;&#xa;你可以用替换标记来动态改变其内容，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。">
+                            <local:MyTextBox.ValidateRules>
+                                <local:ValidateExcept>
+                                    <local:ValidateExcept.Excepts>
+                                        <System:String>"</System:String>
+                                        <System:String>“</System:String>
+                                        <System:String>”</System:String>
+                                    </local:ValidateExcept.Excepts>
+                                </local:ValidateExcept>
+                            </local:MyTextBox.ValidateRules>
+                        </local:MyTextBox>
+                        <TextBlock VerticalAlignment="Center" Grid.Row="6" HorizontalAlignment="Left" Text="游戏 Java" Margin="0,0,25,0" />
+                        <local:MyComboBox x:Name="ComboArgumentJava" Grid.ColumnSpan="2" Grid.Row="6" Grid.Column="1" MaxDropDownHeight="240"
+                                          ToolTip="若将 Java 放在游戏文件夹或 PCL 文件夹，在进行自动选择时 PCL 会尽量优先选择它">
+                            <ComboBoxItem Content="加载中……" IsSelected="True" />
+                            <!--<local:MyComboBoxItem Content="Java 8 (1.8.0_171)，64 位：C:\Program Files (x86)\Common Files\Oracle\Java\javapath\javaw.exe" ToolTipService.Placement="Right" ToolTipService.HorizontalOffset="5" IsSelected="True" ToolTip="C:\Program Files (x86)\Common Files\Oracle\Java\javapath\javaw.exe" />-->
+                        </local:MyComboBox>
+                    </Grid>
+                </StackPanel>
+            </local:MyCard>
+            <local:MyCard Margin="0,0,0,15" Title="游戏内存">
+                <StackPanel Margin="25,40,25,15">
+                    <local:MyHint x:Name="LabRamWarn" Text="32 位 Java 只能分配最多 1 GB 的内存。强烈建议换用 64 位的 Java！" Theme="Yellow" Margin="0,0,0,12" />
+                    <Grid Margin="0,0,0,3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <local:MyRadioBox Text="跟随全局设置" Width="110" Checked="True" x:Name="RadioRamType2" Tag="VersionRamType/2" Margin="0,0,20,9" />
+                        <local:MyRadioBox Grid.Row="1" Text="自动配置" Width="110" x:Name="RadioRamType0" Tag="VersionRamType/0" Margin="0,0,20,0"
+                                          ToolTip="根据安装的 Mod 量与电脑剩余内存动态调整为游戏分配的内存" ToolTipService.Placement="Right" ToolTipService.HorizontalOffset="-10" ToolTipService.VerticalOffset="-3" />
+                        <local:MyRadioBox Grid.Row="3" Text="自定义" x:Name="RadioRamType1" Tag="VersionRamType/1" Margin="0,0,20,0" />
+                        <local:MySlider Grid.Row="3" Grid.Column="1" IsEnabled="False" x:Name="SliderRamCustom" Tag="VersionRamCustom" MaxValue="49" Value="13" />
+                        <!--<local:MyTextBox Grid.Row="2" Grid.Column="3" Width="100" VerticalAlignment="Center" Margin="30,0,0,0" Text="2048 MB" />-->
+                    </Grid>
+                    <Grid Margin="0,5,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="28" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Margin="0,6,30,0" Text="启动游戏前进行内存优化" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" />
+                        <local:MyComboBox x:Name="ComboRamOptimize" Margin="10,0,0,0" Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="2" Tag="VersionRamOptimize">
+                            <local:MyComboBoxItem Content="跟随全局设置" IsSelected="True" />
+                            <local:MyComboBoxItem Content="开启" />
+                            <local:MyComboBoxItem Content="关闭" />
+                        </local:MyComboBox>
+                    </Grid>
+                    <Grid x:Name="PanRamDisplay" Margin="0,11,2,0" SnapsToDevicePixels="True" Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition x:Name="ColumnRamUsed" Width="4.7*"/>
+                            <ColumnDefinition x:Name="ColumnRamGame" Width="2.5*"/>
+                            <ColumnDefinition x:Name="ColumnRamEmpty" Width="0.7*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition Height="4" />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <Rectangle x:Name="RectRamUsed" Grid.Row="1" StrokeThickness="0" >
+                            <Rectangle.Fill>
+                                <LinearGradientBrush EndPoint="1,0.5" StartPoint="0,0.5">
+                                    <GradientStop Color="{DynamicResource ColorObject3}" Offset="0"/>
+                                    <GradientStop Color="{DynamicResource ColorObject2}" Offset="0.5"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <Rectangle Grid.Row="1" StrokeThickness="0" Grid.Column="1" Fill="{DynamicResource ColorBrush3}" Opacity="0.5" x:Name="RectRamGame" />
+                        <Rectangle x:Name="RectRamEmpty" Grid.Row="1" StrokeThickness="0" Grid.Column="2" Fill="{DynamicResource ColorBrush6}" Opacity="0.7" />
+                        <TextBlock x:Name="LabRamUsedTitle" Text="已使用内存" Grid.ColumnSpan="3" Opacity="0.7" TextTrimming="None" Margin="2,0,0,5" FontSize="11" HorizontalAlignment="Left" />
+                        <TextBlock x:Name="LabRamGameTitle" Text="游戏分配" Opacity="0.7" Grid.ColumnSpan="3" TextTrimming="None" Margin="2,0,0,5" FontSize="11" HorizontalAlignment="Left" />
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Grid.ColumnSpan="3" Margin="2,3,0,0" HorizontalAlignment="Left">
+                            <TextBlock x:Name="LabRamUsed" Text="4.7 GB" FontSize="16" Foreground="Black" TextTrimming="None" />
+                            <TextBlock x:Name="LabRamTotal" Text=" / 7.9 GB" FontSize="16" Foreground="Black" TextTrimming="None" />
+                        </StackPanel>
+                        <TextBlock Grid.Row="2" x:Name="LabRamGame" Text="2.5 GB" Grid.ColumnSpan="3" TextTrimming="None" Margin="2,3,0,0" FontSize="16" Foreground="Black" HorizontalAlignment="Left" />
+                    </Grid>
+                </StackPanel>
+            </local:MyCard>
+            <local:MyCard x:Name="CardServer" Margin="0,0,0,15" Title="服务器">
+                <StackPanel Margin="25,42,25,18">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="3" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="登录方式" Margin="0,0,25,0" />
+                        <local:MyComboBox x:Name="ComboServerLogin" Grid.Row="0" Grid.ColumnSpan="2" Tag="VersionServerLogin" Grid.Column="1">
+                            <local:MyComboBoxItem Content="正版登录或离线登录" IsSelected="True" />
+                            <local:MyComboBoxItem Content="仅正版登录" />
+                            <local:MyComboBoxItem Content="仅离线登录" />
+                            <local:MyComboBoxItem Content="第三方登录：统一通行证" />
+                            <local:MyComboBoxItem Content="第三方登录：Authlib Injector 或 LittleSkin" />
+                        </local:MyComboBox>
+                        <TextBlock Name="LabServerNide" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left" Text="服务器 ID（必填）" Margin="0,8,25,0" Visibility="Collapsed" />
+                        <local:MyTextBox x:Name="TextServerNide" Grid.Row="1" Grid.ColumnSpan="2" ShowValidateResult="False" Tag="VersionServerNide" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="服主后台 → 集成说明 中提供的服务器 ID">
+                            <local:MyTextBox.ValidateRules>
+                                <local:ValidateLength Min="32" Max="32" />
+                            </local:MyTextBox.ValidateRules>
+                        </local:MyTextBox>
+                        <TextBlock Name="LabServerAuthServer" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left" Text="认证服务器（必填）" Margin="0,8,25,0" Visibility="Collapsed" />
+                        <local:MyTextBox x:Name="TextServerAuthServer" Grid.Row="1" Grid.ColumnSpan="2" ShowValidateResult="False" Tag="VersionServerAuthServer" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="Yggdrasil API 认证服务器的完整地址">
+                            <local:MyTextBox.ValidateRules>
+                                <local:ValidateHttp />
+                            </local:MyTextBox.ValidateRules>
+                        </local:MyTextBox>
+                        <TextBlock Name="LabServerAuthRegister" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="注册链接" Margin="0,8,25,0" Visibility="Collapsed" />
+                        <local:MyTextBox x:Name="TextServerAuthRegister" Grid.Row="2" Grid.ColumnSpan="2" ShowValidateResult="False" Tag="VersionServerAuthRegister" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="注册账号的网页地址，如 https://xxxxx.xxx/auth/register">
+                            <local:MyTextBox.ValidateRules>
+                                <local:ValidateHttp />
+                            </local:MyTextBox.ValidateRules>
+                        </local:MyTextBox>
+                        <TextBlock Name="LabServerAuthName" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left" Text="服务器名称" Margin="0,8,25,0" Visibility="Collapsed" />
+                        <local:MyTextBox x:Name="TextServerAuthName" Grid.Row="3" Grid.ColumnSpan="2" ShowValidateResult="False" Tag="VersionServerAuthName" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="显示在登录页面的服务器名称" />
+                        <TextBlock VerticalAlignment="Center" Grid.Row="5" HorizontalAlignment="Left" Text="自动进入服务器" Margin="0,0,25,0" />
+                        <local:MyTextBox x:Name="TextServerEnter" Grid.ColumnSpan="2" Grid.Row="5" Tag="VersionServerEnter" Grid.Column="1" ToolTip="在打开 Minecraft 后自动进入某服务器。&#xa;用英文冒号间隔 IP 与端口，例如 233.233.233.233:12345。">
+                            <local:MyTextBox.ValidateRules>
+                                <local:ValidateExcept>
+                                    <local:ValidateExcept.Excepts>
+                                        <System:String>"</System:String>
+                                        <System:String>“</System:String>
+                                        <System:String>”</System:String>
+                                        <System:String>http://</System:String>
+                                        <System:String>https://</System:String>
+                                    </local:ValidateExcept.Excepts>
+                                </local:ValidateExcept>
+                            </local:MyTextBox.ValidateRules>
+                        </local:MyTextBox>
+                    </Grid>
+                    <Grid Height="35" Name="PanServerNide" Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
+                        </Grid.ColumnDefinitions>
+                        <local:MyButton x:Name="BtnServerNideWeb" Grid.Column="0" MinWidth="140" Text="服主后台" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
+                    </Grid>
+                    <local:MyButton x:Name="BtnServerAuthLittle" Height="35" MinWidth="150" Margin="0,12,0,0" Text="设置为 LittleSkin" HorizontalAlignment="Left" ColorType="Highlight" />
+                </StackPanel>
+            </local:MyCard>
+            <local:MyCard x:Name="CardAdvance" Margin="0,0,0,15" Title="高级选项" IsSwapped="True" CanSwap="True">
+                <Grid Margin="25,40,25,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="60" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="9" />
+                        <RowDefinition Height="28" />
+                        <RowDefinition Height="9" />
+                        <RowDefinition Height="31" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="Java 虚拟机参数" Margin="0,0,25,0" />
+                    <local:MyTextBox x:Name="TextAdvanceJvm" Grid.Row="0" Grid.ColumnSpan="2" Tag="VersionAdvanceJvm" Grid.Column="1" MaxLength="4000" ToolTip="启动 Minecraft 时使用的额外 JVM 参数，在没有确定把握的情况下请不要尝试修改。&#xa;&#xa;支持 Minecraft 版本 JSON 中的字符串替换标记，例如 ${library_directory}。&#xa;也支持使用 PCL 的替换标记，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。&#xa;&#xa;若留空，则跟随全局设置的值。" HintText="跟随全局设置"
+                                     Height="100" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" Padding="0,5" VerticalScrollBarVisibility="Auto" />
+                    <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="游戏参数" Margin="0,0,25,0" />
+                    <local:MyTextBox x:Name="TextAdvanceGame" Grid.Row="2" Grid.ColumnSpan="2" Tag="VersionAdvanceGame" Grid.Column="1" ToolTip="文本框中的内容将会被直接拼合在启动参数的末尾。&#xa;例如，输入 --demo 则会以试玩模式启动游戏。&#xa;&#xa;支持 Minecraft 版本 JSON 中的字符串替换标记，例如 ${library_directory}。&#xa;也支持使用 PCL 的替换标记，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。&#xa;&#xa;若留空，则跟随全局设置的值。" HintText="跟随全局设置" />
+                    <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="启动前执行命令" Margin="0,0,25,3" />
+                    <local:MyTextBox x:Name="TextAdvanceRun" Grid.Row="4" Grid.ColumnSpan="2" Tag="VersionAdvanceRun" Grid.Column="1" HintText="" Margin="0,0,0,3"
+                                     ToolTip="该项不会覆盖全局设置：启动时会先执行全局设置的命令，再执行版本设置的命令。&#xa;&#xa;在 MC 启动前执行特定命令或程序，语法与 Windows 的命令提示符一致。&#xa;&#xa;你可以用替换标记来动态改变其内容或实现相对路径，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。例如：&#xa; · &quot;{verpath}test.exe&quot; ：运行版本文件夹下的 test.exe 程序&#xa; · &quot;{java}java.exe&quot; -jar &quot;{verpath}test.jar&quot; ：用 Java 运行版本文件夹下的 test.jar&#xa; · notepad &quot;{verindie}options.txt&quot; ：使用记事本打开该版本的设置文件&#xa;&#xa;涉及路径的操作最好都打上双引号，以避免路径中的空格导致运行失败。&#xa;执行命令时，命令行所在的目录是当前的 .minecraft 文件夹。" />
+                    <local:MyCheckBox Grid.Row="5" Grid.Column="1" x:Name="CheckAdvanceRunWait" Tag="VersionAdvanceRunWait" Visibility="Collapsed"
+                                      Text="等待命令执行完成后再继续启动" Margin="0,5,0,0" />
+                    <StackPanel Margin="0,12,0,4" Grid.Row="6" Grid.ColumnSpan="2" HorizontalAlignment="Left">
+                        <local:MyCheckBox Height="28" Text="禁止更新 Mod" x:Name="CheckAdvanceDisableModUpdate" Tag="VersionAdvanceDisableModUpdate"
+                                          ToolTip="禁止为此版本更新 Mod，以防止整合包玩家误操作"
+                                          ToolTipService.Placement="Right" />
+                        <local:MyCheckBox Height="28" Text="忽略 Java 兼容性警告" x:Name="CheckAdvanceJava" Tag="VersionAdvanceJava"
+                                          ToolTipService.Placement="Right"
+                                          ToolTip="如果手动选择了与当前版本不兼容的 Java，则自动跳过兼容性警告弹窗，强制使用手动选择的 Java。" />
+                        <local:MyCheckBox Height="28" Text="关闭文件校验" x:Name="CheckAdvanceAssetsV2" Tag="VersionAdvanceAssetsV2"
+                                          ToolTipService.Placement="Right"
+                                          ToolTip="完全不更改 assets；不校验 libraries、第三方登录库与版本主 jar 文件是否被修改。&#xa;如果你没有修改相关文件，请勿勾选此项。" />
+                        <local:MyCheckBox Height="28" Text="禁用 Java Launch Wrapper" x:Name="CheckAdvanceDisableJLW" Tag="VersionAdvanceDisableJLW"
+                                          ToolTipService.Placement="Right"
+                                          ToolTip="PCL 会使用 Java Launch Wrapper 来修复老版本 Java 在中文路径下无法启动的问题。&#xa;如果这被反作弊拦截，或遇到其他问题，也可以将其关闭。" />
+                    </StackPanel>
+                </Grid>
+            </local:MyCard>
+            <local:MyExtraTextButton HorizontalAlignment="Center" Margin="0,-5,0,0"
+                x:Name="BtnSwitch" Text="全局设置"
+                LogoScale="0.9" Logo="M73 584L920 584 608 896C579 925 579 972 608 1001 637 1030 683 1030 712 1001L1149 565C1164 550 1170 531 1170 511 1170 492 1164 472 1149 457L712 21C683-7 637-7 608 21 579 50 579 97 608 126L920 438 73 438C33 438 0 471 0 511 0 551 33 584 73 584Z" />
+        </StackPanel>
+    </local:MyScrollViewer>
+</local:MyPageRight>

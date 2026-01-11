@@ -3,35 +3,52 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageSetupLink"
-    PanScroll="{Binding ElementName=PanBack}">
+    PanScroll="PanBack">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel x:Name="PanMain" Margin="25,10">
-            <local:MyCard Margin="0,15" Title="HiPer">
-                <StackPanel Margin="25,40,25,20" Orientation="Vertical">
-                    <local:MyCheckBox Text="在索引码还有 5 分钟到期时提醒我" x:Name="CheckHiperCertWarn" Tag="LinkHiperCertWarn" Height="22" />
-                    <local:MyButton x:Name="BtnHiperLog" Height="35" MinWidth="140" Text="查看日志" Padding="13,0" Margin="0,10,20,0" HorizontalAlignment="Left" />
-                </StackPanel>
-            </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="IOI">
+            <local:MyCard x:Name="CardArgument" Margin="0,15" Title="连接选项">
                 <StackPanel Margin="25,40,25,20">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
                             <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="60" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="28" />
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="玩家名" Margin="0,0,25,0" />
-                        <local:MyTextBox x:Name="TextLinkName" Grid.Row="0" Grid.ColumnSpan="2" Tag="LinkName" Grid.Column="1">
-                            <local:MyTextBox.ValidateRules>
-                                <local:ValidateNullable />
-                                <local:ValidateNullOrWhiteSpace />
-                                <local:ValidateLength Max="20" />
-                            </local:MyTextBox.ValidateRules>
-                        </local:MyTextBox>
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="模式" Margin="0,0,25,0" />
+                        <local:MyComboBox Grid.Row="0" x:Name="ComboLatencyMode" Grid.ColumnSpan="2" Tag="LinkLatencyMode" Grid.Column="1">
+                            <local:MyComboBoxItem Content="优先直连" IsSelected="True" ToolTip="尽量不进行中转，而是 P2P 直连。" />
+                            <local:MyComboBoxItem Content="优先低延迟" ToolTip="如果使用中转节点能降低延迟，就不进行直连。&#xa;不过，这会增加社区节点的负载……" />
+                        </local:MyComboBox>
                     </Grid>
                 </StackPanel>
+            </local:MyCard>
+            <local:MyCard Margin="0,0,0,15" Title="高级设置" IsSwapped="True" CanSwap="True">
+                <Grid Margin="25,40,25,22">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="28" />
+                        <RowDefinition Height="15" />
+                        <RowDefinition Height="35" />
+                    </Grid.RowDefinitions>
+                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="自定义节点" Margin="0,0,25,0" />
+                    <local:MyTextBox x:Name="TextCustomPeer" Tag="LinkCustomPeer" Grid.Column="1" MaxHeight="28" 
+                        ToolTip="覆盖 PCL 所选择的节点，仅连接此处填写的节点。&#xa;如果你自己搭建了 EasyTier 节点，你可以用这个设置让 PCL 连接它。&#xa;&#xa;使用逗号分隔多个节点，例如：&#xa;tcp://public.easytier.cn:11010,tcp://public2.easytier.cn:54321&#xa;&#xa;房主和加入者必须连接到至少一个相同节点，才能互相连上。" />
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left">
+                        <local:MyButton MinWidth="140" Padding="13,5" Margin="0,0,20,0" HorizontalAlignment="Left"
+                            Text=" 光荣地贡献节点！" ColorType="Highlight"
+                            ToolTip="联机功能全靠社区的各位无私贡献的节点才能存在！&#xa;如果你有空闲的高带宽服务器，欢迎搭建一个共享节点，人人为我，我为人人嘛……" 
+                            local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://shimo.im/docs/qKPttVvXKqPD8YDC#anchor-Dupo" />
+                        <local:MyButton MinWidth="140" Padding="13,5" Margin="0,0,20,0" HorizontalAlignment="Left"
+                            Text="节点状态"
+                            local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://uptime.easytier.cn/" />
+                    </StackPanel>
+                </Grid>
             </local:MyCard>
         </StackPanel>
     </local:MyScrollViewer>

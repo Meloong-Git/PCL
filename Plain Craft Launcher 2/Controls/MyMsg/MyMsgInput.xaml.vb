@@ -73,13 +73,13 @@
 
     Public Sub Btn1_Click() Handles Btn1.Click
         TextArea.Validate() '#5773
-        If MyConverter.IsExited OrElse Not TextArea.IsValidated Then Exit Sub
+        If MyConverter.IsExited OrElse Not TextArea.IsValidated Then Return
         MyConverter.IsExited = True
         MyConverter.Result = TextArea.Text
         Close()
     End Sub
     Public Sub Btn2_Click() Handles Btn2.Click
-        If MyConverter.IsExited Then Exit Sub
+        If MyConverter.IsExited Then Return
         MyConverter.IsExited = True
         MyConverter.Result = Nothing
         Close()

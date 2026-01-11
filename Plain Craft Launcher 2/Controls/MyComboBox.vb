@@ -8,7 +8,7 @@
     Public Property HintText As String = ""
     Public Overrides Sub OnApplyTemplate()
         MyBase.OnApplyTemplate()
-        If Not IsEditable Then Exit Sub
+        If Not IsEditable Then Return
         Try
             TextBox = Template.FindName("PART_EditableTextBox", Me)
             TextBox.AddHandler(LostFocusEvent, New RoutedEventHandler(AddressOf RefreshColor))
@@ -116,16 +116,15 @@
     '修复 WPF Bug：下拉框文本修改后，依然误认为还选择着此前的选项，导致再次点击该选项时内容不变
     Private IsTextChanging As Boolean = False
     Private Sub MyComboBox_TextChanged(sender As Object, e As TextChangedEventArgs) Handles Me.TextChanged
-        If IsTextChanging OrElse Not IsEditable Then Exit Sub
-        If SelectedItem IsNot Nothing AndAlso Text <> SelectedItem.ToString Then
-            Dim RawText As String = Text
-            Dim RawSelectionStart As Integer = TextBox.SelectionStart
-            IsTextChanging = True
-            SelectedItem = Nothing
-            Text = RawText
-            TextBox.SelectionStart = RawSelectionStart
-            IsTextChanging = False
-        End If
+        If IsTextChanging OrElse Not IsEditable Then Return
+        If SelectedItem Is Nothing OrElse Text = SelectedItem.ToString Then Return
+        Dim RawText As String = Text
+        Dim RawSelectionStart As Integer = TextBox.SelectionStart
+        IsTextChanging = True
+        SelectedItem = Nothing
+        Text = RawText
+        TextBox.SelectionStart = RawSelectionStart
+        IsTextChanging = False
     End Sub
 
     Public ReadOnly Property ContentPresenter As ContentPresenter
@@ -133,5 +132,9 @@
             Return Template.FindName("PART_Content", Me)
         End Get
     End Property
+
+    Private Sub MyComboBox_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles Me.SelectionChanged
+        If IsLoaded AndAlso AniControlEnabled = 0 Then RaiseCustomEvent()
+    End Sub
 
 End Class

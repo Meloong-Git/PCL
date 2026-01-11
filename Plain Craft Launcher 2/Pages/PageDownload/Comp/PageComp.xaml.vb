@@ -67,18 +67,22 @@ Public Class PageComp
     ''' <summary>
     ''' 在切换到页面时，应自动将筛选项设置为与该目标 MC 版本和加载器相同。
     ''' </summary>
-    Public Shared TargetVersion As McVersion = Nothing
+    Public Shared TargetInstance As McInstance = Nothing
+    ''' <summary>
+    ''' 在切换到该页面时自动设置的搜索框内的内容。
+    ''' </summary>
+    Public Shared TargetName As String = Nothing
 
     '在点击 MyCompItem 时会获取 Loader 的输入，以使资源详情页面可以应用相同的筛选项
     Public Loader As New LoaderTask(Of CompProjectRequest, Integer)("社区资源获取：XXX", AddressOf CompProjectsGet, AddressOf LoaderInput) With {.ReloadTimeout = 60 * 1000}
 
-    Private IsLoaderInited As Boolean = False
     Private Sub PageCompControls_Inited(sender As Object, e As EventArgs) Handles Me.Loaded
+        Static IsFirstLoaded As Boolean = False
         '不知道从 Initialized 改成 Loaded 会不会有问题，但用 Initialized 会导致初始的筛选器修改被覆盖回默认值
-        If TargetVersion IsNot Nothing Then
+        If TargetInstance IsNot Nothing Then
             '设置目标
             ResetFilter() '重置筛选器
-            TextSearchVersion.Text = TargetVersion.Version.McName
+            TextSearchVersion.Text = TargetInstance.Version.VanillaName
             Dim GetTargetItemByName =
             Function(Name As String) As MyComboBoxItem
                 For Each Item As MyComboBoxItem In ComboSearchLoader.Items
@@ -86,41 +90,43 @@ Public Class PageComp
                 Next
                 Return ComboSearchLoader.Items(0)
             End Function
-            If TargetVersion.Version.HasForge Then
+            If TargetInstance.Version.HasForge Then
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("Forge")
-            ElseIf TargetVersion.Version.HasFabric Then
+            ElseIf TargetInstance.Version.HasFabric Then
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("Fabric")
-            ElseIf TargetVersion.Version.HasNeoForge Then
+            ElseIf TargetInstance.Version.HasNeoForge Then
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("NeoForge")
             End If
-            TargetVersion = Nothing
+            TargetInstance = Nothing
+            If TargetName IsNot Nothing Then
+                TextSearchName.Text = TargetName
+                TargetName = Nothing
+            End If
             '如果已经完成请求，则重新开始
-            If IsLoaderInited Then StartNewSearch()
+            If IsFirstLoaded Then StartNewSearch()
             ScrollToHome()
         End If
         '加载器初始化
-        If IsLoaderInited Then Return
-        IsLoaderInited = True
+        If IsFirstLoaded Then Return
+        IsFirstLoaded = True
         CType(Parent, MyPageRight).PageLoaderInit(Load, PanLoad, PanContent, PanAlways, Loader, AddressOf Load_OnFinish, AddressOf LoaderInput)
-        If McVersionHighest = -1 Then McVersionHighest = Math.Max(McVersionHighest, Integer.Parse(CType(TextSearchVersion.Items(1), MyComboBoxItem).Content.ToString.Split(".")(1)))
-    End Sub
-    Private Function LoaderInput() As CompProjectRequest
-        Dim Request As New CompProjectRequest(PageType, Storage, (Page + 1) * PageSize)
-        Dim GameVersion As String = If(TextSearchVersion.Text = "全部 (也可自行输入)", Nothing,
-                If(TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w"), TextSearchVersion.Text, Nothing))
-        Dim ModLoader As CompModLoaderType = CompModLoaderType.Any
-        If PageType = CompType.Mod Then '只有 Mod 考虑加载器
-            ModLoader = Val(ComboSearchLoader.SelectedItem.Tag)
-            If GameVersion IsNot Nothing AndAlso GameVersion.Contains(".") AndAlso Val(GameVersion.Split(".")(1)) < 14 AndAlso '1.14-
-                ModLoader = CompModLoaderType.Forge Then '选择了 Forge
-                ModLoader = CompModLoaderType.Any '此时，视作没有筛选 Mod Loader（因为部分老 Mod 没有设置自己支持的加载器）
+        '将最高 Drop 加入筛选
+        If AllDrops IsNot Nothing AndAlso AllDrops.First > 250 Then
+            Dim HighestVersion As String = McVersion.DropToVersion(AllDrops.First)
+            If CType(TextSearchVersion.Items(1), MyComboBoxItem).Content.ToString <> HighestVersion Then '0 是全部
+                TextSearchVersion.Items.Insert(1, New MyComboBoxItem With {.Content = HighestVersion})
             End If
         End If
+    End Sub
+    Private Function LoaderInput() As CompProjectRequest
+        Dim Request As New CompProjectRequest(PageType, Storage, (Page + 1) * PAGE_SIZE)
+        Dim GameVersion As String = If(TextSearchVersion.Text = "全部 (也可自行输入)", Nothing,
+            If(TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w"), TextSearchVersion.Text, Nothing))
         With Request
             .SearchText = TextSearchName.Text
             .GameVersion = GameVersion
             .Tag = ComboSearchTag.SelectedItem.Tag
-            .ModLoader = ModLoader
+            .ModLoader = If(PageType = CompType.Mod, Val(ComboSearchLoader.SelectedItem.Tag), CompModLoaderType.Any)
             .Source = CType(Val(ComboSearchSource.SelectedItem.Tag), CompSourceType)
         End With
         Return Request
@@ -132,7 +138,7 @@ Public Class PageComp
     ''' <summary>
     ''' 每页展示的结果数量。
     ''' </summary>
-    Public Const PageSize = 40
+    Public Const PAGE_SIZE = 40
     Public Page As Integer = 0
 
     '结果 UI 化
@@ -141,8 +147,9 @@ Public Class PageComp
             Log($"[Comp] 开始可视化{TypeNameSpaced}列表，已储藏 {Storage.Results.Count} 个结果，当前在第 {Page + 1} 页")
             '列表项
             PanProjects.Children.Clear()
-            For i = Math.Min(Page * PageSize, Storage.Results.Count - 1) To Math.Min((Page + 1) * PageSize - 1, Storage.Results.Count - 1)
-                PanProjects.Children.Add(Storage.Results(i).ToCompItem(
+            Dim Index As Integer = Math.Min(Page * PAGE_SIZE, Storage.Results.Count - 1)
+            For Each Result In Storage.Results.GetRange(Index, Math.Min(Storage.Results.Count - Index, PAGE_SIZE))
+                PanProjects.Children.Add(Result.ToCompItem(
                     ShowMcVersionDesc:=Loader.Input.GameVersion Is Nothing,
                     ShowLoaderDesc:=Loader.Input.ModLoader = CompModLoaderType.Any AndAlso (PageType = CompType.Mod OrElse PageType = CompType.ModPack)))
             Next
@@ -156,7 +163,7 @@ Public Class PageComp
             BtnPageLeft.IsEnabled = Page > 0
             BtnPageLeft.Opacity = If(Page > 0, 1, 0.2)
             Dim IsRightEnabled As Boolean = '由于 WPF 的未知 bug，读取到的 IsEnabled 可能是错误的值（#3319）
-                Storage.Results.Count > PageSize * (Page + 1) OrElse
+                Storage.Results.Count > PAGE_SIZE * (Page + 1) OrElse
                 Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse Storage.ModrinthOffset < Storage.ModrinthTotal
             BtnPageRight.IsEnabled = IsRightEnabled
             BtnPageRight.Opacity = If(IsRightEnabled, 1, 0.2)
@@ -188,7 +195,6 @@ Public Class PageComp
     End Sub
 
     '切换页码
-
     Private Sub BtnPageFirst_Click(sender As Object, e As RoutedEventArgs) Handles BtnPageFirst.Click
         ChangePage(0)
     End Sub

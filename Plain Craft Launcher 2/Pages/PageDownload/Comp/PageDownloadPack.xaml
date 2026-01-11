@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageDownloadPack"
-    PanScroll="{Binding ElementName=Content}">
+    PanScroll="Content">
     <local:PageComp x:Name="Content" PageType="ModPack" TypeName="整合包" TypeNameSpaced="整合包">
         <local:MyComboBoxItem Tag="" Content="全部" IsSelected="True" />
         <local:MyComboBoxItem Tag="4484/" Content="多人" />
@@ -17,7 +17,7 @@
         <local:MyComboBoxItem Tag="/kitchen-sink" Content="水槽包" />
         <local:MyComboBoxItem Tag="4476/" Content="探索" />
         <local:MyComboBoxItem Tag="4477/" Content="小游戏" />
-        <local:MyComboBoxItem Tag="4471/" Content="科幻" />
+        <local:MyComboBoxItem Tag="4474/" Content="科幻" />
         <local:MyComboBoxItem Tag="4736/" Content="空岛" />
         <local:MyComboBoxItem Tag="5128/" Content="原版改良" />
         <local:MyComboBoxItem Tag="4487/" Content="FTB" ToolTip="由 FTB 官方发布" ToolTipService.HorizontalOffset="70" />

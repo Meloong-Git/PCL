@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageSetupUI"
-    PanScroll="{Binding ElementName=PanBack}">
+    PanScroll="PanBack">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel x:Name="PanMain" Margin="25,10">
             <local:MyCard Margin="0,15" Title="基础" x:Name="CardLauncher">
@@ -116,7 +116,7 @@
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="背景模糊" Margin="0,0,25,0" />
                         <local:MySlider x:Name="SliderBackgroundBlur" Tag="UiBackgroundBlur" MaxValue="40" Grid.Column="1" ToolTip="较强的模糊会导致启动器严重掉帧，请谨慎使用。&#13;不建议在制作整合包时开启模糊，以确保 PCL 在低性能电脑上可以流畅运行。" />
                     </Grid>
-                    <local:MyCheckBox Text="使用彩色背景" Margin="-1,0,0,8" Height="22" x:Name="CheckBackgroundColorful" Tag="UiBackgroundColorful" />
+                    <local:MyCheckBox Text="叠加彩色背景" Margin="-1,0,0,8" Height="22" x:Name="CheckBackgroundColorful" Tag="UiBackgroundColorful" />
                     <Grid Height="35" Margin="0,2,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
@@ -206,9 +206,9 @@
                         <local:MyRadioBox Text="读取本地文件" x:Name="RadioCustomType1" Height="22" Tag="UiCustomType/1" Grid.Column="2" />
                         <local:MyRadioBox Text="联网更新" x:Name="RadioCustomType2" Height="22" Tag="UiCustomType/2" Grid.Column="3" />
                     </Grid>
-                    <local:MyHint Margin="0,15,0,-9" Text="在使用陌生人提供的主页前请务必谨慎，恶意的主页可能会造成损害！" IsWarn="True" x:Name="HintCustomWarn" 
+                    <local:MyHint Margin="0,15,0,-4" Text="内容见 ModSetup" Theme="Blue" x:Name="HintCustom" />
+                    <local:MyHint Margin="0,15,0,6" Text="请谨慎使用陌生人提供的主页，恶意代码可能会造成损害！" Theme="Yellow" x:Name="HintCustomWarn" 
                                   CanClose="True" RelativeSetup="HintCustomWarn" />
-                    <local:MyHint Margin="0,15,0,1" Text="内容见 ModSetup" IsWarn="False" x:Name="HintCustom" />
                     <Grid Height="35" x:Name="PanCustomLocal" Visibility="Collapsed" Margin="0,10,0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
@@ -225,7 +225,8 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="下载地址" Margin="0,0,25,0" />
-                        <local:MyTextBox x:Name="TextCustomNet" Tag="UiCustomNet" Grid.Column="1" MaxHeight="28">
+                        <local:MyTextBox x:Name="TextCustomNet" Tag="UiCustomNet" Grid.Column="1" MaxHeight="28"
+                                         ToolTip="你可以用替换标记动态改变网址，以传入参数或变量。&#xa;在 更多 → 帮助 中搜索 “替换标记” 以了解用法。">
                             <local:MyTextBox.ValidateRules>
                                 <local:ValidateNullable />
                                 <local:ValidateHttp />
@@ -247,10 +248,14 @@
                             <local:MyComboBoxItem Content="Minecraft 皮肤推荐（作者：wkea）" />
                             <local:MyComboBoxItem Content="OpenBMCLAPI 仪表盘 Lite（作者：Silverteal、Mxmilu666）" />
                             <local:MyComboBoxItem Content="PCL 主页市场（作者：凌云）" />
-                            <local:MyComboBoxItem Content="PCL 新闻速报（作者：Joker2184）" />
+                            <local:MyComboBoxItem Content="PCL 新闻速报（作者：Joker2184）" Visibility="Collapsed" />
                             <local:MyComboBoxItem Content="PCL 新功能说明书（作者：WForst-Breeze）" />
                             <local:MyComboBoxItem Content="OpenMCIM 仪表盘（作者：SALTWOOD）" Visibility="Collapsed" />
                             <local:MyComboBoxItem Content="杂志主页（作者：CreeperIsASpy）" />
+                            <local:MyComboBoxItem Content="PCL GitHub 仪表盘（作者：Deep-Dark-Forest）" />
+                            <local:MyComboBoxItem Content="Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）" />
+                            <local:MyComboBoxItem Content="今日新闻热点（作者：EYicheng，部分由 AI 生成）" />
+                            <local:MyComboBoxItem Content="Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）" />
                         </local:MyComboBox>
                     </Grid>
                 </StackPanel>
@@ -278,14 +283,14 @@
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left" Text="主页面" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" Text="下载" x:Name="CheckHiddenPageDownload" Tag="UiHiddenPageDownload" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="3" Visibility="Collapsed" Text="联机" x:Name="CheckHiddenPageLink" Tag="UiHiddenPageLink" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="3" Text="设置" x:Name="CheckHiddenPageSetup" Tag="UiHiddenPageSetup" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="4" Text="更多" x:Name="CheckHiddenPageOther" Tag="UiHiddenPageOther" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="3" Text="联机" x:Name="CheckHiddenPageLink" Tag="UiHiddenPageLink" IsEnabled="False" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="4" Text="设置" x:Name="CheckHiddenPageSetup" Tag="UiHiddenPageSetup" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="5" Text="更多" x:Name="CheckHiddenPageOther" Tag="UiHiddenPageOther" />
                         <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="设置 子页面" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="2" Text="游戏" x:Name="CheckHiddenSetupLaunch" Tag="UiHiddenSetupLaunch" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="3" Text="个性化" x:Name="CheckHiddenSetupUI" Tag="UiHiddenSetupUi" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4" Text="其他" x:Name="CheckHiddenSetupSystem" Tag="UiHiddenSetupSystem" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="5" Text="联机" x:Name="CheckHiddenSetupLink" Tag="UiHiddenSetupLink" Visibility="Collapsed" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="2" Text="启动" x:Name="CheckHiddenSetupLaunch" Tag="UiHiddenSetupLaunch" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="3" Text="联机" x:Name="CheckHiddenSetupLink" Tag="UiHiddenSetupLink" IsEnabled="False" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4" Text="个性化" x:Name="CheckHiddenSetupUI" Tag="UiHiddenSetupUi" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="5" Text="其他" x:Name="CheckHiddenSetupSystem" Tag="UiHiddenSetupSystem" />
                         <TextBlock Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left" Text="更多 子页面" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="2" Text="帮助" x:Name="CheckHiddenOtherHelp" Tag="UiHiddenOtherHelp" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="3" Text="关于与鸣谢" x:Name="CheckHiddenOtherAbout" Tag="UiHiddenOtherAbout" />
@@ -293,7 +298,7 @@
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="5" Text="反馈" x:Name="CheckHiddenOtherFeedback" Tag="UiHiddenOtherFeedback" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="6" Text="新功能投票" x:Name="CheckHiddenOtherVote" Tag="UiHiddenOtherVote" />
                         <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="特定功能" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="2" Text="邮箱隐藏" x:Name="CheckLauncherEmail" Tag="UiLauncherEmail" ToolTip="隐藏第三方登录的账号邮箱显示，并尽量将邮箱打码，以避免隐私泄露。&#xa;此选项的更改将在重启启动器后生效。" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="2" Text="邮箱隐藏" x:Name="CheckLauncherEmail" Tag="UiLauncherEmail" ToolTip="隐藏第三方登录的账号邮箱显示，以避免隐私泄露。&#xa;此选项的更改将在重启启动器后生效。" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="3" Text="版本管理" x:Name="CheckHiddenFunctionSelect" Tag="UiHiddenFunctionSelect" ToolTip="隐藏启动按钮下方的版本选择与版本设置入口。" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="4" Text="Mod 更新" x:Name="CheckHiddenFunctionModUpdate" Tag="UiHiddenFunctionModUpdate" ToolTip="禁止在 Mod 管理页面更新 Mod。" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="5" Text="功能隐藏" x:Name="CheckHiddenFunctionHidden" Tag="UiHiddenFunctionHidden" ToolTip="仅隐藏本选项卡，设置的禁用内容依然有效。&#xa;可以在保留个性化设置页面的情况下避免隐藏设置被修改。" />

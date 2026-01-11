@@ -197,7 +197,7 @@ Public Class MyListItem
             Return _Info
         End Get
         Set(value As String)
-            If _Info = value Then Exit Property
+            If _Info = value Then Return
             value = value.Replace(vbCr, "").Replace(vbLf, "")
             _Info = value
             LabInfo.Text = value
@@ -212,7 +212,7 @@ Public Class MyListItem
             Return _Logo
         End Get
         Set(value As String)
-            If _Logo = value Then Exit Property
+            If _Logo = value Then Return
             _Logo = value
             '删除旧 Logo
             If Not IsNothing(PathLogo) Then Children.Remove(PathLogo)
@@ -297,7 +297,7 @@ Public Class MyListItem
             Return _Type
         End Get
         Set(value As CheckType)
-            If _Type = value Then Exit Property
+            If _Type = value Then Return
             _Type = value
             '切换左栏大小
             ColumnCheck.Width = New GridLength(If(_Type = CheckType.None OrElse _Type = CheckType.Clickable, If(Height < 40, 4, 2), 6))
@@ -367,35 +367,36 @@ Public Class MyListItem
                     RaiseEvent Changed(Me, ChangedEventArgs)
                     If ChangedEventArgs.Handled Then
                         _Checked = RawValue
-                        Exit Sub
+                        Return
                     End If
                 End If
                 _Checked = value
             Else
-                If value = _Checked Then Exit Sub
+                If value = _Checked Then Return
                 _Checked = value
                 If IsInitialized Then
                     RaiseEvent Changed(Me, ChangedEventArgs)
                     If ChangedEventArgs.Handled Then
                         _Checked = RawValue
-                        Exit Sub
+                        Return
                     End If
                 End If
             End If
             If value Then
                 Dim CheckEventArgs As New RouteEventArgs(user)
                 RaiseEvent Check(Me, CheckEventArgs)
-                If CheckEventArgs.Handled Then Exit Sub
+                If CheckEventArgs.Handled Then Return
             End If
 
             '保证只有一个单选 ListItem 选中
 
             If Type = CheckType.RadioBox Then
-                If IsNothing(Parent) Then Exit Sub
+                If IsNothing(Parent) Then Return
                 Dim RadioboxList As New List(Of MyListItem)
                 Dim CheckedCount As Integer = 0
                 '收集控件列表与选中个数
                 For Each Control In CType(Parent, Object).Children
+                    Control = MyVirtualizingElement.TryInit(Control)
                     If TypeOf Control Is MyListItem AndAlso CType(Control, MyListItem).Type = CheckType.RadioBox Then
                         RadioboxList.Add(Control)
                         If Control.Checked Then CheckedCount += 1
@@ -502,15 +503,15 @@ Public Class MyListItem
 
     '触发点击事件
     Private Sub Button_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonUp
-        If Not IsMouseDown Then Exit Sub
+        If Not IsMouseDown Then Return
         RaiseEvent Click(sender, e)
-        If e.Handled Then Exit Sub
+        If e.Handled Then Return
         '触发自定义事件
-        If Not String.IsNullOrEmpty(EventType) Then
-            ModEvent.TryStartEvent(EventType, EventData)
+        If CustomEventService.GetEventType(sender) <> CustomEvent.EventType.None Then
+            RaiseCustomEvent()
             e.Handled = True
         End If
-        If e.Handled Then Exit Sub
+        If e.Handled Then Return
         '实际的单击处理
         Select Case Type
             Case CheckType.Clickable
@@ -537,26 +538,6 @@ Public Class MyListItem
         If ButtonStack IsNot Nothing Then ButtonStack.IsHitTestVisible = True
     End Sub
 
-    '实现自定义事件
-    Public Property EventType As String
-        Get
-            Return GetValue(EventTypeProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventTypeProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventTypeProperty As DependencyProperty = DependencyProperty.Register("EventType", GetType(String), GetType(MyListItem), New PropertyMetadata(Nothing))
-    Public Property EventData As String
-        Get
-            Return GetValue(EventDataProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventDataProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventDataProperty As DependencyProperty = DependencyProperty.Register("EventData", GetType(String), GetType(MyListItem), New PropertyMetadata(Nothing))
-
 #End Region
 
     Private StateLast As String
@@ -564,7 +545,7 @@ Public Class MyListItem
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp
         '菜单虚拟化检测
         If ContentHandler IsNot Nothing Then
-            ContentHandler(sender, e)
+            ContentHandler(Me, e)
             ContentHandler = Nothing
         End If
         '判断当前颜色
@@ -581,7 +562,7 @@ Public Class MyListItem
                 Time = 180
             End If
         End If
-        If StateLast = StateNew Then Exit Sub
+        If StateLast = StateNew Then Return
         StateLast = StateNew
         '触发颜色动画
         If IsLoaded AndAlso AniControlEnabled = 0 Then '防止默认属性变更触发动画
@@ -657,13 +638,14 @@ Public Class MyListItem
             SetResourceReference(ForegroundProperty, "ColorBrush1")
         End If
         ColumnPaddingRight.Width = New GridLength(MinPaddingRight)
-        If EventType = "打开帮助" AndAlso Not (Title <> "" AndAlso Info <> "") Then '#3266
+        If CustomEventService.GetEventType(Me) = CustomEvent.EventType.打开帮助 AndAlso Not (Title <> "" AndAlso Info <> "") Then '#3266
             Try
-                Dim Unused = New HelpEntry(GetEventAbsoluteUrls(EventData, EventType)(0)).SetToListItem(Me)
+                Dim Entry As New HelpEntry(CustomEvent.GetAbsoluteUrls(CustomEventService.GetEventData(Me), CustomEventService.GetEventType(Me))(0))
+                Entry.SetToListItem(Me)
             Catch ex As Exception
                 Log(ex, "设置帮助 MyListItem 失败", LogLevel.Msgbox)
-                EventType = Nothing
-                EventData = Nothing
+                CustomEventService.SetEventType(Me, CustomEvent.EventType.None)
+                CustomEventService.SetEventData(Me, "")
             End Try
         End If
     End Sub

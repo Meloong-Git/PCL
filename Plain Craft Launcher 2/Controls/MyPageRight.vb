@@ -3,16 +3,16 @@
     Public PageUuid As Integer = GetUuid()
 
     '“返回顶部” 按钮检测的滚动区域
-    Public Property PanScroll As MyScrollViewer
+    Public Property PanScroll As String '需要在 Loaded 之后才能获取到控件，所以不能用 Binding 直接绑定（#6664）
         Get
             Return GetValue(PanScrollProperty)
         End Get
-        Set(value As MyScrollViewer)
+        Set(value As String)
             SetValue(PanScrollProperty, value)
         End Set
     End Property
     Private Shared ReadOnly PanScrollProperty =
-        DependencyProperty.Register("PanScroll", GetType(MyScrollViewer), GetType(MyPageRight), New PropertyMetadata(Nothing))
+        DependencyProperty.Register("PanScroll", GetType(String), GetType(MyPageRight), New PropertyMetadata(Nothing))
 
     '当前状态
     Public Enum PageStates
@@ -33,7 +33,7 @@
             Return _PageState
         End Get
         Set(value As PageStates)
-            If _PageState = value Then Exit Property
+            If _PageState = value Then Return
             _PageState = value
             If ModeDebug Then Log("[UI] 页面状态切换为 " & GetStringFromEnum(value))
         End Set
@@ -106,7 +106,7 @@
     End Sub
     '重试
     Public Sub PageLoaderRestart(Optional Input As Object = Nothing, Optional IsForceRestart As Boolean = True) '由外部调用的重试
-        If Not PageLoaderAutoRun Then Exit Sub
+        If Not PageLoaderAutoRun Then Return
         If PageLoader.GetType.Name.StartsWithF("LoaderTask") Then
             PageLoader.Start(CType(PageLoader, Object).StartGetInput(Input, PageLoaderInputInvoke), IsForceRestart:=IsForceRestart)
         Else
@@ -130,12 +130,12 @@
         Select Case PageState
             Case PageStates.Empty
                 If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Aborted Then
-                    '如果加载器在进入页面时不启动（例如 HiPer 联机），那么在此时就会有 State = Waiting
+                    '如果加载器在进入页面时不启动（例如联机），那么在此时就会有 State = Waiting
                     PageState = PageStates.ContentEnter
                     TriggerEnterAnimation(PanAlways, If(PanContent, Child))
                 ElseIf PageLoader.State = LoadState.Loading Then
                     PageState = PageStates.LoaderWait
-                    AniStart(AaCode(AddressOf PageOnLoaderWaitFinished, 200), "PageRight PageChange " & PageUuid)
+                    AniStart(AaCode(AddressOf PageOnLoaderWaitFinished, 400), "PageRight PageChange " & PageUuid)
                 Else 'PageLoader.State = LoadState.Failed
                     PageState = PageStates.LoaderEnter
                     TriggerEnterAnimation(PanAlways, PanLoader)
@@ -147,12 +147,13 @@
                     TriggerEnterAnimation(If(PanContent, Child))
                 ElseIf PageLoader.State = LoadState.Loading Then
                     PageState = PageStates.LoaderWait
-                    AniStart(AaCode(AddressOf PageOnLoaderWaitFinished, 200), "PageRight PageChange " & PageUuid)
+                    AniStart(AaCode(AddressOf PageOnLoaderWaitFinished, 400), "PageRight PageChange " & PageUuid)
                 Else 'PageLoader.State = LoadState.Failed
                     PageState = PageStates.LoaderEnter
                     TriggerEnterAnimation(PanLoader)
                 End If
-            Case PageStates.ContentEnter '重复调用 PageOnEnter，直接忽略
+            Case PageStates.ContentEnter
+                '重复调用 PageOnEnter，直接忽略
             Case Else
                 Throw New Exception("在状态为 " & GetStringFromEnum(PageState) & " 时触发了 PageOnEnter 事件。")
         End Select
@@ -187,7 +188,7 @@
     ''' 需要立即切换至 Empty。
     ''' </summary>
     Public Sub PageOnForceExit()
-        If PageState = PageStates.Empty Then Exit Sub
+        If PageState = PageStates.Empty Then Return
         If ModeDebug Then Log("[UI] 已触发 PageOnForceExit")
         PageState = PageStates.Empty
         AniStop("PageRight PageChange " & PageUuid)
@@ -207,8 +208,8 @@
     Public Sub PageOnContentExit()
         If ModeDebug Then Log("[UI] 已触发 PageOnContentExit")
         If PageLoader IsNot Nothing AndAlso PageLoader.State = LoadState.Loading Then
-            Throw New Exception("在调用 PageOnContentExit 时，加载器不能为 Loading 状态")
             'Loading 的加载器可能触发进一步变化，难以预测会触发子页面的动画还是加载器完成的动画
+            Throw New Exception("在调用 PageOnContentExit 时，加载器不能为 Loading 状态")
         End If
         Select Case PageState
             Case PageStates.ContentEnter, PageStates.ContentStay
@@ -219,8 +220,12 @@
             Case PageStates.LoaderEnter, PageStates.LoaderStayForce, PageStates.LoaderStay
                 PageState = PageStates.ContentExit
                 TriggerExitAnimation(PanLoader)
-            Case PageStates.LoaderWait, PageStates.Empty
+            Case PageStates.LoaderWait
                 PageOnEnter()
+            Case PageStates.Empty
+                '可能是在离开页面后，其他后台线程调用了本函数，此时不应触发 PageOnEnter()
+                '例如：在加入联机房间后，切换到其他页面，然后联机房间被解散
+                If IsLoaded Then PageOnEnter()
         End Select
     End Sub
 
@@ -302,7 +307,7 @@
     Private Sub PageLoaderState(sender As Object, NewState As LoadState, OldState As LoadState)
         Select Case NewState
             Case LoadState.Failed, LoadState.Loading
-                If OldState = LoadState.Failed OrElse OldState = LoadState.Loading Then Exit Sub
+                If OldState = LoadState.Failed OrElse OldState = LoadState.Loading Then Return
                 If ModeDebug Then Log("[UI] 已触发 PageLoaderState (Start/Refresh)")
                 '（重新）开始运行
                 '需要从部分状态切换到 ReloadExit
@@ -314,7 +319,7 @@
                         PageState = PageStates.ContentExit
                 End Select
             Case LoadState.Finished, LoadState.Aborted, LoadState.Waiting
-                If Not (OldState = LoadState.Failed OrElse OldState = LoadState.Loading) Then Exit Sub
+                If Not (OldState = LoadState.Failed OrElse OldState = LoadState.Loading) Then Return
                 If ModeDebug Then Log("[UI] 已触发 PageLoaderState (Stop/Abort)")
                 '运行结束
                 '需要从 LoaderWait 切换到 ContentEnter，或从 LoaderStay 切换到 LoaderExit
@@ -358,10 +363,10 @@
                 Else
                     Control.Opacity = 0
                     Control.RenderTransform = New TranslateTransform(0, -16)
-                    AniList.Add(AaOpacity(Control, 1, 150, Delay, New AniEaseOutFluent(AniEasePower.Weak)))
+                    AniList.Add(AaOpacity(Control, 1, 100, Delay, New AniEaseOutFluent(AniEasePower.Weak)))
                     AniList.Add(AaTranslateY(Control, 5, 250, Delay, New AniEaseOutFluent))
                     AniList.Add(AaTranslateY(Control, 11, 350, Delay, New AniEaseOutBack))
-                    Delay += 40
+                    Delay += 25
                 End If
             Next
         Next
@@ -373,7 +378,7 @@
         End If
         '结束
         AniList.Add(AaCode(Sub() PageOnEnterAnimationFinished(),, True))
-        AniStart(AniList, "PageRight PageChange " & PageUuid)
+        AniStart(AniList, "PageRight PageChange " & PageUuid, True)
     End Sub
 
     '逐个退出动画
@@ -387,9 +392,9 @@
                     CType(Control, MyExtraTextButton).Show = False
                 Else
                     Control.IsHitTestVisible = False
-                    AniList.Add(AaOpacity(Control, -1, 90, Delay))
-                    AniList.Add(AaTranslateY(Control, -6, 90, Delay))
-                    Delay += 20
+                    AniList.Add(AaOpacity(Control, -1, 70, Delay))
+                    AniList.Add(AaTranslateY(Control, -6, 70, Delay))
+                    Delay += 15
                 End If
             Next
         Next
@@ -423,7 +428,7 @@
         Return AllControls.Except(DisabledPageAnimControls)
     End Function
     Private Sub _GetAllAnimControls(Element As FrameworkElement, ByRef AllControls As List(Of FrameworkElement), IgnoreInvisibility As Boolean)
-        If Not IgnoreInvisibility AndAlso Element.Visibility = Visibility.Collapsed Then Exit Sub
+        If Not IgnoreInvisibility AndAlso Element.Visibility = Visibility.Collapsed Then Return
         If TypeOf Element Is MyCard OrElse TypeOf Element Is MyHint OrElse TypeOf Element Is MyExtraTextButton OrElse TypeOf Element Is TextBlock OrElse TypeOf Element Is MyTextButton Then
             AllControls.Add(Element)
         ElseIf TypeOf Element Is ContentControl Then

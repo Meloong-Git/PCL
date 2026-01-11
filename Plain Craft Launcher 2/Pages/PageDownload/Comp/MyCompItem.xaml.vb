@@ -3,23 +3,13 @@
 #Region "基础属性"
     Public Uuid As Integer = GetUuid()
 
-    'Logo
-    Public Property Logo As String
-        Get
-            Return PathLogo.Source
-        End Get
-        Set(value As String)
-            PathLogo.Source = value
-        End Set
-    End Property
-
     '标题
     Public Property Title As String
         Get
             Return LabTitle.Text
         End Get
         Set(value As String)
-            If LabTitle.Text = value Then Exit Property
+            If LabTitle.Text = value Then Return
             LabTitle.Text = value
         End Set
     End Property
@@ -30,7 +20,7 @@
             Return If(LabTitleRaw?.Text, "")
         End Get
         Set(value As String)
-            If LabTitleRaw.Text = value Then Exit Property
+            If LabTitleRaw.Text = value Then Return
             LabTitleRaw.Text = value
             LabTitleRaw.Visibility = If(value = "", Visibility.Collapsed, Visibility.Visible)
         End Set
@@ -42,7 +32,7 @@
             Return LabInfo.Text
         End Get
         Set(value As String)
-            If LabInfo.Text = value Then Exit Property
+            If LabInfo.Text = value Then Return
             LabInfo.Text = value
         End Set
     End Property
@@ -64,17 +54,17 @@
 
     'Tag
     Public WriteOnly Property Tags As List(Of String)
-        Set(value As List(Of String))
+        Set(Tags As List(Of String))
             PanTags.Children.Clear()
-            PanTags.Visibility = If(value.Any(), Visibility.Visible, Visibility.Collapsed)
-            For Each TagText In value
-                Dim NewTag = GetObjectFromXML(
-                "<Border xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
-                         Background=""#11000000"" Padding=""3,1"" CornerRadius=""3"" Margin=""0,0,3,0"" 
-                         SnapsToDevicePixels=""True"" UseLayoutRounding=""False"">
-                   <TextBlock Text=""" & TagText & """ Foreground=""#868686"" FontSize=""11"" />
-                </Border>")
-                PanTags.Children.Add(NewTag)
+            PanTags.Visibility = If(Tags.Any(), Visibility.Visible, Visibility.Collapsed)
+            For Each TagText In Tags
+                Dim BorderTag As New Border With {
+                    .Background = New MyColor("#11000000"), .Padding = New Thickness(3, 1, 3, 1), .CornerRadius = New CornerRadius(3),
+                    .Margin = New Thickness(0, 0, 3, 0), .SnapsToDevicePixels = True, .UseLayoutRounding = False}
+                Dim LabTag As New TextBlock With {
+                    .Text = TagText, .Foreground = New MyColor("#868686"), .FontSize = 11}
+                BorderTag.Child = LabTag
+                PanTags.Children.Add(BorderTag)
             Next
         End Set
     End Property
@@ -88,7 +78,7 @@
     Private Sub Button_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonUp
         If IsMouseDown Then
             RaiseEvent Click(sender, e)
-            If e.Handled Then Exit Sub
+            If e.Handled Then Return
             Log("[Control] 按下资源工程列表项：" & LabTitle.Text)
         End If
     End Sub
@@ -97,7 +87,7 @@
         Dim Titles As New List(Of String)
         If FrmMain.PageCurrent.Page = FormMain.PageType.CompDetail Then
             For Each Card As MyCard In FrmDownloadCompDetail.PanResults.Children
-                If Card.Title <> "" AndAlso Not Card.IsSwaped Then Titles.Add(Card.Title)
+                If Card.Title <> "" AndAlso Not Card.IsSwapped Then Titles.Add(Card.Title)
             Next
             Log("[Comp] 记录当前已展开的卡片：" & String.Join("、", Titles))
             FrmMain.PageCurrent.Additional(1) = Titles
@@ -185,7 +175,7 @@
     ''' </summary>
     Public Property CanInteraction As Boolean = True
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp
-        If Not CanInteraction Then Exit Sub
+        If Not CanInteraction Then Return
         '判断当前颜色
         Dim StateNew As String, Time As Integer
         If IsMouseOver Then
@@ -200,7 +190,7 @@
             StateNew = "Idle"
             Time = 180
         End If
-        If StateLast = StateNew Then Exit Sub
+        If StateLast = StateNew Then Return
         StateLast = StateNew
         '触发颜色动画
         If IsLoaded AndAlso AniControlEnabled = 0 Then '防止默认属性变更触发动画
@@ -208,9 +198,9 @@
             Dim Ani As New List(Of AniData)
             If IsMouseOver Then
                 Ani.AddRange({
-                             AaColor(RectBack, Border.BackgroundProperty, If(IsMouseDown, "ColorBrush6", "ColorBrushBg1"), Time),
-                             AaOpacity(RectBack, 1 - RectBack.Opacity, Time,, New AniEaseOutFluent)
-                         })
+                    AaColor(RectBack, Border.BackgroundProperty, If(IsMouseDown, "ColorBrush6", "ColorBrushBg1"), Time),
+                    AaOpacity(RectBack, 1 - RectBack.Opacity, Time,, New AniEaseOutFluent)
+                })
                 If IsMouseDown Then
                     Ani.Add(AaScaleTransform(RectBack, 0.996 - CType(RectBack.RenderTransform, ScaleTransform).ScaleX, Time * 1.2,, New AniEaseOutFluent))
                 Else
@@ -218,11 +208,11 @@
                 End If
             Else
                 Ani.AddRange({
-                             AaOpacity(RectBack, -RectBack.Opacity, Time),
-                             AaColor(RectBack, Border.BackgroundProperty, If(IsMouseDown, "ColorBrush6", "ColorBrush7"), Time),
-                             AaScaleTransform(RectBack, 0.996 - CType(RectBack.RenderTransform, ScaleTransform).ScaleX, Time,, New AniEaseOutFluent),
-                             AaScaleTransform(RectBack, -0.196, 1,,, True)
-                         })
+                    AaOpacity(RectBack, -RectBack.Opacity, Time),
+                    AaColor(RectBack, Border.BackgroundProperty, If(IsMouseDown, "ColorBrush6", "ColorBrush7"), Time),
+                    AaScaleTransform(RectBack, 0.996 - CType(RectBack.RenderTransform, ScaleTransform).ScaleX, Time,, New AniEaseOutFluent),
+                    AaScaleTransform(RectBack, -0.196, 1,,, True)
+                })
             End If
             AniStart(Ani, "CompItem Color " & Uuid)
         Else

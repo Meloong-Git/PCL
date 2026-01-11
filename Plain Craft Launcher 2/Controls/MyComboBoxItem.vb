@@ -35,7 +35,7 @@
             NewFontOpacity = 0.4
             Time = AnimationTimeOut
         End If
-        If BackColorName = NewBackColorName AndAlso FontOpacity = NewFontOpacity Then Exit Sub
+        If BackColorName = NewBackColorName AndAlso FontOpacity = NewFontOpacity Then Return
         BackColorName = NewBackColorName
         FontOpacity = NewFontOpacity
         '触发颜色动画

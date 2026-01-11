@@ -1,7 +1,7 @@
 ﻿<local:MyPageLeft
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:PCL;assembly=" x:Class="PageSelectLeft"
-             AnimatedControl="{Binding ElementName=PanList, Mode=OneWay}">
+             AnimatedControl="PanList">
     <AdornerDecorator>
         <Grid>
             <Grid.RowDefinitions>

@@ -5,11 +5,6 @@ Imports System.Drawing.Imaging
 Public Class MyBitmap
 
     ''' <summary>
-    ''' 位图缓存。
-    ''' </summary>
-    Public Shared BitmapCache As New Concurrent.ConcurrentDictionary(Of String, MyBitmap)
-
-    ''' <summary>
     ''' 存储的图片
     ''' </summary>
     Public Pic As System.Drawing.Bitmap
@@ -30,14 +25,17 @@ Public Class MyBitmap
     End Operator
     Public Shared Widening Operator CType(Image As MyBitmap) As ImageSource
         If Image Is Nothing Then Return Nothing
-        Dim Bitmap = Image.Pic
-        Dim rect = New System.Drawing.Rectangle(0, 0, Bitmap.Width, Bitmap.Height)
-        Dim bitmapData = Bitmap.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb)
+        Dim BitmapPic As System.Drawing.Bitmap = Image.Pic
+        Dim rect = New System.Drawing.Rectangle(0, 0, BitmapPic.Width, BitmapPic.Height)
+        Dim bitmapData = BitmapPic.LockBits(rect, ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb)
         Try
-            Dim size = rect.Width * rect.Height * 4
-            Return BitmapSource.Create(Bitmap.Width, Bitmap.Height, Bitmap.HorizontalResolution, Bitmap.VerticalResolution, PixelFormats.Bgra32, Nothing, bitmapData.Scan0, size, bitmapData.Stride)
+            Dim Result = BitmapSource.Create(BitmapPic.Width, BitmapPic.Height, BitmapPic.HorizontalResolution, BitmapPic.VerticalResolution,
+                                       PixelFormats.Bgra32, Nothing, bitmapData.Scan0,
+                                       rect.Width * rect.Height * 4, bitmapData.Stride)
+            Result.Freeze()
+            Return Result
         Finally
-            Bitmap.UnlockBits(bitmapData)
+            BitmapPic.UnlockBits(bitmapData)
         End Try
     End Operator
     Public Shared Widening Operator CType(Image As System.Drawing.Bitmap) As MyBitmap
@@ -65,11 +63,12 @@ Public Class MyBitmap
             FilePathOrResourceName = FilePathOrResourceName.Replace("pack://application:,,,/images/", PathImage)
             If FilePathOrResourceName.StartsWithF(PathImage) Then
                 '使用缓存
-                If BitmapCache.ContainsKey(FilePathOrResourceName) Then
-                    Pic = BitmapCache(FilePathOrResourceName).Pic
+                Static Cache As New Concurrent.ConcurrentDictionary(Of String, MyBitmap)
+                If Cache.ContainsKey(FilePathOrResourceName) Then
+                    Pic = Cache(FilePathOrResourceName).Pic
                 Else
                     Pic = New MyBitmap(CType((New ImageSourceConverter).ConvertFromString(FilePathOrResourceName), ImageSource))
-                    BitmapCache.TryAdd(FilePathOrResourceName, Pic)
+                    Cache.TryAdd(FilePathOrResourceName, Pic)
                 End If
             Else
                 '使用这种自己接管 FileStream 的方法加载才能解除文件占用
@@ -92,7 +91,11 @@ Public Class MyBitmap
             Pic = My.Application.TryFindResource(FilePathOrResourceName)
             If Pic Is Nothing Then
                 Pic = New System.Drawing.Bitmap(1, 1)
-                Throw New Exception($"加载 MyBitmap 失败（{FilePathOrResourceName}）", ex)
+                If TypeOf ex Is ArgumentException Then
+                    Throw New Exception($"图片格式不支持，或图片文件损坏（{FilePathOrResourceName}）", ex)
+                Else
+                    Throw New Exception($"加载 MyBitmap 意外失败（{FilePathOrResourceName}）", ex)
+                End If
             Else
                 Log(ex, $"指定类型有误的 MyBitmap 加载（{FilePathOrResourceName}）", LogLevel.Developer)
                 Exit Try

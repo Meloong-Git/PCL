@@ -27,7 +27,7 @@
     ''' 获取当前页面的登录信息。
     ''' </summary>
     Public Shared Function GetLoginData() As McLoginServer
-        Dim Server As String = If(IsNothing(McVersionCurrent), Setup.Get("CacheAuthServerServer"), Setup.Get("VersionServerAuthServer", Version:=McVersionCurrent)) & "/authserver"
+        Dim Server As String = If(IsNothing(McInstanceSelected), Setup.Get("CacheAuthServerServer"), Setup.Get("VersionServerAuthServer", Instance:=McInstanceSelected)) & "/authserver"
         If FrmLoginAuth Is Nothing Then
             Return New McLoginServer(McLoginType.Auth) With {.Token = "Auth", .BaseUrl = Server, .UserName = "", .Password = "", .Description = "Authlib-Injector", .Type = McLoginType.Auth}
         Else
@@ -71,15 +71,15 @@
     End Sub
     Private Sub Btn_Click(sender As Object, e As EventArgs) Handles BtnLink.Click
         If BtnLink.Content = "注册账号" Then
-            OpenWebsite(If(McVersionCurrent IsNot Nothing, Setup.Get("VersionServerAuthRegister", Version:=McVersionCurrent), Setup.Get("CacheAuthServerRegister")))
+            OpenWebsite(If(McInstanceSelected IsNot Nothing, Setup.Get("VersionServerAuthRegister", Instance:=McInstanceSelected), Setup.Get("CacheAuthServerRegister")))
         Else
-            Dim Website As String = If(McVersionCurrent IsNot Nothing, Setup.Get("VersionServerAuthRegister", Version:=McVersionCurrent), Setup.Get("CacheAuthServerRegister"))
+            Dim Website As String = If(McInstanceSelected IsNot Nothing, Setup.Get("VersionServerAuthRegister", Instance:=McInstanceSelected), Setup.Get("CacheAuthServerRegister"))
             OpenWebsite(Website.Replace("/auth/register", "/auth/forgot"))
         End If
     End Sub
     '切换注册按钮可见性
     Private Sub ReloadRegisterButton() Handles Me.Loaded
-        Dim Address As String = If(McVersionCurrent IsNot Nothing, Setup.Get("VersionServerAuthRegister", Version:=McVersionCurrent), Setup.Get("CacheAuthServerRegister"))
+        Dim Address As String = If(McInstanceSelected IsNot Nothing, Setup.Get("VersionServerAuthRegister", Instance:=McInstanceSelected), Setup.Get("CacheAuthServerRegister"))
         BtnLink.Visibility = If(String.IsNullOrEmpty(New ValidateHttp().Validate(Address)), Visibility.Visible, Visibility.Collapsed)
     End Sub
 

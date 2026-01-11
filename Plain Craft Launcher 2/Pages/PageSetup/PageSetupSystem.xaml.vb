@@ -15,7 +15,7 @@
 #End If
 
         '非重复加载部分
-        If IsLoaded Then Exit Sub
+        If IsLoaded Then Return
         IsLoaded = True
 
         AniControlEnabled += 1
@@ -35,7 +35,7 @@
 
         'Mod 与整合包
         ComboDownloadTranslateV2.SelectedIndex = Setup.Get("ToolDownloadTranslateV2")
-        'ComboDownloadMod.SelectedIndex = Setup.Get("ToolDownloadMod")
+        ComboDownloadMod.SelectedIndex = Setup.Get("ToolDownloadMod")
         ComboModLocalNameStyle.SelectedIndex = Setup.Get("ToolModLocalNameStyle")
         CheckDownloadIgnoreQuilt.Checked = Setup.Get("ToolDownloadIgnoreQuilt")
 
@@ -50,6 +50,7 @@
         ComboSystemUpdate.SelectedIndex = Setup.Get("SystemSystemUpdate")
         ComboSystemActivity.SelectedIndex = Setup.Get("SystemSystemActivity")
         TextSystemCache.Text = Setup.Get("SystemSystemCache")
+        CheckSystemTelemetry.Checked = Setup.Get("SystemSystemTelemetry")
 
         '调试选项
         CheckDebugMode.Checked = Setup.Get("SystemDebugMode")
@@ -81,9 +82,10 @@
             Setup.Reset("SystemSystemCache")
             Setup.Reset("SystemSystemUpdate")
             Setup.Reset("SystemSystemActivity")
+            Setup.Reset("SystemSystemTelemetry")
 
             Log("[Setup] 已初始化启动器页设置")
-            Hint("已初始化启动器页设置！", HintType.Finish, False)
+            Hint("已初始化启动器页设置！", HintType.Green, False)
         Catch ex As Exception
             Log(ex, "初始化启动器页设置失败", LogLevel.Msgbox)
         End Try
@@ -92,13 +94,13 @@
     End Sub
 
     '将控件改变路由到设置改变
-    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckDebugMode.Change, CheckDebugDelay.Change, CheckDebugSkipCopy.Change, CheckUpdateRelease.Change, CheckUpdateSnapshot.Change, CheckHelpChinese.Change, CheckDownloadIgnoreQuilt.Change, CheckDownloadCert.Change
+    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckDebugMode.Change, CheckDebugDelay.Change, CheckDebugSkipCopy.Change, CheckUpdateRelease.Change, CheckUpdateSnapshot.Change, CheckHelpChinese.Change, CheckDownloadIgnoreQuilt.Change, CheckDownloadCert.Change, CheckSystemTelemetry.Change
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Checked)
     End Sub
     Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderDebugAnim.Change, SliderDownloadThread.Change, SliderDownloadSpeed.Change
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value)
     End Sub
-    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboDownloadVersion.SelectionChanged, ComboModLocalNameStyle.SelectionChanged, ComboDownloadTranslateV2.SelectionChanged, ComboSystemUpdate.SelectionChanged, ComboSystemActivity.SelectionChanged, ComboDownloadSource.SelectionChanged
+    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboDownloadVersion.SelectionChanged, ComboModLocalNameStyle.SelectionChanged, ComboDownloadTranslateV2.SelectionChanged, ComboSystemUpdate.SelectionChanged, ComboSystemActivity.SelectionChanged, ComboDownloadSource.SelectionChanged, ComboDownloadMod.SelectionChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex)
     End Sub
     Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextSystemCache.ValidatedTextChanged
@@ -124,7 +126,7 @@
         SliderDebugAnim.GetHintText = Function(v) If(v > 29, "关闭", (v / 10 + 0.1) & "x")
     End Sub
     Private Sub SliderDownloadThread_PreviewChange(sender As Object, e As RouteEventArgs) Handles SliderDownloadThread.PreviewChange
-        If SliderDownloadThread.Value < 100 Then Exit Sub
+        If SliderDownloadThread.Value < 100 Then Return
         If Not Setup.Get("HintDownloadThread") Then
             Setup.Set("HintDownloadThread", True)
             MyMsgBox("如果设置过多的下载线程，可能会导致下载时出现非常严重的卡顿。" & vbCrLf &
@@ -134,7 +136,7 @@
 
     '识别码/解锁码替代入口
     Private Sub BtnSystemIdentify_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSystemIdentify.Click
-        PageOtherAbout.CopyUniqueAddress()
+        PageOtherAbout.CopyIdentify()
     End Sub
     Private Sub BtnSystemUnlock_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSystemUnlock.Click
         DonateCodeInput()
@@ -147,8 +149,8 @@
 
     '自动更新
     Private Sub ComboSystemActivity_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboSystemActivity.SelectionChanged
-        If AniControlEnabled <> 0 Then Exit Sub
-        If ComboSystemActivity.SelectedIndex <> 2 Then Exit Sub
+        If AniControlEnabled <> 0 Then Return
+        If ComboSystemActivity.SelectedIndex <> 2 Then Return
         If MyMsgBox("若选择此项，即使在将来出现严重问题时，你也无法获取相关通知。" & vbCrLf &
                     "例如，如果发现某个版本游戏存在严重 Bug，你可能就会因为无法得到通知而导致无法预知的后果。" & vbCrLf & vbCrLf &
                     "一般选择 仅在有重要通知时显示公告 就可以让你尽量不受打扰了。" & vbCrLf &
@@ -157,8 +159,8 @@
         End If
     End Sub
     Private Sub ComboSystemUpdate_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboSystemUpdate.SelectionChanged
-        If AniControlEnabled <> 0 Then Exit Sub
-        If ComboSystemUpdate.SelectedIndex <> 3 Then Exit Sub
+        If AniControlEnabled <> 0 Then Return
+        If ComboSystemUpdate.SelectedIndex <> 3 Then Return
         If MyMsgBox("若选择此项，即使在启动器将来出现严重问题时，你也无法获取更新并获得修复。" & vbCrLf &
                     "例如，如果官方修改了登录方式，从而导致现有启动器无法登录，你可能就会因为无法更新而无法开始游戏。" & vbCrLf & vbCrLf &
                     "一般选择 仅在有重大漏洞更新时显示提示 就可以让你尽量不受打扰了。" & vbCrLf &

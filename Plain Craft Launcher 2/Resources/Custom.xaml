@@ -3,7 +3,7 @@
      下列内容均基于 WPF 框架。你可以在继续之前先尝试自学 XAML 与 WPF 的基础，这能让你更轻松地理解下列内容。
      你也可以使用 Ctrl + F 快速查找。例如，若需要改变文本颜色，则搜索 “颜色” 即可。 -->
 
-<local:MyCard Title="纯文本" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="纯文本" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="每个 local:MyCard 代表一张卡片，你可以添加、删除格式类似的 MyCard 来添加多个卡片。每个 TextBlock 代表一段文本，你可以在 Text 属性中书写任何你想写的内容，也可以自行添加更多的 TextBlock。" />
@@ -14,17 +14,17 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="卡片、提示条" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="卡片、提示条" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
-        <local:MyHint Text="local:MyHint 代表提示条，它默认是警告样式。" />
-        <local:MyHint Margin="0,8,0,2" IsWarn="False"
-                    Text="将提示条的 IsWarn 属性改为 False 即可改为提示样式。&#xA;使用左边的那堆字符可以在任意地方手动换行，如果需要使用等号、引号等特殊字符，可以自行百度 XAML 转义字符。" />
+        <local:MyHint Text="local:MyHint 代表提示条。" />
+        <local:MyHint Margin="0,8,0,2" Theme="Blue"
+                    Text="将提示条的 Theme 属性改为 Blue、Yellow 或 Red 即可修改配色。&#xA;使用左边的那堆字符可以在任意地方手动换行，如果需要使用等号、引号等特殊字符，可以自行百度 XAML 转义字符。" />
         <TextBlock TextWrapping="Wrap" Margin="0,6,0,0"
-                    Text="卡片（local:MyCard）的 Title 属性决定了它的标题。&#xA;为卡片添加 CanSwap 属性让它可以被折叠，True 代表是，False 代表否。在此基础上，再使用 IsSwaped 属性调整它是否默认被折叠。" />
+                    Text="卡片（local:MyCard）的 Title 属性决定了它的标题。&#xA;为卡片添加 CanSwap 属性让它可以被折叠，True 代表是，False 代表否。在此基础上，再使用 IsSwapped 属性调整它是否默认被折叠。" />
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="长宽属性、图片" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="长宽属性、图片" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4" Width="320" HorizontalAlignment="Right"
                     Text="任意项目都可以添加 Width 与 Height 属性来控制宽高。HorizontalAlignment 属性可以控制对齐：Center 代表居中，Right 代表居右，例如这段文本就被居右了。" />
@@ -34,7 +34,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="按钮" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="按钮" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="添加 local:MyButton 即可新建一个按钮。你需要限定它的尺寸与位置，并通过 Padding 属性进一步控制它的内边距。" />
@@ -53,91 +53,66 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="事件 1：打开网页、弹出窗口" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
-    <StackPanel Margin="25,40,23,15">
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
+<local:MyCard Title="自定义事件" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
+	<StackPanel Margin="25,40,23,15">
+		<TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
                     Text="将按钮的 EventType 属性设为 打开网页，然后在 EventData 属性中写入网址，即可通过点击按钮打开网页。" />
-        <local:MyButton Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0"
+		<local:MyButton Height="35" HorizontalAlignment="Left" Padding="20,0,20,0"
                     Text="打开 Minecraft Wiki" EventType="打开网页" EventData="https://zh.minecraft.wiki/" />
-        <TextBlock TextWrapping="Wrap" Margin="0,10,0,10"
+		<TextBlock TextWrapping="Wrap" Margin="0,10,0,10"
                     Text="或者将 EventType 属性改为 弹出窗口，然后在 EventData 属性中写入弹窗的标题与内容……" />
-        <local:MyButton Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0"
+		<local:MyButton Width="140" Height="35" HorizontalAlignment="Left" Padding="13,0,13,0"
                     Text="显示一个弹窗" EventType="弹出窗口" EventData="这是标题|标题与内容以竖线间隔。\n你也可以直接在其中换行。" />
-        <TextBlock TextWrapping="Wrap" Margin="0,10,0,0"
+		<TextBlock TextWrapping="Wrap" Margin="0,10,0,0"
                     Text="local:MyTextButton 同样可以设置 EventType 与 EventData 让它具有特定功能。" />
-        <local:MyTextButton Margin="0,8,0,0" HorizontalAlignment="Center"
-                    Text="点击打开知乎" EventType="打开网页" EventData="https://www.zhihu.com/" />
-    </StackPanel>
+		<local:MyTextButton Margin="0,8,0,0" HorizontalAlignment="Center"
+                    Text="点击打开哔哩哔哩" EventType="打开网页" EventData="https://www.bilibili.com/" />
+		<TextBlock TextWrapping="Wrap" Margin="0,30,0,0"
+                    Text="自定义事件的详细用法请参考下方的页面。" />
+		<local:MyListItem Margin="-5,4,-5,5"
+		                  EventType="打开帮助" EventData="个性化/自定义事件.json" />
+	</StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="事件 2：启动游戏" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
-    <StackPanel Margin="25,40,23,15">
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
-                    Text="将 EventType 设置为 启动游戏，EventData 设置为具体的游戏版本，即可通过点击按钮启动游戏。如果当前游戏文件夹没有该版本，则无法启动。" />
-        <local:MyButton Margin="0,4,0,10" Width="250" Height="35"
-                    Text="启动 Minecraft 1.12.2" EventType="启动游戏" EventData="1.12.2" />
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
-                    Text="在 EventData 后面添加一条竖线（|），竖线后填写服务器 IP，即可在启动该版本的同时自动进入服务器。" />
-        <local:MyButton Margin="0,4,0,0" Width="250" Height="35"
-                    Text="启动 1.20.1 并进入 Hypixel" EventType="启动游戏" EventData="1.20.1|mc.hypixel.net" ToolTip="服务器 IP：mc.hypixel.net" />
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
-                    Text="在 EventData 中填写 \current，表示启动当前被选中的游戏版本，同样可以在后面填写服务器 IP。" />
-        <local:MyButton Margin="0,4,0,10" Width="250" Height="35"
-                    Text="启动当前选中版本并进入 Hypixel" EventType="启动游戏" EventData="\current|mc.hypixel.net" ToolTip="启动当前版本" />
-    </StackPanel>
+<local:MyCard Title="替换标记" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
+	<StackPanel Margin="25,40,23,10">
+		<local:MyListItem Margin="-5,0,-5,8"
+		                  EventType="打开帮助" EventData="个性化/替换标记.json" />
+	</StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="事件 3：执行命令" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
-    <StackPanel Margin="25,40,23,15">
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
-                    Text="将 EventType 设置为 执行命令（或 打开文件），EventData 设置为文件路径，即可点击打开特定文件或启动程序。" />
-        <local:MyButton Margin="0,4,0,8" Width="200" Height="35"
-                    Text="打开记事本" EventType="执行命令" EventData="notepad.exe" />
-        <TextBlock TextWrapping="Wrap" Margin="0,4,0,0"
-                    Text="如果能在 PCL 文件夹中找到该文件，则会优先打开 PCL 文件夹中的文件。当然，你可以使用例如 C:\ 开头的绝对路径。" />
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
-                    Text="此外，PCL 会将文件中的 “花括号 path” 替换为 PCL 可执行文件所在文件夹（{path}），可以用于执行特定程序或加载图片。" />
-        <local:MyButton Margin="0,4,0,10" Width="200" Height="35"
-                    Text="打开 PCL 日志" EventType="执行命令" EventData="Log1.txt" ToolTip="PCL 的日志文件就在 PCL 文件夹内，且名为 Log1.txt" />
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
-                    Text="就像为游戏指定服务器 IP 一样，你也可以在 EventData 的竖线后为程序添加启动参数。" />
-        <local:MyButton Margin="0,4,0,0" Width="200" Height="35"
-                    Text="定位游戏启动脚本" EventType="执行命令" EventData="explorer.exe|/select,LatestLaunch.bat" ToolTip="PCL 会将上一次启动 MC 的脚本保存在 PCL 文件夹内，且名为 LatestLaunch.bat。&#xA;点击按钮会打开文件管理器，并且借助参数要求它选中这个文件。" />
-    </StackPanel>
+<local:MyCard Title="进阶：高级自定义事件" Margin="0,0,0,15" CanSwap="True" IsSwapped="{variable:TutorialCardSwap:True}">
+	<StackPanel Margin="25,40,23,10">
+		<TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
+            Text="你可以让一个控件触发多个事件。下方的例子展示了连续触发多个事件搭配 {variable} 替换标记的效果。" />
+		<local:MyButton Height="35" HorizontalAlignment="Left" Padding="20,0,20,0" Margin="0,0,0,10"
+            Text="隐藏下方的百度 Logo" Visibility="{variable:TutorialVisibility1:Visible}">
+			<local:CustomEventService.Events>
+				<local:CustomEventCollection>
+					<local:CustomEvent Type="修改变量" Data="TutorialVisibility1|Collapsed|-" />
+					<local:CustomEvent Type="修改变量" Data="TutorialVisibility2|Visible|-" />
+					<local:CustomEvent Type="修改变量" Data="TutorialCardSwap|False|-" />
+					<local:CustomEvent Type="刷新页面" Data="-" />
+				</local:CustomEventCollection>
+			</local:CustomEventService.Events>
+		</local:MyButton>
+		<local:MyButton Height="35" HorizontalAlignment="Left" Padding="20,0,20,0" Margin="0,0,0,10"
+            Text="再次显示 Logo 并折叠卡片" Visibility="{variable:TutorialVisibility2:Collapsed}">
+			<local:CustomEventService.Events>
+				<local:CustomEventCollection>
+					<local:CustomEvent Type="修改变量" Data="TutorialVisibility1|Visible|-" />
+					<local:CustomEvent Type="修改变量" Data="TutorialVisibility2|Collapsed|-" />
+					<local:CustomEvent Type="修改变量" Data="TutorialCardSwap|True|-" />
+					<local:CustomEvent Type="刷新页面" Data="-" />
+				</local:CustomEventCollection>
+			</local:CustomEventService.Events>
+		</local:MyButton>
+		<local:MyImage Height="50" HorizontalAlignment="Left" Margin="0,0,0,10" Visibility="{variable:TutorialVisibility1:Visible}"
+            Source="https://www.baidu.com/img/flexible/logo/pc/result.png" />
+	</StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="事件 4：其他事件类型" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
-    <StackPanel Margin="25,40,23,15">
-        <TextBlock Margin="0,4,0,6" FontWeight="Bold"
-                    Text="EventType 共有以下种类：" />
-        <TextBlock Margin="0,0,0,4"
-                    Text="· 打开网页、启动游戏、打开文件：已在上方的卡片中介绍" />
-        <local:MyButton Margin="0,5,0,6" Width="250" Height="35"
-                    Text="查看 PCL 源代码" EventType="打开网页" EventData="https://github.com/Hex-Dragon/PCL2/blob/main/Plain%20Craft%20Launcher%202/FormMain.xaml.vb"/>
-        <TextBlock Margin="0,0,0,4"
-                    Text="· 今日人品、清理垃圾、内存优化、安装整合包：触发对应功能" />
-        <TextBlock Margin="0,0,0,4"
-                    Text="· 复制文本：将 EventData 中的内容复制到剪贴板" />
-        <TextBlock Margin="0,0,0,4"
-                    Text="· 刷新主页：点击重新加载主页。如果主页文件为联网更新，这会重新下载主页内容" />
-        <TextBlock Margin="0,0,0,4"
-                    Text="· 下载文件：在点击时要求选择文件保存位置，并且下载 EventData 的链接中的文件&#xa;  　　　　　EventData 中也能可选地指定文件名或目标文件夹，格式为：链接|文件名|文件夹" />
-        <local:MyButton Margin="0,5,0,6" Width="250" Height="35"
-                    Text="下载百度的 Logo" EventType="下载文件" EventData="https://www.baidu.com/img/flexible/logo/pc/result.png" />
-        <TextBlock Margin="0,4,0,4"
-                    Text="· 打开帮助：跳转到 EventData 对应的帮助文件（输入相对 Help 文件夹的路径）"/>
-        <local:MyButton Margin="0,5,0,6" Width="250" Height="35"
-                    Text="打开自定义帮助页面" EventType="打开帮助" EventData="帮助/自定义帮助.json"/>
-        <TextBlock Margin="0,4,0,4"
-                    Text="· 切换页面：强制切换到 PCL 的某一页面（尝试切换到不太对头的页面会出现不可预知的 Bug）&#xa;  　　　　　EventData 为 页面种类|次要页面种类（PageType|PageSubType，例如 1|1）&#xa;  　　　　　点击上方的 查看 PCL 源代码 按钮，在 1000 行左右的位置即可查找到对应数值"/>
-        <local:MyButton Margin="0,5,0,6" Width="250" Height="35"
-                    Text="切换到下载页面" EventType="切换页面" EventData="1|1"/>
-        <local:MyButton Margin="0,5,0,6" Width="250" Height="35"
-                    Text="切换到启动器设置" EventType="切换页面" EventData="3|2"/>
-    </StackPanel>
-</local:MyCard>
-
-<local:MyCard Title="StackPanel 横向布局" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="横向布局" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
                     Text="你需要使用 StackPanel 在一行里塞下多个按钮。你可以仅在这个教学卡片的基础上稍作调整，来实现自己的按钮布局。" />
@@ -162,7 +137,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="列表项 1：基础" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="列表项 1：基础" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="你也可以使用列表项 “local:MyListItem” 来替代按钮，其使用方式与按钮类似。" />
@@ -175,11 +150,11 @@
                     Logo="pack://application:,,,/images/Blocks/Grass.png"
                     EventType="打开帮助" EventData="帮助/自定义帮助.json" Type="Clickable" />
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
-                    Text="EventType、EventData 与按钮几乎一致，唯一不同的是，列表项不支持联网加载帮助文件。" />
+                    Text="EventType、EventData 与按钮几乎一致。唯一不同的是，列表项不支持联网加载帮助文件。" />
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="列表项 2：内置图片" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="列表项 2：内置图片" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="PCL 内置了一些 Minecraft 方块与物品图片，可以直接使用。"/>
@@ -217,7 +192,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="主题色" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="主题色" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,15"
                     Text="你可以用类似 {DynamicResource ColorBrush5} 的格式使用 PCL 当前的主题颜色，修改末尾的数字编号以改变颜色浓度。" />
@@ -238,19 +213,7 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="替换标记" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
-    <StackPanel Margin="25,40,23,15">
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
-                    Text="在花括号 {} 中写入特定内容，PCL 会在加载时对其进行替换。&#xa;例如，path 会被替换为 PCL 可执行文件所在文件夹（{path}），用于在 EventData 中指定特定文件，或是加载图片。" />
-        <local:MyHint Margin="0,6,0,10" Text="以下特性于 PCL 2.6.5 (299) 加入，不适用于更早版本的 PCL。" IsWarn="False" />
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
-                    Text="你也可以使用替换标记来获取随机内容：cave 会被替换为一条随机的回声洞内容，hint 则是 “你知道吗” 的内容。" />
-        <TextBlock TextWrapping="Wrap" Margin="10,6,0,5" Foreground="{DynamicResource ColorBrush3}"
-                    Text="你知道吗：{hint}" />
-    </StackPanel>
-</local:MyCard>
-
-<local:MyCard Title="进阶：Grid 布局" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="进阶：Grid 布局" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="如果要实现更复杂的布局，则必须使用 Grid。Grid 可以让按钮们自动适应窗口宽度：随意拉伸 PCL 窗口，按钮大小会自动改变。" />
@@ -273,9 +236,8 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="进阶：图标按钮" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="进阶：图标按钮" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
-        <local:MyHint Margin="0,0,0,10" Text="以下特性于 PCL 2.6.5 (299) 加入，不适用于更早版本的 PCL。" IsWarn="False" />
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,4"
                     Text="MyIconTextButton 是一种带有自定义矢量图标的按钮变体，它同样支持 EventType 与 EventData 属性。&#xa;通过设置 Logo 属性来控制它的图标，设置 LogoScale 属性还可以调整图标的缩放比例。" />
         <local:MyIconTextButton Margin="0,4,0,8" Height="35" HorizontalAlignment="Center"
@@ -299,13 +261,12 @@
     </StackPanel>
 </local:MyCard>
 
-<local:MyCard Title="进阶：联网主页" Margin="0,0,0,15" CanSwap="True" IsSwaped="True">
+<local:MyCard Title="进阶：联网主页" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
     <StackPanel Margin="25,40,23,15">
-        <local:MyHint Margin="0,0,0,10" Text="以下特性于 PCL 2.6.5 (299) 加入，不适用于更早版本的 PCL。" IsWarn="False" />
         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10"
                     Text="如果你在尝试制作联网更新的主页，可以查看下方的 GitHub 讨论页。&#xa;你可以根据其中的介绍为主页添加版本号检查以节省流量，也可以通过检查 Referer 和 User Agent 来确定对方的 PCL 版本。" />
         <local:MyButton Margin="0,0,0,8" Height="35" HorizontalAlignment="Center" Padding="20,0,20,0"
-                    Text="打开 GitHub 讨论页" EventType="打开网页" EventData="https://github.com/Hex-Dragon/PCL2/discussions/2528" />
+                    Text="打开 GitHub 讨论页" EventType="打开网页" EventData="https://github.com/Meloong-Git/PCL/discussions/2528" />
     </StackPanel>
 </local:MyCard>
 
@@ -335,7 +296,7 @@ local:MyImage（图片）：
 local:MyCard（卡片）：
  - Title：设置显示的标题文本
  - CanSwap：卡片是否可以折叠，True 为是，False 为否
- - IsSwaped：卡片是否默认折叠，要求 CanSwap 必须为 True
+ - IsSwapped：卡片是否默认折叠，要求 CanSwap 必须为 True
  - HorizontalAlignment：若使用，要求 CanSwap 必须为 False
  - UseAnimation：是否在展开等高度改变时触发动画；True 为是（默认），False 为否
  - SwapLogoRight：卡片折叠时的箭头是朝下还是朝右；True 为朝右，False 为朝下（默认）
@@ -343,7 +304,7 @@ local:MyCard（卡片）：
 
 local:MyHint（提示条）：
  - Text：设置显示的文本（&#xA; 代表换行）
- - IsWarn：设置为 True 代表警告样式，False 代表提示样式
+ - Theme：设置颜色主题（Blue、Yellow 或 Red）
 
 local:MyButton（按钮）：
  - Text：设置显示的文本

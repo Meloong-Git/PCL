@@ -14,7 +14,7 @@ Public Class MyExtraTextButton
             Return _Logo
         End Get
         Set(value As String)
-            If value = _Logo Then Exit Property
+            If value = _Logo Then Return
             _Logo = value
             Path.Data = (New GeometryConverter).ConvertFromString(value)
         End Set
@@ -55,7 +55,7 @@ Public Class MyExtraTextButton
             Return _Show
         End Get
         Set(value As Boolean)
-            If _Show = value Then Exit Property
+            If _Show = value Then Return
             _Show = value
             RunInUi(
             Sub()
@@ -81,12 +81,12 @@ Public Class MyExtraTextButton
 
     '触发点击事件
     Private Sub Button_LeftMouseUp(sender As Object, e As MouseButtonEventArgs) Handles PanClick.MouseLeftButtonUp
-        If IsLeftMouseHeld Then
-            Log("[Control] 按下附加图标按钮：" & Text)
-            RaiseEvent Click(sender, e)
-            e.Handled = True
-            Button_LeftMouseUp()
-        End If
+        If Not IsLeftMouseHeld Then Return
+        Log("[Control] 按下附加图标按钮：" & Text)
+        RaiseEvent Click(sender, e)
+        e.Handled = True
+        RaiseCustomEvent()
+        Button_LeftMouseUp()
     End Sub
 
     '鼠标点击判定（务必放在点击事件之后，以使得 Button_MouseUp 先于 Button_MouseLeave 执行）

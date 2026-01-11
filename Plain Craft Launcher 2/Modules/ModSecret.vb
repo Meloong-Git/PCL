@@ -6,12 +6,16 @@ Friend Module ModSecret
 
 #Region "杂项"
 
+    '标注 PCL 的不同分支，仅用于替换标记
+    Public Const VersionBranchMain As String = "OpenSource"
     '在开源版的注册表与常规版的注册表隔离，以防数据冲突
     Public Const RegFolder As String = "PCLDebug"
     '用于微软登录的 ClientId
-    Public Const OAuthClientId As String = ""
+    Public OAuthClientId As String = If(Environment.GetEnvironmentVariable("PCL_MS_CLIENT_ID"), "")
     'CurseForge API Key
-    Public Const CurseForgeAPIKey As String = ""
+    Public CurseForgeAPIKey As String = If(Environment.GetEnvironmentVariable("PCL_CURSEFORGE_API_KEY"), "")
+    '用于匿名数据收集的腾讯云日志服务上报 URL，形如 https://{region}.cls.tencentcs.com/track?topic_id={topic_id}
+    Public Const ClsBaseUrl As String = ""
 
     Friend Sub SecretOnApplicationStart()
         '提升 UI 线程优先级
@@ -54,74 +58,42 @@ Friend Module ModSecret
     ''' <summary>
     ''' 获取设备标识码。
     ''' </summary>
-    Friend Function SecretGetUniqueAddress() As String
+    Friend Function SecretGetIdentify() As String
         Return "0000-0000-0000-0000"
     End Function
 
     Friend Sub SecretLaunchJvmArgs(ByRef DataList As List(Of String))
-        Dim DataJvmCustom As String = Setup.Get("VersionAdvanceJvm", Version:=McVersionCurrent)
-        DataList.Insert(0, If(DataJvmCustom = "", Setup.Get("LaunchAdvanceJvm"), DataJvmCustom)) '可变 JVM 参数
+        Dim DataJvmCustom As String = Setup.Get("VersionAdvanceJvm", Instance:=McInstanceSelected)
+        DataList.Insert(0, ArgumentReplace(If(DataJvmCustom = "", Setup.Get("LaunchAdvanceJvm"), DataJvmCustom))) '可变 JVM 参数
         McLaunchLog("当前剩余内存：" & Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024 * 10) / 10 & "G")
-        DataList.Add("-Xmn" & Math.Floor(PageVersionSetup.GetRam(McVersionCurrent) * 1024 * 0.15) & "m")
-        DataList.Add("-Xmx" & Math.Floor(PageVersionSetup.GetRam(McVersionCurrent) * 1024) & "m")
+        DataList.Add("-Xmn" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024 * 0.15) & "m")
+        DataList.Add("-Xmx" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024) & "m")
         If Not DataList.Any(Function(d) d.Contains("-Dlog4j2.formatMsgNoLookups=true")) Then DataList.Add("-Dlog4j2.formatMsgNoLookups=true")
     End Sub
-
-    ''' <summary>
-    ''' 打码字符串中的 AccessToken。
-    ''' </summary>
-    Friend Function SecretFilter(Raw As String, FilterChar As Char) As String
-        '打码 "accessToken " 后的内容
-        If Raw.Contains("accessToken ") Then
-            For Each Token In RegexSearch(Raw, "(?<=accessToken ([^ ]{5}))[^ ]+(?=[^ ]{5})")
-                Raw = Raw.Replace(Token, New String(FilterChar, Token.Count))
-            Next
-        End If
-        '打码当前登录的结果
-        Dim AccessToken As String = McLoginLoader.Output.AccessToken
-        If AccessToken Is Nothing OrElse AccessToken.Length < 10 OrElse Not Raw.ContainsF(AccessToken, True) OrElse
-            McLoginLoader.Output.Uuid = McLoginLoader.Output.AccessToken Then 'UUID 和 AccessToken 一样则不打码
-            Return Raw
-        Else
-            Return Raw.Replace(AccessToken, Left(AccessToken, 5) & New String(FilterChar, AccessToken.Length - 10) & Right(AccessToken, 5))
-        End If
-    End Function
 
 #End Region
 
 #Region "网络鉴权"
 
-    Friend Function SecretCdnSign(UrlWithMark As String)
+    Friend Function SecretCdnSign(UrlWithMark As String) As String
         If Not UrlWithMark.EndsWithF("{CDN}") Then Return UrlWithMark
         Return UrlWithMark.Replace("{CDN}", "").Replace(" ", "%20")
     End Function
     ''' <summary>
     ''' 设置 Headers 的 UA、Referer。
     ''' </summary>
-    Friend Sub SecretHeadersSign(Url As String, ByRef Client As WebClient, Optional UseBrowserUserAgent As Boolean = False)
-        If Url.Contains("baidupcs.com") OrElse Url.Contains("baidu.com") Then
-            Client.Headers("User-Agent") = "LogStatistic" '#4951
-        ElseIf UseBrowserUserAgent Then
-            Client.Headers("User-Agent") = "PCL2/" & VersionStandardCode & " Mozilla/5.0 AppleWebKit/537.36 Chrome/63.0.3239.132 Safari/537.36"
-        Else
-            Client.Headers("User-Agent") = "PCL2/" & VersionStandardCode
+    Friend Sub SecretHeadersSign(Url As String, ByRef Req As HttpRequestMessage, Optional SimulateBrowserHeaders As Boolean = False)
+        If Not Req.Headers.UserAgent.Any Then
+            If Url.Contains("baidupcs.com") OrElse Url.Contains("baidu.com") Then
+                Req.Headers.Add("User-Agent", "LogStatistic")  '#4951
+            ElseIf SimulateBrowserHeaders Then
+                Req.Headers.Add("User-Agent", $"PCL2/{VersionStandardCode} Mozilla/5.0 AppleWebKit/537.36 Chrome/63.0.3239.132 Safari/537.36")
+            Else
+                Req.Headers.Add("User-Agent", $"PCL2/{VersionStandardCode}")
+            End If
         End If
-        Client.Headers("Referer") = "http://" & VersionCode & ".open.pcl2.server/"
-        If Url.Contains("api.curseforge.com") Then Client.Headers("x-api-key") = CurseForgeAPIKey
-    End Sub
-    ''' <summary>
-    ''' 设置 Headers 的 UA、Referer。
-    ''' </summary>
-    Friend Sub SecretHeadersSign(Url As String, ByRef Request As HttpWebRequest, Optional UseBrowserUserAgent As Boolean = False)
-        If Url.Contains("baidupcs.com") OrElse Url.Contains("baidu.com") Then
-            Request.UserAgent = "LogStatistic" '#4951
-        ElseIf UseBrowserUserAgent Then
-            Request.UserAgent = "PCL2/" & VersionStandardCode & " Mozilla/5.0 AppleWebKit/537.36 Chrome/63.0.3239.132 Safari/537.36"
-        Else
-            Request.UserAgent = "PCL2/" & VersionStandardCode
-        End If
-        Request.Referer = "http://" & VersionCode & ".open.pcl2.server/"
-        If Url.Contains("api.curseforge.com") Then Request.Headers("x-api-key") = CurseForgeAPIKey
+        If Not SimulateBrowserHeaders Then Req.Headers.Add("Referer", $"http://{VersionCode}.open.pcl2.server/")
+        If Url.Contains("api.curseforge.com") Then Req.Headers.Add("x-api-key", CurseForgeAPIKey)
     End Sub
 
 #End Region
@@ -198,45 +170,70 @@ Friend Module ModSecret
     Public ThemeDontClick As Integer = 0
 
     Public Sub ThemeRefresh(Optional NewTheme As Integer = -1)
-        Hint("该版本中不包含主题功能……")
+        Try
+            If ThemeNow = NewTheme AndAlso NewTheme >= 0 Then Return
+            If NewTheme >= 0 Then ThemeNow = NewTheme
+
+            Color1 = New MyColor().FromHSL2(ColorHue, ColorSat * 0.2, 25 + ColorLightAdjust * 0.3)
+            Color2 = New MyColor().FromHSL2(ColorHue, ColorSat, 45 + ColorLightAdjust)
+            Color3 = New MyColor().FromHSL2(ColorHue, ColorSat, 55 + ColorLightAdjust)
+            Color4 = New MyColor().FromHSL2(ColorHue, ColorSat, 65 + ColorLightAdjust)
+            Color5 = New MyColor().FromHSL2(ColorHue, ColorSat, 80 + ColorLightAdjust * 0.4)
+            Color6 = New MyColor().FromHSL2(ColorHue, ColorSat, 91 + ColorLightAdjust * 0.1)
+            Color7 = New MyColor().FromHSL2(ColorHue, ColorSat, 95)
+            Color8 = New MyColor().FromHSL2(ColorHue, ColorSat, 97)
+            ColorBg0 = Color4 * 0.4 + Color5 * 0.4 + ColorGray4 * 0.2
+            ColorBg1 = New MyColor(190, Color7)
+
+            ColorSemiTransparent = New MyColor(1, Color8)
+            Application.Current.Resources("ColorBrush1") = New SolidColorBrush(Color1)
+            Application.Current.Resources("ColorBrush2") = New SolidColorBrush(Color2)
+            Application.Current.Resources("ColorBrush3") = New SolidColorBrush(Color3)
+            Application.Current.Resources("ColorBrush4") = New SolidColorBrush(Color4)
+            Application.Current.Resources("ColorBrush5") = New SolidColorBrush(Color5)
+            Application.Current.Resources("ColorBrush6") = New SolidColorBrush(Color6)
+            Application.Current.Resources("ColorBrush7") = New SolidColorBrush(Color7)
+            Application.Current.Resources("ColorBrush8") = New SolidColorBrush(Color8)
+            Application.Current.Resources("ColorBrushBg0") = New SolidColorBrush(ColorBg0)
+            Application.Current.Resources("ColorBrushBg1") = New SolidColorBrush(ColorBg1)
+            Application.Current.Resources("ColorObject1") = CType(Color1, Color)
+            Application.Current.Resources("ColorObject2") = CType(Color2, Color)
+            Application.Current.Resources("ColorObject3") = CType(Color3, Color)
+            Application.Current.Resources("ColorObject4") = CType(Color4, Color)
+            Application.Current.Resources("ColorObject5") = CType(Color5, Color)
+            Application.Current.Resources("ColorObject6") = CType(Color6, Color)
+            Application.Current.Resources("ColorObject7") = CType(Color7, Color)
+            Application.Current.Resources("ColorObject8") = CType(Color8, Color)
+            Application.Current.Resources("ColorObjectBg0") = CType(ColorBg0, Color)
+            Application.Current.Resources("ColorObjectBg1") = CType(ColorBg1, Color)
+            ThemeRefreshMain()
+        Catch ex As Exception
+            Log(ex, "刷新主题颜色失败", LogLevel.Hint)
+        End Try
     End Sub
     Public Sub ThemeRefreshMain()
         RunInUi(
         Sub()
-            If Not FrmMain.IsLoaded Then Exit Sub
+            If Not FrmMain.IsLoaded Then Return
             '顶部条背景
             Dim Brush = New LinearGradientBrush With {.EndPoint = New Point(1, 0), .StartPoint = New Point(0, 0)}
-            If ThemeNow = 5 Then
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 0, .Color = New MyColor().FromHSL2(ColorHue, ColorSat, 25)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 0.5, .Color = New MyColor().FromHSL2(ColorHue, ColorSat, 15)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 1, .Color = New MyColor().FromHSL2(ColorHue, ColorSat, 25)})
-                FrmMain.PanTitle.Background = Brush
-                FrmMain.PanTitle.Background.Freeze()
-            ElseIf Not (ThemeNow = 12 OrElse ThemeDontClick = 2) Then
-                If TypeOf ColorHueTopbarDelta Is Integer Then
-                    Brush.GradientStops.Add(New GradientStop With {.Offset = 0, .Color = New MyColor().FromHSL2(ColorHue - ColorHueTopbarDelta, ColorSat, 48 + ColorLightAdjust)})
-                    Brush.GradientStops.Add(New GradientStop With {.Offset = 0.5, .Color = New MyColor().FromHSL2(ColorHue, ColorSat, 54 + ColorLightAdjust)})
-                    Brush.GradientStops.Add(New GradientStop With {.Offset = 1, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta, ColorSat, 48 + ColorLightAdjust)})
-                Else
-                    Brush.GradientStops.Add(New GradientStop With {.Offset = 0, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta(0), ColorSat, 48 + ColorLightAdjust)})
-                    Brush.GradientStops.Add(New GradientStop With {.Offset = 0.5, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta(1), ColorSat, 54 + ColorLightAdjust)})
-                    Brush.GradientStops.Add(New GradientStop With {.Offset = 1, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta(2), ColorSat, 48 + ColorLightAdjust)})
-                End If
-                FrmMain.PanTitle.Background = Brush
-                FrmMain.PanTitle.Background.Freeze()
+            If TypeOf ColorHueTopbarDelta Is Integer Then
+                Brush.GradientStops.Add(New GradientStop With {.Offset = 0, .Color = New MyColor().FromHSL2(ColorHue - ColorHueTopbarDelta, ColorSat, 48 + ColorLightAdjust)})
+                Brush.GradientStops.Add(New GradientStop With {.Offset = 0.5, .Color = New MyColor().FromHSL2(ColorHue, ColorSat, 54 + ColorLightAdjust)})
+                Brush.GradientStops.Add(New GradientStop With {.Offset = 1, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta, ColorSat, 48 + ColorLightAdjust)})
             Else
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 0, .Color = New MyColor().FromHSL2(ColorHue - 21, ColorSat, 53 + ColorLightAdjust)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 0.33, .Color = New MyColor().FromHSL2(ColorHue - 7, ColorSat, 47 + ColorLightAdjust)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 0.67, .Color = New MyColor().FromHSL2(ColorHue + 7, ColorSat, 47 + ColorLightAdjust)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 1, .Color = New MyColor().FromHSL2(ColorHue + 21, ColorSat, 53 + ColorLightAdjust)})
-                FrmMain.PanTitle.Background = Brush
+                Brush.GradientStops.Add(New GradientStop With {.Offset = 0, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta(0), ColorSat, 48 + ColorLightAdjust)})
+                Brush.GradientStops.Add(New GradientStop With {.Offset = 0.5, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta(1), ColorSat, 54 + ColorLightAdjust)})
+                Brush.GradientStops.Add(New GradientStop With {.Offset = 1, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta(2), ColorSat, 48 + ColorLightAdjust)})
             End If
+            FrmMain.PanTitle.Background = Brush
+            FrmMain.PanTitle.Background.Freeze()
             '主页面背景
             If Setup.Get("UiBackgroundColorful") Then
                 Brush = New LinearGradientBrush With {.EndPoint = New Point(0.1, 1), .StartPoint = New Point(0.9, 0)}
-                Brush.GradientStops.Add(New GradientStop With {.Offset = -0.1, .Color = New MyColor().FromHSL2(ColorHue - 20, Math.Min(60, ColorSat) * 0.5, 80)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 0.4, .Color = New MyColor().FromHSL2(ColorHue, ColorSat * 0.9, 90)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 1.1, .Color = New MyColor().FromHSL2(ColorHue + 20, Math.Min(60, ColorSat) * 0.5, 80)})
+                Brush.GradientStops.Add(New GradientStop With {.Offset = -0.1, .Color = New MyColor().FromHSL2(ColorHue - 15, ColorSat * 0.8, 91)})
+                Brush.GradientStops.Add(New GradientStop With {.Offset = 0.4, .Color = New MyColor().FromHSL2(ColorHue, ColorSat * 0.8, 91)})
+                Brush.GradientStops.Add(New GradientStop With {.Offset = 1.1, .Color = New MyColor().FromHSL2(ColorHue + 15, ColorSat * 0.8, 91)})
                 FrmMain.PanForm.Background = Brush
             Else
                 FrmMain.PanForm.Background = New MyColor(245, 245, 245)
@@ -284,9 +281,16 @@ Friend Module ModSecret
 
 #End Region
 
-#Region "联网通知"
+#Region "联网配置"
 
-    Public ServerLoader As New LoaderTask(Of Integer, Integer)("PCL 服务", Sub() Log("[Server] 该版本中不包含更新通知功能……"), Priority:=ThreadPriority.BelowNormal)
+    ''' <summary>
+    ''' 联网获取的配置信息。
+    ''' 若获取失败或仍在获取中，可能为 Nothing。
+    ''' </summary>
+    Public ServerConfig As JObject
+
+    Public ServerLoader As New LoaderTask(Of Integer, Integer)("PCL 配置更新", Sub() Log("[Server] 该版本中不包含更新通知功能……"), Priority:=ThreadPriority.BelowNormal) With
+        {.ReloadTimeout = 1000 * 60 * 60} '超时 1 小时
 
 #End Region
 

@@ -35,7 +35,7 @@ Public Class MyLoading
             Return _ShowProgress
         End Get
         Set(value As Boolean)
-            If _ShowProgress = value Then Exit Property
+            If _ShowProgress = value Then Return
             _ShowProgress = value
             RefreshText()
         End Set
@@ -79,11 +79,7 @@ Public Class MyLoading
                         Do While Ex.InnerException IsNot Nothing
                             Ex = Ex.InnerException
                         Loop
-                        LabText.Text = StrTrim(Ex.Message)
-                        If {"远程主机强迫关闭了", "远程方已关闭传输流", "未能解析此远程名称", "由于目标计算机积极拒绝",
-                            "操作已超时", "操作超时", "服务器超时", "连接超时"}.Any(Function(s) LabText.Text.Contains(s)) Then
-                            LabText.Text = "网络环境不佳，请重试或尝试使用 VPN"
-                        End If
+                        LabText.Text = If(Ex.IsNetworkRelated(), "网络环境不佳，请稍后再试，或使用 VPN 改善网络环境", StrTrim(Ex.Message))
                     End If
                 Else
                     LabText.Text = TextError
@@ -142,7 +138,7 @@ Public Class MyLoading
             Return _OuterState
         End Get
         Set(value As MyLoadingState)
-            If _OuterState = value Then Exit Property
+            If _OuterState = value Then Return
             Dim OldValue = _OuterState
             _OuterState = value
             '引发事件
@@ -159,7 +155,7 @@ Public Class MyLoading
             Return _InnerState
         End Get
         Set(value As MyLoadingState)
-            If _InnerState = value Then Exit Property
+            If _InnerState = value Then Return
             Dim OldValue = _InnerState
             _InnerState = value
             '引发事件
@@ -183,34 +179,33 @@ Public Class MyLoading
     Private IsLooping As Boolean = False
     Private Sub AniLoop()
         '这坨循环代码也是老屎坑了，救救.jpg
-        If Not HasAnimation OrElse IsLooping OrElse Not InnerState = MyLoadingState.Run OrElse AniSpeed > 10 OrElse Not IsLoaded Then Exit Sub
+        If Not HasAnimation OrElse IsLooping OrElse Not InnerState = MyLoadingState.Run OrElse AniSpeed > 10 OrElse Not IsLoaded Then Return
         IsLooping = True
         ErrorAnimationWaiting = True
         AniStart({
-                    AaRotateTransform(PathPickaxe, -20 - CType(PathPickaxe.RenderTransform, RotateTransform).Angle, 350, 250, New AniEaseInBack(AniEasePower.Weak)),
-                    AaRotateTransform(PathPickaxe, 50, 900,, New AniEaseOutFluent, True),
-                    AaRotateTransform(PathPickaxe, 25, 900,, New AniEaseOutElastic(AniEasePower.Weak)),
-                    AaCode(Sub()
-                               PathLeft.Opacity = 1
-                               PathLeft.Margin = New Thickness(7, 41, 0, 0)
-                               PathRight.Opacity = 1
-                               PathRight.Margin = New Thickness(14, 41, 0, 0)
-                               ErrorAnimationWaiting = False
-                           End Sub),
-                    AaOpacity(PathLeft, -1, 100, 50),
-                    AaX(PathLeft, -5, 180,, New AniEaseOutFluent),
-                    AaY(PathLeft, -6, 180,, New AniEaseOutFluent),
-                    AaOpacity(PathRight, -1, 100, 50),
-                    AaX(PathRight, 5, 180,, New AniEaseOutFluent),
-                    AaY(PathRight, -6, 180,, New AniEaseOutFluent),
-                    AaCode(Sub()
-                               IsLooping = False
-                               AniLoop()
-                           End Sub,, True)
-            }, "MyLoader Loop " & Uuid & "/" & GetUuid())
-        If ShowProgress Then
-
-        End If
+            AaRotateTransform(PathPickaxe, -20 - CType(PathPickaxe.RenderTransform, RotateTransform).Angle, 350, 250, New AniEaseInBack(AniEasePower.Weak)),
+            AaRotateTransform(PathPickaxe, 50, 900,, New AniEaseOutFluent, True),
+            AaRotateTransform(PathPickaxe, 25, 900,, New AniEaseOutElastic(AniEasePower.Weak)),
+            AaCode(
+            Sub()
+                PathLeft.Opacity = 1
+                PathLeft.Margin = New Thickness(7, 41, 0, 0)
+                PathRight.Opacity = 1
+                PathRight.Margin = New Thickness(14, 41, 0, 0)
+                ErrorAnimationWaiting = False
+            End Sub),
+            AaOpacity(PathLeft, -1, 100, 50),
+            AaX(PathLeft, -5, 180,, New AniEaseOutFluent),
+            AaY(PathLeft, -6, 180,, New AniEaseOutFluent),
+            AaOpacity(PathRight, -1, 100, 50),
+            AaX(PathRight, 5, 180,, New AniEaseOutFluent),
+            AaY(PathRight, -6, 180,, New AniEaseOutFluent),
+            AaCode(
+            Sub()
+                IsLooping = False
+                AniLoop()
+            End Sub,, True)
+        }, "MyLoader Loop " & Uuid & "/" & GetUuid())
     End Sub
 
     ''' <summary>
@@ -271,7 +266,7 @@ Public Class MyLoadingStateSimulator
             Return _LoadingState
         End Get
         Set(value As MyLoadingState)
-            If _LoadingState = value Then Exit Property
+            If _LoadingState = value Then Return
             Dim OldState = _LoadingState
             _LoadingState = value
             RaiseEvent LoadingStateChanged(value, OldState)
