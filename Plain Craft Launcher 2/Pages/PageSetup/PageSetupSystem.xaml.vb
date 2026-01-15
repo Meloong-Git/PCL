@@ -50,6 +50,7 @@
         ComboSystemUpdate.SelectedIndex = Setup.Get("SystemSystemUpdate")
         ComboSystemActivity.SelectedIndex = Setup.Get("SystemSystemActivity")
         TextSystemCache.Text = Setup.Get("SystemSystemCache")
+        ComboSystemAuth.SelectedIndex = Setup.Get("SystemSystemAuth")
         CheckSystemTelemetry.Checked = Setup.Get("SystemSystemTelemetry")
 
         '调试选项
@@ -100,7 +101,7 @@
     Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderDebugAnim.Change, SliderDownloadThread.Change, SliderDownloadSpeed.Change
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value)
     End Sub
-    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboDownloadVersion.SelectionChanged, ComboModLocalNameStyle.SelectionChanged, ComboDownloadTranslateV2.SelectionChanged, ComboSystemUpdate.SelectionChanged, ComboSystemActivity.SelectionChanged, ComboDownloadSource.SelectionChanged, ComboDownloadMod.SelectionChanged
+    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboDownloadVersion.SelectionChanged, ComboModLocalNameStyle.SelectionChanged, ComboDownloadTranslateV2.SelectionChanged, ComboSystemUpdate.SelectionChanged, ComboSystemActivity.SelectionChanged, ComboSystemAuth.SelectionChanged, ComboDownloadSource.SelectionChanged, ComboDownloadMod.SelectionChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex)
     End Sub
     Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextSystemCache.ValidatedTextChanged
