@@ -367,8 +367,10 @@ Public Class PageInstanceExport
             TextExportVersion.Text = Ini.GetOrDefault("Version", "")
             CheckOptionsPcl.Checked = Ini.GetOrDefault("IncludeLauncher", True)
             CheckOptionsPclCustom.Checked = Ini.GetOrDefault("IncludeLauncherCustom", True)
-            CheckAdvancedModrinth.Checked = Ini.GetOrDefault("ModrinthUploadMode", False)
             CheckAdvancedInclude.Checked = Ini.GetOrDefault("DontCheckHostedAssets", False)
+            If Not CheckAdvancedInclude.Checked Then '#7979，加个特判
+                CheckAdvancedModrinth.Checked = Ini.GetOrDefault("ModrinthUploadMode", False)
+            End If
             ConfigPackPath = Ini.GetOrDefault("PackPath", Nothing)
             '导出内容段
             RulesOverrides = Segments(1).Replace(vbCr, vbLf).Replace(vbLf & vbLf, vbLf).Split(vbLf).ToList
