@@ -140,6 +140,21 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CacheCow.Client, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\CacheCow.Client.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="CacheCow.Client.FileStore, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\CacheCow.Client.FileStore.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="CacheCow.Common, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\CacheCow.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Imazen.WebP, Version=10.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Resources\Imazen.WebP.dll</HintPath>
@@ -147,10 +162,12 @@
     </Reference>
     <Reference Include="NAudio, Version=1.7.3.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\NAudio.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Ookii.Dialogs.Wpf, Version=1.0.0.0, Culture=neutral, PublicKeyToken=0c15020868fd6249, processorArchitecture=MSIL">
@@ -158,14 +175,25 @@
       <HintPath>Resources\Ookii.Dialogs.Wpf.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Management" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\System.Net.Http.Formatting.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ValueTuple, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System" />
@@ -182,7 +210,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Controls\IMyRadio.vb" />
+    <Compile Include="Controls\Behaviors\ClipboardInterceptor.vb" />
+    <Compile Include="Controls\Behaviors\Interfaces.vb" />
+    <Compile Include="Controls\Behaviors\LazyLoadBehavior.vb" />
     <Compile Include="Controls\MyComboBox.vb" />
     <Compile Include="Controls\MyComboBoxItem.vb" />
     <Compile Include="Controls\MyCard.vb" />
@@ -198,11 +228,13 @@
 
 
 
+    <Compile Include="Controls\MyVirtualizingElement.vb" />
     <Compile Include="Modules\Minecraft\ModComp.vb" />
     <Compile Include="Modules\Minecraft\ModJava.vb" />
     <Compile Include="Modules\Minecraft\ModMod.vb" />
     <Compile Include="Modules\Minecraft\ModModpack.vb" />
-    <Compile Include="Pages\PageVersion\MyLocalModItem.xaml.vb">
+    <Compile Include="Modules\ThirdParty\DragHelper.vb" />
+    <Compile Include="Pages\PageInstance\MyLocalModItem.xaml.vb">
       <DependentUpon>MyLocalModItem.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modules\ModEvent.vb" />
@@ -235,9 +267,6 @@
     <Compile Include="Modules\ModDevelop.vb" />
     <Compile Include="Modules\Minecraft\ModWatcher.vb" />
     <Compile Include="Modules\ModSecret.vb" />
-    <Compile Include="Modules\Reference\CookieWebClient.vb">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Pages\PageDownload\Comp\PageComp.xaml.vb">
       <DependentUpon>PageComp.xaml</DependentUpon>
     </Compile>
@@ -260,17 +289,11 @@
     <Compile Include="Pages\PageDownload\Comp\PageDownloadMod.xaml.vb">
       <DependentUpon>PageDownloadMod.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageDownload\PageDownloadFabric.xaml.vb">
-      <DependentUpon>PageDownloadFabric.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Pages\PageDownload\PageDownloadInstall.xaml.vb">
       <DependentUpon>PageDownloadInstall.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageDownload\Comp\PageDownloadCompDetail.xaml.vb">
       <DependentUpon>PageDownloadCompDetail.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\PageDownload\PageDownloadNeoForge.xaml.vb">
-      <DependentUpon>PageDownloadNeoForge.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageLaunch\MyMsgLogin.xaml.vb">
       <DependentUpon>MyMsgLogin.xaml</DependentUpon>
@@ -290,38 +313,29 @@
     <Compile Include="Pages\PageLaunch\PageLoginNideSkin.xaml.vb">
       <DependentUpon>PageLoginNideSkin.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageLink\PageLinkFeedback.xaml.vb">
-      <DependentUpon>PageLinkFeedback.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\PageLink\PageLinkHiper.xaml.vb">
-      <DependentUpon>PageLinkHiper.xaml</DependentUpon>
+    <Compile Include="Pages\PageLink\PageLinkMain.xaml.vb">
+      <DependentUpon>PageLinkMain.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageOther\PageOtherHelpDetail.xaml.vb">
       <DependentUpon>PageOtherHelpDetail.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageLink\PageLinkIoi.xaml.vb">
-      <DependentUpon>PageLinkIoi.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceExport.xaml.vb">
+      <DependentUpon>PageInstanceExport.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageLink\PageLinkLeft.xaml.vb">
-      <DependentUpon>PageLinkLeft.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceLeft.xaml.vb">
+      <DependentUpon>PageInstanceLeft.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionExport.xaml.vb">
-      <DependentUpon>PageVersionExport.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceMod.xaml.vb">
+      <DependentUpon>PageInstanceMod.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionLeft.xaml.vb">
-      <DependentUpon>PageVersionLeft.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceModDisabled.xaml.vb">
+      <DependentUpon>PageInstanceModDisabled.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionMod.xaml.vb">
-      <DependentUpon>PageVersionMod.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceOverall.xaml.vb">
+      <DependentUpon>PageInstanceOverall.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionModDisabled.xaml.vb">
-      <DependentUpon>PageVersionModDisabled.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionOverall.xaml.vb">
-      <DependentUpon>PageVersionOverall.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionSetup.xaml.vb">
-      <DependentUpon>PageVersionSetup.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceSetup.xaml.vb">
+      <DependentUpon>PageInstanceSetup.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\MyDropShadow.vb" />
     <Compile Include="Modules\Base\ModLoader.vb" />
@@ -330,15 +344,6 @@
     <Compile Include="Modules\Minecraft\ModDownload.vb" />
     <Compile Include="Modules\Minecraft\ModLaunch.vb" />
     <Compile Include="Modules\Minecraft\ModMinecraft.vb" />
-    <Compile Include="Pages\PageDownload\PageDownloadForge.xaml.vb">
-      <DependentUpon>PageDownloadForge.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\PageDownload\PageDownloadLiteLoader.xaml.vb">
-      <DependentUpon>PageDownloadLiteLoader.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\PageDownload\PageDownloadOptiFine.xaml.vb">
-      <DependentUpon>PageDownloadOptiFine.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Pages\PageOther\PageOtherTest.xaml.vb">
       <DependentUpon>PageOtherTest.xaml</DependentUpon>
     </Compile>
@@ -371,9 +376,6 @@
     </Compile>
     <Compile Include="Pages\PageDownload\PageDownloadLeft.xaml.vb">
       <DependentUpon>PageDownloadLeft.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Pages\PageDownload\PageDownloadClient.xaml.vb">
-      <DependentUpon>PageDownloadClient.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageOther\PageOtherLeft.xaml.vb">
       <DependentUpon>PageOtherLeft.xaml</DependentUpon>
@@ -502,7 +504,7 @@
       <SubType>Code</SubType>
     </Compile>
 
-    <Page Include="Pages\PageVersion\MyLocalModItem.xaml">
+    <Page Include="Pages\PageInstance\MyLocalModItem.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -534,19 +536,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageDownload\PageDownloadFabric.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Pages\PageDownload\PageDownloadInstall.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\PageDownload\Comp\PageDownloadCompDetail.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Pages\PageDownload\PageDownloadNeoForge.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -579,11 +573,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </None>
-    <Page Include="Pages\PageLink\PageLinkFeedback.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Pages\PageLink\PageLinkHiper.xaml">
+    <Page Include="Pages\PageLink\PageLinkMain.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -591,27 +581,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageLink\PageLinkIoi.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Pages\PageLink\PageLinkLeft.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Pages\PageVersion\PageVersionExport.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Pages\PageDownload\PageDownloadForge.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Pages\PageDownload\PageDownloadLiteLoader.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Pages\PageDownload\PageDownloadOptiFine.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceExport.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -659,10 +629,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageDownload\PageDownloadClient.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Pages\PageOther\PageOtherLeft.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -695,23 +661,23 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionLeft.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceLeft.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionMod.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceMod.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionModDisabled.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceModDisabled.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionOverall.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceOverall.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionSetup.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceSetup.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -724,6 +690,7 @@
     <Import Include="System.IO" />
     <Import Include="System.Linq" />
     <Import Include="System.Net" />
+    <Import Include="System.Net.Http" />
     <Import Include="System.Text" />
     <Import Include="System.Threading" />
     <Import Include="System.Xml.Linq" />
@@ -842,28 +809,6 @@
     <Resource Include="Images\Themes\10.png" />
   </ItemGroup>
   <ItemGroup>
-    <PublishFile Include="NAudio">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>Assembly</FileType>
-    </PublishFile>
-    <PublishFile Include="Newtonsoft.Json">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>Assembly</FileType>
-    </PublishFile>
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\Heads\Patrick.png" />
   </ItemGroup>
   <ItemGroup>
@@ -960,6 +905,24 @@
   <ItemGroup>
     <None Include="Resources\Imazen.WebP.dll" />
     <None Include="Resources\libwebp64.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CacheCow.Client.FileStore.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CacheCow.Common.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CacheCow.Client.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\System.Net.Http.Formatting.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\EasyTier.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\System.ValueTuple.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

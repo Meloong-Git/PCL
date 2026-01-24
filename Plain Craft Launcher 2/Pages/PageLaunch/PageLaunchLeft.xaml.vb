@@ -14,7 +14,7 @@
         AniControlEnabled += 1
 
         '开始按钮
-        AddHandler McVersionListLoader.LoadingStateChanged, AddressOf RefreshButtonsUI
+        AddHandler McInstanceListLoader.LoadingStateChanged, AddressOf RefreshButtonsUI
         AddHandler McFolderListLoader.LoadingStateChanged, AddressOf RefreshButtonsUI
         RefreshButtonsUI()
 
@@ -37,18 +37,18 @@
                 McFolderListLoader.WaitForExit()
             End If
             '确认 Minecraft 文件夹存在
-            PathMcFolder = Setup.Get("LaunchFolderSelect").ToString.Replace("$", Path)
-            If PathMcFolder = "" OrElse Not Directory.Exists(PathMcFolder) Then
+            McFolderSelected = Setup.Get("LaunchFolderSelect").ToString.Replace("$", Path)
+            If McFolderSelected = "" OrElse Not Directory.Exists(McFolderSelected) Then
                 '无效的文件夹
-                If PathMcFolder = "" Then
+                If McFolderSelected = "" Then
                     Log("[Launch] 没有已储存的 Minecraft 文件夹")
                 Else
-                    Log("[Launch] Minecraft 文件夹无效，该文件夹已不存在：" & PathMcFolder, LogLevel.Debug)
+                    Log("[Launch] Minecraft 文件夹无效，该文件夹已不存在：" & McFolderSelected, LogLevel.Debug)
                 End If
                 McFolderListLoader.WaitForExit(IsForceRestart:=True)
-                Setup.Set("LaunchFolderSelect", McFolderList(0).Path.Replace(Path, "$"))
+                Setup.Set("LaunchFolderSelect", McFolderList(0).Location.Replace(Path, "$"))
             End If
-            Log("[Launch] Minecraft 文件夹：" & PathMcFolder)
+            Log("[Launch] Minecraft 文件夹：" & McFolderSelected)
             If Setup.Get("SystemDebugDelay") Then Thread.Sleep(RandomInteger(500, 3000))
             '自动整合包安装
             If PackInstallPath IsNot Nothing Then
@@ -68,24 +68,24 @@
             End If
             '确认 Minecraft 版本存在
             Dim Selection As String = Setup.Get("LaunchVersionSelect")
-            Dim Version As McVersion = If(Selection = "", Nothing, New McVersion(Selection))
-            If Version Is Nothing OrElse Not Version.Path.StartsWithF(PathMcFolder) OrElse Not Version.Check() Then
+            Dim Instance As McInstance = If(Selection = "", Nothing, New McInstance(Selection))
+            If Instance Is Nothing OrElse Not Instance.PathVersion.StartsWithF(McFolderSelected) OrElse Not Instance.Check() Then
                 '无效的版本
-                Log("[Launch] 当前选择的 Minecraft 版本无效：" & If(Version Is Nothing, "null", Version.Path), If(IsNothing(Version), LogLevel.Normal, LogLevel.Debug))
-                If Not McVersionListLoader.State = LoadState.Finished Then LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\", WaitForExit:=True)
-                If Not McVersionList.Any() OrElse McVersionList.First.Value(0).Logo.Contains("RedstoneBlock") Then
-                    Version = Nothing
+                Log("[Launch] 当前选择的 Minecraft 版本无效：" & If(Instance Is Nothing, "null", Instance.PathVersion), If(IsNothing(Instance), LogLevel.Normal, LogLevel.Debug))
+                If Not McInstanceListLoader.State = LoadState.Finished Then LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\", WaitForExit:=True)
+                If Not McInstanceList.Any() OrElse McInstanceList.First.Value(0).Logo.Contains("RedstoneBlock") Then
+                    Instance = Nothing
                     Setup.Set("LaunchVersionSelect", "")
                     Log("[Launch] 无可用 Minecraft 版本")
                 Else
-                    Version = McVersionList.First.Value(0)
-                    Setup.Set("LaunchVersionSelect", Version.Name)
-                    Log("[Launch] 自动选择 Minecraft 版本：" & Version.Path)
+                    Instance = McInstanceList.First.Value(0)
+                    Setup.Set("LaunchVersionSelect", Instance.Name)
+                    Log("[Launch] 自动选择 Minecraft 版本：" & Instance.PathVersion)
                 End If
             End If
             RunInUi(
             Sub()
-                McVersionCurrent = Version '绕这一圈是为了避免 McVersionCheck 触发第二次版本改变
+                McInstanceSelected = Instance '绕这一圈是为了避免 McVersionCheck 触发第二次版本改变
                 IsLoadFinished = True
                 RefreshButtonsUI()
                 RefreshPage(False, False) '有可能选择的版本变化了，需要重新刷新
@@ -110,11 +110,7 @@
         '修改登陆方式
         Select Case Setup.Get("LoginType")
             Case McLoginType.Legacy
-                If PageLinkHiper.HiperState = LoadState.Finished Then
-                    LabLaunchingMethod.Text = "联机离线登录"
-                Else
-                    LabLaunchingMethod.Text = "离线登录"
-                End If
+                LabLaunchingMethod.Text = "离线登录"
             Case McLoginType.Ms
                 LabLaunchingMethod.Text = "正版登录"
             Case McLoginType.Nide
@@ -123,7 +119,7 @@
                 LabLaunchingMethod.Text = "Authlib-Injector"
         End Select
         '初始化页面
-        LabLaunchingName.Text = McVersionCurrent.Name
+        LabLaunchingName.Text = McInstanceSelected.Name
         LabLaunchingStage.Text = "初始化"
         LabLaunchingTitle.Text = If(CurrentLaunchOptions?.SaveBatch Is Nothing, "正在启动游戏", "正在导出启动脚本")
         LabLaunchingProgress.Text = "0.00 %"
@@ -243,19 +239,21 @@
             If Not IsNothing(PageNew) AndAlso Not IsNothing(PageNew.Parent) Then PageNew.SetValue(ContentPresenter.ContentProperty, Nothing)
             If Anim Then
                 '动画
-                Dispatcher.Invoke(Sub()
-                                      '执行动画
-                                      AniStart({
-                                                     AaOpacity(PanLogin, -PanLogin.Opacity, 100,, New AniEaseOutFluent),
-                                                     AaCode(Sub()
-                                                                AniControlEnabled += 1
-                                                                PanLogin.Children.Clear()
-                                                                PanLogin.Children.Add(PageNew)
-                                                                AniControlEnabled -= 1
-                                                            End Sub, 100),
-                                                     AaOpacity(PanLogin, 1, 100, 120, New AniEaseInFluent)
-                                                 }, "FrmLogin PageChange")
-                                  End Sub, Threading.DispatcherPriority.Render)
+                Dispatcher.Invoke(
+                Sub()
+                    '执行动画
+                    AniStart({
+                        AaOpacity(PanLogin, -PanLogin.Opacity, 100,, New AniEaseOutFluent),
+                        AaCode(
+                        Sub()
+                            AniControlEnabled += 1
+                            PanLogin.Children.Clear()
+                            PanLogin.Children.Add(PageNew)
+                            AniControlEnabled -= 1
+                        End Sub, 100),
+                        AaOpacity(PanLogin, 1, 100, 120, New AniEaseInFluent)
+                    }, "FrmLogin PageChange")
+                End Sub, Threading.DispatcherPriority.Render)
             Else
                 '无动画
                 AniControlEnabled += 1
@@ -280,9 +278,9 @@
         '获取页面的可用种类并回写缓存
         Dim Type As PageType
         Dim LoginPageType As Integer
-        If McVersionCurrent IsNot Nothing Then
-            LoginPageType = Setup.Get("VersionServerLogin", Version:=McVersionCurrent)
-            '缓存当前版本的页面种类，下一次打开 McVersionCurrent 为空时才能加载出正确的页面
+        If McInstanceSelected IsNot Nothing Then
+            LoginPageType = Setup.Get("VersionServerLogin", Instance:=McInstanceSelected)
+            '缓存当前版本的页面种类，下一次打开 McInstanceSelected 为空时才能加载出正确的页面
             Setup.Set("LoginPageType", LoginPageType)
         Else
             LoginPageType = Setup.Get("LoginPageType")
@@ -346,7 +344,7 @@ UnknownType:
                 PanType.Visibility = Visibility.Collapsed
                 PanTypeOne.Visibility = Visibility.Visible
                 PathTypeOne.Data = (New GeometryConverter).ConvertFromString(Logo.IconButtonCard)
-                LabTypeOne.Text = If(McVersionCurrent Is Nothing, Setup.Get("CacheAuthServerName"), Setup.Get("VersionServerAuthName", Version:=McVersionCurrent))
+                LabTypeOne.Text = If(McInstanceSelected Is Nothing, Setup.Get("CacheAuthServerName"), Setup.Get("VersionServerAuthName", Instance:=McInstanceSelected))
                 If LabTypeOne.Text = "" Then LabTypeOne.Text = "第三方登录"
             Case Else
                 Log("[Control] 未知的登录页面：" & LoginPageType, LogLevel.Hint)
@@ -390,14 +388,14 @@ UnknownType:
             Result = McSkinDownload(Result)
             If Data.IsAborted Then Throw New ThreadInterruptedException("当前任务已取消：" & UserName)
             Data.Output = Result
+        Catch ex As ThreadInterruptedException
+            Data.Output = ""
+            Return
         Catch ex As Exception
-            If ex.GetType.Name = "ThreadInterruptedException" Then
-                Data.Output = ""
-                Return
-            ElseIf GetExceptionSummary(ex).Contains("429") Then
+            If ex.GetBrief.Contains("(429)") Then
                 Data.Output = PathImage & "Skins/" & McSkinSex(McLoginLegacyUuid(UserName)) & ".png"
                 Log("[Minecraft] 获取正版皮肤失败（" & UserName & "）：获取皮肤太过频繁，请 5 分钟后再试！", LogLevel.Hint)
-            ElseIf GetExceptionSummary(ex).Contains("未设置自定义皮肤") Then
+            ElseIf ex.GetBrief.Contains("未设置自定义皮肤") Then
                 Data.Output = PathImage & "Skins/" & McSkinSex(McLoginLegacyUuid(UserName)) & ".png"
                 Log("[Minecraft] 用户未设置自定义皮肤，跳过皮肤加载")
             Else
@@ -460,11 +458,11 @@ UseDefault:
                         If Data.IsAborted Then Throw New ThreadInterruptedException("当前任务已取消：" & ID)
                         Data.Output = Result
                     End If
+                Catch ex As ThreadInterruptedException
+                    Data.Output = ""
+                    Return
                 Catch ex As Exception
-                    If ex.GetType.Name = "ThreadInterruptedException" Then
-                        Data.Output = ""
-                        Return
-                    ElseIf GetExceptionSummary(ex).Contains("429") Then
+                    If ex.GetBrief.Contains("(429)") Then
                         Data.Output = PathImage & "Skins/" & McSkinSex(McLoginLegacyUuid(ID)) & ".png"
                         Log("获取离线登录使用的正版皮肤失败（" & ID & "）：获取皮肤太过频繁，请 5 分钟后再试！")
                     Else
@@ -512,14 +510,14 @@ UseDefault:
             Result = McSkinDownload(Result)
             If Data.IsAborted Then Throw New ThreadInterruptedException("当前任务已取消：" & UserName)
             Data.Output = Result
+        Catch ex As ThreadInterruptedException
+            Data.Output = ""
+            Return
         Catch ex As Exception
-            If ex.GetType.Name = "ThreadInterruptedException" Then
-                Data.Output = ""
-                Return
-            ElseIf GetExceptionSummary(ex).Contains("429") Then
+            If ex.GetBrief.Contains("(429)") Then
                 Data.Output = PathImage & "Skins/Steve.png"
                 Log("[Minecraft] 获取统一通行证皮肤失败（" & UserName & "）：获取皮肤太过频繁，请 5 分钟后再试！", LogLevel.Hint)
-            ElseIf GetExceptionSummary(ex).Contains("未设置自定义皮肤") Then
+            ElseIf ex.GetBrief.Contains("未设置自定义皮肤") Then
                 Data.Output = PathImage & "Skins/Steve.png"
                 Log("[Minecraft] 用户未设置自定义皮肤，跳过皮肤加载")
             Else
@@ -548,26 +546,26 @@ Finish:
         RunInUi(Sub() If FrmLoginAuthSkin IsNot Nothing AndAlso FrmLoginAuthSkin.Skin IsNot Nothing Then FrmLoginAuthSkin.Skin.Clear())
         '获取 Url
         Dim UserName As String = Data.Input(0)
-        Dim Uuid As String = Data.Input(1)
+        Dim UUID As String = Data.Input(1)
         If UserName = "" Then
             Data.Output = PathImage & "Skins/Steve.png"
             Log("[Minecraft] 获取 Authlib-Injector 皮肤失败，ID 为空")
             GoTo Finish
         End If
         Try
-            Dim Result As String = McSkinGetAddress(Uuid, "Auth")
+            Dim Result As String = McSkinGetAddress(UUID, "Auth")
             If Data.IsAborted Then Throw New ThreadInterruptedException("当前任务已取消：" & UserName)
             Result = McSkinDownload(Result)
             If Data.IsAborted Then Throw New ThreadInterruptedException("当前任务已取消：" & UserName)
             Data.Output = Result
+        Catch ex As ThreadInterruptedException
+            Data.Output = ""
+            Return
         Catch ex As Exception
-            If ex.GetType.Name = "ThreadInterruptedException" Then
-                Data.Output = ""
-                Return
-            ElseIf GetExceptionSummary(ex).Contains("429") Then
+            If ex.GetBrief.Contains("(429)") Then
                 Data.Output = PathImage & "Skins/Steve.png"
                 Log("[Minecraft] 获取 Authlib-Injector 皮肤失败（" & UserName & "）：获取皮肤太过频繁，请 5 分钟后再试！", LogLevel.Hint)
-            ElseIf GetExceptionSummary(ex).Contains("未设置自定义皮肤") Then
+            ElseIf ex.GetBrief.Contains("未设置自定义皮肤") Then
                 Data.Output = PathImage & "Skins/Steve.png"
                 Log("[Minecraft] 用户未设置自定义皮肤，跳过皮肤加载")
             Else
@@ -593,7 +591,7 @@ Finish:
     '版本选择按钮
     Private Sub BtnVersion_Click(sender As Object, e As EventArgs) Handles BtnVersion.Click
         If McLaunchLoader.State = LoadState.Loading Then Return
-        FrmMain.PageChange(FormMain.PageType.VersionSelect)
+        FrmMain.PageChange(FormMain.PageType.InstanceSelect)
     End Sub
     '启动按钮
     Public Sub LaunchButtonClick() Handles BtnLaunch.Click
@@ -617,15 +615,15 @@ Finish:
         End If
     End Sub
     Private BtnLaunchState As Integer = 0
-    Private BtnLaunchVersion As McVersion = Nothing
+    Private BtnLaunchInstance As McInstance = Nothing
     Public Sub RefreshButtonsUI() Handles BtnLaunch.Loaded
         If Not BtnLaunch.IsLoaded Then Return
         '获取当前状态
         Dim CurrentState As Integer
-        If (Not IsLoadFinished) OrElse McVersionListLoader.State = LoadState.Loading OrElse McFolderListLoader.State = LoadState.Loading Then
+        If (Not IsLoadFinished) OrElse McInstanceListLoader.State = LoadState.Loading OrElse McFolderListLoader.State = LoadState.Loading Then
             CurrentState = 0
         Else
-            If McVersionCurrent Is Nothing Then
+            If McInstanceSelected Is Nothing Then
                 If Setup.Get("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow Then
                     CurrentState = 1
                 Else
@@ -637,8 +635,8 @@ Finish:
         End If
         '更新状态
         If CurrentState = BtnLaunchState AndAlso
-           If(McVersionCurrent Is Nothing, "", McVersionCurrent.Path) = If(BtnLaunchVersion Is Nothing, "", BtnLaunchVersion.Path) Then GoTo ExitRefresh
-        BtnLaunchVersion = McVersionCurrent
+           If(McInstanceSelected Is Nothing, "", McInstanceSelected.PathVersion) = If(BtnLaunchInstance Is Nothing, "", BtnLaunchInstance.PathVersion) Then GoTo ExitRefresh
+        BtnLaunchInstance = McInstanceSelected
         BtnLaunchState = CurrentState
         Select Case CurrentState
             Case 0
@@ -663,11 +661,11 @@ Finish:
                 FrmLaunchLeft.BtnVersion.IsEnabled = True
                 FrmLaunchLeft.BtnMore.Visibility = Visibility.Collapsed
             Case 3
-                Log("[Minecraft] 启动按钮：Minecraft 版本：" & McVersionCurrent.Path)
+                Log("[Minecraft] 启动按钮：Minecraft 版本：" & McInstanceSelected.PathVersion)
                 FrmLaunchLeft.BtnLaunch.Text = "启动游戏"
                 FrmLaunchLeft.BtnVersion.IsEnabled = True
                 FrmLaunchLeft.BtnLaunch.IsEnabled = True
-                FrmLaunchLeft.LabVersion.Text = McVersionCurrent.Name
+                FrmLaunchLeft.LabVersion.Text = McInstanceSelected.Name
                 'FrmLaunchLeft.BtnMore.Visibility = Visibility.Visible '由功能隐藏设置修改
         End Select
 ExitRefresh:
@@ -696,12 +694,12 @@ ExitRefresh:
     '版本设置按钮
     Private Sub BtnMore_Click(sender As Object, e As EventArgs) Handles BtnMore.Click
         If McLaunchLoader.State = LoadState.Loading Then Return
-        McVersionCurrent.Load()
-        PageVersionLeft.Version = McVersionCurrent
-        FrmMain.PageChange(FormMain.PageType.VersionSetup, 0)
+        McInstanceSelected.Load()
+        PageInstanceLeft.Instance = McInstanceSelected
+        FrmMain.PageChange(FormMain.PageType.InstanceSetup, 0)
     End Sub
     ''' <summary>
-    ''' 每 0.2s 执行一次，刷新启动的数据 UI 显示。
+    ''' 每 0.1s 执行一次，刷新启动的数据 UI 显示。
     ''' </summary>
     Public Sub LaunchingRefresh()
         Try
@@ -721,20 +719,27 @@ ExitRefresh:
                 Log(ex, "获取是否启动完成失败，可能是由于启动状态改变导致集合已修改")
                 Return
             End Try
+            LabLaunchingTitle.Text = If(IsLaunched OrElse McLaunchLoaderReal.State = LoadState.Finished,
+                "已启动游戏",
+                If(CurrentLaunchOptions.SaveBatch Is Nothing, "正在启动游戏", "正在导出启动脚本"))
             If AniIsRun("Launch State Page") Then IsLaunched = False '等待页面切换动画完成
-            '计算应显示的进度
+            '更新进度
             Dim ActualProgress = McLaunchLoaderReal.Progress
-            If ActualProgress >= ShowProgress Then ShowProgress += (ActualProgress - ShowProgress) * 0.2 + 0.005 '向实际进度靠一点
+            If ActualProgress >= ShowProgress Then ShowProgress += (ActualProgress - ShowProgress) * 0.1 + 0.0025 '向实际进度靠一点
             If ActualProgress <= ShowProgress Then ShowProgress = ActualProgress '原来或处理后变得比实际进度高，直接回退
             If IsLaunched Then ShowProgress = 1 '如果已经完成了，就不卖关子了
-            '文本
-            LabLaunchingTitle.Text = If(IsLaunched, "已启动游戏", If(CurrentLaunchOptions.SaveBatch Is Nothing, "正在启动游戏", "正在导出启动脚本"))
-            LabLaunchingProgress.Text = StrFillNum(ShowProgress * 100, 2) & " %"
+            LabLaunchingProgress.Text = (ShowProgress * 100).ToString("0.00") & " %"
+            '更新下载速度
             Dim HasLaunchDownloader As Boolean = False
             Try
-                For Each Loader In NetManager.Tasks
-                    If Loader.RealParent IsNot Nothing AndAlso Loader.RealParent.Name = "Minecraft 启动" AndAlso Loader.State = LoadState.Loading Then HasLaunchDownloader = True
-                Next
+                If NetManager.Speed = 0 AndAlso LabLaunchingDownload.Visibility = Visibility.Collapsed Then
+                    '可能只是在检查文件，没有实际下载
+                    HasLaunchDownloader = False
+                Else
+                    For Each Loader In NetManager.Tasks
+                        If Loader.RealParent IsNot Nothing AndAlso Loader.RealParent.Name = "Minecraft 启动" AndAlso Loader.State = LoadState.Loading Then HasLaunchDownloader = True
+                    Next
+                End If
             Catch ex As Exception
                 Log(ex, "获取 Minecraft 启动下载器失败，可能是因为启动被取消")
                 HasLaunchDownloader = False
@@ -742,41 +747,33 @@ ExitRefresh:
             LabLaunchingDownload.Text = GetString(NetManager.Speed) & "/s"
             '进度改变动画
             Dim AnimList As New List(Of AniData) From {
-                 AaGridLengthWidth(ProgressLaunchingFinished, ShowProgress - ProgressLaunchingFinished.Width.Value, 260,, New AniEaseOutFluent),
-                 AaGridLengthWidth(ProgressLaunchingUnfinished, 1 - ShowProgress - ProgressLaunchingUnfinished.Width.Value, 260,, New AniEaseOutFluent)
+                 AaGridLengthWidth(ProgressLaunchingFinished, ShowProgress - ProgressLaunchingFinished.Width.Value, 130,, New AniEaseOutFluent),
+                 AaGridLengthWidth(ProgressLaunchingUnfinished, 1 - ShowProgress - ProgressLaunchingUnfinished.Width.Value, 130,, New AniEaseOutFluent)
             }
-            Dim IsDownloadStateChanged As Boolean = HasLaunchDownloader = (LabLaunchingDownload.Visibility = Visibility.Collapsed)
-            If IsDownloadStateChanged Then
+            If HasLaunchDownloader = (LabLaunchingDownload.Visibility = Visibility.Collapsed) Then 'IsDownloadStateChanged
                 LabLaunchingDownload.Visibility = Visibility.Visible
                 LabLaunchingDownloadLeft.Visibility = Visibility.Visible
                 AnimList.AddRange({
-                 AaOpacity(LabLaunchingDownload, If(HasLaunchDownloader, 1, 0) - LabLaunchingDownload.Opacity, 100),
-                 AaOpacity(LabLaunchingDownloadLeft, If(HasLaunchDownloader, 0.5, 0) - LabLaunchingDownloadLeft.Opacity, 100),
-                 AaCode(Sub()
-                            If Not HasLaunchDownloader Then
-                                LabLaunchingDownload.Visibility = Visibility.Collapsed
-                                LabLaunchingDownloadLeft.Visibility = Visibility.Collapsed
-                            End If
-                        End Sub, 110)
-            })
+                    AaOpacity(LabLaunchingDownload, If(HasLaunchDownloader, 1, 0) - LabLaunchingDownload.Opacity, 90),
+                    AaOpacity(LabLaunchingDownloadLeft, If(HasLaunchDownloader, 0.5, 0) - LabLaunchingDownloadLeft.Opacity, 90),
+                    AaCode(
+                    Sub()
+                        If Not HasLaunchDownloader Then
+                            LabLaunchingDownload.Visibility = Visibility.Collapsed
+                            LabLaunchingDownloadLeft.Visibility = Visibility.Collapsed
+                        End If
+                    End Sub, 110)
+                })
             End If
-            Dim IsProgressStateChanged As Boolean = (Not IsLaunched) = (LabLaunchingProgress.Visibility = Visibility.Collapsed)
-            If IsProgressStateChanged Then
+            If (Not IsLaunched) = (LabLaunchingProgress.Visibility = Visibility.Collapsed) Then 'IsProgressStateChanged
                 LabLaunchingProgress.Visibility = Visibility.Visible
                 LabLaunchingProgressLeft.Visibility = Visibility.Visible
-                If IsLaunched Then
-                    'IsWidthAnimating = True
-                    PanLaunchingHint.Visibility = Visibility.Visible
-                    'AniStop("Launching Info Width")
-                    'PanLaunchingInfo.Width = 260
-                    'ActualUsedWidth = 260
-                    'IsWidthAnimating = False
-                End If
+                If IsLaunched Then PanLaunchingHint.Visibility = Visibility.Visible
                 AnimList.AddRange({
-                 AaOpacity(LabLaunchingProgress, If(Not IsLaunched, 1, 0) - LabLaunchingProgress.Opacity, 100),
-                 AaOpacity(LabLaunchingProgressLeft, If(Not IsLaunched, 0.5, 0) - LabLaunchingProgressLeft.Opacity, 100),
-                 AaOpacity(PanLaunchingHint, If(IsLaunched, 1, 0) - PanLaunchingHint.Opacity, 100)
-            })
+                    AaOpacity(LabLaunchingProgress, If(Not IsLaunched, 1, 0) - LabLaunchingProgress.Opacity, 90),
+                    AaOpacity(LabLaunchingProgressLeft, If(Not IsLaunched, 0.5, 0) - LabLaunchingProgressLeft.Opacity, 90),
+                    AaOpacity(PanLaunchingHint, If(IsLaunched, 1, 0) - PanLaunchingHint.Opacity, 90)
+                })
             End If
             AniStart(AnimList, "Launching Progress")
         Catch ex As Exception

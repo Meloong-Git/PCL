@@ -55,7 +55,7 @@
                 If Type = "指南" Then
                     MyCard.StackInstall(NewStack, 11, "指南")
                 Else
-                    NewCard.IsSwaped = True
+                    NewCard.IsSwapped = True
                 End If
                 PanList.Children.Add(NewCard)
             Next
@@ -71,7 +71,7 @@
     Public Shared Sub OnItemClick(Entry As HelpEntry)
         Try
             If Entry.IsEvent Then
-                ModEvent.TryStartEvent(Entry.EventType, Entry.EventData)
+                CustomEvent.Raise(Entry.EventType, Entry.EventData)
             Else
                 EnterHelpPage(Entry)
             End If

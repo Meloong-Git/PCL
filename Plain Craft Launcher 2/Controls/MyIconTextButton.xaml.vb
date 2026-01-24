@@ -8,9 +8,6 @@ Public Class MyIconTextButton
     Public Uuid As Integer = GetUuid()
     Public Event Check(sender As Object, raiseByMouse As Boolean)
     Public Event Change(sender As Object, raiseByMouse As Boolean)
-    Public Sub RaiseChange()
-        RaiseEvent Change(Me, False)
-    End Sub '使外部程序可以引发本控件的 Change 事件
 
     '自定义属性
 
@@ -76,7 +73,7 @@ Public Class MyIconTextButton
         Log("[Control] 按下带图标按钮：" & Text)
         IsMouseDown = False
         RaiseEvent Click(Me, New RouteEventArgs(True))
-        ModEvent.TryStartEvent(EventType, EventData)
+        RaiseCustomEvent() '自定义事件
         RefreshColor()
     End Sub
     Private Sub MyIconTextButton_MouseDown() Handles Me.MouseLeftButtonDown
@@ -87,24 +84,6 @@ Public Class MyIconTextButton
         IsMouseDown = False
         RefreshColor()
     End Sub
-    Public Property EventType As String
-        Get
-            Return GetValue(EventTypeProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventTypeProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventTypeProperty As DependencyProperty = DependencyProperty.Register("EventType", GetType(String), GetType(MyIconTextButton), New PropertyMetadata(Nothing))
-    Public Property EventData As String
-        Get
-            Return GetValue(EventDataProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventDataProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventDataProperty As DependencyProperty = DependencyProperty.Register("EventData", GetType(String), GetType(MyIconTextButton), New PropertyMetadata(Nothing))
 
     '动画
 

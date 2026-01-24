@@ -12,9 +12,6 @@ Public Class MyCheckBox
     ''' <param name="user">是否为用户手动改变的勾选状态。</param>
     Public Event Change(sender As Object, user As Boolean)
     Public Event PreviewChange(sender As Object, e As RouteEventArgs)
-    Public Sub RaiseChange()
-        RaiseEvent Change(Me, False)
-    End Sub '使外部程序引发本控件的 Change 事件
 
     '自定义属性
     Public Property Checked As Boolean
@@ -59,6 +56,7 @@ Public Class MyCheckBox
 
             '更改动画
             SyncUI()
+            RaiseCustomEvent()
         Catch ex As Exception
             Log(ex, "设置 Checked 失败")
         End Try

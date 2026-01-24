@@ -90,8 +90,9 @@
             MainGrid.Children.Add(MainSwap)
         End If
         '改变默认的折叠
-        If IsSwaped AndAlso SwapControl IsNot Nothing Then
+        If IsSwapped AndAlso SwapControl IsNot Nothing Then
             MainSwap.RenderTransform = New RotateTransform(If(SwapLogoRight, 270, 0))
+            SwapControl.Visibility = Visibility.Collapsed
             '取消由于高度变化被迫触发的高度动画
             Dim RawUseAnimation As Boolean = UseAnimation
             UseAnimation = False
@@ -109,28 +110,24 @@
         '这一部分的代码是好几年前留下的究极屎坑，当时还不知道该咋正确调用这种方法，就写了这么一坨屎
         '但是现在……反正勉强能用……懒得改了就这样吧.jpg
         '别骂了别骂了.jpg
-        If IsNothing(Stack.Tag) Then Return
+        If Stack.Tag Is Nothing Then Return
         '排序
+        Dim HasDuplicates As Boolean = False
         Select Case Type
             Case 3
-                Stack.Tag = CType(Stack.Tag, List(Of DlOptiFineListEntry)).Sort(Function(a, b) VersionSortBoolean(a.NameDisplay, b.NameDisplay))
+                Stack.Tag = CType(Stack.Tag, List(Of DlOptiFineListEntry)).SortByComparison(Function(a, b) CompareVersionGE(a.DisplayName, b.DisplayName))
             Case 4, 10
-                Stack.Tag = CType(Stack.Tag, List(Of DlLiteLoaderListEntry)).Sort(Function(a, b) VersionSortBoolean(a.Inherit, b.Inherit))
+                Stack.Tag = CType(Stack.Tag, List(Of DlLiteLoaderListEntry)).SortByComparison(Function(a, b) CompareVersionGE(a.Inherit, b.Inherit))
             Case 6
-                Stack.Tag = CType(Stack.Tag, List(Of DlForgeVersionEntry)).Sort(Function(a, b) a.Version > b.Version)
+                Stack.Tag = CType(Stack.Tag, List(Of DlForgeVersionEntry)).OrderByDescending(Function(a) a).ToList
             Case 8, 9
-                Stack.Tag = CType(Stack.Tag, List(Of CompFile)).Sort(Function(a, b) a.ReleaseDate > b.ReleaseDate)
+                Stack.Tag = CType(Stack.Tag, List(Of CompFile)).SortByComparison(Function(a, b) a.ReleaseDate > b.ReleaseDate)
+                HasDuplicates =
+                    CType(Stack.Tag, List(Of CompFile)).Distinct(Function(a, b) a.DisplayName = b.DisplayName).Count <>
+                    CType(Stack.Tag, List(Of CompFile)).Count
         End Select
         '控件转换
         Select Case Type
-            Case 5
-                Dim LoadingPickaxe As New MyLoading With {.Text = "正在获取版本列表", .Margin = New Thickness(5)}
-                Dim Loader = New LoaderTask(Of String, List(Of DlForgeVersionEntry))("DlForgeVersion Main", AddressOf DlForgeVersionMain)
-                LoadingPickaxe.State = Loader
-                Loader.Start(Stack.Tag)
-                AddHandler LoadingPickaxe.StateChanged, AddressOf FrmDownloadForge.Forge_StateChanged
-                AddHandler LoadingPickaxe.Click, AddressOf FrmDownloadForge.Forge_Click
-                Stack.Children.Add(LoadingPickaxe)
             Case 6
                 ForgeDownloadListItemPreload(Stack, Stack.Tag, AddressOf ForgeSave_Click, True)
             Case 8
@@ -140,37 +137,24 @@
         For Each Data As Object In Stack.Tag
             Select Case Type
                 Case 0
-                    Stack.Children.Add(PageSelectRight.McVersionListItem(Data))
+                    Stack.Children.Add(CType(Data, McInstance).ToListItem(AddressOf PageSelectRight.McInstanceListContent))
                 Case 2
                     Stack.Children.Add(McDownloadListItem(Data, AddressOf McDownloadMenuSave, True))
                 Case 3
                     Stack.Children.Add(OptiFineDownloadListItem(Data, AddressOf OptiFineSave_Click, True))
-                Case 4
-                    Stack.Children.Add(LiteLoaderDownloadListItem(Data, AddressOf FrmDownloadLiteLoader.DownloadStart, False))
-                Case 5
                 Case 6
                     Stack.Children.Add(ForgeDownloadListItem(Data, AddressOf ForgeSave_Click, True))
                 Case 7
                     '不能使用 AddressOf，这导致了 #535，原因完全不明，疑似是编译器 Bug
                     Stack.Children.Add(McDownloadListItem(Data, Sub(sender, e) FrmDownloadInstall.MinecraftSelected(sender, e), False))
                 Case 8
-                    If CType(Stack.Tag, List(Of CompFile)).Distinct(Function(a, b) a.DisplayName = b.DisplayName).Count <>
-                       CType(Stack.Tag, List(Of CompFile)).Count Then
-                        '存在重复的名称（#1344）
-                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=True))
-                    Else
-                        '不存在重复的名称，正常加载
-                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Save_Click))
-                    End If
+                    '若存在重复的版本名，则显示文件名而非版本名（#1344）
+                    Stack.Children.Add(CType(Data, CompFile).ToListItem(
+                        AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=HasDuplicates))
                 Case 9
-                    If CType(Stack.Tag, List(Of CompFile)).Distinct(Function(a, b) a.DisplayName = b.DisplayName).Count <>
-                       CType(Stack.Tag, List(Of CompFile)).Count Then
-                        '存在重复的名称（#1344）
-                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Install_Click, AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=True))
-                    Else
-                        '不存在重复的名称，正常加载
-                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Install_Click, AddressOf FrmDownloadCompDetail.Save_Click))
-                    End If
+                    '若存在重复的版本名，则显示文件名而非版本名（#1344）
+                    Stack.Children.Add(CType(Data, CompFile).ToListItem(
+                        AddressOf FrmDownloadCompDetail.Install_Click, AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=HasDuplicates))
                 Case 10
                     Stack.Children.Add(LiteLoaderDownloadListItem(Data, AddressOf LiteLoaderSave_Click, True))
                 Case 11
@@ -224,7 +208,7 @@
     Private ActualUsedHeight As Double '回滚实际高度（例如 NaN）
     Private Sub MySizeChanged(sender As Object, e As SizeChangedEventArgs) Handles Me.SizeChanged
         If Not UseAnimation Then Return
-        Dim DeltaHeight As Double = If(IsSwaped, SwapedHeight, e.NewSize.Height) - e.PreviousSize.Height
+        Dim DeltaHeight As Double = If(IsSwapped, SwapedHeight, e.NewSize.Height) - e.PreviousSize.Height
         '卡片的进入时动画已被页面通用切换动画替代
         If e.PreviousSize.Height = 0 OrElse IsHeightAnimating OrElse Math.Abs(DeltaHeight) < 1 OrElse ActualHeight = 0 Then Return
         StartHeightAnimation(DeltaHeight, e.PreviousSize.Height, False)
@@ -269,18 +253,18 @@
         Sub()
             IsHeightAnimating = False
             Height = ActualUsedHeight
-            If IsSwaped AndAlso SwapControl IsNot Nothing Then SwapControl.Visibility = Visibility.Collapsed
+            If IsSwapped AndAlso SwapControl IsNot Nothing Then SwapControl.Visibility = Visibility.Collapsed
         End Sub,, True))
         AniStart(AnimList, "MyCard Height " & Uuid)
         IsHeightAnimating = True
-        ActualUsedHeight = If(IsSwaped, SwapedHeight, Height)
+        ActualUsedHeight = If(IsSwapped, SwapedHeight, Height)
         Height = PreviousHeight
     End Sub
     ''' <summary>
-    ''' 通知 MyCard，控件内容已改变，需要中断动画并更新高度。
+    ''' 通知 MyCard，控件内容已改变，需要中断动画并瞬间更新高度。
     ''' </summary>
     Public Sub TriggerForceResize()
-        Height = If(IsSwaped, SwapedHeight, Double.NaN)
+        Height = If(IsSwapped, SwapedHeight, Double.NaN)
         AniStop("MyCard Height " & Uuid)
         IsHeightAnimating = False
     End Sub
@@ -291,7 +275,7 @@
 
     '若设置了 CanSwap，或 SwapControl 不为空，则判定为会进行折叠
     '这是因为不能直接在 XAML 中设置 SwapControl
-    Public SwapControl As Object
+    Public SwapControl As FrameworkElement
     Public Property CanSwap As Boolean = False
     ''' <summary>
     ''' 被折叠的种类，用于控件虚拟化。
@@ -300,59 +284,78 @@
     ''' <summary>
     ''' 是否已被折叠。
     ''' </summary>
-    Public Property IsSwaped As Boolean
+    Public Property IsSwapped As Boolean
         Get
-            Return _IsSwaped
+            Return _IsSwapped
         End Get
         Set(value As Boolean)
-            If _IsSwaped = value Then Return
-            _IsSwaped = value
+            If _IsSwapped = value Then Return
+            _IsSwapped = value
             If SwapControl Is Nothing Then Return
             '展开
-            If Not IsSwaped AndAlso TypeOf SwapControl Is StackPanel Then StackInstall(SwapControl, SwapType, Title)
+            If Not IsSwapped AndAlso TypeOf SwapControl Is StackPanel Then StackInstall(SwapControl, SwapType, Title)
             '若尚未加载，会在 Loaded 事件中触发无动画的折叠，不需要在这里进行
             If Not IsLoaded Then Return
             '更新高度
             SwapControl.Visibility = Visibility.Visible
             TriggerForceResize()
             '改变箭头
-            AniStart(AaRotateTransform(MainSwap, If(_IsSwaped, If(SwapLogoRight, 270, 0), 180) - CType(MainSwap.RenderTransform, RotateTransform).Angle, 250,, New AniEaseOutFluent(AniEasePower.ExtraStrong)), "MyCard Swap " & Uuid, True)
+            AniStart(AaRotateTransform(MainSwap, If(_IsSwapped, If(SwapLogoRight, 270, 0), 180) - CType(MainSwap.RenderTransform, RotateTransform).Angle, 250,, New AniEaseOutFluent(AniEasePower.ExtraStrong)), "MyCard Swap " & Uuid, True)
         End Set
     End Property
-    Private _IsSwaped As Boolean = False
+    Private _IsSwapped As Boolean = False
+    <Obsolete("IsSwaped 存在拼写错误，请换用 IsSwapped 属性。")>
+    Public Property IsSwaped As Boolean
+        Get
+            Return GetValue(IsSwapedProperty)
+        End Get
+        Set(value As Boolean)
+            SetValue(IsSwapedProperty, value)
+        End Set
+    End Property
+    Public Shared ReadOnly IsSwapedProperty As DependencyProperty = DependencyProperty.Register("IsSwaped", GetType(Boolean), GetType(MyCard), New PropertyMetadata(False,
+    Sub(sender, e) If sender IsNot Nothing AndAlso TypeOf sender Is MyCard Then CType(sender, MyCard).IsSwapped = CType(e.NewValue, Boolean)))
 
     Public Property SwapLogoRight As Boolean = False
-    Private IsMouseDown As Boolean = False
+    Private IsSwapMouseDown As Boolean = False '用于触发卡片展开/折叠的 MouseDown
+    Private IsCustomMouseDown As Boolean = False '用于触发自定义事件的 MouseDown
     Public Event PreviewSwap(sender As Object, e As RouteEventArgs)
     Public Event Swap(sender As Object, e As RouteEventArgs)
     Public Const SwapedHeight As Integer = 40
     Private Sub MyCard_MouseLeftButtonDown(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonDown
         Dim Pos As Double = Mouse.GetPosition(Me).Y
-        If Not IsSwaped AndAlso
-            (SwapControl Is Nothing OrElse Pos > If(IsSwaped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return '检测点击位置；或已经不在可视树上的误判
-        IsMouseDown = True
+        If Not IsSwapped AndAlso
+            (Pos > If(IsSwapped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return
+        IsCustomMouseDown = True
+        If Not IsSwapped AndAlso
+            (SwapControl Is Nothing OrElse Pos > If(IsSwapped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return '检测点击位置；或已经不在可视树上的误判
+        IsSwapMouseDown = True
     End Sub
-    Private Sub MyCard_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonUp
-        If Not IsMouseDown Then Return
-        IsMouseDown = False
+    Private Sub MyCard_MouseLeftButtonUp() Handles Me.MouseLeftButtonUp
+        If Not IsCustomMouseDown Then Return
+        IsCustomMouseDown = False
+        RaiseCustomEvent() '触发自定义事件
+
+        If Not IsSwapMouseDown Then Return
+        IsSwapMouseDown = False
 
         Dim Pos As Double = Mouse.GetPosition(Me).Y
-        If Not IsSwaped AndAlso
-            (SwapControl Is Nothing OrElse Pos > If(IsSwaped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return '检测点击位置；或已经不在可视树上的误判
+        If Not IsSwapped AndAlso
+            (SwapControl Is Nothing OrElse Pos > If(IsSwapped, SwapedHeight, SwapedHeight - 6) OrElse (Pos = 0 AndAlso Not IsMouseDirectlyOver)) Then Return '检测点击位置；或已经不在可视树上的误判
 
-        Dim ee = New RouteEventArgs(True)
-        RaiseEvent PreviewSwap(Me, ee)
-        If ee.Handled Then
-            IsMouseDown = False
+        Dim e = New RouteEventArgs(True)
+        RaiseEvent PreviewSwap(Me, e)
+        If e.Handled Then
+            IsSwapMouseDown = False
             Return
         End If
 
-        IsSwaped = Not IsSwaped
-        Log("[Control] " & If(IsSwaped, "折叠卡片", "展开卡片") & If(Title Is Nothing, "", "：" & Title))
-        RaiseEvent Swap(Me, ee)
+        IsSwapped = Not IsSwapped
+        Log("[Control] " & If(IsSwapped, "折叠卡片", "展开卡片") & If(Title Is Nothing, "", "：" & Title))
+        RaiseEvent Swap(Me, e)
     End Sub
     Private Sub MyCard_MouseLeave_Swap(sender As Object, e As MouseEventArgs) Handles Me.MouseLeave
-        IsMouseDown = False
+        IsSwapMouseDown = False
     End Sub
 
 #End Region

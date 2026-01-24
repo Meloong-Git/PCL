@@ -54,4 +54,7 @@
         End If
     End Sub
 
+    Private Sub MyMenuItem_Click(sender As Object, e As RoutedEventArgs) Handles Me.Click
+        RaiseCustomEvent()
+    End Sub
 End Class

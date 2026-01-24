@@ -27,7 +27,7 @@
     ''' 获取当前页面的登录信息。
     ''' </summary>
     Public Shared Function GetLoginData() As McLoginServer
-        Dim Server As String = If(IsNothing(McVersionCurrent), Setup.Get("CacheNideServer"), Setup.Get("VersionServerNide", Version:=McVersionCurrent))
+        Dim Server As String = If(IsNothing(McInstanceSelected), Setup.Get("CacheNideServer"), Setup.Get("VersionServerNide", Instance:=McInstanceSelected))
         If FrmLoginNide Is Nothing Then
             Return New McLoginServer(McLoginType.Nide) With {.Token = "Nide", .UserName = "", .Password = "", .Description = "统一通行证", .Type = McLoginType.Nide, .BaseUrl = "https://auth.mc-user.com:233/" & Server & "/authserver"}
         Else
@@ -71,7 +71,7 @@
     End Sub
     Private Sub Btn_Click(sender As Object, e As EventArgs) Handles BtnLink.Click
         If BtnLink.Content = "注册账号" Then
-            OpenWebsite("https://login.mc-user.com:233/" & Setup.Get("VersionServerNide", Version:=McVersionCurrent) & "/register")
+            OpenWebsite("https://login.mc-user.com:233/" & Setup.Get("VersionServerNide", Instance:=McInstanceSelected) & "/register")
         Else
             OpenWebsite("https://login.mc-user.com:233/account/login")
         End If

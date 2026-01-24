@@ -264,7 +264,7 @@
             If IsLoaded AndAlso AniControlEnabled = 0 Then '防止默认属性变更触发动画
                 '有动画
                 AniStart({
-                         AaColor(Me, BorderBrushProperty, ForeColorName, AnimationTime)，
+                         AaColor(Me, BorderBrushProperty, ForeColorName, AnimationTime),
                          AaColor(Me, BackgroundProperty, BackColorName, AnimationTime)
                      }, "MyTextBox Color " & Uuid)
             Else
@@ -291,4 +291,8 @@
         End If
     End Sub
 
+    '在按下回车时触发自定义事件
+    Private Sub MyTextBox_KeyUp(sender As Object, e As KeyEventArgs) Handles Me.KeyUp
+        If e.Key = Key.Enter Then RaiseCustomEvent()
+    End Sub
 End Class

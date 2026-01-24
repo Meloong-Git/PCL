@@ -1,8 +1,8 @@
 ﻿<Grid x:Class="MyMsgLogin"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:my="clr-namespace:PCL"
-             RenderTransformOrigin="0,0.5" UseLayoutRounding="True" SnapsToDevicePixels="True" MinWidth="400" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="25">
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="clr-namespace:PCL"
+      RenderTransformOrigin="0,0.5" UseLayoutRounding="True" SnapsToDevicePixels="True" MinWidth="400" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="25">
     <Grid.RenderTransform>
         <TransformGroup>
             <RotateTransform x:Name="TransformRotate" Angle="-4" />
@@ -23,17 +23,17 @@
             </Grid.RowDefinitions>
             <TextBlock Grid.Row="0" FontSize="23" TextTrimming="None" Foreground="{DynamicResource ColorBrush2}" HorizontalAlignment="Left" Name="LabTitle" Margin="7,-1,70,9" Text="测试标题文本" VerticalAlignment="Top" SnapsToDevicePixels="False" UseLayoutRounding="False" />
             <Rectangle x:Name="ShapeLine" Grid.Row="1" Height="2" Fill="{Binding Foreground, ElementName=LabTitle}" />
-            <my:MyScrollViewer Grid.Row="3" VerticalAlignment="Top" x:Name="PanCaption" Margin="0,0,0,17" Padding="7,0,15,0"
+            <local:MyScrollViewer Grid.Row="3" VerticalAlignment="Top" x:Name="PanCaption" Margin="0,0,0,17" Padding="7,0,15,0"
                                VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" DeltaMult="0.7">
                 <TextBlock VerticalAlignment="Top" TextTrimming="None" TextWrapping="Wrap" Name="LabCaption" FontSize="15" LineHeight="18"
                            Foreground="#FF5C5C5C" FontWeight="Normal" Padding="1" />
-            </my:MyScrollViewer>
+            </local:MyScrollViewer>
             <StackPanel Grid.Row="4" Name="PanBtn" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="150,0,8,0" Orientation="Horizontal">
-                <my:MyButton ColorType="Normal" x:FieldModifier="public" Text="重新打开网页" x:Name="Btn1" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False"
-                             EventType="打开网页" />
-                <my:MyButton ColorType="Normal" x:FieldModifier="public" Text="复制代码" x:Name="Btn2" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False"
-                             EventType="复制文本" />
-                <my:MyButton ColorType="Normal" x:FieldModifier="public" Text="取消" x:Name="Btn3" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False" />
+                <local:MyButton ColorType="Normal" x:FieldModifier="public" Text="重新打开网页" x:Name="Btn1" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False"
+                             local:CustomEventService.EventType="打开网页" />
+                <local:MyButton ColorType="Normal" x:FieldModifier="public" Text="复制代码" x:Name="Btn2" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False"
+                             local:CustomEventService.EventType="复制文本" />
+                <local:MyButton ColorType="Normal" x:FieldModifier="public" Text="取消" x:Name="Btn3" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False" />
             </StackPanel>
         </Grid>
     </Border>

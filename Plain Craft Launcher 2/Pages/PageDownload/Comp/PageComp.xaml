@@ -34,16 +34,14 @@
                     <TextBlock VerticalAlignment="Center" Grid.Row="2" HorizontalAlignment="Left" Text="版本" Margin="0,0,18,0" />
                     <local:MyComboBox x:Name="TextSearchVersion" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" IsEditable="True" MaxDropDownHeight="320">
                         <local:MyComboBoxItem Content="全部 (也可自行输入)" IsSelected="True" />
-                        <local:MyComboBoxItem Content="1.21.5" />
+                        <local:MyComboBoxItem Content="1.21.11" />
                         <local:MyComboBoxItem Content="1.21.1" />
                         <local:MyComboBoxItem Content="1.20.6" />
                         <local:MyComboBoxItem Content="1.20.1" />
                         <local:MyComboBoxItem Content="1.19.4" />
-                        <local:MyComboBoxItem Content="1.19.2" />
                         <local:MyComboBoxItem Content="1.18.2" />
                         <local:MyComboBoxItem Content="1.16.5" />
                         <local:MyComboBoxItem Content="1.12.2" />
-                        <local:MyComboBoxItem Content="1.10.2" />
                         <local:MyComboBoxItem Content="1.8.9" />
                         <local:MyComboBoxItem Content="1.7.10" />
                     </local:MyComboBox>
@@ -71,7 +69,7 @@
             </StackPanel>
         </local:MyCard>
         <StackPanel x:Name="PanContent">
-            <local:MyHint x:Name="HintError" HasBorder="True" Text="无法连接到 Modrinth，所以目前仅显示了来自 CurseForge 的内容，搜索结果可能不全。&#xa;请稍后重试，或使用 VPN 以改善网络环境。" Theme="Yellow" Margin="0,0,0,15" />
+            <local:MyHint x:Name="HintError" HasBorder="True" Text="无法连接到 Modrinth，所以目前仅显示了来自 CurseForge 的内容，搜索结果可能不全。&#xa;请稍后再试，或使用 VPN 改善网络环境。" Theme="Yellow" Margin="0,0,0,15" />
             <local:MyCard x:Name="CardProjects" UseAnimation="False">
                 <StackPanel x:Name="PanProjects" Margin="12" />
             </local:MyCard>

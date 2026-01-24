@@ -1,6 +1,4 @@
-﻿Imports NAudio.Wave
-
-Public Class PageSetupUI
+﻿Public Class PageSetupUI
 
     Public Shadows IsLoaded As Boolean = False
 
@@ -164,7 +162,7 @@ Public Class PageSetupUI
             Setup.Reset("UiHiddenOtherTest")
 
             Log("[Setup] 已初始化个性化设置！")
-            Hint("已初始化个性化设置", HintType.Finish, False)
+            Hint("已初始化个性化设置", HintType.Green, False)
         Catch ex As Exception
             Log(ex, "初始化个性化设置失败", LogLevel.Msgbox)
         End Try
@@ -217,7 +215,7 @@ Public Class PageSetupUI
         If MyMsgBox("即将删除背景图片文件夹中的所有文件。" & vbCrLf & "此操作不可撤销，是否确定？", "警告",, "取消", IsWarn:=True) = 1 Then
             DeleteDirectory(Path & "PCL\Pictures")
             BackgroundRefresh(False, True)
-            Hint("背景图片已清空！", HintType.Finish)
+            Hint("背景图片已清空！", HintType.Green)
         End If
     End Sub
     ''' <summary>
@@ -240,10 +238,10 @@ Public Class PageSetupUI
             If Not Pic.Any() Then
                 If Refresh Then
                     If FrmMain.ImgBack.Visibility = Visibility.Collapsed Then
-                        If IsHint Then Hint("未检测到可用背景图片！", HintType.Critical)
+                        If IsHint Then Hint("未检测到可用背景图片！", HintType.Red)
                     Else
                         FrmMain.ImgBack.Visibility = Visibility.Collapsed
-                        If IsHint Then Hint("背景图片已清除！", HintType.Finish)
+                        If IsHint Then Hint("背景图片已清除！", HintType.Green)
                     End If
                 End If
                 If Not IsNothing(FrmSetupUI) Then FrmSetupUI.BackgroundRefreshUI(False, 0)
@@ -255,7 +253,7 @@ Public Class PageSetupUI
                         FrmMain.ImgBack.Background = New MyBitmap(Address)
                         Setup.Load("UiBackgroundSuit", True)
                         FrmMain.ImgBack.Visibility = Visibility.Visible
-                        If IsHint Then Hint("背景图片已刷新：" & GetFileNameFromPath(Address), HintType.Finish, False)
+                        If IsHint Then Hint("背景图片已刷新：" & GetFileNameFromPath(Address), HintType.Green, False)
                     Catch ex As Exception
                         If ex.Message.Contains("参数无效") Then
                             Log("刷新背景图片失败，该图片文件可能并非标准格式。" & vbCrLf &
@@ -276,7 +274,7 @@ Public Class PageSetupUI
 
     '顶部栏
     Private Sub BtnLogoChange_Click(sender As Object, e As EventArgs) Handles BtnLogoChange.Click
-        Dim FileName As String = SelectFile("常用图片文件(*.png;*.jpg;*.gif;*.webp;*.jpeg)|*.png;*.jpg;*.gif;*.webp;*.jpeg", "选择图片")
+        Dim FileName As String = SelectFile("常用图片文件(*.png;*.jpg;*.jpeg;*.gif;*.webp)|*.png;*.jpg;*.jpeg;*.gif;*.webp", "选择图片")
         If FileName = "" Then Return
         Try
             '拷贝文件
@@ -321,7 +319,7 @@ Refresh:
             Return
         End If
         '没有图片则要求选择
-        Dim FileName As String = SelectFile("常用图片文件(*.png;*.jpg;*.gif;*.webp)|*.png;*.jpg;*.gif;*.webp", "选择图片")
+        Dim FileName As String = SelectFile("常用图片文件(*.png;*.jpeg;*.jpg;*.gif;*.webp)|*.png;*.jpeg;*.jpg;*.gif;*.webp", "选择图片")
         If FileName = "" Then
             FrmMain.ImageTitleLogo.Source = Nothing
             e.Handled = True
@@ -340,7 +338,7 @@ Refresh:
         Try
             File.Delete(Path & "PCL\Logo.png")
             RadioLogoType1.SetChecked(True, True)
-            Hint("标题栏图片已清空！", HintType.Finish)
+            Hint("标题栏图片已清空！", HintType.Green)
         Catch ex As Exception
             Log(ex, "清空标题栏图片失败", LogLevel.Msgbox)
         End Try
@@ -359,15 +357,9 @@ Refresh:
             PanMusicVolume.Visibility = Visibility.Visible
             PanMusicDetail.Visibility = Visibility.Visible
             BtnMusicClear.Visibility = Visibility.Visible
-            Dim validMusicCount As Integer = 0
-            For Each File In EnumerateFiles(Path & "PCL\Musics\")
-                Try
-                    If {".ini", ".jpg", ".txt", ".cfg", ".lrc", ".db", ".png"}.Contains(File.Extension.ToLower) Then Continue For
-                    validMusicCount += 1
-                Catch ex As Exception
-                End Try
-            Next
-            CardMusic.Title = "背景音乐（" & validMusicCount & " 首）"
+            CardMusic.Title = "背景音乐（" &
+                EnumerateFiles(Path & "PCL\Musics\").Count(Function(f) Not {".ini", ".jpg", ".txt", ".cfg", ".lrc", ".db", ".png"}.Contains(f.Extension.ToLower)) &
+                " 首）"
         Else
             PanMusicVolume.Visibility = Visibility.Collapsed
             PanMusicDetail.Visibility = Visibility.Collapsed
@@ -389,7 +381,7 @@ Refresh:
                 '删除文件
                 Try
                     DeleteDirectory(Path & "PCL\Musics")
-                    Hint("背景音乐已删除！", HintType.Finish)
+                    Hint("背景音乐已删除！", HintType.Green)
                 Catch ex As Exception
                     Log(ex, "删除背景音乐失败", LogLevel.Msgbox)
                 End Try
@@ -418,7 +410,7 @@ Refresh:
                 If MyMsgBox("当前已存在布局文件，继续生成教学文件将会覆盖现有布局文件！", "覆盖确认", "继续", "取消", IsWarn:=True) = 2 Then Return
             End If
             WriteFile(Path & "PCL\Custom.xaml", GetResources("Custom"))
-            Hint("教学文件已生成！", HintType.Finish)
+            Hint("教学文件已生成！", HintType.Green)
             OpenExplorer(Path & "PCL\Custom.xaml")
         Catch ex As Exception
             Log(ex, "生成教学文件失败", LogLevel.Feedback)
@@ -426,7 +418,7 @@ Refresh:
     End Sub
     Private Sub BtnCustomRefresh_Click() Handles BtnCustomRefresh.Click
         FrmLaunchRight.ForceRefresh()
-        Hint("已刷新主页！", HintType.Finish)
+        Hint("已刷新主页！", HintType.Green)
     End Sub
     Private Sub BtnCustomTutorial_Click(sender As Object, e As EventArgs) Handles BtnCustomTutorial.Click
         MyMsgBox("1. 点击 生成教学文件 按钮，这会在 PCL 文件夹下生成 Custom.xaml 布局文件。" & vbCrLf &
@@ -550,7 +542,7 @@ Refresh:
                 Dim AvaliableCount As Integer = 0
                 If Not Setup.Get("UiHiddenSetupLaunch") Then AvaliableCount += 1
                 If Not Setup.Get("UiHiddenSetupUi") Then AvaliableCount += 1
-                If Not Setup.Get("UiHiddenSetupLink") Then AvaliableCount += 1
+                'If Not Setup.Get("UiHiddenSetupLink") Then AvaliableCount += 1
                 If Not Setup.Get("UiHiddenSetupSystem") Then AvaliableCount += 1
                 FrmSetupLeft.PanItem.Visibility = If(AvaliableCount < 2 AndAlso Not HiddenForceShow, Visibility.Collapsed, Visibility.Visible)
             End If
@@ -582,9 +574,9 @@ Refresh:
                 FrmMain.BtnTitleSelect4.Text = "更多"
             End If
             '各个页面的入口
-            If FrmMain.PageCurrent = FormMain.PageType.VersionSelect Then FrmSelectRight.BtnEmptyDownload_Loaded()
+            If FrmMain.PageCurrent = FormMain.PageType.InstanceSelect Then FrmSelectRight.BtnEmptyDownload_Loaded()
             If FrmMain.PageCurrent = FormMain.PageType.Launch Then FrmLaunchLeft.RefreshButtonsUI()
-            If FrmMain.PageCurrent = FormMain.PageType.VersionSetup AndAlso FrmVersionModDisabled IsNot Nothing Then FrmVersionModDisabled.BtnDownload_Loaded()
+            If FrmMain.PageCurrent = FormMain.PageType.InstanceSetup AndAlso FrmInstanceModDisabled IsNot Nothing Then FrmInstanceModDisabled.BtnDownload_Loaded()
             '备注
             If FrmSetupUI IsNot Nothing Then FrmSetupUI.CardSwitch.Title = If(HiddenForceShow, "功能隐藏（已暂时关闭，按 F12 以重新启用）", "功能隐藏")
         Catch ex As Exception

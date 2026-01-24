@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageDownloadMod"
-    PanScroll="{Binding ElementName=Content}">
+    PanScroll="Content">
     <local:PageComp x:Name="Content" PageType="Mod" TypeName="Mod" TypeNameSpaced=" Mod ">
         <local:MyComboBoxItem Content="全部" Tag="" IsSelected="True" />
         <local:MyComboBoxItem Content="世界元素" Tag="406/worldgen" />
@@ -27,7 +27,8 @@
         <local:MyComboBoxItem Content="生物" Tag="411/mobs" />
         <local:MyComboBoxItem Content="实用" Tag="5191/utility" />
         <local:MyComboBoxItem Content="装备与工具" Tag="434/equipment" />
-        <local:MyComboBoxItem Content="性能优化" Tag="/optimization" />
+        <local:MyComboBoxItem Content="创造模式" Tag="9026/" />
+        <local:MyComboBoxItem Content="性能优化" Tag="6814/optimization" />
         <local:MyComboBoxItem Content="信息显示" Tag="423/" />
         <local:MyComboBoxItem Content="服务器" Tag="435/social" />
         <local:MyComboBoxItem Content="支持库" Tag="421/library" />

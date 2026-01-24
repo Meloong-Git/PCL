@@ -467,7 +467,7 @@ Public Module ModAnimation
     ''' 按照 WPF 方式旋转控件的动画。
     ''' </summary>
     ''' <param name="Obj">动画的对象。它必须已经拥有了单一的 ScaleTransform 值。</param>
-    ''' <param name="Value">大小改变的百分比（如-0.6）。</param>
+    ''' <param name="Value">旋转角度（度）。</param>
     ''' <param name="Time">动画长度（毫秒）。</param>
     ''' <param name="Delay">动画延迟执行的时间（毫秒）。</param>
     ''' <param name="Ease">插值器类型。</param>
@@ -743,9 +743,9 @@ Public Module ModAnimation
     ''' <param name="AniGroup">由 Aa 开头的函数初始化的 AniData 对象集合。</param>
     ''' <param name="Name">动画组的名称。如果重复会直接停止同名动画组。</param>
     Public Sub AniStart(AniGroup As IList, Optional Name As String = "", Optional RefreshTime As Boolean = False)
-        If RefreshTime Then AniLastTick = GetTimeTick() '避免处理动画时已经造成了极大的延迟，导致动画突然结束
+        If RefreshTime Then AniLastTick = GetTimeMs() '避免处理动画时已经造成了极大的延迟，导致动画突然结束
         '添加到正在执行的动画组
-        Dim NewEntry As New AniGroupEntry With {.Data = GetFullList(Of AniData)(AniGroup), .StartTick = GetTimeTick()}
+        Dim NewEntry As New AniGroupEntry With {.Data = GetFullList(Of AniData)(AniGroup), .StartTick = GetTimeMs()}
         If Name = "" Then
             Name = NewEntry.Uuid
         Else
@@ -788,48 +788,50 @@ Public Module ModAnimation
     ''' </summary>
     Public Sub AniStart()
         '初始化计时器
-        AniLastTick = GetTimeTick()
+        AniLastTick = GetTimeMs()
         AniFPSTimer = AniLastTick
         AniRunning = True '标记动画执行开始
 
-        RunInNewThread(Sub()
-                           Try
-                               Log("[Animation] 动画线程开始")
-                               Do While True
-                                   '两帧之间的间隔时间
-                                   Dim DeltaTime As Long = MathClamp(GetTimeTick() - AniLastTick, 0, 100000)
-                                   If DeltaTime < 3 Then GoTo Sleeper
-                                   AniLastTick = GetTimeTick()
-                                   '记录 FPS
-                                   If ModeDebug Then
-                                       If MathClamp(AniLastTick - AniFPSTimer, 0, 100000) >= 500 Then
-                                           AniFPS = AniFPSCounter
-                                           AniFPSCounter = 0
-                                           AniFPSTimer = AniLastTick
-                                       End If
-                                       AniFPSCounter += 2
-                                   End If
-                                   '执行动画
-                                   RunInUiWait(Sub()
-                                                   AniCount = 0
-                                                   AniTimer(DeltaTime * AniSpeed)
-                                                   '#If DEBUG Then
-                                                   '    FrmMain.Title = "F " & AniFPS & ", A " & AniCount & ", R " & NetManage.FileRemain
-                                                   '#Else
-                                                   '    If ModeDebug Then FrmMain.Title = "FPS " & AniFPS & ", 动画 " & AniCount & ", 下载中 " & NetManage.FileRemain
-                                                   '#End If
-                                                   If RandomInteger(0, 64 * If(ModeDebug, 5, 30)) = 0 AndAlso ((AniFPS < 62 AndAlso AniFPS > 0) OrElse AniCount > 4 OrElse NetManager.FileRemain <> 0) Then
-                                                       Log("[Report] FPS " & AniFPS & ", 动画 " & AniCount & ", 下载中 " & NetManager.FileRemain & "（" & GetString(NetManager.Speed) & "/s）")
-                                                   End If
-                                               End Sub)
+        RunInNewThread(
+        Sub()
+            Try
+                Log("[Animation] 动画线程开始")
+                Do While True
+                    '两帧之间的间隔时间
+                    Dim DeltaTime As Long = MathClamp(GetTimeMs() - AniLastTick, 0, 100000)
+                    If DeltaTime < 3 Then GoTo Sleeper
+                    AniLastTick = GetTimeMs()
+                    '记录 FPS
+                    If ModeDebug Then
+                        If MathClamp(AniLastTick - AniFPSTimer, 0, 100000) >= 500 Then
+                            AniFPS = AniFPSCounter
+                            AniFPSCounter = 0
+                            AniFPSTimer = AniLastTick
+                        End If
+                        AniFPSCounter += 2
+                    End If
+                    '执行动画
+                    RunInUiWait(
+                    Sub()
+                        AniCount = 0
+                        AniTimer(DeltaTime * AniSpeed)
+                        '#If DEBUG Then
+                        '    FrmMain.Title = "F " & AniFPS & ", A " & AniCount & ", R " & NetManage.FileRemain
+                        '#Else
+                        '    If ModeDebug Then FrmMain.Title = "FPS " & AniFPS & ", 动画 " & AniCount & ", 下载中 " & NetManage.FileRemain
+                        '#End If
+                        If RandomInteger(0, 64 * If(ModeDebug, 5, 30)) = 0 AndAlso ((AniFPS < 62 AndAlso AniFPS > 0) OrElse AniCount > 4 OrElse NetManager.FileRemain <> 0) Then
+                            Log("[Report] FPS " & AniFPS & ", 动画 " & AniCount & ", 下载中 " & NetManager.FileRemain & "（" & GetString(NetManager.Speed) & "/s）")
+                        End If
+                    End Sub)
 Sleeper:
-                                   '控制 FPS
-                                   Thread.Sleep(1)
-                               Loop
-                           Catch ex As Exception
-                               Log(ex, "动画帧执行失败", LogLevel.Critical)
-                           End Try
-                       End Sub, "Animation", ThreadPriority.AboveNormal)
+                    '控制 FPS
+                    Thread.Sleep(1)
+                Loop
+            Catch ex As Exception
+                Log(ex, "动画帧执行失败", LogLevel.Critical)
+            End Try
+        End Sub, "Animation", ThreadPriority.AboveNormal)
     End Sub
 
     ''' <summary>
@@ -838,7 +840,7 @@ Sleeper:
     Public Sub AniTimer(DeltaTick As Integer)
         Try
 
-            If DeltaTick / AniSpeed > 200 Then Log("[Animation] 两个动画帧间隔 " & DeltaTick & " ms", LogLevel.Developer)
+            If DeltaTick / AniSpeed > 100 Then Log("[Animation] 两个动画帧间隔 " & DeltaTick & " ms", LogLevel.Developer)
             Dim i As Integer = -1
             '循环每个动画组
             Do While i + 1 < AniGroups.Count
@@ -996,7 +998,7 @@ NextAni:
                 Case AniType.ScaleTransform
                     Dim Obj As FrameworkElement = Ani.Obj
                     If TypeOf Obj.RenderTransform IsNot ScaleTransform Then
-                        Obj.RenderTransformOrigin = New Point(0.5, 0.5)
+                        If Obj.RenderTransformOrigin = New Point(0, 0) Then Obj.RenderTransformOrigin = New Point(0.5, 0.5)
                         Obj.RenderTransform = New ScaleTransform(1, 1)
                     End If
                     Dim Delta As Double = MathPercent(0, Ani.Value, Ani.Ease.GetDelta(Ani.TimeFinished / Ani.TimeTotal, Ani.TimePercent))
@@ -1006,7 +1008,7 @@ NextAni:
                 Case AniType.RotateTransform
                     Dim Obj As FrameworkElement = Ani.Obj
                     If TypeOf Obj.RenderTransform IsNot RotateTransform Then
-                        Obj.RenderTransformOrigin = New Point(0.5, 0.5)
+                        If Obj.RenderTransformOrigin = New Point(0, 0) Then Obj.RenderTransformOrigin = New Point(0.5, 0.5)
                         Obj.RenderTransform = New RotateTransform(0)
                     End If
                     Dim Delta As Double = MathPercent(0, Ani.Value, Ani.Ease.GetDelta(Ani.TimeFinished / Ani.TimeTotal, Ani.TimePercent))

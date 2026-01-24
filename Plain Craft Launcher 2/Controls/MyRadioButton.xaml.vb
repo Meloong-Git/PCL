@@ -7,10 +7,6 @@ Public Class MyRadioButton
 
     Public Uuid As Integer = GetUuid()
     Public Event Check(sender As Object, raiseByMouse As Boolean)
-    Public Event Change(sender As Object, raiseByMouse As Boolean)
-    Public Sub RaiseChange()
-        RaiseEvent Change(Me, False)
-    End Sub '使外部程序可以引发本控件的 Change 事件
 
     '自定义属性
 
@@ -46,23 +42,22 @@ Public Class MyRadioButton
     ''' 手动设置 Checked 属性。
     ''' </summary>
     ''' <param name="value">新的 Checked 属性。</param>
-    ''' <param name="user">是否由用户引发。</param>
+    ''' <param name="raiseByMouse">是否由用户引发。</param>
     ''' <param name="anime">是否执行动画。</param>
-    Public Sub SetChecked(value As Boolean, user As Boolean, anime As Boolean)
+    Public Sub SetChecked(value As Boolean, raiseByMouse As Boolean, anime As Boolean)
         Try
 
             '自定义属性基础
 
             Dim IsChanged As Boolean = False
-            If IsLoaded AndAlso Not value = _Checked Then RaiseEvent Change(Me, user)
-            If Not value = _Checked Then
+            If _Checked <> value Then
                 _Checked = value
                 IsChanged = True
             End If
 
             '保证只有一个单选框选中
 
-            If IsNothing(Parent) Then Return
+            If Parent Is Nothing Then Return
             Dim RadioboxList As New List(Of MyRadioButton)
             Dim CheckedCount As Integer = 0
             '收集控件列表与选中个数
@@ -105,7 +100,8 @@ Public Class MyRadioButton
             RefreshColor(Nothing, anime)
 
             '触发事件
-            If Checked Then RaiseEvent Check(Me, user)
+            If Checked Then RaiseEvent Check(Me, raiseByMouse)
+            RaiseCustomEvent()
 
         Catch ex As Exception
             Log(ex, "单选按钮勾选改变错误", LogLevel.Hint)

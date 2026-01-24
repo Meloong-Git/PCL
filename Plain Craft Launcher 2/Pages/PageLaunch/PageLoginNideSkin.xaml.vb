@@ -21,7 +21,7 @@
     ''' 获取当前页面的登录信息。
     ''' </summary>
     Public Shared Function GetLoginData() As McLoginServer
-        Dim Server As String = If(IsNothing(McVersionCurrent), Setup.Get("CacheNideServer"), Setup.Get("VersionServerNide", Version:=McVersionCurrent))
+        Dim Server As String = If(IsNothing(McInstanceSelected), Setup.Get("CacheNideServer"), Setup.Get("VersionServerNide", Instance:=McInstanceSelected))
         Return New McLoginServer(McLoginType.Nide) With {.Token = "Nide", .UserName = Setup.Get("CacheNideUsername"), .Password = Setup.Get("CacheNidePass"), .Description = "统一通行证", .Type = McLoginType.Nide, .BaseUrl = "https://auth.mc-user.com:233/" & Server & "/authserver"}
     End Function
 
@@ -54,7 +54,7 @@
     End Sub
 
     Private Sub Skin_Click(sender As Object, e As MouseButtonEventArgs) Handles Skin.Click
-        OpenWebsite("https://login.mc-user.com:233/" & If(IsNothing(McVersionCurrent), Setup.Get("CacheNideServer"), Setup.Get("VersionServerNide", Version:=McVersionCurrent)) & "/skin")
+        OpenWebsite("https://login.mc-user.com:233/" & If(IsNothing(McInstanceSelected), Setup.Get("CacheNideServer"), Setup.Get("VersionServerNide", Instance:=McInstanceSelected)) & "/skin")
     End Sub
 
 End Class

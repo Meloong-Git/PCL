@@ -400,6 +400,7 @@ Public Class MyListItem
                 Dim CheckedCount As Integer = 0
                 '收集控件列表与选中个数
                 For Each Control In CType(Parent, Object).Children
+                    Control = MyVirtualizingElement.TryInit(Control)
                     If TypeOf Control Is MyListItem AndAlso CType(Control, MyListItem).Type = CheckType.RadioBox Then
                         RadioboxList.Add(Control)
                         If Control.Checked Then CheckedCount += 1
@@ -510,8 +511,8 @@ Public Class MyListItem
         RaiseEvent Click(sender, e)
         If e.Handled Then Return
         '触发自定义事件
-        If Not String.IsNullOrEmpty(EventType) Then
-            ModEvent.TryStartEvent(EventType, EventData)
+        If CustomEventService.GetEventType(sender) <> CustomEvent.EventType.None Then
+            RaiseCustomEvent()
             e.Handled = True
         End If
         If e.Handled Then Return
@@ -541,26 +542,6 @@ Public Class MyListItem
         If ButtonStack IsNot Nothing Then ButtonStack.IsHitTestVisible = True
     End Sub
 
-    '实现自定义事件
-    Public Property EventType As String
-        Get
-            Return GetValue(EventTypeProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventTypeProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventTypeProperty As DependencyProperty = DependencyProperty.Register("EventType", GetType(String), GetType(MyListItem), New PropertyMetadata(Nothing))
-    Public Property EventData As String
-        Get
-            Return GetValue(EventDataProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventDataProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventDataProperty As DependencyProperty = DependencyProperty.Register("EventData", GetType(String), GetType(MyListItem), New PropertyMetadata(Nothing))
-
 #End Region
 
     Private StateLast As String
@@ -568,7 +549,7 @@ Public Class MyListItem
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp
         '菜单虚拟化检测
         If ContentHandler IsNot Nothing Then
-            ContentHandler(sender, e)
+            ContentHandler(Me, e)
             ContentHandler = Nothing
         End If
         '判断当前颜色
@@ -661,13 +642,14 @@ Public Class MyListItem
             SetResourceReference(ForegroundProperty, "ColorBrush1")
         End If
         ColumnPaddingRight.Width = New GridLength(MinPaddingRight)
-        If EventType = "打开帮助" AndAlso Not (Title <> "" AndAlso Info <> "") Then '#3266
+        If CustomEventService.GetEventType(Me) = CustomEvent.EventType.打开帮助 AndAlso Not (Title <> "" AndAlso Info <> "") Then '#3266
             Try
-                Dim Unused = New HelpEntry(GetEventAbsoluteUrls(EventData, EventType)(0)).SetToListItem(Me)
+                Dim Entry As New HelpEntry(CustomEvent.GetAbsoluteUrls(CustomEventService.GetEventData(Me), CustomEventService.GetEventType(Me))(0))
+                Entry.SetToListItem(Me)
             Catch ex As Exception
                 Log(ex, "设置帮助 MyListItem 失败", LogLevel.Msgbox)
-                EventType = Nothing
-                EventData = Nothing
+                CustomEventService.SetEventType(Me, CustomEvent.EventType.None)
+                CustomEventService.SetEventData(Me, "")
             End Try
         End If
     End Sub

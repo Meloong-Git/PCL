@@ -89,14 +89,15 @@ Public Class MyRadioBox
                     End If
             End Select
 
-            '触发事件
             If IsChanged Then
+                '触发事件
                 If Checked Then RaiseEvent Check(Me, New RouteEventArgs(user))
                 RaiseEvent Changed(Me, New RouteEventArgs(user))
+                RaiseCustomEvent()
+                '更改动画
+                SyncUI()
             End If
 
-            '更改动画
-            SyncUI()
         Catch ex As Exception
             Log(ex, "单选框勾选改变错误", LogLevel.Hint)
         End Try

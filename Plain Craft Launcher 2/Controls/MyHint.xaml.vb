@@ -102,7 +102,7 @@ Public Class MyHint
         If CanClose AndAlso Setup.Get(RelativeSetup) Then Visibility = Visibility.Collapsed
     End Sub
     Private Sub BtnClose_Click(sender As Object, e As EventArgs) Handles BtnClose.Click
-        Setup.Set(RelativeSetup, True)
+        Setup.SetSafe(RelativeSetup, True)
         AniDispose(Me, False)
     End Sub
 
@@ -113,7 +113,7 @@ Public Class MyHint
         IsMouseDown = False
         Log("[Control] 按下提示条" & If(String.IsNullOrEmpty(Name), "", "：" & Name))
         e.Handled = True
-        ModEvent.TryStartEvent(EventType, EventData)
+        RaiseCustomEvent() '自定义事件
     End Sub
     Private Sub MyHint_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonDown
         IsMouseDown = True
@@ -121,24 +121,6 @@ Public Class MyHint
     Private Sub MyHint_MouseLeave() Handles Me.MouseLeave
         IsMouseDown = False
     End Sub
-    Public Property EventType As String
-        Get
-            Return GetValue(EventTypeProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventTypeProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventTypeProperty As DependencyProperty = DependencyProperty.Register("EventType", GetType(String), GetType(MyHint), New PropertyMetadata(Nothing))
-    Public Property EventData As String
-        Get
-            Return GetValue(EventDataProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventDataProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventDataProperty As DependencyProperty = DependencyProperty.Register("EventData", GetType(String), GetType(MyHint), New PropertyMetadata(Nothing))
 
 End Class
 Partial Public Module ModAnimation
