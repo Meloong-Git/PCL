@@ -822,8 +822,9 @@ Public Class FormMain
         If PageLinkMain.LinkState <> PageLinkMain.LinkStates.Waiting Then Return '已启动联机
         If PageCurrent = PageType.Link Then Return '已在联机界面
         Dim Code = ClipboardGetText() : If Code Is Nothing Then Return '剪贴板无文本
-        If Setup.Get("LinkLastAutoJoinInviteCode") = Code Then Return
-        If PageLinkMain.ValidateCodeFormat(Code) IsNot Nothing Then Return '不是邀请码
+        If Setup.Get("LinkLastAutoJoinInviteCode") = Code Then Return                                                                                                                                                                                                                                                                                                                                                                                                                  
+        ' If PageLinkMain.ValidateCodeFormat(Code) IsNot Nothing Then Return '不是邀请码
+        Return     '联机关闭 直接return                                                                                                                                                                                                                                                                                                                                                                                                                        
         Setup.Set("LinkLastAutoJoinInviteCode", Code)
         RunInThread(
         Sub()
