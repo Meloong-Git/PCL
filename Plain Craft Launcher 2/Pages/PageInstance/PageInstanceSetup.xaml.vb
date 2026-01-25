@@ -391,7 +391,7 @@ PreFin:
         TextServerAuthRegister.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
         LabServerAuthServer.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
         TextServerAuthServer.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
-        BtnServerAuthLittle.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
+        PanServerAuth.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
         CardServer.TriggerForceResize()
     End Sub
 
@@ -400,6 +400,37 @@ PreFin:
         OpenWebsite("https://login.mc-user.com:233/server/intro")
     End Sub
 
+    '自动填写信息
+    Private Sub BtnServerAuthDetect_Click(sender As Object, e As EventArgs) Handles BtnServerAuthDetect.Click
+        If MyMsgBox("即将把第三方登录设置覆盖为认证服务器提供的信息。" & vbCrLf & "请务必确保认证服务器地址正确。" & vbCrLf & vbCrLf & "是否确实要覆盖当前设置？", "设置覆盖确认", "继续", "取消") = 2 Then Return
+        RunInNewThread(Function()
+                           Try
+                               Dim AuthServer As String = Dispatcher.Invoke(Function()
+                                                                                TextServerAuthName.IsEnabled = False
+                                                                                TextServerAuthRegister.IsEnabled = False
+                                                                                Return TextServerAuthServer.Text
+                                                                            End Function)
+                               Dim Result = NetRequestByClientRetry(
+                                       AuthServer & "?lang=zh_CN", HttpMethod.Get,
+                                       ContentType:="application/json",
+                                       RequireJson:=True)
+                               '获取结果
+                               Dim ResultJson As JObject = GetJson(Result)
+                               RunInUi(Function()
+                                           TextServerAuthName.Text = ResultJson("meta")("serverName").ToString & " 登录"
+                                           TextServerAuthRegister.Text = ResultJson("meta")("links")("register").ToString
+                                       End Function)
+                               Hint("信息获取成功！", HintType.Green)
+                           Catch ex As Exception
+                               Hint("信息获取失败，还是手动输入吧......", HintType.Red)
+                           Finally
+                               RunInUi(Function()
+                                           TextServerAuthName.IsEnabled = True
+                                           TextServerAuthRegister.IsEnabled = True
+                                       End Function)
+                           End Try
+                       End Function)
+    End Sub
     'LittleSkin
     Private Sub BtnServerAuthLittle_Click(sender As Object, e As EventArgs) Handles BtnServerAuthLittle.Click
         If TextServerAuthServer.Text <> "" AndAlso TextServerAuthServer.Text <> "https://littleskin.cn/api/yggdrasil" AndAlso
