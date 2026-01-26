@@ -1,4 +1,4 @@
-﻿<local:MyPageRight
+<local:MyPageRight
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -190,7 +190,7 @@
                         <local:MyButton x:Name="BtnServerNideWeb" Grid.Column="0" MinWidth="140" Text="服主后台" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
                     </Grid>
                     <StackPanel x:Name="PanServerAuth" Orientation="Horizontal">
-                        <local:MyButton x:Name="BtnServerAuthDetect" Height="35" MinWidth="150" Margin="0,12,20,0" Text="设置为服务器默认" HorizontalAlignment="Left" ColorType="Highlight" ToolTip="请求认证服务器，以此获取并自动填写信息。"/>
+                        <local:MyButton x:Name="BtnServerAuthDetect" Height="35" MinWidth="150" Margin="0,12,20,0" Text="设置为服务器默认" HorizontalAlignment="Left" ColorType="Highlight" ToolTip="请求认证服务器，以此获取并自动填写信息。&#xA;此为可选选项，认证服务器可能并不会提供这些信息。"/>
                         <local:MyButton x:Name="BtnServerAuthLittle" Height="35" MinWidth="150" Margin="0,12,0,0" Text="设置为 LittleSkin" HorizontalAlignment="Left" ColorType="Highlight" />
                     </StackPanel>
                 </StackPanel>
