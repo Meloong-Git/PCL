@@ -402,8 +402,12 @@ PreFin:
 
     '自动填写信息
     Private Sub BtnServerAuthDetect_Click(sender As Object, e As EventArgs) Handles BtnServerAuthDetect.Click
+        If TextServerAuthServer.Text = "" Then
+            Hint("请先设置认证服务器！", HintType.Red)
+            Return
+        End If
         If MyMsgBox("即将把第三方登录设置覆盖为认证服务器提供的信息。" & vbCrLf & "请务必确保认证服务器地址正确。" & vbCrLf & vbCrLf & "是否确实要覆盖当前设置？", "设置覆盖确认", "继续", "取消") = 2 Then Return
-        RunInNewThread(Function()
+        RunInNewThread(Sub()
                            Try
                                Dim AuthServer As String = Dispatcher.Invoke(Function()
                                                                                 TextServerAuthName.IsEnabled = False
@@ -416,20 +420,20 @@ PreFin:
                                        RequireJson:=True)
                                '获取结果
                                Dim ResultJson As JObject = GetJson(Result)
-                               RunInUi(Function()
+                               RunInUi(Sub()
                                            TextServerAuthName.Text = ResultJson("meta")("serverName").ToString & " 登录"
                                            TextServerAuthRegister.Text = ResultJson("meta")("links")("register").ToString
-                                       End Function)
+                                       End Sub)
                                Hint("信息获取成功！", HintType.Green)
                            Catch ex As Exception
                                Hint("信息获取失败，还是手动输入吧......", HintType.Red)
                            Finally
-                               RunInUi(Function()
+                               RunInUi(Sub()
                                            TextServerAuthName.IsEnabled = True
                                            TextServerAuthRegister.IsEnabled = True
-                                       End Function)
+                                       End Sub)
                            End Try
-                       End Function)
+                       End Sub)
     End Sub
     'LittleSkin
     Private Sub BtnServerAuthLittle_Click(sender As Object, e As EventArgs) Handles BtnServerAuthLittle.Click
