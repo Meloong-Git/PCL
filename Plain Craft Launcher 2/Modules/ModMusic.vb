@@ -280,7 +280,7 @@
             CurrentWave = New NAudio.Wave.WaveOutEvent()
             MusicNAudio = CurrentWave
             CurrentWave.DeviceNumber = -1
-            Reader = New NAudio.Wave.AudioFileReader(MusicCurrent)
+            Reader = New NAudio.Wave.MediaFoundationReader(MusicCurrent)
             CurrentWave.Init(Reader)
             CurrentWave.Play()
             '第一次打开的暂停
