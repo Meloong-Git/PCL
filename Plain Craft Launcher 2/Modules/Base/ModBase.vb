@@ -1075,15 +1075,16 @@ Public Module ModBase
 Re:
         Try
             '获取 MD5
-            Dim File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-            Using h = MD5Cng.Create()
-                Dim Retval As Byte() = h.ComputeHash(File)
-                Dim Result As New StringBuilder(Retval.Length * 2)
-                For i = 0 To Retval.Length - 1
-                    Result.Append(Retval(i).ToString("x2"))
-                Next
+            Using File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                Using h = MD5Cng.Create()
+                    Dim Retval As Byte() = h.ComputeHash(File)
+                    Dim Result As New StringBuilder(Retval.Length * 2)
+                    For i = 0 To Retval.Length - 1
+                        Result.Append(Retval(i).ToString("x2"))
+                    Next
 
-                Return Result.ToString
+                    Return Result.ToString
+                End Using
             End Using
         Catch ex As Exception
             If Retry OrElse TypeOf ex Is FileNotFoundException Then
