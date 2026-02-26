@@ -262,6 +262,9 @@
     <s:String x:Key="LangSetHomePagePresetPageK">Πίνακας Ελέγχου OpenMCIM (Συγγραφέας: SALTWOOD)</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">杂志主页（作者：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub 仪表盘（作者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">Απόκρυψη Λειτουργιών</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">Μπορείτε να αποκρύψετε περιττές σελίδες ή να απενεργοποιήσετε συγκεκριμένες λειτουργίες. Πατήστε «F12» σε οποιαδήποτε διεπαφή για να εμφανιστούν προσωρινά οι κρυφές λειτουργίες.</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">Κύρια Διεπαφή</s:String>
@@ -376,8 +379,7 @@
     <s:String x:Key="LangSelectDeleteVersionContentA">Είστε βέβαιοι ότι θα διαγράψετε την παρουσία {0};</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">Είστε βέβαιοι ότι θα διαγράψετε οριστικά την παρουσία {0};</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">Δεδομένου ότι η «Απομόνωση Παρουσίας είναι ενεργοποιημένη για αυτήν την περίπτωση, οι αντίστοιχες αποθηκευμένες ρυθμίσεις, πακέτα πόρων, mods και άλλα αρχεία αυτής της παρουσίας θα διαγραφούν επίσης!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">Η παρουσία {0} έχει διαγραφεί οριστικά!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">Η παρουσία {0} έχει διαγραφεί στον κάδο ανακύκλωσης!</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">Η διαγραφή της παρουσίας {0} ακυρώθηκε μη αυτόματα.</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">Απέτυχε η διαγραφή της παρουσίας {0}.</s:String>
     <s:String x:Key="LangSpeedTotalProgress">Πρόοδος</s:String>
@@ -543,6 +545,7 @@
     <s:String x:Key="LangDownloadModTypeMobs">Mobs</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">Εξοπλισμός</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">Βελτιστοποίηση</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">Οθόνη</s:String>
     <s:String x:Key="LangDownloadModTypeServer">Βοηθητικό Πρόγραμμα Διακομιστή</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">Βοηθητικό &amp; QoL</s:String>
@@ -692,6 +695,7 @@
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">Κανένα</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">Επιλογή</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">Ιδιότητες</s:String>
@@ -820,6 +824,8 @@
     <s:String x:Key="LangPageOtherAboutThanks00ll00">Παρέχει Java Launch Wrapper και κάποια σημαντική υποστήριξη!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">Παρέχει το mcmod-info-mirror για mods και υπηρεσίες φιλοξενίας εικόνων για το Κέντρο Βοήθειας!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM 主页</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">Σχεδίασε και δημιούργησε το εικονίδιο PCL, έσωσε το LTCat από την άβυσσο του πόνου...</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">Βρέθηκε ένα σωρό περίεργα σφάλματα που οι άνθρωποι δεν θα σκεφτόντουσαν σε εσωτερικές δοκιμές, έχει μια ασυνήθιστη διάπλαση σφαλμάτων.</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">MCBBS</s:String>
@@ -1240,7 +1246,6 @@ Email για Αναφορά Παράνομης και Παράτυπης Συμ�
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">Είστε βέβαιοι ότι θέλετε να διαγράψετε την παρουσία {0};</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">Διαγραφή Επιβεβαίωσης Παρουσίας</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">Η παρουσία {0} έχει διαγραφεί στον κάδο ανακύκλωσης!</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">Η παρουσία {0} έχει διαγραφεί οριστικά!</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">Κλείστε πρώτα την επιλογή «Ιδιότητες → Ρυθμίσεις → Σύνθετες Επιλογές Εκκίνησης → Απενεργοποίηση Επαλήθευσης Αρχείου» πριν επιχειρήσετε να επιδιορθώσετε τα αρχεία!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">Οι ρυθμίσεις της παρουσίας έχουν αρχικοποιηθεί!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">Απέτυχε η προετοιμασία των ρυθμίσεων παρουσίας.</s:String>
@@ -1414,6 +1419,7 @@ Email για Αναφορά Παράνομης και Παράτυπης Συμ�
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">Το αρχείο JSON έκδοσης είναι λανθασμένο, περιεχόμενο: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">Η ένθεση εμφανίζεται στις εξαρτήσεις έκδοσης: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">Η έκδοση JSON δεν είναι τυπική. ({0})</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">Προέκδοση</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">Απελευθέρωση υποψηφίου</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">快照</s:String>
@@ -1422,8 +1428,6 @@ Email για Αναφορά Παράνομης και Παράτυπης Συμ�
     <s:String x:Key="LangModMinecraftUnknownError">Παρουσιάστηκε άγνωστο σφάλμα, αναφέρετε αυτό το ζήτημα στον συγγραφέα.</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">Ενοποιημένος έλεγχος ταυτότητας πάσου</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Έλεγχος ταυτότητας Authlib</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">Μη έγκυρη έκδοση Fabric: {0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">Μη έγκυρη έκδοση Neo/Forge: {0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">Οι δηλητηριώδεις πατάτες πάντα αγνοούνταν και υποτιμούνταν, γι' αυτό τις τροφοδοτήσαμε πολύ!</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">你可以合成任何东西——包括合成你的世界！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">Η έρευνα δείχνει: στους παίκτες αρέσει να κάνουν επιλογές—όσο περισσότερες, τόσο το καλύτερο!</s:String>

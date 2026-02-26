@@ -263,6 +263,9 @@
     <s:String x:Key="LangSetHomePagePresetPageK">开放麦恩克拉夫特模组信息镜子猛冲板（作者：SALTWOOD）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">杂志主页（作者：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">平原合成发射台吉特轮毂猛冲板（作者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">特性雪藏</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">你可以让不需要的页面或特定特性被雪藏。在随意界面按 F12 可以暂时挖出被雪藏的特性。</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">家</s:String>
@@ -377,8 +380,7 @@
     <s:String x:Key="LangSelectDeleteVersionContentA">你确定要扬掉版本 {0} 吗？</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">你确定要永久地扬掉版本 {0} 吗？</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">由于该版本打开了版本孤立，扬掉版本时该版本对应的存档、亮目害眼包、模组等文件也将被一并扬掉！</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">版本 {0} 已永久扬掉！</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">版本 {0} 已扬掉到回收站！</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">扬掉版本 {0} 被主动取消</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">扬掉版本 {0} 不成功</s:String>
     <s:String x:Key="LangSpeedTotalProgress">总进度</s:String>
@@ -544,6 +546,7 @@
     <s:String x:Key="LangDownloadModTypeMobs">暴徒</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">装备与工具</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">性能优化</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">信息展示</s:String>
     <s:String x:Key="LangDownloadModTypeServer">服务器</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">有用</s:String>
@@ -693,6 +696,7 @@
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">莫得海角</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">想玩哪个</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">版本设置</s:String>
@@ -823,6 +827,8 @@
     <s:String x:Key="LangPageOtherAboutThanks00ll00">提供了爪哇擦腚纸和一些重要服务支持！</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">提供了麦恩克拉夫特模组信息镜子社区资源镜子源和帮助库图床！</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">麦恩克拉夫特模组信息镜子主页</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">设计并制作了平原合成发射台图标，让我从做图标的水深火热中得到了解脱……</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">在内测中找出了一大堆没人想得到的诡异虫子，有非同寻常的虫子体质</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">麦恩克拉夫特中文论坛</s:String>
@@ -1243,7 +1249,6 @@
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">你确定要削除版本 {0} 吗？</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">版本削除确认</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">版本 {0} 已砸到回收站！</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">版本 {0} 被永远删掉了！</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">请先关掉 [版本设置 → 设置 → 高级发射选项 → 关掉文件校验]，然后再尝试补全文件！</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">已初始化版本独立设置！</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">初始化版本独立设置不成功</s:String>
@@ -1420,6 +1425,7 @@
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">版本爪哇脚本对象表示法文件有误，内容为：{0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">版本依赖项出现套娃：{0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">初始化版本爪哇脚本对象表示法不成功（{0}）</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">预发布版</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">发布候选</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">快照</s:String>
@@ -1428,8 +1434,6 @@
     <s:String x:Key="LangModMinecraftUnknownError">发生了未知错误，请向作者投诉此问题</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">统一通行证验证</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">身份验证图书馆验证</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">莫得效的布料版本：{0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">莫得效的 新/锻造版本：{0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">有毒的育碧服务器一直都被大家忽视和低估，于是我们超级加强了它！</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">你可以合成任何东西——包括合成你的世界！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">研究表明：播放器喜欢作出选择——越多越好！</s:String>

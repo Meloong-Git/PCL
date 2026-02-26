@@ -262,6 +262,9 @@ Si has creado una página de inicio en línea estable, puedes hacer clic en esta
     <s:String x:Key="LangSetHomePagePresetPageK">OpenMCIM 仪表盘（作者：SALTWOOD）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">杂志主页（作者：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub 仪表盘（作者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">Ocultación de Funciones</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">Puedes ocultar páginas innecesarias o desactivar funciones específicas. Presiona "F12" en cualquier interfaz para mostrar funciones ocultas temporalmente.</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">Interfaz Principal</s:String>
@@ -376,8 +379,7 @@ Presiona "F11" nuevamente para salir del modo de visualización de instancias oc
     <s:String x:Key="LangSelectDeleteVersionContentA">¿Estás seguro de eliminar la instancia {0}?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">¿Estás seguro de eliminar la instancia {0} permanentemente?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">¡Dado que la "Aislamiento de Instancia" está habilitada para esta instancia, los correspondientes guardados, paquetes de recursos, mods y otros archivos de esta instancia también serán eliminados!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">¡La instancia {0} ha sido eliminada permanentemente!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">¡La instancia {0} ha sido eliminada a la papelera!</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">La eliminación de la instancia {0} ha sido cancelada manualmente.</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">Error al eliminar la instancia {0}.</s:String>
     <s:String x:Key="LangSpeedTotalProgress">Progreso</s:String>
@@ -540,6 +542,7 @@ Presiona "F11" nuevamente para salir del modo de visualización de instancias oc
     <s:String x:Key="LangDownloadModTypeMobs">Criaturas</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">Equipamiento</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">Optimización</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">Visualización</s:String>
     <s:String x:Key="LangDownloadModTypeServer">Utilidad del Servidor</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">Utilidad y Calidad de Vida</s:String>
@@ -686,6 +689,7 @@ Esta página proporciona la descarga del instalador de NeoForge. Después de des
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">Ninguna</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">Selección</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">Propiedades</s:String>
@@ -814,6 +818,8 @@ Mensaje de error original: </s:String>
     <s:String x:Key="LangPageOtherAboutThanks00ll00">Proporcionó el Java Launch Wrapper y un importante soporte!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">Proporcionó el mcmod-info-mirror para mods y servicios de alojamiento de imágenes para el centro de ayuda!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM 主页</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">Diseñó e hizo el ícono de PCL, salvó a LTCat del abismo del sufrimiento...</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">Encontró un montón de errores extraños que la gente no pensaría en la prueba interna, tiene una inusual constitución de errores.</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">MCBBS</s:String>
@@ -1234,7 +1240,6 @@ Dado que "Aislamiento de Instancia" está habilitado para esta instancia, cuando
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">¿Estás seguro de que deseas eliminar la instancia {0}?</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">Confirmación de Eliminación de Instancia</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">¡La instancia {0} ha sido eliminada a la papelera de reciclaje!</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">¡La instancia {0} ha sido eliminada permanentemente!</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">¡Cierre primero la opción "Propiedades → Configuración → Opciones de inicio avanzadas → Deshabilitar verificación de archivos" antes de intentar reparar los archivos!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">¡Las configuraciones de la instancia han sido inicializadas!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">Error al inicializar las configuraciones de la instancia.</s:String>
@@ -1408,6 +1413,7 @@ Por favor verifica si el tipo de evento está correctamente completado, y si PCL
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">El archivo JSON de versión es incorrecto, contenido: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">Aparece anidamiento en las dependencias de versión: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">El JSON de versión no es estándar. ({0})</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">Pre-lanzamiento</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">Candidato a Lanzamiento</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">快照</s:String>
@@ -1416,8 +1422,6 @@ Por favor verifica si el tipo de evento está correctamente completado, y si PCL
     <s:String x:Key="LangModMinecraftUnknownError">Ocurrió un error desconocido, por favor reporta este problema al autor.</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">Autenticación de Pase Unificado</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Autenticación de Authlib</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">Versión de Fabric no válida: {0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">Versión de Neo/Forge no válida: {0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">¡Las patatas venenosas siempre han sido pasadas por alto y subestimadas, así que las hemos superpotenciado!</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">你可以合成任何东西——包括合成你的世界！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">La investigación muestra: a los jugadores les gusta tomar decisiones: ¡cuantas más, mejor!</s:String>

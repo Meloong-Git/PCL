@@ -262,6 +262,9 @@
     <s:String x:Key="LangSetHomePagePresetPageK">OpenMCIM 儀表板（撰者：SALTWOOD）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">杂志主页（作者：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub 仪表盘（作者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">隱功能</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">汝可隱不需之頁，或關特定功。於任界按 F12 可暫顯隱功。</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">主頁</s:String>
@@ -376,8 +379,7 @@
     <s:String x:Key="LangSelectDeleteVersionContentA">汝確欲刪版 {0} 乎？</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">汝確欲永刪版 {0} 乎？</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">因此版開版隔，刪版時此版之存檔、資囊、改囊等文亦將同刪！</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">版 {0} 已永刪！</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">版 {0} 已刪入回收簿！</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">刪版 {0} 被主動止</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">刪版 {0} 失</s:String>
     <s:String x:Key="LangSpeedTotalProgress">全程</s:String>
@@ -543,6 +545,7 @@ PCL 薦汝始下載前，於 設置 → 版本隔離 中開版本隔離選！</s
     <s:String x:Key="LangDownloadModTypeMobs">生物</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">裝備 / 工具</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">性能優化</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">信息顯示</s:String>
     <s:String x:Key="LangDownloadModTypeServer">服務器</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">改良</s:String>
@@ -692,6 +695,7 @@ PCL 薦汝始下載前，於 設置 → 版本隔離 中開版本隔離選！</s
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">無</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">版擇</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">版設</s:String>
@@ -822,6 +826,8 @@ PCL 薦汝始下載前，於 設置 → 版本隔離 中開版本隔離選！</s
     <s:String x:Key="LangPageOtherAboutThanks00ll00">供 Java Launch Wrapper 与重要服務之支持！</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">供 MCIM 華夏改囊之鏡像源与説明庫圖之床！</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM 主页</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">設計並製 PCL 之圖標，使餘於制圖標之水深火熱解脫</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">於內測中尋無人問津之詭異問題不計其數，擁非比尋常之問題體質</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">Minecraft 汉文論之壇</s:String>
@@ -1242,7 +1248,6 @@ PCL 薦汝始下載前，於 設置 → 版本隔離 中開版本隔離選！</s
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">你確定要刪除版本 {0} 嗎？</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">版本刪除確認</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">版本 {0} 已刪除到回收站！</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">版本 {0} 已永久刪除！</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">請先關閉 [版本設定 → 設定 → 高級啟動選項 → 關閉檔案驗證]，然後再嘗試補全檔案！</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">已初始化版本獨立設置！</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">初始化版本獨立設置失敗</s:String>
@@ -1415,6 +1420,7 @@ PCL 不支持其他亂七八糟的下載協議。</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">版本 JSON 文件有誤，內容為：{0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">版本依賴項出現嵌套：{0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">版本 JSON 時失敗（{0}）</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">預發布版</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">發布候選</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">快照</s:String>
@@ -1423,8 +1429,6 @@ PCL 不支持其他亂七八糟的下載協議。</s:String>
     <s:String x:Key="LangModMinecraftUnknownError">發生了未知錯誤，請向作者反饋此問題</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">統一通行證驗證</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Authlib 驗證</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">無效的 Fabric 版本：{0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">無效的 Neo/Forge 版本：{0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">毒馬鈴薯一直都被大家忽視和低估，於是我們超級加強了它！</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">你可以合成任何东西——包括合成你的世界！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">研究表明：玩家喜歡作出選擇——越多越好！</s:String>

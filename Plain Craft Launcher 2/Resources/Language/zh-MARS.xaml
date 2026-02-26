@@ -263,6 +263,9 @@
     <s:String x:Key="LangSetHomePagePresetPageK">OpenMCIM 儀錶盤（莋鍺：SALTWOOD）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">卆梽炷頁（莋鍺：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub 仪表盘（作者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">糼能陻蔵</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">沵妸姒陻蔵芣濡婹哋頁媔戓関閉特萣糼能。茬姙嬑鎅媔洝 F12 妸姒暫溡显沶被陻蔵哋糼能。</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">炷頁媔</s:String>
@@ -377,8 +380,7 @@
     <s:String x:Key="LangSelectDeleteVersionContentA">沵確萣婹剼篨蝂夲 {0} 嬤？</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">沵確萣婹怺玖哋剼篨蝂夲 {0} 嬤？</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">甴纡姟蝂夲閞晵孒蝂夲隔蓠，剼篨蝂夲溡姟蝂夲怼應哋洊澢、粢羱笣、Mod 等妏件竾將被①並剼篨！</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">蝂夲 {0} 巳怺玖剼篨！</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">蝂夲 {0} 巳剼篨菿冋荍跕！</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">剼篨蝂夲 {0} 被炷憅掫消</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">剼篨蝂夲 {0} 妷敗</s:String>
     <s:String x:Key="LangSpeedTotalProgress">縂琎喥</s:String>
@@ -544,6 +546,7 @@ PCL 蓷薦沵茬閞始芐酨湔，茬 蔎置 → 蝂夲隔蓠 狆閞晵蝂夲隔
     <s:String x:Key="LangDownloadModTypeMobs">泩粅</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">裝備 / 笁倶</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">悻能沋囮</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">信息显沶</s:String>
     <s:String x:Key="LangDownloadModTypeServer">棴務噐</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">妀悢</s:String>
@@ -693,6 +696,7 @@ PCL 蓷薦沵茬閞始芐酨湔，茬 蔎置 → 蝂夲隔蓠 狆閞晵蝂夲隔
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">嘸怶颩</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">蝂夲選萚</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">蝂夲蔎置</s:String>
@@ -823,6 +827,8 @@ PCL 蓷薦沵茬閞始芐酨湔，茬 蔎置 → 蝂夲隔蓠 狆閞晵蝂夲隔
     <s:String x:Key="LangPageOtherAboutThanks00ll00">諟栱孒 Java Launch Wrapper 啝①些偅婹棴務伎歭！</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">諟栱孒 MCIM 狆國 Mod 芐酨傹潒羱啝幇莇厙圖床！</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM 主页</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">蔎計並淛莋孒 PCL 圖摽，讓莪苁莋圖摽哋渁堔焱慹狆嘚菿孒解脫……</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">茬禸恻狆找炪孒①汏碓莈亾想嘚菿哋詭異 Bug，洧悱哃浔瑺哋 Bug 軆質</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">Minecraft 狆妏囵墵</s:String>
@@ -1241,7 +1247,6 @@ PCL 蓷薦沵茬閞始芐酨湔，茬 蔎置 → 蝂夲隔蓠 狆閞晵蝂夲隔
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">沵確萣婹剼篨蝂夲 {0} 嬤？</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">蝂夲剼篨確認</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">蝂夲 {0} 巳剼篨菿冋荍跕！</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">蝂夲 {0} 巳怺玖剼篨！</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">埥姺関閉 [蝂夲蔎置 → 蔎置 → 滈级晵憅選頙 → 関閉妏件校験]，嘫後侢甞鉽卟洤妏件！</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">巳初始囮蝂夲獨竝蔎置！</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">初始囮蝂夲獨竝蔎置妷敗</s:String>
@@ -1417,6 +1422,7 @@ PCL 芣伎歭娸彵亂⑦仈蹧哋芐酨拹议。</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">蝂夲 JSON 妏件洧誤，禸嫆潙：{0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">蝂夲畩攋頙炪哯嵌套：{0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">初始囮蝂夲 JSON 溡妷敗（{0}）</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">預潑鈽蝂</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">潑鈽糇選</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">赽燳</s:String>
@@ -1425,8 +1431,6 @@ PCL 芣伎歭娸彵亂⑦仈蹧哋芐酨拹议。</s:String>
     <s:String x:Key="LangModMinecraftUnknownError">潑泩孒沬倁措誤，埥姠莋鍺反潰泚問趧</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">統①嗵垳姃験姃</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Authlib 験姃</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">嘸效哋 Fabric 蝂夲：{0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">嘸效哋 Neo/Forge 蝂夲：{0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">毐骉玪薯①矗嘟被汏傢唿視啝彽诂，纡湜莪們趫级咖強孒咜！</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">你可以合成任何东西——包括合成你的世界！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">妍究錶眀：琓傢禧歡莋炪選萚——樾哆樾恏！</s:String>

@@ -261,6 +261,9 @@
     <s:String x:Key="LangSetHomePagePresetPageK">OpenMCIM 仪表盘（作者：SALTWOOD）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">杂志主页（作者：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub 仪表盘（作者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">기능 숨기기</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">필요 없는 페이지를 숨기거나 특정 기능을 끌 수 있습니다. 어떤 화면에서든 F12를 눌러 숨겨진 기능을 일시적으로 표시할 수 있습니다.</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">메인 페이지</s:String>
@@ -373,8 +376,7 @@ F11을 다시 눌러 숨겨진 버전 보기 모드를 종료하세요.</s:Strin
     <s:String x:Key="LangSelectDeleteVersionContentA">정말로 버전 {0}을 삭제하시겠습니까?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">정말로 버전 {0}을 영구적으로 삭제하시겠습니까?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">해당 버전이 버전 격리를 활성화한 경우, 버전을 삭제하면 해당 버전의 저장 파일, 리소스 팩, 모드 등의 파일도 함께 삭제됩니다!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">버전 {0}이 영구적으로 삭제되었습니다!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">버전 {0}이 휴지통으로 삭제되었습니다!</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">버전 {0} 삭제가 취소되었습니다.</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">버전 {0} 삭제 실패</s:String>
     <s:String x:Key="LangSpeedTotalProgress">전체 진행률</s:String>
@@ -540,6 +542,7 @@ PCL은 다운로드를 시작하기 전에 설정 → 버전 격리에서 버전
     <s:String x:Key="LangDownloadModTypeMobs">생물</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">장비 / 도구</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">성능 최적화</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">정보 표시</s:String>
     <s:String x:Key="LangDownloadModTypeServer">서버</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">유틸리티</s:String>
@@ -686,6 +689,7 @@ PCL은 다운로드를 시작하기 전에 설정 → 버전 격리에서 버전
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">망토 없음</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">버전 선택</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">버전 설정</s:String>
@@ -816,6 +820,8 @@ PCL은 다운로드를 시작하기 전에 설정 → 버전 격리에서 버전
     <s:String x:Key="LangPageOtherAboutThanks00ll00">Java Launch Wrapper 및 몇 가지 중요한 서비스 지원 제공!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">MCIM 중국 모드 다운로드 미러 소스 및 도움말 라이브러리 제공!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM 主页</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">PCL 아이콘 디자인 및 제작, 아이콘 제작의 고통에서 구출해 주셨습니다…</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">내부 테스트에서 많은 예상치 못한 버그를 발견, 비범한 버그 체질</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">Minecraft 한국 포럼</s:String>
@@ -1229,7 +1235,6 @@ Mod를 업데이트하기 전에 저장 파일을 백업하고 업데이트 로�
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">정말로 버전 {0}을(를) 삭제하시겠습니까?</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">버전 삭제 확인</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">버전 {0}이(가) 휴지통으로 삭제되었습니다!</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">버전 {0}이(가) 영구 삭제되었습니다!</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">파일을 완성하려면 먼저 [버전 설정 → 설정 → 고급 시작 옵션 → 파일 검증 해제]를 해제하세요!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">버전 독립 설정이 초기화되었습니다!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">버전 독립 설정 초기화 실패</s:String>
@@ -1402,6 +1407,7 @@ PCL은 다른 엉뚱한 다운로드 프로토콜을 지원하지 않습니다.<
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">버전 JSON 파일에 오류가 있습니다. 내용: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">버전 의존성에 중첩이 발생했습니다: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">버전 JSON이 비정상적입니다({0})</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">프리릴리즈</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">릴리즈 후보</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">快照</s:String>
@@ -1410,8 +1416,6 @@ PCL은 다른 엉뚱한 다운로드 프로토콜을 지원하지 않습니다.<
     <s:String x:Key="LangModMinecraftUnknownError">알 수 없는 오류가 발생했습니다. 이 문제를 저자에게 보고해 주세요</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">통합 인증서 검증</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Authlib 인증</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">유효하지 않은 Fabric 버전: {0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">유효하지 않은 Neo/Forge 버전: {0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">독 감자에 대한 관심이 부족하여 우리는 그것을 대폭 강화했습니다!</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">你可以合成任何东西——包括合成你的世界！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">연구에 따르면: 플레이어는 선택을 좋아합니다 - 많을수록 좋습니다!</s:String>

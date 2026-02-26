@@ -264,6 +264,9 @@ If you have created a stable online homepage, you can click this tip to contribu
     <s:String x:Key="LangSetHomePagePresetPageK">OpenMCIM Dashboard (Author: SALTWOOD)</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">Magazine Homepage (Author: CreeperIsASpy)</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub Dashboard (Author: Deep-Dark-Forest)</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">Feature hiding</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">You can hide unnecessary pages or disable specific features. Press "F12" in any interface to show the hidden features temporarily.</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">Main interface</s:String>
@@ -378,8 +381,7 @@ Press "F11" again to exit the hidden instance viewing mode.</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentA">Are you sure you want to delete the instance {0}?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">Are you sure you want to delete the instance {0} permanently?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">Since the instance isolation is enabled for this instance, the corresponding saves, resource packs, mods, and other files of this instance will also be deleted!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">The instance {0} has been permanently deleted!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">The instance {0} has been deleted to the recycle bin!</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">Deletion of the instance {0} has been manually canceled.</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">Failed to delete the instance {0}.</s:String>
     <s:String x:Key="LangSpeedTotalProgress">Progress</s:String>
@@ -545,6 +547,7 @@ It is strongly recommended to enable instance isolation under "Settings → Laun
     <s:String x:Key="LangDownloadModTypeMobs">Mobs</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">Equipment</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">Optimization</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">Display</s:String>
     <s:String x:Key="LangDownloadModTypeServer">Server Utility</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">Utility &amp; QoL</s:String>
@@ -694,6 +697,7 @@ Please check your internet and try again.</s:String>
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">None</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">Selection</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">Properties</s:String>
@@ -822,6 +826,8 @@ Original error message: </s:String>
     <s:String x:Key="LangPageOtherAboutThanks00ll00">Provided Java Launch Wrapper and some important support!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">Provides MCIM community resource mirrors and image hosting services for the help center!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM Homepage</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">Designed and created the PCL icon, saved me from the abyss of suffering...</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">Found a ton of weird bugs during the insider test that people wouldn't expect, must have a talent for finding bugs.</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">MCBBS</s:String>
@@ -1239,7 +1245,6 @@ Since instance isolation is enabled for this instance, the corresponding saves, 
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">Are you sure you want to delete the instance {0}?</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">Deletion</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">The instance {0} has been deleted to the recycle bin!</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">The instance {0} has been permanently deleted!</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">Please disable the "Properties → Settings → Advanced launch options → Disable file verification" option before attempting to repair the files!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">The instance settings have been initialized!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">Failed to initialize the instance settings.</s:String>
@@ -1416,6 +1421,7 @@ Please check whether the event type is filled in correctly and whether the PCL i
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">Instance JSON file is incorrect, content: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">Nesting appears in instance dependencies: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">Failed to initialize the instance JSON. ({0})</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">Pre-release</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">Release candidate</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">Snapshot</s:String>
@@ -1424,8 +1430,6 @@ Please check whether the event type is filled in correctly and whether the PCL i
     <s:String x:Key="LangModMinecraftUnknownError">An unknown error occurred. Please report this issue to the developer.</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">Unified Pass authentication</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Authlib authentication</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">Invalid Fabric version: {0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">Invalid (Neo)Forge version: {0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">Poisonous potatoes have always been overlooked and underestimated, so we've super-powered them!</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">You can craft anything - including your mines!</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">Research shows: players like making choices — the more, the better!</s:String>

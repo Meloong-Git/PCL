@@ -262,6 +262,9 @@
     <s:String x:Key="LangSetHomePagePresetPageK">OpenMCIM 仪表盘（作者：SALTWOOD）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">杂志主页（作者：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub 仪表盘（作者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">Скрытие функций</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">Вы можете скрыть ненужные страницы или отключить определенные функции. Нажмите "F12" в любой интерфейсе, чтобы временно показать скрытые функции.</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">Главный интерфейс</s:String>
@@ -376,8 +379,7 @@
     <s:String x:Key="LangSelectDeleteVersionContentA">Вы уверены, что хотите удалить экземпляр {0}?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">Вы уверены, что хотите удалить экземпляр {0} навсегда?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC"> Поскольку для этого экземпляра включена "Изоляция экземпляра", соответствующие сохранения, ресурс-паки, моды и другие файлы этого экземпляра также будут удалены!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">Экземпляр {0} был удален навсегда!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">Экземпляр {0} был перемещен в корзину!</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">Удаление экземпляра {0} было отменено вручную.</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">Не удалось удалить экземпляр {0}.</s:String>
     <s:String x:Key="LangSpeedTotalProgress">Прогресс</s:String>
@@ -543,6 +545,7 @@ PCL рекомендует включить опцию "Изоляция экз�
     <s:String x:Key="LangDownloadModTypeMobs">Мобы</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">Экипировка</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">Оптимизация</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">Отображение</s:String>
     <s:String x:Key="LangDownloadModTypeServer">Серверная утилита</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">Утилиты и Качество жизни</s:String>
@@ -692,6 +695,7 @@ PCL рекомендует включить опцию "Изоляция экз�
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">Нет</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">Выбор</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">Свойства</s:String>
@@ -820,6 +824,8 @@ PCL рекомендует включить опцию "Изоляция экз�
     <s:String x:Key="LangPageOtherAboutThanks00ll00">Предоставил Java Launch Wrapper и некоторые важные поддержки!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">Предоставил mcmod-info-mirror для модов и услуги хостинга изображений для Центра помощи!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM 主页</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">Разработал и создал иконку PCL, спас LTCat от бездны страданий...</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">Нашел кучу странных багов, которые никто не подумал бы в тестировании внутри, обладает необычным телосложением багов.</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">MCBBS</s:String>
@@ -1240,7 +1246,6 @@ PCL рекомендует включить опцию "Изоляция экз�
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">Вы уверены, что хотите удалить экземпляр {0}?</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">Подтверждение удаления экземпляра</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">Экземпляр {0} перемещен в корзину!</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">Экземпляр {0} удален навсегда!</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">Перед тем, как пытаться восстановить файлы, закройте параметр «Свойства → Настройки → Дополнительные параметры запуска → Отключить проверку файлов»!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">Настройки экземпляра инициализированы!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">Не удалось инициализировать настройки экземпляра.</s:String>
@@ -1414,6 +1419,7 @@ PCL не поддерживает другие странные протокол
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">Файл JSON версии некорректен, содержимое: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">В версиях зависимостей появляется вложенность: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">JSON версии нестандартен. ({0})</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">Предварительная версия</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">Кандидат в релизы</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">快照</s:String>
@@ -1422,8 +1428,6 @@ PCL не поддерживает другие странные протокол
     <s:String x:Key="LangModMinecraftUnknownError">Произошла неизвестная ошибка, пожалуйста, сообщите об этой проблеме автору.</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">Аутентификация Unified Pass</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Аутентификация Authlib</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">Неверная версия Fabric: {0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">Неверная версия Neo/Forge: {0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">Ядовитые картофелины всегда недооценивались и недооценивались, поэтому мы их усилить!</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">你可以合成任何东西——包括合成你的世界！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">Исследования показывают: игроки любят делать выбор — чем больше, тем лучше!</s:String>

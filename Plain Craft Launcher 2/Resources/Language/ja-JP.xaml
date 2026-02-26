@@ -264,6 +264,9 @@
     <s:String x:Key="LangSetHomePagePresetPageK">OpenMCIM ダッシュボード（著者：SALTWOOD）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">雑誌のホームページ（著者：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub ダッシュボード（著者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">機能隠し</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">不要なページを隠したり、特定の機能をオフにしたりできます。任意の画面で F12 を押すと、隠された機能を一時的に表示できます。</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">メインページ</s:String>
@@ -378,8 +381,7 @@
     <s:String x:Key="LangSelectDeleteVersionContentA">本当にバージョン {0} を削除しますか？</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">本当にバージョン {0} を永久に削除しますか？</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">このバージョンはバージョン隔離が有効になっているため、バージョンを削除すると、対応するセーブデータ、リソースパック、Mod などが一緒に削除されます！</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">バージョン {0} が永久に削除されました！</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">バージョン {0} がゴミ箱に移動されました！</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">バージョン {0} の削除がキャンセルされました</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">バージョン {0} の削除に失敗しました</s:String>
     <s:String x:Key="LangSpeedTotalProgress">総進捗</s:String>
@@ -544,6 +546,7 @@
     <s:String x:Key="LangDownloadModTypeMobs">モブ</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">装備とツール</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">パフォーマンス最適化</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">情報表示</s:String>
     <s:String x:Key="LangDownloadModTypeServer">サーバー</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">ユーティリティ</s:String>
@@ -693,6 +696,7 @@
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">カペなし</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">バージョン選択</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">バージョン設定</s:String>
@@ -821,6 +825,8 @@
     <s:String x:Key="LangPageOtherAboutThanks00ll00">Java Launch Wrapper といくつかの重要なサービスサポートを提供しています！</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">MCIM コミュニティリソースのミラーソースとヘルプライブラリの画像ホスティングを提供しています！</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM ホームページ</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">PCL アイコンをデザインし、作成しました、アイコン作りの苦しみから解放してくれました……</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">内測中に誰も予想しなかった奇妙なバグを大量に見つけ出し、特別なバグ体質を持っています</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">Minecraft 中文論壇</s:String>
@@ -1243,7 +1249,6 @@ Modローダーを既にインストールしている場合は、おそらく�
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">本当にバージョン {0} を削除してもよろしいですか？」</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">バージョン削除の確認</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">バージョン {0} がごみ箱に移動されました！」</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">バージョン {0} が永久に削除されました！」</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">まず [バージョン設定 → 設定 → 高度な起動オプション → ファイル検証を無効にする] を無効にしてから、ファイルを補完してみてください！</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">バージョン独立設定が初期化されました！</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">バージョン独立設定の初期化に失敗しました</s:String>
@@ -1420,6 +1425,7 @@ PCL は他の様々なダウンロードプロトコルをサポートしてい�
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">バージョン JSON ファイルに誤りがあります、内容は：{0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">バージョン依存関係にネストが出現しました：{0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">バージョン JSON が不規則です（{0}）</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">プレリリース版</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">リリース候補</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">スナップショット</s:String>
@@ -1428,8 +1434,6 @@ PCL は他の様々なダウンロードプロトコルをサポートしてい�
     <s:String x:Key="LangModMinecraftUnknownError">不明なエラーが発生しました。この問題を作者に報告してください</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">統合認証</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Authlib 認証</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">無効な Fabric バージョン：{0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">無効な Neo/Forge バージョン：{0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">毒馬鈴薯はいつも見過ごされ、過小評価されていました。そのため、私たちはそれを大幅に強化しました！</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">あなたは何でもクラフトできます——あなたの世界さえもクラフト可能です！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">研究により：プレイヤーは選択することが好きです——より多いほどいい！</s:String>

@@ -262,6 +262,9 @@ Si vous avez créé une page d'accueil en ligne stable, vous pouvez cliquer sur 
     <s:String x:Key="LangSetHomePagePresetPageK">OpenMCIM 仪表盘（作者：SALTWOOD）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">杂志主页（作者：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub 仪表盘（作者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">Masquage de Fonctionnalités</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">Vous pouvez masquer des pages inutiles ou désactiver des fonctionnalités spécifiques. Appuyez sur "F12" dans n'importe quelle interface pour afficher temporairement les fonctionnalités cachées.</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">Interface Principale</s:String>
@@ -376,8 +379,7 @@ Appuyez à nouveau sur "F11" pour quitter le mode de visualisation des instances
     <s:String x:Key="LangSelectDeleteVersionContentA">Êtes-vous sûr de vouloir supprimer l'instance {0} ?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">Êtes-vous sûr de vouloir supprimer l'instance {0} de façon permanente ?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">Puisque l'"Isolation de l'Instance" est activée pour cette instance, les sauvegardes, packs de ressources, mods et autres fichiers correspondants de cette instance seront également supprimés !</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">L'instance {0} a été supprimée de façon permanente !</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">L'instance {0} a été supprimée dans la corbeille !</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">La suppression de l'instance {0} a été annulée manuellement.</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">Échec de la suppression de l'instance {0}.</s:String>
     <s:String x:Key="LangSpeedTotalProgress">Progrès</s:String>
@@ -540,6 +542,7 @@ Appuyez à nouveau sur "F11" pour quitter le mode de visualisation des instances
     <s:String x:Key="LangDownloadModTypeMobs">Mobs</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">Équipement</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">Optimisation</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">Affichage</s:String>
     <s:String x:Key="LangDownloadModTypeServer">Utilitaire serveur</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">Utilitaire &amp; QoL</s:String>
@@ -687,6 +690,7 @@ Cette page fournit le téléchargement de l'installateur NeoForge. Après le té
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">Aucune</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">Sélection</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">Propriétés</s:String>
@@ -815,6 +819,8 @@ Message d'erreur original : </s:String>
     <s:String x:Key="LangPageOtherAboutThanks00ll00">Fournisseur de Java Launch Wrapper et de certains supports importants !</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">Fournisseur du miroir mcmod-info pour les mods et services d'hébergement d'images pour le Centre d'aide !</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM 主页</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">Conçu et réalisé l'icône PCL, a sauvé LTCat des abîmes de la souffrance...</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">A trouvé un tas de bugs étranges que les gens ne penseraient pas lors des tests internes, a une physique de bug inhabituelle.</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">MCBBS</s:String>
@@ -1235,7 +1241,6 @@ Puisque "L'isolement d'instance" est activé pour cette instance, lorsque vous s
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">Êtes-vous sûr de vouloir supprimer l'instance {0} ?</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">Confirmation de suppression de l'instance</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">L'instance {0} a été supprimée dans la corbeille !</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">L'instance {0} a été supprimée définitivement !</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">Veuillez fermer l'option « Propriétés → Paramètres → Options de lancement avancées → Désactiver la vérification des fichiers » avant de tenter de réparer les fichiers !</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">Les paramètres de l'instance ont été initialisés !</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">Échec de l'initialisation des paramètres de l'instance.</s:String>
@@ -1409,6 +1414,7 @@ Veuillez vérifier si le type d'événement est correctement rempli, si le PCL e
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">Le fichier JSON de version est incorrect, contenu : {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">Une imbrication apparaît dans les dépendances de version : {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">Le JSON de version n'est pas standard. ({0})</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">Pré-version</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">Candidat à la publication</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">快照</s:String>
@@ -1417,8 +1423,6 @@ Veuillez vérifier si le type d'événement est correctement rempli, si le PCL e
     <s:String x:Key="LangModMinecraftUnknownError">Une erreur inconnue s'est produite, veuillez signaler ce problème à l'auteur.</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">Authentification Unified Pass</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Authentification Authlib</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">Version Fabric invalide : {0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">Version Neo/Forge invalide : {0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">Les pommes de terre toxiques ont toujours été négligées et sous-estimées, alors nous leur avons donné des super-pouvoirs !</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">你可以合成任何东西——包括合成你的世界！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">Des recherches montrent : les joueurs aiment faire des choix - plus il y en a, mieux c'est !</s:String>

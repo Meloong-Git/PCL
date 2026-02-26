@@ -262,6 +262,9 @@ Ak ste vytvorili stabilnú online domovskú stránku, môžete kliknutím na ten
     <s:String x:Key="LangSetHomePagePresetPageK">Rozcestník OpenMCIM (Autor: SALTWOOD)</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">杂志主页（作者：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub 仪表盘（作者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">Skrytie funkcií</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">Môžete skryť nepotrebné stránky alebo zakázať konkrétne funkcie. Stlačením klávesy "F12" v akomkoľvek rozhraní môžete dočasne zobraziť skryté funkcie.</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">Hlavné rozhranie</s:String>
@@ -376,8 +379,7 @@ Stlačte znovu "F11" na opustenie režimu zobrazenia skrytých inštancií.</s:S
     <s:String x:Key="LangSelectDeleteVersionContentA">Ste si istý, že chcete odstrániť inštanciu {0}?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">Ste si istý, že chcete odstrániť inštanciu {0} navždy?</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">Keďže je pre túto inštanciu povolená "Izolácia inštancie", budú tiež odstránené súvisiace uloženia, balíčky zdrojov, modmi a iné súbory tejto inštancie!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">Inštancia {0} bola navždy odstránená!</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">Inštancia {0} bola odstránená do košovníka!</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">Odstránenie inštancie {0} bolo ručne zrušené.</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">Nepodarilo sa odstrániť inštanciu {0}.</s:String>
     <s:String x:Key="LangSpeedTotalProgress">Pokrok</s:String>
@@ -543,6 +545,7 @@ PCL odporúča aktivovať "Izoláciu inštancie" v "Nastavenia → Izolácia in�
     <s:String x:Key="LangDownloadModTypeMobs">Moby</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">Výbava</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">Optimalizácia</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">Zobrazenie</s:String>
     <s:String x:Key="LangDownloadModTypeServer">Utility servera</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">Utility &amp; QoL</s:String>
@@ -692,6 +695,7 @@ Prosím, skontrolujte internet a potom sa znovu pokúste.</s:String>
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">Žiadny</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">Výber</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">Vlastnosti</s:String>
@@ -820,6 +824,8 @@ Originálna chybová správa: </s:String>
     <s:String x:Key="LangPageOtherAboutThanks00ll00">Poskytol Java Launch Wrapper a niektorú dôležitú podporu!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">Poskytol mcmod-info-mirror pre módov a služby na hostovanie obrázkov pre Centrum pomoci!</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM 主页</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">Navrhol a vytvoril ikonu PCL, zachránil LTCat z priepasti utrpenia...</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">Počas testovania insiderov našiel veľa zvláštnych chýb, ktoré by ľudia nečakali, musí mať talent na hľadanie chýb.</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">MCBBS</s:String>
@@ -1240,7 +1246,6 @@ Keďže je pre túto inštanciu povolená "Izolácia inštancií", pri vymazaní
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">Ste si istý, že chcete vymazať inštanciu {0}?</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">Potvrdenie vymazania inštancie</s:String>
     <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">Inštancia {0} bola vymazaná do koša!</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">Inštancia {0} bola trvalo vymazaná!</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">Prosím, zatvorte možnosť "Nastavenia → Pokročilé spustenie → Zakázať overovanie súborov" pred pokusom o opravu súborov!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">Nastavenia inštancie boli inicializované!</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">Nepodarilo sa inicializovať nastavenia inštancie.</s:String>
@@ -1414,6 +1419,7 @@ Prosím, skontrolujte, či je typ udalosti správne vyplnený, či je PCL najnov
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">Súbor JSON verzie je neplatný, obsah: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">Vyskytuje sa zloženie závislostí verzie: {0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">Nepodarilo sa inicializovať súbor JSON verzie. ({0})</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">Predverzia</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">Kandidát na vydanie</s:String>
     <s:String x:Key="LangModMinecraftVersionSnapshot">快照</s:String>
@@ -1422,8 +1428,6 @@ Prosím, skontrolujte, či je typ udalosti správne vyplnený, či je PCL najnov
     <s:String x:Key="LangModMinecraftUnknownError">Nastala neznáma chyba, prosím, nahláste tento problém autorovi.</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">Unifikovaná autentifikácia</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Autentifikácia Authlib</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">Neplatná verzia Fabric: {0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">Neplatná verzia Neo/Forge: {0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">Jedovaté zemiaky boli vždy prehliadnuté a podceňované, takže sme ich supermocili!</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">你可以合成任何东西——包括合成你的世界！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">Výskum ukázal: hráči sa radi rozhodujú—the more, the better!</s:String>
