@@ -21,7 +21,7 @@
     ''' 获取当前页面的登录信息。
     ''' </summary>
     Public Shared Function GetLoginData() As McLoginServer
-        Dim Server As String = If(IsNothing(McVersionCurrent), Setup.Get("CacheAuthServerServer"), Setup.Get("VersionServerAuthServer", Version:=McVersionCurrent)) & "/authserver"
+        Dim Server As String = If(IsNothing(McInstanceSelected), Setup.Get("CacheAuthServerServer"), Setup.Get("VersionServerAuthServer", Instance:=McInstanceSelected)) & "/authserver"
         Return New McLoginServer(McLoginType.Auth) With {.Token = "Auth", .BaseUrl = Server, .UserName = Setup.Get("CacheAuthUsername"), .Password = Setup.Get("CacheAuthPass"), .Description = "Authlib-Injector", .Type = McLoginType.Auth}
     End Function
 
@@ -78,7 +78,7 @@
     End Sub
 
     Private Sub Skin_Click(sender As Object, e As MouseButtonEventArgs) Handles Skin.Click
-        Dim Address As String = If(McVersionCurrent IsNot Nothing, Setup.Get("VersionServerAuthRegister", Version:=McVersionCurrent), Setup.Get("CacheAuthServerRegister"))
+        Dim Address As String = If(McInstanceSelected IsNot Nothing, Setup.Get("VersionServerAuthRegister", Instance:=McInstanceSelected), Setup.Get("CacheAuthServerRegister"))
         If String.IsNullOrEmpty(New ValidateHttp().Validate(Address)) Then OpenWebsite(Address.Replace("/auth/register", "/user/closet"))
     End Sub
 

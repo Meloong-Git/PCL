@@ -35,7 +35,7 @@
         ''' <summary>
         ''' Java 的大版本号。
         ''' </summary>
-        Public ReadOnly Property VersionCode As Integer
+        Public ReadOnly Property MajorVersion As Integer
             Get
                 Return Version.Minor
             End Get
@@ -71,7 +71,7 @@
         Public Overrides Function ToString() As String
             Dim VersionString = Version.ToString
             If VersionString.StartsWithF("1.") Then VersionString = Mid(VersionString, 3)
-            Return If(IsJre, "JRE ", "JDK ") & VersionCode & " (" & VersionString & ")" & If(Is64Bit, "", GetLang("LangComma") & GetLang("LangModJava32Bit")) & If(IsUserImport, GetLang("LangComma") & GetLang("LangModJavaManuallyImport"), "") & GetLang("LangColon") & PathFolder
+            Return If(IsJre, "JRE ", "JDK ") & MajorVersion & " (" & VersionString & ")" & If(Is64Bit, "", GetLang("LangComma") & GetLang("LangModJava32Bit")) & If(IsUserImport, GetLang("LangComma") & GetLang("LangModJavaManuallyImport"), "") & GetLang("LangColon") & PathFolder
         End Function
 
         '构造
@@ -124,7 +124,7 @@
                 '#3649：在 64 位系统上禁用 32 位 Java
                 If Not Is64Bit AndAlso Not Is32BitSystem Then Throw New Exception(GetLang("LangModJavaExceptionNeed64Bit"))
                 '#2249：JRE 17 似乎会导致 Forge 安装失败，干脆禁用更多版本的 JRE
-                If IsJre AndAlso VersionCode >= 16 Then Throw New Exception(GetLang("LangModJavaExceptionNeedJDK"))
+                If IsJre AndAlso MajorVersion >= 16 Then Throw New Exception(GetLang("LangModJavaExceptionNeedJDK"))
             Catch ex As ApplicationException
                 Throw ex
             Catch ex As ThreadInterruptedException
@@ -199,19 +199,19 @@
     ''' 必须在工作线程调用，且必须包括 SyncLock JavaLock。
     ''' </summary>
     Public Function JavaSelect(CancelException As String, Optional MinVersion As Version = Nothing, Optional MaxVersion As Version = Nothing,
-                               Optional RelatedVersion As McVersion = Nothing) As JavaEntry
+                               Optional GameInstance As McInstance = Nothing) As JavaEntry
         Try
             Dim AllowedJavaList As New List(Of JavaEntry)
 
             '添加特定的 Java
             Dim JavaPreList As New Dictionary(Of String, Boolean)
-            If PathMcFolder.Split("\").Count > 3 AndAlso Not PathMcFolder.Contains("AppData\Roaming") Then
-                JavaSearchFolder(GetPathFromFullPath(PathMcFolder), JavaPreList, False, True) 'Minecraft 文件夹的父文件夹（如果不是根目录或 %APPDATA% 的话）
+            If McFolderSelected.Split("\").Count > 3 AndAlso Not McFolderSelected.Contains("AppData\Roaming") Then
+                JavaSearchFolder(GetPathFromFullPath(McFolderSelected), JavaPreList, False, True) 'Minecraft 文件夹的父文件夹（如果不是根目录或 %APPDATA% 的话）
             End If
-            JavaSearchFolder(PathMcFolder, JavaPreList, False, True) 'Minecraft 文件夹
+            JavaSearchFolder(McFolderSelected, JavaPreList, False, True) 'Minecraft 文件夹
             JavaPreList = JavaPreList.Where(Function(j) Not j.Key.Contains(".minecraft\runtime")).
                 ToDictionary(Function(j) j.Key, Function(j) j.Value) '排除官启自带 Java（#4286）
-            If RelatedVersion IsNot Nothing Then JavaSearchFolder(RelatedVersion.Path, JavaPreList, False, True) '所选版本文件夹
+            If GameInstance IsNot Nothing Then JavaSearchFolder(GameInstance.PathVersion, JavaPreList, False, True) '所选版本文件夹
             Dim TargetJavaList As New List(Of JavaEntry)
             For Each Entry In JavaPreList
                 TargetJavaList.Add(New JavaEntry(Entry.Key, Entry.Value))
@@ -232,8 +232,8 @@
 
             '获取版本独立设置中指定的 Java
             Dim VersionSelect As String = ""
-            If RelatedVersion IsNot Nothing Then
-                VersionSelect = Setup.Get("VersionArgumentJavaSelect", Version:=RelatedVersion)
+            If GameInstance IsNot Nothing Then
+                VersionSelect = Setup.Get("VersionArgumentJavaSelect", Instance:=GameInstance)
                 If VersionSelect.StartsWithF("{") Then
                     Try
                         UserJava = JavaEntry.FromJson(GetJson(VersionSelect))
@@ -242,7 +242,7 @@
                         Throw
                     Catch ex As Exception
                         UserJava = Nothing
-                        Setup.Reset("VersionArgumentJavaSelect", Version:=RelatedVersion)
+                        Setup.Reset("VersionArgumentJavaSelect", Instance:=GameInstance)
                         Log(ex, "版本独立设置中指定的 Java 已无法使用，此设置已重置", LogLevel.Hint)
                     End Try
                 End If
@@ -330,8 +330,8 @@ RetryGet:
                 Dim Right As String = MaxVersion.Minor & If(ShowRevision, "." & MaxVersion.MajorRevision & "." & MaxVersion.MinorRevision, "")
                 Requirement = GetLang("LangModJavaRequireVersion", If(Left = Right, Left, Left & " ~ " & Right))
             End If
-            Dim JavaCurrent As String = UserJava.VersionCode & If(ShowRevision, "." & UserJava.Version.MajorRevision & "." & UserJava.Version.MinorRevision, "")
-            If RelatedVersion IsNot Nothing AndAlso Setup.Get("VersionAdvanceJava", RelatedVersion) Then
+            Dim JavaCurrent As String = UserJava.MajorVersion & If(ShowRevision, "." & UserJava.Version.MajorRevision & "." & UserJava.Version.MinorRevision, "")
+            If GameInstance IsNot Nothing AndAlso Setup.Get("VersionAdvanceJava", GameInstance) Then
                 '直接跳过弹窗
                 Log("[Java] 设置中指定了使用 Java " & JavaCurrent & "，但当前版本" & Requirement & "，这可能会导致游戏崩溃！", LogLevel.Debug)
                 AllowedJavaList = New List(Of JavaEntry) From {UserJava}
@@ -368,7 +368,7 @@ ExitUserJavaCheck:
 UserPass:
 
             '对适合的 Java 进行排序
-            AllowedJavaList = AllowedJavaList.Sort(AddressOf JavaSorter)
+            AllowedJavaList = AllowedJavaList.SortByComparison(AddressOf JavaSorter)
             Log($"[Java] 排序后的 Java 优先顺序：")
             For Each Java In AllowedJavaList
                 Log($"[Java]  - {Java}")
@@ -404,12 +404,12 @@ UserPass:
     ''' <summary>
     ''' 是否强制指定了 64 位 Java。如果没有强制指定，返回是否安装了 64 位 Java。
     ''' </summary>
-    Public Function JavaIs64Bit(Optional RelatedVersion As McVersion = Nothing) As Boolean
+    Public Function JavaIs64Bit(Optional GameInstance As McInstance = Nothing) As Boolean
         Try
             '检查强制指定
             Dim UserSetup As String = Setup.Get("LaunchArgumentJavaSelect")
-            If RelatedVersion IsNot Nothing Then
-                Dim UserSetupVersion As String = Setup.Get("VersionArgumentJavaSelect", Version:=RelatedVersion)
+            If GameInstance IsNot Nothing Then
+                Dim UserSetupVersion As String = Setup.Get("VersionArgumentJavaSelect", Instance:=GameInstance)
                 If UserSetupVersion <> "使用全局设置" Then UserSetup = UserSetupVersion
             End If
             If UserSetup <> "" Then
@@ -418,7 +418,7 @@ UserPass:
                     UserJava = JavaEntry.FromJson(GetJson(UserSetup))
                 Catch ex As Exception
                     Log(ex, "版本指定的 Java 信息已损坏，已重置版本设置中指定的 Java")
-                    Setup.Set("VersionArgumentJavaSelect", "使用全局设置", Version:=RelatedVersion)
+                    Setup.Set("VersionArgumentJavaSelect", "使用全局设置", Instance:=GameInstance)
                     GoTo NoUserJava
                 End Try
                 For Each Java In JavaList
@@ -442,14 +442,14 @@ NoUserJava:
     ''' </summary>
     Public Function JavaSorter(Left As JavaEntry, Right As JavaEntry) As Boolean
         Dim PathInfo As New DirectoryInfo(Path)
-        Dim PathMcInfo As New DirectoryInfo(PathMcFolder)
+        Dim PathMcInfo As New DirectoryInfo(McFolderSelected)
         '1. 尽量在当前文件夹或当前 Minecraft 文件夹
         Dim ProgramPathParent As String, MinecraftPathParent As String = ""
         ProgramPathParent = If(PathInfo.Parent, PathInfo).FullName
-        If PathMcFolder <> "" Then MinecraftPathParent = If(PathMcInfo.Parent, PathMcInfo).FullName
+        If McFolderSelected <> "" Then MinecraftPathParent = If(PathMcInfo.Parent, PathMcInfo).FullName
         If Left.PathFolder.StartsWithF(ProgramPathParent) AndAlso Not Right.PathFolder.StartsWithF(ProgramPathParent) Then Return True
         If Not Left.PathFolder.StartsWithF(ProgramPathParent) AndAlso Right.PathFolder.StartsWithF(ProgramPathParent) Then Return False
-        If PathMcFolder <> "" Then
+        If McFolderSelected <> "" Then
             If Left.PathFolder.StartsWithF(MinecraftPathParent) AndAlso Not Right.PathFolder.StartsWithF(MinecraftPathParent) Then Return True
             If Not Left.PathFolder.StartsWithF(MinecraftPathParent) AndAlso Right.PathFolder.StartsWithF(MinecraftPathParent) Then Return False
         End If
@@ -460,10 +460,11 @@ NoUserJava:
         If Left.IsJre AndAlso Not Right.IsJre Then Return True
         If Not Left.IsJre AndAlso Right.IsJre Then Return False
         '4. Java 大版本
-        If Left.VersionCode <> Right.VersionCode Then
-            '                             Java  7   8   9  10  11  12 13 14 15  16  17  18  19  20  21  22  23...
-            Dim Weight = {0, 1, 2, 3, 4, 5, 6, 14, 30, 10, 12, 15, 13, 9, 8, 7, 11, 31, 29, 16, 17, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18}
-            Return Weight.ElementAtOrDefault(Left.VersionCode) >= Weight.ElementAtOrDefault(Right.VersionCode)
+        If Left.MajorVersion <> Right.MajorVersion Then
+            '                             Java  7   8   9  10  11  12 13 14 15  16  17  18  19  20
+            Dim Weight = {0, 1, 2, 3, 4, 5, 6, 14, 30, 10, 12, 15, 13, 9, 8, 7, 11, 31, 29, 16, 17} '更高的版本指定为 20，且越低越好
+            Return If(Left.MajorVersion > 20, 20 - Left.MajorVersion * 0.0001, Weight.ElementAtOrDefault(Left.MajorVersion)) >=
+                   If(Right.MajorVersion > 20, 20 - Right.MajorVersion * 0.0001, Weight.ElementAtOrDefault(Right.MajorVersion))
         End If
         '5. 最次级版本号更接近 51
         Return Math.Abs(Left.Version.Revision - 51) <= Math.Abs(Right.Version.Revision - 51)
@@ -483,11 +484,11 @@ NoUserJava:
                 FrmSetupLaunch.ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = GetLang("LangPageSetupLaunchLaunchJavaLoading"), .IsSelected = True})
             End Sub)
         End If
-        If FrmVersionSetup IsNot Nothing Then
+        If FrmInstanceSetup IsNot Nothing Then
             RunInUiWait(
             Sub()
-                FrmVersionSetup.ComboArgumentJava.Items.Clear()
-                FrmVersionSetup.ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = GetLang("LangPageSetupLaunchLaunchJavaLoading"), .IsSelected = True})
+                FrmInstanceSetup.ComboArgumentJava.Items.Clear()
+                FrmInstanceSetup.ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = GetLang("LangPageSetupLaunchLaunchJavaLoading"), .IsSelected = True})
             End Sub)
         End If
 
@@ -521,8 +522,8 @@ NoUserJava:
             '查找启动器目录中的 Java
             JavaSearchFolder(Path, JavaPreList, False, IsFullSearch:=True)
             '查找所选 Minecraft 文件夹中的 Java
-            If Not String.IsNullOrWhiteSpace(PathMcFolder) AndAlso Path <> PathMcFolder Then
-                JavaSearchFolder(PathMcFolder, JavaPreList, False, IsFullSearch:=True)
+            If Not String.IsNullOrWhiteSpace(McFolderSelected) AndAlso Path <> McFolderSelected Then
+                JavaSearchFolder(McFolderSelected, JavaPreList, False, IsFullSearch:=True)
             End If
 
             '若不全为符号链接，则清除符号链接的地址
@@ -575,7 +576,7 @@ NoUserJava:
             For Each Entry In JavaPreList.Distinct(Function(a, b) a.Key.ToLower = b.Key.ToLower) '#794
                 NewJavaList.Add(New JavaEntry(Entry.Key, Entry.Value))
             Next
-            NewJavaList = JavaCheckList(NewJavaList).Sort(AddressOf JavaSorter)
+            NewJavaList = JavaCheckList(NewJavaList).SortByComparison(AddressOf JavaSorter)
 
             '修改设置项
             Dim AllList As New JArray
@@ -592,7 +593,7 @@ NoUserJava:
 
         Log("[Java] Java 搜索完成，发现 " & JavaList.Count & " 个 Java")
         If FrmSetupLaunch IsNot Nothing Then RunInUi(Sub() FrmSetupLaunch.RefreshJavaComboBox())
-        If FrmVersionSetup IsNot Nothing Then RunInUi(Sub() FrmVersionSetup.RefreshJavaComboBox())
+        If FrmInstanceSetup IsNot Nothing Then RunInUi(Sub() FrmInstanceSetup.RefreshJavaComboBox())
     End Sub
 
     ''' <summary>
@@ -691,26 +692,12 @@ Wait:
 #Region "下载"
 
     ''' <summary>
-    ''' 提示 Java 缺失，并弹窗确认是否自动下载。返回玩家选择是否下载。
+    ''' 获取下载 Java 的加载器。需要开启 IsForceRestart 以正常刷新 Java 列表。
     ''' </summary>
-    Public Function JavaDownloadConfirm(VersionDescription As String, Optional ForcedManualDownload As Boolean = False) As Boolean
-        If ForcedManualDownload Then
-            MyMsgBox(GetLang("LangModJavaDialogContentJavaNotFound", VersionDescription, VersionDescription),
-                     GetLang("LangModJavaDialogTitleJavaNotFound"))
-            Return False
-        Else
-            Return MyMsgBox(GetLang("LangModJavaDialogContentDownloadJava", VersionDescription, VersionDescription),
-                            GetLang("LangModJavaDialogTitleJavaNotFound"), GetLang("LangModJavaDialogBtn1DownloadJava"), GetLang("LangDialogBtnCancel")) = 1
-        End If
-    End Function
-
-    ''' <summary>
-    ''' 获取下载 Java 8/14/17/21 的加载器。需要开启 IsForceRestart 以正常刷新 Java 列表。
-    ''' </summary>
-    Public Function JavaFixLoaders(Version As Integer) As LoaderCombo(Of Integer)
+    Public Function GetJavaDownloadLoader() As LoaderCombo(Of String)
         Dim JavaDownloadLoader As New LoaderDownload(GetLang("LangModJavaTaskDownloadJavaFile"), New List(Of NetFile)) With {.ProgressWeight = 10}
-        Dim Loader = New LoaderCombo(Of Integer)(GetLang("LangModJavaTaskDownloadJava", Version), {
-            New LoaderTask(Of Integer, List(Of NetFile))(GetLang("LangModJavaTaskGetJavaDownloadInfo"), AddressOf JavaFileList) With {.ProgressWeight = 2},
+        Dim Loader = New LoaderCombo(Of String)(GetLang("LangModJavaTaskDownloadJava"), {
+            New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModJavaTaskGetJavaDownloadInfo"), AddressOf JavaFileList) With {.ProgressWeight = 2},
             JavaDownloadLoader,
             JavaSearchLoader
         })
@@ -727,22 +714,29 @@ Wait:
         Return Loader
     End Function
     Private LastJavaBaseDir As String = Nothing '用于在下载中断或失败时删除未完成下载的 Java 文件夹，防止残留只下了一半但 -version 能跑的 Java
-    Private Sub JavaFileList(Loader As LoaderTask(Of Integer, List(Of NetFile)))
+    Private Sub JavaFileList(Loader As LoaderTask(Of String, List(Of NetFile)))
         Log("[Java] 开始获取 Java 下载信息")
         Dim IndexFileStr As String = NetRequestByLoader(DlVersionListOrder(
             {"https://piston-meta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"},
             {"https://bmclapi2.bangbang93.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"}
         ), IsJson:=True)
-        '获取下载地址
-        Dim MainEntry As JObject = CType(GetJson(IndexFileStr), JObject)($"windows-x{If(Is32BitSystem, "86", "64")}")
-        Dim Entries = MainEntry.Children.Reverse. '选择最靠后的一项（最新）
-            SelectMany(Function(e As JProperty) CType(e.Value, JArray).Select(Function(v) New KeyValuePair(Of String, JObject)(e.Name, v)))
-        Dim TargetEntry = Entries.First(Function(t) t.Value("version")("name").ToString.StartsWithF(Loader.Input))
-        Dim Address As String = TargetEntry.Value("manifest")("url")
-        Log($"[Java] 准备下载 Java {TargetEntry.Value("version")("name")}（{TargetEntry.Key}）：{Address}")
+        '查找要下载的目标 Java
+        Dim TargetEntry As JProperty = Nothing
+        Dim Components As JObject = CType(GetJson(IndexFileStr), JObject)($"windows-x{If(Is32BitSystem, "86", "64")}")
+        If Components.ContainsKey(Loader.Input) Then '精确匹配
+            TargetEntry = Components.Property(Loader.Input)
+        Else '模糊匹配
+            TargetEntry = Components.Properties.FirstOrDefault(
+                Function(c) c.Value IsNot Nothing AndAlso c.Value.ToArray.FirstOrDefault()?("version")("name").ToString.StartsWithF(Loader.Input))
+            If TargetEntry Is Nothing Then Throw New Exception($"未能找到所需的 Java {Loader.Input}")
+        End If
+        Dim TargetComponent = TargetEntry.Value.ToArray.FirstOrDefault
+        If TargetComponent Is Nothing Then Throw New Exception($"Mojang 未提供所需的 Java {Loader.Input}")
         '获取文件列表
+        Dim Address As String = TargetComponent("manifest")("url")
+        McLaunchLog($"准备下载 Java {TargetComponent("version")("name")}（{TargetEntry.Name}）：{Address}")
         Dim ListFileStr As String = NetRequestByLoader(DlSourceOrder({Address}, {Address.Replace("piston-meta.mojang.com", "bmclapi2.bangbang93.com")}), IsJson:=True)
-        LastJavaBaseDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\runtime\" & TargetEntry.Key & "\"
+        LastJavaBaseDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\runtime\" & TargetEntry.Name & "\"
         Dim Results As New List(Of NetFile)
         For Each File As JProperty In CType(GetJson(ListFileStr), JObject)("files")
             If CType(File.Value, JObject)("downloads")?("raw") Is Nothing Then Continue For

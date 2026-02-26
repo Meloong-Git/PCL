@@ -1,13 +1,13 @@
-﻿Public Class PageVersionLeft
+﻿Public Class PageInstanceLeft
     Implements IRefreshable
 
     ''' <summary>
     ''' 当前显示设置的 MC 版本。
     ''' </summary>
-    Public Shared Version As McVersion = Nothing
+    Public Shared Instance As McInstance = Nothing
 
     Public Sub RefreshModDisabled() Handles Me.Loaded
-        If Version IsNot Nothing AndAlso Version.Modable Then
+        If Instance IsNot Nothing AndAlso Instance.Modable Then
             ItemMod.Visibility = Visibility.Visible
             ItemModDisabled.Visibility = Visibility.Collapsed
         Else
@@ -26,7 +26,7 @@
     ''' <summary>
     ''' 勾选事件改变页面。
     ''' </summary>
-    Private Sub PageCheck(sender As MyListItem, e As RouteEventArgs) Handles ItemOverall.Check, ItemMod.Check, ItemModDisabled.Check, ItemSetup.Check, ItemExport.Check
+    Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemOverall.Check, ItemMod.Check, ItemModDisabled.Check, ItemSetup.Check, ItemExport.Check
         '尚未初始化控件属性时，sender.Tag 为 Nothing，会导致切换到页面 0
         '若使用 IsLoaded，则会导致模拟点击不被执行（模拟点击切换页面时，控件的 IsLoaded 为 False）
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
@@ -35,21 +35,21 @@
     Public Function PageGet(Optional ID As FormMain.PageSubType = -1)
         If ID = -1 Then ID = PageID
         Select Case ID
-            Case FormMain.PageSubType.VersionOverall
-                If FrmVersionOverall Is Nothing Then FrmVersionOverall = New PageVersionOverall
-                Return FrmVersionOverall
-            Case FormMain.PageSubType.VersionMod
-                If FrmVersionMod Is Nothing Then FrmVersionMod = New PageVersionMod
-                Return FrmVersionMod
-            Case FormMain.PageSubType.VersionModDisabled
-                If FrmVersionModDisabled Is Nothing Then FrmVersionModDisabled = New PageVersionModDisabled
-                Return FrmVersionModDisabled
-            Case FormMain.PageSubType.VersionSetup
-                If IsNothing(FrmVersionSetup) Then FrmVersionSetup = New PageVersionSetup
-                Return FrmVersionSetup
-            Case FormMain.PageSubType.VersionExport
-                If FrmVersionExport Is Nothing Then FrmVersionExport = New PageVersionExport
-                Return FrmVersionExport
+            Case FormMain.PageSubType.InstanceOverall
+                If FrmInstanceOverall Is Nothing Then FrmInstanceOverall = New PageInstanceOverall
+                Return FrmInstanceOverall
+            Case FormMain.PageSubType.InstanceMod
+                If FrmInstanceMod Is Nothing Then FrmInstanceMod = New PageInstanceMod
+                Return FrmInstanceMod
+            Case FormMain.PageSubType.InstanceModDisabled
+                If FrmInstanceModDisabled Is Nothing Then FrmInstanceModDisabled = New PageInstanceModDisabled
+                Return FrmInstanceModDisabled
+            Case FormMain.PageSubType.InstanceSetup
+                If IsNothing(FrmInstanceSetup) Then FrmInstanceSetup = New PageInstanceSetup
+                Return FrmInstanceSetup
+            Case FormMain.PageSubType.InstanceExport
+                If FrmInstanceExport Is Nothing Then FrmInstanceExport = New PageInstanceExport
+                Return FrmInstanceExport
             Case Else
                 Throw New Exception("未知的版本设置子页面种类：" & ID)
         End Select
@@ -99,19 +99,19 @@
     End Sub
     Public Sub Refresh(SubType As FormMain.PageSubType)
         Select Case SubType
-            Case FormMain.PageSubType.VersionMod
-                PageVersionMod.Refresh()
+            Case FormMain.PageSubType.InstanceMod
+                PageInstanceMod.Refresh()
                 ItemMod.Checked = True
-            Case FormMain.PageSubType.VersionExport
-                If FrmVersionExport IsNot Nothing Then FrmVersionExport.RefreshAll()
+            Case FormMain.PageSubType.InstanceExport
+                If FrmInstanceExport IsNot Nothing Then FrmInstanceExport.RefreshAll()
                 ItemExport.Checked = True
         End Select
     End Sub
 
     Public Sub Reset(sender As Object, e As EventArgs)
         If MyMsgBox(GetLang("LangPageVersionLeftSettingDialogIndependentSetContent"), GetLang("LangPageVersionLeftSettingDialogIndependentSetTitle"),, GetLang("LangDialogBtnCancel"), IsWarn:=True) = 1 Then
-            If IsNothing(FrmVersionSetup) Then FrmVersionSetup = New PageVersionSetup
-            FrmVersionSetup.Reset()
+            If IsNothing(FrmInstanceSetup) Then FrmInstanceSetup = New PageInstanceSetup
+            FrmInstanceSetup.Reset()
             ItemSetup.Checked = True
         End If
     End Sub

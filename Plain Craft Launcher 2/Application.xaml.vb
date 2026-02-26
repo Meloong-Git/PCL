@@ -168,8 +168,8 @@ WaitRetry:
             Setup.Load("ToolDownloadCert")
             Setup.Load("ToolDownloadSpeed")
             '计时
-            Log("[Start] 第一阶段加载用时：" & GetTimeTick() - ApplicationStartTick & " ms")
-            ApplicationStartTick = GetTimeTick()
+            Log("[Start] 第一阶段加载用时：" & GetTimeMs() - ApplicationStartTick & " ms")
+            ApplicationStartTick = GetTimeMs()
             '执行测试
 #If DEBUG Then
             Test()
@@ -221,7 +221,7 @@ WaitRetry:
     Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
     Public Shared Function AssemblyResolve(sender As Object, Args As ResolveEventArgs) As Assembly
         '缓存
-        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "System.Net.Http.Formatting"}
+        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "System.Net.Http.Formatting", "System.ValueTuple"}
         Static Locks As New Dictionary(Of String, Object)(StringComparer.Ordinal)
         Static LoadedAssembly As New Dictionary(Of String, Assembly)(StringComparer.Ordinal)
         '查找对应的 DLL
@@ -236,7 +236,11 @@ WaitRetry:
                 'WebP 特判
                 If Prefix = "Imazen.WebP" Then
                     SetDllDirectory(PathPure.TrimEnd("\"c))
-                    WriteFile(PathPure & "libwebp.dll", GetResources("libwebp64"))
+                    Try
+                        WriteFile(PathPure & "libwebp.dll", GetResources("libwebp64"))
+                    Catch ex As Exception
+                        Log(ex, "写入 libwebp.dll 失败") '防止同时加载多个图片时，同时写入文件导致文件占用，进而导致崩溃
+                    End Try
                 End If
             End If
             Return LoadedAssembly(Prefix)

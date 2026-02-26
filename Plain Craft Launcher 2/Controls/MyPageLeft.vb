@@ -30,6 +30,7 @@
             Dim AniList As New List(Of AniData)
             Dim Id As Integer = 0, Delay As Integer = 0
             For Each Element As FrameworkElement In GetAllAnimControls(True)
+                Element = MyVirtualizingElement.TryInit(Element)
                 If Element.Visibility = Visibility.Collapsed Then
                     '还原之前的隐藏动画可能导致的改变（#2436）
                     Element.Opacity = 1

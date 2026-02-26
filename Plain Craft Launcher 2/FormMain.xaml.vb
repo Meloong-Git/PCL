@@ -11,6 +11,21 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
 #If BETA Then
+        If LastVersion < 379 Then 'Release 2.12.1
+            If LastVersion >= 376 Then
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：暂时隐藏联机入口……不过只是暂时关闭，它还会回来的！"))
+            End If
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：适配新的 Minecraft 版本号系统与 Unobfuscated 版本"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：巨幅优化各个下载页面和 Mod 管理页面的性能"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：更换披风时会显示当前使用的披风"))
+            FeatureCount += 33
+            BugCount += 29
+        End If
+        If LastVersion < 376 Then 'Release 2.11.2
+            'FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "新增：联机功能！"))
+            FeatureCount += 32
+            BugCount += 21
+        End If
         If LastVersion < 372 Then 'Release 2.10.9
             FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：如果版本设置了自定义描述，会在标题后面以淡灰色显示其版本号"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "新增：支持为一个控件设置多个自定义事件"))
@@ -113,8 +128,48 @@ Public Class FormMain
         '3：BUG+ IMP* FEAT-
         '2：BUG* IMP-
         '1：BUG-
+        If LastVersion < 380 Then 'Snapshot 2.12.2
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法搜索 CurseForge 上的社区资源"))
+            FeatureCount += 3
+            BugCount += 13
+        End If
+        If LastVersion < 378 Then 'Snapshot 2.12.1
+            If LastVersion >= 377 Then
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：在版本列表中存在 OptiFine 时可能无法加载版本列表"))
+                BugCount += 2
+            End If
+        End If
+        If LastVersion < 377 Then 'Snapshot 2.12.0
+            If LastVersion >= 373 Then
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：暂时隐藏联机入口……不过只是暂时关闭，它还会回来的！"))
+            End If
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：适配新的 Minecraft 版本号系统与 Unobfuscated 版本"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：巨幅优化各个下载页面和 Mod 管理页面的性能"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：更换披风时会显示当前使用的披风"))
+            FeatureCount += 33
+            BugCount += 29
+        End If
+        If LastVersion < 375 Then 'Snapshot 2.11.2
+            'If LastVersion >= 373 Then
+            '    FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：对联机进行了各种各样的优化，以改善稳定性"))
+            '    FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：若有加入者的网络环境比房主更好，会提示可以让那位加入者担任房主"))
+            'End If
+            FeatureCount += 16
+            BugCount += 4
+        End If
+        If LastVersion < 374 Then 'Snapshot 2.11.1
+            'If LastVersion >= 373 Then
+            '    FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：使用离线登录也可以直接加入联机房间了"))
+            '    FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：会从所有共享节点中自动选择负载最低的进行中继连接"))
+            '    FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：若复制了邀请码，则可以直接快速加入房间"))
+            '    FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：关闭 PCL 时总是会提示是否退出联机，防止在关闭 PCL 时无意地关闭或退出了房间"))
+            '    FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "新增：允许自定义要连接的节点"))
+            'End If
+            FeatureCount += 9
+            BugCount += 7
+        End If
         If LastVersion < 373 Then 'Snapshot 2.11.0
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "新增：联机功能！"))
+            'FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "新增：联机功能！"))
             FeatureCount += 7
             BugCount += 10
         End If
@@ -283,7 +338,7 @@ Public Class FormMain
     '窗口加载
     Private IsWindowLoadFinished As Boolean = False
     Public Sub New()
-        ApplicationStartTick = GetTimeTick()
+        ApplicationStartTick = GetTimeMs()
         '窗体参数初始化
         FrmMain = Me
         FrmLaunchLeft = New PageLaunchLeft
@@ -347,10 +402,10 @@ Public Class FormMain
         '尽早执行的加载池
         McFolderListLoader.Start(0) '为了让下载已存在文件检测可以正常运行，必须跑一次；为了让启动按钮尽快可用，需要尽早执行；为了与 PageLaunchLeft 联动，需要为 0 而不是 GetUuid
 
-        Log("[Start] 第二阶段加载用时：" & GetTimeTick() - ApplicationStartTick & " ms")
+        Log("[Start] 第二阶段加载用时：" & GetTimeMs() - ApplicationStartTick & " ms")
     End Sub
     Private Sub FormMain_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-        ApplicationStartTick = GetTimeTick()
+        ApplicationStartTick = GetTimeMs()
         Handle = New Interop.WindowInteropHelper(Me).Handle
         '读取设置
         Setup.Load("UiBackgroundOpacity")
@@ -441,7 +496,7 @@ Public Class FormMain
                 Thread.Sleep(100)
                 DlClientListMojangLoader.Start(1) 'PCL 会同时根据这里的加载结果决定是否使用官方源进行下载
                 RunCountSub()
-                ServerLoader.Start(1)
+                ServerLoader.Start()
                 RunInNewThread(AddressOf TryClearTaskTemp, "TryClearTaskTemp", ThreadPriority.BelowNormal)
             Catch ex As Exception
                 Log(ex, "初始化加载池运行失败", LogLevel.Feedback)
@@ -456,7 +511,7 @@ Public Class FormMain
             Telemetry("启动")
         End Sub, "初始化", ThreadPriority.Lowest)
 
-        Log("[Start] 第三阶段加载用时：" & GetTimeTick() - ApplicationStartTick & " ms")
+        Log("[Start] 第三阶段加载用时：" & GetTimeMs() - ApplicationStartTick & " ms")
     End Sub
     '根据打开次数触发的事件
     Private Sub RunCountSub()
@@ -586,9 +641,7 @@ Public Class FormMain
             End Sub, "强行停止下载任务")
         End If
         '关闭联机？
-        If FrmLinkMain IsNot Nothing Then
-            If FrmLinkMain.TryExit(SendWarning) Then Return
-        End If
+        If FrmLinkMain?.TryExit(Not SendWarning, True) Then Return
         '关闭
         RunInUiWait(
         Sub()
@@ -707,9 +760,9 @@ Public Class FormMain
         '按 ESC 返回上一级
         If e.Key = Key.Escape Then TriggerPageBack()
         '更改隐藏版本可见性
-        If e.Key = Key.F11 AndAlso PageCurrent = FormMain.PageType.VersionSelect Then
+        If e.Key = Key.F11 AndAlso PageCurrent = FormMain.PageType.InstanceSelect Then
             FrmSelectRight.ShowHidden = Not FrmSelectRight.ShowHidden
-            LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+            LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             Return
         End If
         '更改功能隐藏可见性
@@ -754,16 +807,32 @@ Public Class FormMain
     '切回窗口
     Private Sub FormMain_Activated() Handles Me.Activated
         Try
-            If PageCurrent = PageType.VersionSetup AndAlso PageCurrentSub = PageSubType.VersionMod Then
+            If PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.InstanceMod Then
                 'Mod 管理自动刷新
-                FrmVersionMod.ReloadModList()
-            ElseIf PageCurrent = PageType.VersionSelect Then
+                FrmInstanceMod.ReloadModList()
+            ElseIf PageCurrent = PageType.InstanceSelect Then
                 '版本选择自动刷新
-                LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\")
+                LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\")
             End If
         Catch ex As Exception
             Log(ex, "切回窗口时出错", LogLevel.Feedback)
         End Try
+        '读取剪贴板，自动加入联机房间
+        If PageLinkMain.LinkState <> PageLinkMain.LinkStates.Waiting Then Return '已启动联机
+        If PageCurrent = PageType.Link Then Return '已在联机界面
+        Dim Code = ClipboardGetText() : If Code Is Nothing Then Return '剪贴板无文本
+        If Setup.Get("LinkLastAutoJoinInviteCode") = Code Then Return
+        If PageLinkMain.ValidateCodeFormat(Code) IsNot Nothing Then Return '不是邀请码
+        Setup.Set("LinkLastAutoJoinInviteCode", Code)
+        RunInThread(
+        Sub()
+            If MyMsgBox("嘿，是否使用复制的邀请码加入房间？", "加入联机房间", "加入", "取消") = 2 Then Return '防止弹窗阻碍主线程，所以必须放在工作线程
+            RunInUi(
+            Sub()
+                PageLinkMain.Join(Code)
+                ClipboardSet(Nothing, False)
+            End Sub)
+        End Sub)
     End Sub
 
     '文件拖放
@@ -817,33 +886,33 @@ Public Class FormMain
                             Hint(GetLang("LangHintAuthlibUrlIncorrect", AuthlibServer), HintType.Red)
                             Return
                         End If
-                        Dim TargetVersion = If(PageCurrent = PageType.VersionSetup, PageVersionLeft.Version, McVersionCurrent)
-                        If TargetVersion Is Nothing Then
+                        Dim Target = If(PageCurrent = PageType.InstanceSetup, PageInstanceLeft.Instance, McInstanceSelected)
+                        If Target Is Nothing Then
                             Hint(GetLang("LangHintAuthlibDownloadGame"), HintType.Red)
                             Return
                         End If
                         If AuthlibServer = "https://littleskin.cn/api/yggdrasil" Then
                             'LittleSkin
-                            If MyMsgBox(GetLang("LangDialogAuthlibEnableLittleSkin", TargetVersion.Name), GetLang("LangDialogTitleAuthlibEnableLittleSkin"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then
+                            If MyMsgBox(GetLang("LangDialogAuthlibEnableLittleSkin", Target.Name), GetLang("LangDialogTitleAuthlibEnableLittleSkin"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then
                                 Return
                             End If
-                            Setup.Set("VersionServerLogin", 4, Version:=TargetVersion)
-                            Setup.Set("VersionServerAuthServer", "https://littleskin.cn/api/yggdrasil", Version:=TargetVersion)
-                            Setup.Set("VersionServerAuthRegister", "https://littleskin.cn/auth/register", Version:=TargetVersion)
-                            Setup.Set("VersionServerAuthName", "LittleSkin 登录", Version:=TargetVersion)
+                            Setup.Set("VersionServerLogin", 4, Instance:=Target)
+                            Setup.Set("VersionServerAuthServer", "https://littleskin.cn/api/yggdrasil", Instance:=Target)
+                            Setup.Set("VersionServerAuthRegister", "https://littleskin.cn/auth/register", Instance:=Target)
+                            Setup.Set("VersionServerAuthName", "LittleSkin 登录", Instance:=Target)
                         Else
                             '第三方 Authlib 服务器
-                            If MyMsgBox(GetLang("LangDialogAuthlibEnableLittleSkinServer", TargetVersion.Name, AuthlibServer), GetLang("LangDialogTitleAuthlibEnableLittleSkin"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then
+                            If MyMsgBox(GetLang("LangDialogAuthlibEnableLittleSkinServer", Target.Name, AuthlibServer), GetLang("LangDialogTitleAuthlibEnableLittleSkin"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then
                                 Return
                             End If
-                            Setup.Set("VersionServerLogin", 4, Version:=TargetVersion)
-                            Setup.Set("VersionServerAuthServer", AuthlibServer, Version:=TargetVersion)
-                            Setup.Set("VersionServerAuthRegister", AuthlibServer.Replace("api/yggdrasil", "auth/register"), Version:=TargetVersion)
-                            Setup.Set("VersionServerAuthName", "", Version:=TargetVersion)
+                            Setup.Set("VersionServerLogin", 4, Instance:=Target)
+                            Setup.Set("VersionServerAuthServer", AuthlibServer, Instance:=Target)
+                            Setup.Set("VersionServerAuthRegister", AuthlibServer.Replace("api/yggdrasil", "auth/register"), Instance:=Target)
+                            Setup.Set("VersionServerAuthName", "", Instance:=Target)
                         End If
-                        If PageCurrent = PageType.VersionSetup AndAlso PageCurrentSub = PageSubType.VersionSetup Then
+                        If PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.InstanceSetup Then
                             '正在服务器选项页，需要刷新设置项显示
-                            FrmVersionSetup.Reload()
+                            FrmInstanceSetup.Reload()
                         ElseIf PageCurrent = PageType.Launch Then
                             '正在主页，需要刷新左边栏
                             FrmLaunchLeft.RefreshPage(True, False)
@@ -916,7 +985,7 @@ Public Class FormMain
                 Return
             End If
             '安装 Mod
-            If PageVersionMod.InstallMods(FilePathList) Then Return
+            If PageInstanceMod.InstallMods(FilePathList) Then Return
             '安装整合包
             If {"zip", "rar", "mrpack"}.Any(Function(t) t = Extension) Then '部分压缩包是 zip 格式但后缀为 rar，总之试一试
                 Log("[System] 文件为压缩包，尝试作为整合包安装")
@@ -1049,7 +1118,7 @@ Public Class FormMain
         ''' <summary>
         ''' 版本选择。这是一个副页面。
         ''' </summary>
-        VersionSelect = 5
+        InstanceSelect = 5
         ''' <summary>
         ''' 下载管理。这是一个副页面。
         ''' </summary>
@@ -1057,7 +1126,7 @@ Public Class FormMain
         ''' <summary>
         ''' 版本设置。这是一个副页面。
         ''' </summary>
-        VersionSetup = 7
+        InstanceSetup = 7
         ''' <summary>
         ''' 资源工程详情。这是一个副页面。
         ''' </summary>
@@ -1087,23 +1156,23 @@ Public Class FormMain
         OtherHelp = 0
         OtherAbout = 1
         OtherTest = 2
-        VersionOverall = 0
-        VersionSetup = 1
-        VersionMod = 2
-        VersionModDisabled = 3
-        VersionExport = 4
+        InstanceOverall = 0
+        InstanceSetup = 1
+        InstanceMod = 2
+        InstanceModDisabled = 3
+        InstanceExport = 4
     End Enum
     ''' <summary>
     ''' 获取次级页面的名称。若并非次级页面则返回空字符串，故可以以此判断是否为次级页面。
     ''' </summary>
     Private Function PageNameGet(Stack As PageStackData) As String
         Select Case Stack.Page
-            Case PageType.VersionSelect
+            Case PageType.InstanceSelect
                 Return GetLang("LangPageNameVersionChoose")
             Case PageType.DownloadManager
                 Return GetLang("LangPageNameDownloadManagement")
-            Case PageType.VersionSetup
-                Return GetLang("LangPageNameVersionConfiguration") & " - " & If(PageVersionLeft.Version Is Nothing, GetLang("LangPageNameVersionConfigurationUnknownVersion"), PageVersionLeft.Version.Name)
+            Case PageType.InstanceSetup
+                Return GetLang("LangPageNameVersionConfiguration") & " - " & If(PageInstanceLeft.Instance Is Nothing, GetLang("LangPageNameVersionConfigurationUnknownVersion"), PageInstanceLeft.Instance.Name)
             Case PageType.CompDetail
                 Return GetLang("LangPageNameCompDownload") & " - " & CType(Stack.Additional(0), CompProject).TranslatedName
             Case PageType.HelpDetail
@@ -1149,9 +1218,9 @@ Public Class FormMain
                 Case PageType.Other
                     If FrmOtherLeft Is Nothing Then FrmOtherLeft = New PageOtherLeft
                     Return FrmOtherLeft.PageID
-                Case PageType.VersionSetup
-                    If FrmVersionLeft Is Nothing Then FrmVersionLeft = New PageVersionLeft
-                    Return FrmVersionLeft.PageID
+                Case PageType.InstanceSetup
+                    If FrmInstanceLeft Is Nothing Then FrmInstanceLeft = New PageInstanceLeft
+                    Return FrmInstanceLeft.PageID
                 Case Else
                     Return 0 '没有子页面
             End Select
@@ -1225,9 +1294,9 @@ Public Class FormMain
         Else
             '切换到次页面
             Select Case Stack.Page
-                Case PageType.VersionSetup
-                    If FrmVersionLeft Is Nothing Then FrmVersionLeft = New PageVersionLeft
-                    CType(FrmVersionLeft.PanItem.Children(SubType), MyListItem).SetChecked(True, True, Stack = PageCurrent)
+                Case PageType.InstanceSetup
+                    If FrmInstanceLeft Is Nothing Then FrmInstanceLeft = New PageInstanceLeft
+                    CType(FrmInstanceLeft.PanItem.Children(SubType), MyListItem).SetChecked(True, True, Stack = PageCurrent)
             End Select
             PageChangeActual(Stack, SubType)
         End If
@@ -1319,7 +1388,7 @@ Public Class FormMain
                 Case PageType.Other '更多
                     If FrmOtherLeft Is Nothing Then FrmOtherLeft = New PageOtherLeft
                     PageChangeAnim(FrmOtherLeft, FrmOtherLeft.PageGet(SubType))
-                Case PageType.VersionSelect '版本选择
+                Case PageType.InstanceSelect '版本选择
                     If FrmSelectLeft Is Nothing Then FrmSelectLeft = New PageSelectLeft
                     If FrmSelectRight Is Nothing Then FrmSelectRight = New PageSelectRight
                     PageChangeAnim(FrmSelectLeft, FrmSelectRight)
@@ -1327,9 +1396,9 @@ Public Class FormMain
                     If FrmSpeedLeft Is Nothing Then FrmSpeedLeft = New PageSpeedLeft
                     If FrmSpeedRight Is Nothing Then FrmSpeedRight = New PageSpeedRight
                     PageChangeAnim(FrmSpeedLeft, FrmSpeedRight)
-                Case PageType.VersionSetup '版本设置
-                    If FrmVersionLeft Is Nothing Then FrmVersionLeft = New PageVersionLeft
-                    PageChangeAnim(FrmVersionLeft, FrmVersionLeft.PageGet(SubType))
+                Case PageType.InstanceSetup '版本设置
+                    If FrmInstanceLeft Is Nothing Then FrmInstanceLeft = New PageInstanceLeft
+                    PageChangeAnim(FrmInstanceLeft, FrmInstanceLeft.PageGet(SubType))
                 Case PageType.CompDetail 'Mod 信息
                     If FrmDownloadCompDetail Is Nothing Then FrmDownloadCompDetail = New PageDownloadCompDetail
                     PageChangeAnim(New MyPageLeft, FrmDownloadCompDetail)

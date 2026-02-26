@@ -3,16 +3,6 @@
 #Region "基础属性"
     Public Uuid As Integer = GetUuid()
 
-    'Logo
-    Public Property Logo As String
-        Get
-            Return PathLogo.Source
-        End Get
-        Set(value As String)
-            PathLogo.Source = value
-        End Set
-    End Property
-
     '标题
     Public Property Title As String
         Get
@@ -64,25 +54,17 @@
 
     'Tag
     Public WriteOnly Property Tags As List(Of String)
-        Set(value As List(Of String))
+        Set(Tags As List(Of String))
             PanTags.Children.Clear()
-            PanTags.Visibility = If(value.Any(), Visibility.Visible, Visibility.Collapsed)
-            For Each TagText In value
-                Dim NewTag As New Border With {
-                    .Background = New SolidColorBrush(Color.FromArgb(17, 0, 0, 0)),
-                    .Padding = New Thickness(3, 1, 3, 1),
-                    .CornerRadius = New CornerRadius(3),
-                    .Margin = New Thickness(0, 0, 3, 0),
-                    .SnapsToDevicePixels = True,
-                    .UseLayoutRounding = False
-                }
-                Dim TagTextBlock As New TextBlock With {
-                    .Text = TagText,
-                    .Foreground = New SolidColorBrush(Color.FromRgb(134, 134, 134)),
-                    .FontSize = 11
-                }
-                NewTag.Child = TagTextBlock
-                PanTags.Children.Add(NewTag)
+            PanTags.Visibility = If(Tags.Any(), Visibility.Visible, Visibility.Collapsed)
+            For Each TagText In Tags
+                Dim BorderTag As New Border With {
+                    .Background = New MyColor("#11000000"), .Padding = New Thickness(3, 1, 3, 1), .CornerRadius = New CornerRadius(3),
+                    .Margin = New Thickness(0, 0, 3, 0), .SnapsToDevicePixels = True, .UseLayoutRounding = False}
+                Dim LabTag As New TextBlock With {
+                    .Text = TagText, .Foreground = New MyColor("#868686"), .FontSize = 11}
+                BorderTag.Child = LabTag
+                PanTags.Children.Add(BorderTag)
             Next
         End Set
     End Property
@@ -216,9 +198,9 @@
             Dim Ani As New List(Of AniData)
             If IsMouseOver Then
                 Ani.AddRange({
-                             AaColor(RectBack, Border.BackgroundProperty, If(IsMouseDown, "ColorBrush6", "ColorBrushBg1"), Time),
-                             AaOpacity(RectBack, 1 - RectBack.Opacity, Time,, New AniEaseOutFluent)
-                         })
+                    AaColor(RectBack, Border.BackgroundProperty, If(IsMouseDown, "ColorBrush6", "ColorBrushBg1"), Time),
+                    AaOpacity(RectBack, 1 - RectBack.Opacity, Time,, New AniEaseOutFluent)
+                })
                 If IsMouseDown Then
                     Ani.Add(AaScaleTransform(RectBack, 0.996 - CType(RectBack.RenderTransform, ScaleTransform).ScaleX, Time * 1.2,, New AniEaseOutFluent))
                 Else
@@ -226,11 +208,11 @@
                 End If
             Else
                 Ani.AddRange({
-                             AaOpacity(RectBack, -RectBack.Opacity, Time),
-                             AaColor(RectBack, Border.BackgroundProperty, If(IsMouseDown, "ColorBrush6", "ColorBrush7"), Time),
-                             AaScaleTransform(RectBack, 0.996 - CType(RectBack.RenderTransform, ScaleTransform).ScaleX, Time,, New AniEaseOutFluent),
-                             AaScaleTransform(RectBack, -0.196, 1,,, True)
-                         })
+                    AaOpacity(RectBack, -RectBack.Opacity, Time),
+                    AaColor(RectBack, Border.BackgroundProperty, If(IsMouseDown, "ColorBrush6", "ColorBrush7"), Time),
+                    AaScaleTransform(RectBack, 0.996 - CType(RectBack.RenderTransform, ScaleTransform).ScaleX, Time,, New AniEaseOutFluent),
+                    AaScaleTransform(RectBack, -0.196, 1,,, True)
+                })
             End If
             AniStart(Ani, "CompItem Color " & Uuid)
         Else

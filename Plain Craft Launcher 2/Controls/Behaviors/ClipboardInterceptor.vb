@@ -35,7 +35,7 @@ Namespace Controls.Behaviors
         End Sub
 
         Public Shared Function GetEnableSafeClipboard(element As DependencyObject) As Boolean
-            Return CBool(element.GetValue(EnableSafeClipboardProperty))
+            Return element.GetValue(EnableSafeClipboardProperty)
         End Function
 
         Private Shared Sub OnEnableSafeClipboardChanged(d As DependencyObject, e As DependencyPropertyChangedEventArgs)
@@ -97,6 +97,10 @@ Namespace Controls.Behaviors
 
             If Forms.Clipboard.ContainsText() Then
                 Dim pasteText = Forms.Clipboard.GetText()
+
+                '将换行符替换为空格（#7825）
+                If Not tb.AcceptsReturn Then pasteText = pasteText.Replace(vbCrLf, " ").Replace(vbCr, " ").Replace(vbLf, " ")
+
                 Dim start = tb.SelectionStart
 
                 tb.SelectedText = pasteText
@@ -162,14 +166,15 @@ Namespace Controls.Behaviors
             Dim dg = TryCast(sender, DataGrid)
             If dg Is Nothing OrElse dg.SelectedCells Is Nothing OrElse dg.SelectedCells.Count = 0 Then Return
 
-            Dim sb = New System.Text.StringBuilder()
+            Dim sb = New StringBuilder
             Dim rowGroups = dg.SelectedCells.GroupBy(Function(c) c.Item)
 
             For Each row In rowGroups
-                Dim rowText = String.Join(vbTab, row.Select(Function(cell)
-                                                                Dim tb = TryCast(cell.Column.GetCellContent(cell.Item), TextBlock)
-                                                                Return If(tb IsNot Nothing, tb.Text, "")
-                                                            End Function))
+                Dim rowText = String.Join(vbTab, row.Select(
+                Function(cell)
+                    Dim tb = TryCast(cell.Column.GetCellContent(cell.Item), TextBlock)
+                    Return If(tb IsNot Nothing, tb.Text, "")
+                End Function))
                 sb.AppendLine(rowText)
             Next
 

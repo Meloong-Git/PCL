@@ -1,4 +1,4 @@
-﻿<local:MyPageLeft x:Class="PageVersionLeft"
+﻿<local:MyPageLeft x:Class="PageInstanceLeft"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:PCL" AnimatedControl="PanItem">

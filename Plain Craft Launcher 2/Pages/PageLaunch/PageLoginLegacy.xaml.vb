@@ -44,8 +44,8 @@ Public Class PageLoginLegacy
     Public Shared Function IsVaild(LoginData As McLoginLegacy) As String
         If LoginData.UserName.Trim = "" Then Return GetLang("LangPageLoginLegacyNoEmptyID")
         If LoginData.UserName.Contains("""") Then Return GetLang("LangPageLoginLegacyNoQuotationInID")
-        If McVersionCurrent IsNot Nothing AndAlso
-           (McVersionCurrent.Version.IsStandardVersion AndAlso McVersionCurrent.Version.McVersion >= New Version(1, 20, 3)) AndAlso
+        If McInstanceSelected IsNot Nothing AndAlso
+           McInstanceSelected.Version.Vaild AndAlso McInstanceSelected.Version.Vanilla >= New Version(20, 0, 3) AndAlso
            LoginData.UserName.Trim.Length > 16 Then
             Return GetLang("LangPageLoginLegacyLengthLimit")
         End If

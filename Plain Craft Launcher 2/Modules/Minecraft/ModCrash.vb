@@ -2,9 +2,9 @@
 
     '构造函数
     Private TempFolder As String
-    Private TargetVersion As McVersion
-    Public Sub New(Optional TargetVersion As McVersion = Nothing)
-        Me.TargetVersion = TargetVersion
+    Private TargetInstance As McInstance
+    Public Sub New(Optional TargetInstance As McInstance = Nothing)
+        Me.TargetInstance = TargetInstance
         '构建文件结构
         TempFolder = RequestTaskTempFolder()
         Directory.CreateDirectory(TempFolder & "Temp\")
@@ -98,7 +98,7 @@
         Try
             Dim Info As New FileInfo(FilePath)
             If Info.Exists AndAlso Info.Length > 0 AndAlso Not FilePath.EndsWithF(".jar", True) Then
-                ExtractFile(FilePath, TempFolder & "Temp\")
+                ExtractCompressedFile(FilePath, TempFolder & "Temp\")
                 Log("[Crash] 已解压导入的日志文件：" & FilePath)
                 GoTo Extracted
             End If
@@ -391,7 +391,7 @@ Extracted:
     ''' <summary>
     ''' 根据 AnalyzeLogs 与可能的版本信息分析崩溃原因。
     ''' </summary>
-    Public Sub Analyze(Optional Version As McVersion = Nothing)
+    Public Sub Analyze()
         Log("[Crash] 步骤 3：分析崩溃原因")
         LogAll = If(LogMc, If(LogMcDebug, "")) & If(LogHs, "") & If(LogCrash, "")
 
@@ -538,7 +538,7 @@ Done:
             '确定的 Mod 导致崩溃
             If LogMc.Contains("Caught exception from ") Then AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(RegexSeek(LogMc, "(?<=Caught exception from )[^\n]+?")?.TrimEnd((vbCrLf & " ").ToCharArray)))
             'Mod 重复 / 前置问题
-            If LogMc.Contains("DuplicateModsFoundException") Then AppendReason(CrashReason.Mod重复安装, RegexSearch(LogMc, "(?<=\n\t[\w]+ : [A-Z]{1}:[^\n]+(/|\\))[^/\\\n]+?.jar", RegularExpressions.RegexOptions.IgnoreCase))
+            If LogMc.Contains("DuplicateModsFoundException") Then AppendReason(CrashReason.Mod重复安装, RegexSearch(LogMc, "(?<=\n\t[\w]+ : [A-Z]:[^\n]+(/|\\))[^/\\\n]+?.jar", RegularExpressions.RegexOptions.IgnoreCase))
             If LogMc.Contains("Found a duplicate mod") Then AppendReason(CrashReason.Mod重复安装, RegexSearch(If(RegexSeek(LogMc, "Found a duplicate mod[^\n]+"), ""), "[^\\/]+.jar", RegularExpressions.RegexOptions.IgnoreCase))
             If LogMc.Contains("Found duplicate mods") Then AppendReason(CrashReason.Mod重复安装, RegexSearch(LogMc, "(?<=Mod ID: ')\w+?(?=' from mod files:)").Distinct.ToList)
             If LogMc.Contains("ModResolutionException: Duplicate") Then AppendReason(CrashReason.Mod重复安装, RegexSearch(If(RegexSeek(LogMc, "ModResolutionException: Duplicate[^\n]+"), ""), "[^\\/]+.jar", RegularExpressions.RegexOptions.IgnoreCase))
@@ -607,7 +607,7 @@ Done:
                 Return True
             End If
             'JSON 名称匹配
-            For Each JsonName In RegexSearch(LogText, "(?<=^[^\t]+[ \[{(]{1})[^ \[{(]+\.[^ ]+(?=\.json)", RegularExpressions.RegexOptions.Multiline)
+            For Each JsonName In RegexSearch(LogText, "(?<=^[^\t]+[ \[{(])[^ \[{(]+\.[^ ]+(?=\.json)", RegularExpressions.RegexOptions.Multiline)
                 AppendReason(CrashReason.ModMixin失败,
                              TryAnalyzeModName(JsonName.Replace("mixins", "mixin").Replace(".mixin", "").Replace("mixin.", "")))
                 Return True
@@ -712,11 +712,11 @@ NextStack:
                 Dim Word As String = Splited(i)
                 If Word.Length <= 2 OrElse Word.StartsWithF("func_") Then Continue For
                 If {"com", "org", "net", "asm", "fml", "mod", "jar", "sun", "lib", "map", "gui", "dev", "nio", "api", "dsi", "top", "mcp",
-                    "core", "init", "mods", "main", "file", "game", "load", "read", "done", "util", "tile", "item", "base", "oshi", "impl", "data", "pool", "task",
-                    "forge", "setup", "block", "model", "mixin", "event", "unimi", "netty", "world", "lwjgl",
-                    "gitlab", "common", "server", "config", "mixins", "compat", "loader", "launch", "entity", "assist", "client", "plugin", "modapi", "mojang", "shader", "events", "github", "recipe", "render", "packet", "events",
-                    "preinit", "preload", "machine", "reflect", "channel", "general", "handler", "content", "systems", "modules", "service",
-                    "fastutil", "optifine", "internal", "platform", "override", "fabricmc", "neoforge",
+                    "core", "init", "mods", "main", "file", "game", "load", "read", "done", "util", "tile", "item", "base", "fake", "oshi", "impl", "data", "pool", "task",
+                    "forge", "setup", "block", "model", "mixin", "event", "unimi", "netty", "world", "lwjgl", "fakes",
+                    "gitlab", "common", "server", "config", "mixins", "compat", "loader", "launch", "script", "entity", "assist", "client", "plugin", "modapi", "mojang", "shader", "events", "github", "recipe", "render", "packet", "events",
+                    "preinit", "preload", "machine", "reflect", "channel", "general", "handler", "content", "systems", "modules", "service", "scripts", "network",
+                    "fastutil", "optifine", "internal", "platform", "override", "fabricmc", "neoforge", "external",
                     "injection", "listeners", "scheduler", "minecraft", "universal", "multipart", "neoforged", "microsoft",
                     "transformer", "transformers", "minecraftforge", "blockentity", "spongepowered", "electronwill", "concurrent"
                    }.Contains(Word.ToLower) Then Continue For
@@ -926,7 +926,7 @@ NextStack:
         '上报
         If IsManualAnalyze Then Return
         Telemetry("Minecraft 崩溃",
-                  "Version", If(TargetVersion Is Nothing, "null", TargetVersion.Version.ToString),
+                  "Version", If(TargetInstance Is Nothing, "null", TargetInstance.VersionDisplayName),
                   "Detail", FilterUserName(Detail, "*"))
     End Sub
     ''' <summary>

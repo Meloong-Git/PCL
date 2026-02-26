@@ -1,4 +1,4 @@
-﻿Public Class PageVersionSetup
+﻿Public Class PageInstanceSetup
 
     Private Shadows IsLoaded As Boolean = False
 
@@ -27,41 +27,41 @@
         Try
 
             '启动参数
-            TextArgumentTitle.Text = Setup.Get("VersionArgumentTitle", Version:=PageVersionLeft.Version)
-            TextArgumentInfo.Text = Setup.Get("VersionArgumentInfo", Version:=PageVersionLeft.Version)
-            Dim _unused = PageVersionLeft.Version.PathIndie '触发自动判定
-            ComboArgumentIndieV2.SelectedIndex = If(Setup.Get("VersionArgumentIndieV2", Version:=PageVersionLeft.Version), 0, 1)
+            TextArgumentTitle.Text = Setup.Get("VersionArgumentTitle", Instance:=PageInstanceLeft.Instance)
+            TextArgumentInfo.Text = Setup.Get("VersionArgumentInfo", Instance:=PageInstanceLeft.Instance)
+            Dim _unused = PageInstanceLeft.Instance.PathIndie '触发自动判定
+            ComboArgumentIndieV2.SelectedIndex = If(Setup.Get("VersionArgumentIndieV2", Instance:=PageInstanceLeft.Instance), 0, 1)
             RefreshJavaComboBox()
 
             '游戏内存
-            CType(FindName("RadioRamType" & Setup.Load("VersionRamType", Version:=PageVersionLeft.Version)), MyRadioBox).Checked = True
-            SliderRamCustom.Value = Setup.Get("VersionRamCustom", Version:=PageVersionLeft.Version)
-            ComboRamOptimize.SelectedIndex = Setup.Get("VersionRamOptimize", Version:=PageVersionLeft.Version)
+            CType(FindName("RadioRamType" & Setup.Load("VersionRamType", Instance:=PageInstanceLeft.Instance)), MyRadioBox).Checked = True
+            SliderRamCustom.Value = Setup.Get("VersionRamCustom", Instance:=PageInstanceLeft.Instance)
+            ComboRamOptimize.SelectedIndex = Setup.Get("VersionRamOptimize", Instance:=PageInstanceLeft.Instance)
 
             '服务器
-            TextServerEnter.Text = Setup.Get("VersionServerEnter", Version:=PageVersionLeft.Version)
-            ComboServerLogin.SelectedIndex = Setup.Get("VersionServerLogin", Version:=PageVersionLeft.Version)
+            TextServerEnter.Text = Setup.Get("VersionServerEnter", Instance:=PageInstanceLeft.Instance)
+            ComboServerLogin.SelectedIndex = Setup.Get("VersionServerLogin", Instance:=PageInstanceLeft.Instance)
             ComboServerLoginLast = ComboServerLogin.SelectedIndex
             ServerLogin(ComboServerLogin.SelectedIndex)
-            TextServerNide.Text = Setup.Get("VersionServerNide", Version:=PageVersionLeft.Version)
-            TextServerAuthServer.Text = Setup.Get("VersionServerAuthServer", Version:=PageVersionLeft.Version)
-            TextServerAuthName.Text = Setup.Get("VersionServerAuthName", Version:=PageVersionLeft.Version)
-            TextServerAuthRegister.Text = Setup.Get("VersionServerAuthRegister", Version:=PageVersionLeft.Version)
+            TextServerNide.Text = Setup.Get("VersionServerNide", Instance:=PageInstanceLeft.Instance)
+            TextServerAuthServer.Text = Setup.Get("VersionServerAuthServer", Instance:=PageInstanceLeft.Instance)
+            TextServerAuthName.Text = Setup.Get("VersionServerAuthName", Instance:=PageInstanceLeft.Instance)
+            TextServerAuthRegister.Text = Setup.Get("VersionServerAuthRegister", Instance:=PageInstanceLeft.Instance)
 
             '高级设置
-            TextAdvanceJvm.Text = Setup.Get("VersionAdvanceJvm", Version:=PageVersionLeft.Version)
-            TextAdvanceGame.Text = Setup.Get("VersionAdvanceGame", Version:=PageVersionLeft.Version)
-            TextAdvanceRun.Text = Setup.Get("VersionAdvanceRun", Version:=PageVersionLeft.Version)
-            CheckAdvanceRunWait.Checked = Setup.Get("VersionAdvanceRunWait", Version:=PageVersionLeft.Version)
-            If Setup.Get("VersionAdvanceAssets", Version:=PageVersionLeft.Version) = 2 Then
+            TextAdvanceJvm.Text = Setup.Get("VersionAdvanceJvm", Instance:=PageInstanceLeft.Instance)
+            TextAdvanceGame.Text = Setup.Get("VersionAdvanceGame", Instance:=PageInstanceLeft.Instance)
+            TextAdvanceRun.Text = Setup.Get("VersionAdvanceRun", Instance:=PageInstanceLeft.Instance)
+            CheckAdvanceRunWait.Checked = Setup.Get("VersionAdvanceRunWait", Instance:=PageInstanceLeft.Instance)
+            If Setup.Get("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance) = 2 Then
                 Log("[Setup] 已迁移老版本的关闭文件校验设置")
-                Setup.Reset("VersionAdvanceAssets", Version:=PageVersionLeft.Version)
-                Setup.Set("VersionAdvanceAssetsV2", True, Version:=PageVersionLeft.Version)
+                Setup.Reset("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance)
+                Setup.Set("VersionAdvanceAssetsV2", True, Instance:=PageInstanceLeft.Instance)
             End If
-            CheckAdvanceAssetsV2.Checked = Setup.Get("VersionAdvanceAssetsV2", Version:=PageVersionLeft.Version)
-            CheckAdvanceJava.Checked = Setup.Get("VersionAdvanceJava", Version:=PageVersionLeft.Version)
-            CheckAdvanceDisableJLW.Checked = Setup.Get("VersionAdvanceDisableJLW", Version:=PageVersionLeft.Version)
-            CheckAdvanceDisableModUpdate.Checked = Setup.Get("VersionAdvanceDisableModUpdate", Version:=PageVersionLeft.Version)
+            CheckAdvanceAssetsV2.Checked = Setup.Get("VersionAdvanceAssetsV2", Instance:=PageInstanceLeft.Instance)
+            CheckAdvanceJava.Checked = Setup.Get("VersionAdvanceJava", Instance:=PageInstanceLeft.Instance)
+            CheckAdvanceDisableJLW.Checked = Setup.Get("VersionAdvanceDisableJLW", Instance:=PageInstanceLeft.Instance)
+            CheckAdvanceDisableModUpdate.Checked = Setup.Get("VersionAdvanceDisableModUpdate", Instance:=PageInstanceLeft.Instance)
 
         Catch ex As Exception
             Log(ex, "重载版本独立设置时出错", LogLevel.Feedback)
@@ -72,29 +72,29 @@
     Public Sub Reset()
         Try
 
-            Setup.Reset("VersionServerEnter", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionServerLogin", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionServerNide", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionServerAuthServer", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionServerAuthRegister", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionServerAuthName", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionArgumentTitle", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionArgumentInfo", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionArgumentIndieV2", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionRamType", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionRamCustom", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionRamOptimize", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionAdvanceJvm", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionAdvanceGame", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionAdvanceAssets", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionAdvanceAssetsV2", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionAdvanceJava", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionAdvanceRun", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionAdvanceRunWait", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionAdvanceDisableJLW", Version:=PageVersionLeft.Version)
-            Setup.Reset("VersionAdvanceDisableModUpdate", Version:=PageVersionLeft.Version)
+            Setup.Reset("VersionServerEnter", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionServerLogin", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionServerNide", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionServerAuthServer", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionServerAuthRegister", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionServerAuthName", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionArgumentTitle", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionArgumentInfo", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionArgumentIndieV2", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionRamType", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionRamCustom", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionRamOptimize", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceJvm", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceGame", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceAssetsV2", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceJava", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceRun", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceRunWait", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceDisableJLW", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceDisableModUpdate", Instance:=PageInstanceLeft.Instance)
 
-            Setup.Reset("VersionArgumentJavaSelect", Version:=PageVersionLeft.Version)
+            Setup.Reset("VersionArgumentJavaSelect", Instance:=PageInstanceLeft.Instance)
             JavaSearchLoader.Start(IsForceRestart:=True)
 
             Log("[Setup] 已初始化版本独立设置")
@@ -108,27 +108,27 @@
 
     '将控件改变路由到设置改变
     Private Shared Sub RadioBoxChange(sender As MyRadioBox, e As Object) Handles RadioRamType0.Check, RadioRamType1.Check, RadioRamType2.Check
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag.ToString.Split("/")(0), Val(sender.Tag.ToString.Split("/")(1)), Version:=PageVersionLeft.Version)
+        If AniControlEnabled = 0 Then Setup.Set(sender.Tag.ToString.Split("/")(0), Val(sender.Tag.ToString.Split("/")(1)), Instance:=PageInstanceLeft.Instance)
     End Sub
     Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextServerEnter.ValidatedTextChanged, TextArgumentInfo.ValidatedTextChanged, TextAdvanceGame.ValidatedTextChanged, TextAdvanceJvm.ValidatedTextChanged, TextServerNide.ValidatedTextChanged, TextServerAuthName.ValidatedTextChanged, TextServerAuthRegister.ValidatedTextChanged, TextServerAuthServer.ValidatedTextChanged, TextArgumentTitle.ValidatedTextChanged, TextAdvanceRun.ValidatedTextChanged
         If AniControlEnabled = 0 Then
             '#3194，不能删减 /
             'Dim HandledText As String = sender.Text
             'If sender.Tag = "VersionServerAuthServer" OrElse sender.Tag = "VersionServerAuthRegister" Then HandledText = HandledText.TrimEnd("/")
-            Setup.Set(sender.Tag, sender.Text, Version:=PageVersionLeft.Version)
+            Setup.Set(sender.Tag, sender.Text, Instance:=PageInstanceLeft.Instance)
         End If
     End Sub
     Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderRamCustom.Change
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value, Version:=PageVersionLeft.Version)
+        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value, Instance:=PageInstanceLeft.Instance)
     End Sub
     Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboRamOptimize.SelectionChanged
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex, Version:=PageVersionLeft.Version)
+        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex, Instance:=PageInstanceLeft.Instance)
     End Sub
     Private Shared Sub CheckBoxLikeComboChange(sender As MyComboBox, e As Object) Handles ComboArgumentIndieV2.SelectionChanged
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex = 0, Version:=PageVersionLeft.Version)
+        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex = 0, Instance:=PageInstanceLeft.Instance)
     End Sub
     Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckAdvanceRunWait.Change, CheckAdvanceAssetsV2.Change, CheckAdvanceJava.Change, CheckAdvanceDisableJLW.Change, CheckAdvanceDisableModUpdate.Change
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Checked, Version:=PageVersionLeft.Version)
+        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Checked, Instance:=PageInstanceLeft.Instance)
     End Sub
 
 #Region "游戏内存"
@@ -142,9 +142,9 @@
     ''' 刷新 UI 上的 RAM 显示。
     ''' </summary>
     Public Sub RefreshRam(ShowAnim As Boolean)
-        If LabRamGame Is Nothing OrElse LabRamUsed Is Nothing OrElse FrmMain.PageCurrent <> FormMain.PageType.VersionSetup OrElse FrmVersionLeft.PageID <> FormMain.PageSubType.VersionSetup Then Return
+        If LabRamGame Is Nothing OrElse LabRamUsed Is Nothing OrElse FrmMain.PageCurrent <> FormMain.PageType.InstanceSetup OrElse FrmInstanceLeft.PageID <> FormMain.PageSubType.InstanceSetup Then Return
         '获取内存情况
-        Dim RamGame As Double = Math.Round(GetRam(PageVersionLeft.Version), 5)
+        Dim RamGame As Double = Math.Round(GetRam(PageInstanceLeft.Instance), 5)
         Dim RamTotal As Double = Math.Round(My.Computer.Info.TotalPhysicalMemory / 1024 / 1024 / 1024, 1)
         Dim RamAvailable As Double = Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024, 1)
         Dim RamGameActual As Double = Math.Round(Math.Min(RamGame, RamAvailable), 5)
@@ -165,7 +165,7 @@
                           If(RamGame <> RamGameActual, " (" & GetLang("LangPageSetupLaunchMemAvailable") & " " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
         LabRamUsed.Text = If(RamUsed = Math.Floor(RamUsed), RamUsed & ".0", RamUsed) & " GB"
         LabRamTotal.Text = " / " & If(RamTotal = Math.Floor(RamTotal), RamTotal & ".0", RamTotal) & " GB"
-        LabRamWarn.Visibility = If(RamGame = 1 AndAlso Not JavaIs64Bit(PageVersionLeft.Version) AndAlso Not Is32BitSystem AndAlso JavaList.Any, Visibility.Visible, Visibility.Collapsed)
+        LabRamWarn.Visibility = If(RamGame = 1 AndAlso Not JavaIs64Bit(PageInstanceLeft.Instance) AndAlso Not Is32BitSystem AndAlso JavaList.Any, Visibility.Visible, Visibility.Collapsed)
         If ShowAnim Then
             '宽度动画
             AniStart({
@@ -269,10 +269,10 @@
     ''' <summary>
     ''' 获取当前设置的 RAM 值。单位为 GB。
     ''' </summary>
-    Public Shared Function GetRam(Version As McVersion, Optional Is32BitJava As Boolean? = Nothing) As Double
+    Public Shared Function GetRam(Instance As McInstance, Optional Is32BitJava As Boolean? = Nothing) As Double
         '跟随全局设置
-        If Setup.Get("VersionRamType", Version:=Version) = 2 Then
-            Return PageSetupLaunch.GetRam(Version, True, Is32BitJava)
+        If Setup.Get("VersionRamType", Instance:=Instance) = 2 Then
+            Return PageSetupLaunch.GetRam(Instance, True, Is32BitJava)
         End If
 
         '------------------------------------------
@@ -281,7 +281,7 @@
 
         '使用当前版本的设置
         Dim RamGive As Double
-        If Setup.Get("VersionRamType", Version:=Version) = 0 Then
+        If Setup.Get("VersionRamType", Instance:=Instance) = 0 Then
             '自动配置
             Dim RamAvailable As Double = Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024 * 10) / 10
             '确定需求的内存值
@@ -289,16 +289,16 @@
             Dim RamTarget1 As Double '估计能勉强带动了的内存
             Dim RamTarget2 As Double '估计没啥问题了的内存
             Dim RamTarget3 As Double '安装过多附加组件需要的内存
-            If Version IsNot Nothing AndAlso Not Version.IsLoaded Then Version.Load()
-            If Version IsNot Nothing AndAlso Version.Modable Then
+            If Instance IsNot Nothing AndAlso Not Instance.IsLoaded Then Instance.Load()
+            If Instance IsNot Nothing AndAlso Instance.Modable Then
                 '可安装 Mod 的版本
-                Dim ModDir As New DirectoryInfo(Version.PathIndie & "mods\")
+                Dim ModDir As New DirectoryInfo(Instance.PathIndie & "mods\")
                 Dim ModCount As Integer = If(ModDir.Exists, ModDir.GetFiles.Length, 0)
                 RamMininum = 0.5 + ModCount / 150
                 RamTarget1 = 1.5 + ModCount / 90
                 RamTarget2 = 2.7 + ModCount / 50
                 RamTarget3 = 4.5 + ModCount / 25
-            ElseIf Version IsNot Nothing AndAlso Version.Version.HasOptiFine Then
+            ElseIf Instance IsNot Nothing AndAlso Instance.Version.HasOptiFine Then
                 'OptiFine 版本
                 RamMininum = 0.5
                 RamTarget1 = 1.5
@@ -337,7 +337,7 @@ PreFin:
             RamGive = Math.Round(Math.Max(RamGive, RamMininum), 1)
         Else
             '手动配置
-            Dim Value As Integer = Setup.Get("VersionRamCustom", Version:=Version)
+            Dim Value As Integer = Setup.Get("VersionRamCustom", Instance:=Instance)
             If Value <= 12 Then
                 RamGive = Value * 0.1 + 0.3
             ElseIf Value <= 25 Then
@@ -349,7 +349,7 @@ PreFin:
             End If
         End If
         '若使用 32 位 Java，则限制为 1G
-        If If(Is32BitJava, Not JavaIs64Bit(PageVersionLeft.Version)) Then RamGive = Math.Min(1, RamGive)
+        If If(Is32BitJava, Not JavaIs64Bit(PageInstanceLeft.Instance)) Then RamGive = Math.Min(1, RamGive)
         Return RamGive
     End Function
 
@@ -423,9 +423,9 @@ PreFin:
         ComboArgumentJava.Items.Add(New MyComboBoxItem With {.Content = GetLang("LangPageSetupLaunchJavaAutoChoice"), .Tag = "自动选择"})
         '更新列表
         Dim SelectedItem As MyComboBoxItem = Nothing
-        Dim SelectedBySetup As String = Setup.Get("VersionArgumentJavaSelect", Version:=PageVersionLeft.Version)
+        Dim SelectedBySetup As String = Setup.Get("VersionArgumentJavaSelect", Instance:=PageInstanceLeft.Instance)
         Try
-            For Each Java In JavaList.Clone().OrderByDescending(Function(v) v.VersionCode)
+            For Each Java In JavaList.Clone().OrderByDescending(Function(v) v.MajorVersion)
                 Dim ListItem = New MyComboBoxItem With {.Content = Java.ToString, .ToolTip = Java.PathFolder, .Tag = Java}
                 ToolTipService.SetHorizontalOffset(ListItem, 400)
                 ComboArgumentJava.Items.Add(ListItem)
@@ -434,7 +434,7 @@ PreFin:
                 If JavaEntry.FromJson(GetJson(SelectedBySetup)).PathFolder = Java.PathFolder Then SelectedItem = ListItem
             Next
         Catch ex As Exception
-            Setup.Set("VersionArgumentJavaSelect", "使用全局设置", Version:=PageVersionLeft.Version)
+            Setup.Set("VersionArgumentJavaSelect", "使用全局设置", Instance:=PageInstanceLeft.Instance)
             Log(ex, GetLang("LangPageSetupLaunchJavaUpdateListFail"), LogLevel.Feedback)
         End Try
         '更新选择项
@@ -469,15 +469,15 @@ PreFin:
         Dim SelectedJava = ComboArgumentJava.SelectedItem.Tag
         If "使用全局设置".Equals(SelectedJava) Then
             '选择 “自动”
-            Setup.Set("VersionArgumentJavaSelect", "使用全局设置", Version:=PageVersionLeft.Version)
+            Setup.Set("VersionArgumentJavaSelect", "使用全局设置", Instance:=PageInstanceLeft.Instance)
             Log("[Java] 修改版本 Java 选择设置：跟随全局设置")
         ElseIf "自动选择".Equals(SelectedJava) Then
             '选择 “自动”
-            Setup.Set("VersionArgumentJavaSelect", "", Version:=PageVersionLeft.Version)
+            Setup.Set("VersionArgumentJavaSelect", "", Instance:=PageInstanceLeft.Instance)
             Log("[Java] 修改版本 Java 选择设置：自动选择")
         Else
             '选择指定项
-            Setup.Set("VersionArgumentJavaSelect", CType(SelectedJava.ToJson(), JObject).ToString(Newtonsoft.Json.Formatting.None), Version:=PageVersionLeft.Version)
+            Setup.Set("VersionArgumentJavaSelect", CType(SelectedJava.ToJson(), JObject).ToString(Newtonsoft.Json.Formatting.None), Instance:=PageInstanceLeft.Instance)
             Log("[Java] 修改版本 Java 选择设置：" & SelectedJava.ToString)
         End If
         RefreshRam(True)

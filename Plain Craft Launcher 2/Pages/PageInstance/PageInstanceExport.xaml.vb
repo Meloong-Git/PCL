@@ -15,28 +15,28 @@ Public Class ExportOption
     Public Property RequireModLoaderOrOptiFine As Boolean = False
 End Class
 
-Public Class PageVersionExport
+Public Class PageInstanceExport
     Implements IRefreshable
 
-    Private CurrentVersion As String = ""
-    Private Sub PageVersionExport_Loaded() Handles Me.Loaded
+    Private CurrentInstance As String = ""
+    Private Sub PageInstanceExport_Loaded() Handles Me.Loaded
         AniControlEnabled += 1
-        If CurrentVersion <> PageVersionLeft.Version.Path Then RefreshAll() '切换到了另一个版本，重置页面
+        If CurrentInstance <> PageInstanceLeft.Instance.PathVersion Then RefreshAll() '切换到了另一个版本，重置页面
         CustomEventService.SetEventData(BtnAdvancedHelp,
             If(VersionBranchName = "Release", "指南/整合包制作 - Public.json", "指南/整合包制作 - Snapshot.json"))
         AniControlEnabled -= 1
     End Sub
     Public Sub RefreshAll() Implements IRefreshable.Refresh
         Log($"[Export] 刷新导出页面")
-        HintOptiFine.Visibility = If(PageVersionLeft.Version.Version.HasOptiFine, Visibility.Visible, Visibility.Collapsed)
-        CurrentVersion = PageVersionLeft.Version.Path
+        HintOptiFine.Visibility = If(PageInstanceLeft.Instance.Version.HasOptiFine, Visibility.Visible, Visibility.Collapsed)
+        CurrentInstance = PageInstanceLeft.Instance.PathVersion
         TextExportName.Text = ""
-        TextExportName.HintText = PageVersionLeft.Version.Name
+        TextExportName.HintText = PageInstanceLeft.Instance.Name
         TextExportVersion.Text = ""
         TextExportVersion.HintText = "1.0.0"
         CheckAdvancedInclude.Checked = False
         CheckAdvancedModrinth.Checked = False
-        GetExportOption(CheckOptionsBasic).Description = PageVersionLeft.Version.GetVersionDescription()
+        GetExportOption(CheckOptionsBasic).Description = PageInstanceLeft.Instance.VersionDisplayName()
         ResetConfigOverrides()
         ReloadAllSubOptions()
         RefreshAllOptionsUI()
@@ -58,7 +58,7 @@ Public Class PageVersionExport
     Private Sub ReloadSubOptions(Panel As StackPanel, AcceptCompressedFile As Boolean, AcceptFolder As Boolean, ParamArray Folders As String())
         Panel.Children.Clear()
         For Each Folder In Folders
-            Dim TargetFolder As New DirectoryInfo(PageVersionLeft.Version.PathIndie & Folder)
+            Dim TargetFolder As New DirectoryInfo(PageInstanceLeft.Instance.PathIndie & Folder)
             If Not TargetFolder.Exists() Then Continue For
             '查找文件夹下的对应项
             If AcceptCompressedFile Then
@@ -100,7 +100,7 @@ Public Class PageVersionExport
                 Return False
             End Try
         End Function
-        Dim PathInfo As New DirectoryInfo(PageVersionLeft.Version.PathIndie)
+        Dim PathInfo As New DirectoryInfo(PageInstanceLeft.Instance.PathIndie)
         AllEntries.AddRange(PathInfo.EnumerateFiles().Select(Function(f) f.Name))
         For Each SubFolder In PathInfo.EnumerateDirectories().Where(IsValidDirectory)
             AllEntries.Add($"{SubFolder.Name}\")
@@ -112,9 +112,9 @@ Public Class PageVersionExport
         Dim IsVisible =
         Function(TargetOption As ExportOption) As Boolean
             '检查需要 OptiFine 或 Mod 加载器
-            If TargetOption.RequireOptiFine AndAlso Not PageVersionLeft.Version.Version.HasOptiFine Then Return False
-            If TargetOption.RequireModLoader AndAlso Not PageVersionLeft.Version.Modable Then Return False
-            If TargetOption.RequireModLoaderOrOptiFine AndAlso Not PageVersionLeft.Version.Version.HasOptiFine AndAlso Not PageVersionLeft.Version.Modable Then Return False
+            If TargetOption.RequireOptiFine AndAlso Not PageInstanceLeft.Instance.Version.HasOptiFine Then Return False
+            If TargetOption.RequireModLoader AndAlso Not PageInstanceLeft.Instance.Modable Then Return False
+            If TargetOption.RequireModLoaderOrOptiFine AndAlso Not PageInstanceLeft.Instance.Version.HasOptiFine AndAlso Not PageInstanceLeft.Instance.Modable Then Return False
             '粗略检查是否可能有符合规则的文件/文件夹
             Return StandardizeLines(If(TargetOption.Rules, TargetOption.ShowRules).Split("|"c), True).Any(
             Function(Rule As String)
@@ -130,9 +130,9 @@ Public Class PageVersionExport
                 Rule = Rule.Trim("*?".ToCharArray)
                 If Rule.Split({"\"c}, StringSplitOptions.RemoveEmptyEntries).Count >= 3 Then
                     If Rule.EndsWithF("\") Then
-                        Return IsValidDirectory(New DirectoryInfo(PageVersionLeft.Version.PathIndie & Rule)) '文件夹有效
+                        Return IsValidDirectory(New DirectoryInfo(PageInstanceLeft.Instance.PathIndie & Rule)) '文件夹有效
                     Else
-                        Return File.Exists(PageVersionLeft.Version.PathIndie & Rule) '文件有效
+                        Return File.Exists(PageInstanceLeft.Instance.PathIndie & Rule) '文件有效
                     End If
                 Else
                     Return False
@@ -324,9 +324,9 @@ Public Class PageVersionExport
             ConfigLines.Add("# 二次分发可能违反使用协议，请尽量不要公开发布包含资源文件的整合包！")
             ConfigLines.Add("DontCheckHostedAssets:" & CheckAdvancedInclude.Checked)
             ConfigLines.Add("")
-            ConfigLines.Add("# 如果你想要打包上传到 Modrinth，启用此项会生成完全符合 Modrinth 要求的整合包文件。")
-            ConfigLines.Add("# 由于 Modrinth 要求，只能从 CurseForge 下载的资源将无法联网下载，会被直接放入整合包中。")
-            ConfigLines.Add("# 此选项与 IncludeLauncher、IncludeLauncherCustom、DontCheckHostedAssets 冲突。")
+            ConfigLines.Add("# 若资源未在 Modrinth 上托管，则将其原始文件直接放入整合包中。")
+            ConfigLines.Add("# 如果你想将整合包上传到 Modrinth，这能帮助你分辨哪些文件未在 Modrinth 上托管。")
+            ConfigLines.Add("# 此选项与 DontCheckHostedAssets 冲突。")
             ConfigLines.Add("ModrinthUploadMode:" & CheckAdvancedModrinth.Checked)
             ConfigLines.Add("")
             ConfigLines.Add("# 导出的文件的存放位置。")
@@ -424,7 +424,7 @@ Public Class PageVersionExport
         End If
         If PackPath Is Nothing Then
             Dim Extensions As New List(Of String)
-            If Not CheckAdvancedModrinth.Checked Then Extensions.Add(GetLang("LangPageVersionExportSelectExportPathSaveAsFormat", "zip", "zip"))
+            Extensions.Add(GetLang("LangPageVersionExportSelectExportPathSaveAsFormat", "zip", "zip"))
             If Not CheckOptionsPcl.Checked Then Extensions.Add(GetLang("LangPageVersionExportSelectExportPathSaveAsFormat", "mrpack", "mrpack"))
             PackPath = SelectSaveFile(GetLang("LangPageVersionExportSelectExportPath"),
                 PackName & If(String.IsNullOrEmpty(TextExportVersion.Text), "", " " & TextExportVersion.Text), Extensions.Join("|"))
@@ -435,7 +435,7 @@ Public Class PageVersionExport
         '缓存所需参数
         Dim CacheFolder = RequestTaskTempFolder()
         Dim OverridesFolder = CacheFolder & "modpack\overrides\"
-        Dim McVersion = PageVersionLeft.Version
+        Dim McVersion = PageInstanceLeft.Instance
         Dim PathIndie As String = McVersion.PathIndie
         Dim CheckHostedAssets As Boolean = Not CheckAdvancedInclude.Checked
         Dim ModrinthUploadMode As Boolean = CheckAdvancedModrinth.Checked
@@ -530,7 +530,7 @@ Public Class PageVersionExport
             Next
             Loader.Progress = 0.97
             '复制 PCL 版本设置
-            CopyDirectory(McVersion.Path & "PCL\", OverridesFolder & "PCL\")
+            CopyDirectory(McVersion.PathVersion & "PCL\", OverridesFolder & "PCL\")
             WriteIni(OverridesFolder & "PCL\Setup.ini", "IsStar", False)
 #If BETA Then
             '复制 PCL 本体
@@ -589,7 +589,7 @@ Public Class PageVersionExport
             RunInNewThread(
             Sub()
                 Try
-                    If ModrinthUploadMode Then Return 'Modrinth 上传模式下，不能从 CurseForge 获取信息
+                    If ModrinthUploadMode Then Return 'Modrinth 上传模式下，不从 CurseForge 获取信息
                     Dim CurseForgeHashes = Loader.Input.Select(Function(m) m.CurseForgeHash)
                     Dim CurseForgeRaw As JContainer = DlModRequest("https://api.curseforge.com/v1/fingerprints/432/", HttpMethod.Post,
                         $"{{""fingerprints"": [{CurseForgeHashes.Join(",")}]}}", "application/json")("data")("exactMatches")
@@ -644,17 +644,17 @@ Public Class PageVersionExport
                 Files.Add(New JObject From {
                     {"path", ModFile.Path.AfterFirst(OverridesFolder).Replace("\", "/")},
                     {"hashes", New JObject From {{"sha1", ModFile.ModrinthHash}, {"sha512", GetFileSHA512(ModFile.Path)}}},
-                    {"downloads", New JArray(Pair.Value.OrderByDescending(Function(u) u.Contains("modrinth.com")))},
+                    {"downloads", New JArray(Pair.Value.OrderBy(Function(u) u.Contains("modrinth.com")))}, '不优先选择 Modrinth
                     {"fileSize", New FileInfo(ModFile.Path).Length}
                 })
                 File.Delete(ModFile.Path)
             Next
             Loader.Progress = 0.2
             '导出最终 JSON 文件
-            Dim Dependencies As New JObject From {{"minecraft", McVersion.Version.McName}}
-            If McVersion.Version.HasForge Then Dependencies.Add("forge", McVersion.Version.ForgeVersion)
-            If McVersion.Version.HasFabric Then Dependencies.Add("fabric-loader", McVersion.Version.FabricVersion)
-            If McVersion.Version.HasNeoForge Then Dependencies.Add("neoforge", McVersion.Version.NeoForgeVersion)
+            Dim Dependencies As New JObject From {{"minecraft", McVersion.Version.VanillaName}}
+            If McVersion.Version.HasForge Then Dependencies.Add("forge", McVersion.Version.Forge)
+            If McVersion.Version.HasFabric Then Dependencies.Add("fabric-loader", McVersion.Version.Fabric)
+            If McVersion.Version.HasNeoForge Then Dependencies.Add("neoforge", McVersion.Version.NeoForge)
             Dim ResultJson As New JObject From {
                 {"game", "minecraft"},
                 {"formatVersion", 1},
@@ -705,12 +705,6 @@ Public Class PageVersionExport
             TextExportName.Text = TextExportName.HintText
             TextExportName.SelectionStart = TextExportName.Text.Length
         End If
-    End Sub
-
-    '勾选 Modrinth 上传模式时，禁止打包 PCL
-    Private Sub CheckAdvancedModrinth_Change(sender As Object, user As Boolean) Handles CheckAdvancedModrinth.Change
-        If CheckAdvancedModrinth.Checked Then CheckOptionsPcl.Checked = False
-        CheckOptionsPcl.IsEnabled = Not CheckAdvancedModrinth.Checked
     End Sub
 
     '勾选打包资源文件时，禁止开启 Modrinth 上传模式

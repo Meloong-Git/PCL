@@ -7,7 +7,7 @@
         '重复加载部分
         PanBack.ScrollToHome()
         RefreshRam(False)
-        If McVersionCurrent Is Nothing Then
+        If McInstanceSelected Is Nothing Then
             BtnSwitch.Visibility = Visibility.Collapsed
         Else
             BtnSwitch.Visibility = Visibility.Visible
@@ -197,7 +197,7 @@
     Public Sub RefreshRam(ShowAnim As Boolean)
         If LabRamGame Is Nothing OrElse LabRamUsed Is Nothing OrElse FrmMain.PageCurrent <> FormMain.PageType.Setup OrElse FrmSetupLeft.PageID <> FormMain.PageSubType.SetupLaunch Then Return
         '获取内存情况
-        Dim RamGame As Double = Math.Round(GetRam(McVersionCurrent, False), 5)
+        Dim RamGame As Double = Math.Round(GetRam(McInstanceSelected, False), 5)
         Dim RamTotal As Double = Math.Round(My.Computer.Info.TotalPhysicalMemory / 1024 / 1024 / 1024, 1)
         Dim RamAvailable As Double = Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024, 1)
         Dim RamGameActual As Double = Math.Round(Math.Min(RamGame, RamAvailable), 5)
@@ -324,10 +324,10 @@
     ''' <summary>
     ''' 获取当前设置的 RAM 值。单位为 GB。
     ''' </summary>
-    Public Shared Function GetRam(Version As McVersion, UseVersionJavaSetup As Boolean, Optional Is32BitJava As Boolean? = Nothing) As Double
+    Public Shared Function GetRam(Instance As McInstance, UseVersionJavaSetup As Boolean, Optional Is32BitJava As Boolean? = Nothing) As Double
 
         '------------------------------------------
-        ' 修改下方代码时需要一并修改 PageVersionSetup
+        ' 修改下方代码时需要一并修改 PageInstanceSetup
         '------------------------------------------
 
         Dim RamGive As Double
@@ -339,16 +339,16 @@
             Dim RamTarget1 As Double '估计能勉强带动了的内存
             Dim RamTarget2 As Double '估计没啥问题了的内存
             Dim RamTarget3 As Double '放一百万个材质和 Mod 和光影需要的内存
-            If Version IsNot Nothing AndAlso Not Version.IsLoaded Then Version.Load()
-            If Version IsNot Nothing AndAlso Version.Modable Then
+            If Instance IsNot Nothing AndAlso Not Instance.IsLoaded Then Instance.Load()
+            If Instance IsNot Nothing AndAlso Instance.Modable Then
                 '可安装 Mod 的版本
-                Dim ModDir As New DirectoryInfo(Version.PathIndie & "mods\")
+                Dim ModDir As New DirectoryInfo(Instance.PathIndie & "mods\")
                 Dim ModCount As Integer = If(ModDir.Exists, ModDir.GetFiles.Length, 0)
                 RamMininum = 0.5 + ModCount / 150
                 RamTarget1 = 1.5 + ModCount / 90
                 RamTarget2 = 2.7 + ModCount / 50
                 RamTarget3 = 4.5 + ModCount / 25
-            ElseIf Version IsNot Nothing AndAlso Version.Version.HasOptiFine Then
+            ElseIf Instance IsNot Nothing AndAlso Instance.Version.HasOptiFine Then
                 'OptiFine 版本
                 RamMininum = 0.5
                 RamTarget1 = 1.5
@@ -399,7 +399,7 @@ PreFin:
             End If
         End If
         '若使用 32 位 Java，则限制为 1G
-        If If(Is32BitJava, Not JavaIs64Bit(If(UseVersionJavaSetup, Version, Nothing))) Then RamGive = Math.Min(1, RamGive)
+        If If(Is32BitJava, Not JavaIs64Bit(If(UseVersionJavaSetup, Instance, Nothing))) Then RamGive = Math.Min(1, RamGive)
         Return RamGive
     End Function
 
@@ -417,7 +417,7 @@ PreFin:
         Dim SelectedItem As MyComboBoxItem = Nothing
         Dim SelectedBySetup As String = Setup.Get("LaunchArgumentJavaSelect")
         Try
-            For Each Java In JavaList.Clone().OrderByDescending(Function(v) v.VersionCode)
+            For Each Java In JavaList.Clone().OrderByDescending(Function(v) v.MajorVersion)
                 Dim ListItem = New MyComboBoxItem With {.Content = Java.ToString, .ToolTip = Java.PathFolder, .Tag = Java}
                 ToolTipService.SetHorizontalOffset(ListItem, 400)
                 ComboArgumentJava.Items.Add(ListItem)
@@ -577,9 +577,9 @@ PreFin:
 
     '切换到版本独立设置
     Private Sub BtnSwitch_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSwitch.Click
-        McVersionCurrent.Load()
-        PageVersionLeft.Version = McVersionCurrent
-        FrmMain.PageChange(FormMain.PageType.VersionSetup, FormMain.PageSubType.VersionSetup)
+        McInstanceSelected.Load()
+        PageInstanceLeft.Instance = McInstanceSelected
+        FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.InstanceSetup)
     End Sub
 
     '去除参数中的回车

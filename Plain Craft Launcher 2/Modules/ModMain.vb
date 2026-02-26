@@ -416,12 +416,12 @@ EndHint:
     Public FrmLoginMsSkin As PageLoginMsSkin
 
     '版本设置页面声明
-    Public FrmVersionLeft As PageVersionLeft
-    Public FrmVersionOverall As PageVersionOverall
-    Public FrmVersionMod As PageVersionMod
-    Public FrmVersionModDisabled As PageVersionModDisabled
-    Public FrmVersionSetup As PageVersionSetup
-    Public FrmVersionExport As PageVersionExport
+    Public FrmInstanceLeft As PageInstanceLeft
+    Public FrmInstanceOverall As PageInstanceOverall
+    Public FrmInstanceMod As PageInstanceMod
+    Public FrmInstanceModDisabled As PageInstanceModDisabled
+    Public FrmInstanceSetup As PageInstanceSetup
+    Public FrmInstanceExport As PageInstanceExport
 
     '资源信息分页声明
     Public FrmDownloadCompDetail As PageDownloadCompDetail
@@ -653,7 +653,7 @@ NextFile:
             DeleteDirectory(PathTemp & "Help")
             Directory.CreateDirectory(PathTemp & "Help")
             WriteFile(PathTemp & "Cache\Help.zip", GetResources("Help"))
-            ExtractFile(PathTemp & "Cache\Help.zip", PathTemp & "Help", Encoding.UTF8)
+            ExtractCompressedFile(PathTemp & "Cache\Help.zip", PathTemp & "Help")
             Setup.Set("SystemHelpVersion", VersionCode)
             Log("[Help] 已解压内置帮助文件，目前状态：" & File.Exists(PathTemp & "Help\启动器\备份设置.xaml"), LogLevel.Debug)
         End If
@@ -798,8 +798,7 @@ NextFile:
         '查看现有设置
         Using ReadOnlyKey = My.Computer.Registry.CurrentUser.OpenSubKey(REG_KEY, False)
             If ReadOnlyKey IsNot Nothing Then
-                Dim CurrentValue = ReadOnlyKey.GetValue(Executeable)
-                If REG_VALUE = CurrentValue?.ToString() Then
+                If REG_VALUE = ReadOnlyKey.GetValue(Executeable)?.ToString() Then
                     Log($"[System] 无需调整显卡设置：{Executeable}")
                     Return
                 End If
@@ -840,20 +839,20 @@ NextFile:
         Text = Text.Replace("{path_temp}", Replacer(PathTemp))
         '时间
         If ReplaceTime Then '在窗口标题中，时间会被后续动态替换，所以此时不应该替换
-            Text = Text.Replace("{date}", Replacer(Date.Now.ToString("yyyy/M/d")))
-            Text = Text.Replace("{time}", Replacer(Date.Now.ToString("HH:mm:ss")))
+            Text = Text.Replace("{date}", Replacer(Date.Now.ToString("yyyy'/'M'/'d")))
+            Text = Text.Replace("{time}", Replacer(Date.Now.ToString("HH':'mm':'ss")))
         End If
         'Minecraft
         Text = Text.Replace("{java}", Replacer(McLaunchJavaSelected?.PathFolder))
-        Text = Text.Replace("{minecraft}", Replacer(PathMcFolder))
-        If McVersionCurrent IsNot Nothing Then
-            Text = Text.Replace("{version_path}", Replacer(McVersionCurrent.Path)) : Text = Text.Replace("{verpath}", Replacer(McVersionCurrent.Path))
-            Text = Text.Replace("{version_indie}", Replacer(McVersionCurrent.PathIndie)) : Text = Text.Replace("{verindie}", Replacer(McVersionCurrent.PathIndie))
-            Text = Text.Replace("{name}", Replacer(McVersionCurrent.Name))
-            If {"unknown", "old", "pending"}.Contains(McVersionCurrent.Version.McName.ToLower) Then
-                Text = Text.Replace("{version}", Replacer(McVersionCurrent.Name))
+        Text = Text.Replace("{minecraft}", Replacer(McFolderSelected))
+        If McInstanceSelected?.IsLoaded Then
+            Text = Text.Replace("{version_path}", Replacer(McInstanceSelected.PathVersion)) : Text = Text.Replace("{verpath}", Replacer(McInstanceSelected.PathVersion))
+            Text = Text.Replace("{version_indie}", Replacer(McInstanceSelected.PathIndie)) : Text = Text.Replace("{verindie}", Replacer(McInstanceSelected.PathIndie))
+            Text = Text.Replace("{name}", Replacer(McInstanceSelected.Name))
+            If {"unknown", "old", "pending"}.Contains(McInstanceSelected.Version.VanillaName.ToLower) Then
+                Text = Text.Replace("{version}", Replacer(McInstanceSelected.Name))
             Else
-                Text = Text.Replace("{version}", Replacer(McVersionCurrent.Version.McName))
+                Text = Text.Replace("{version}", Replacer(McInstanceSelected.Version.VanillaName))
             End If
         Else
             Text = Text.Replace("{version_path}", Replacer(Nothing)) : Text = Text.Replace("{verpath}", Replacer(Nothing))
@@ -883,7 +882,7 @@ NextFile:
         '高级
         Text = Text.RegexReplaceEach("\{hint\}", Function() Replacer(PageOtherTest.GetRandomHint()))
         Text = Text.RegexReplaceEach("\{cave\}", Function() Replacer(PageOtherTest.GetRandomCave()))
-        Text = Text.RegexReplaceEach("\{setup:([a-zA-Z0-9]+)\}", Function(m) Replacer(Setup.GetSafe(m.Groups(1).Value, McVersionCurrent)))
+        Text = Text.RegexReplaceEach("\{setup:([a-zA-Z0-9]+)\}", Function(m) Replacer(Setup.GetSafe(m.Groups(1).Value, McInstanceSelected)))
         Text = Text.RegexReplaceEach("\{varible:([^:\}]+)(?::([^\}]+))?\}", Function(m) Replacer(ReadReg("CustomEvent" & m.Groups(1).Value, m.Groups(2).Value)))
         Text = Text.RegexReplaceEach("\{variable:([^:\}]+)(?::([^\}]+))?\}", Function(m) Replacer(ReadReg("CustomEvent" & m.Groups(1).Value, m.Groups(2).Value)))
         Return Text

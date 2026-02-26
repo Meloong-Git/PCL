@@ -52,11 +52,11 @@ Friend Module ModSecret
     End Function
 
     Friend Sub SecretLaunchJvmArgs(ByRef DataList As List(Of String))
-        Dim DataJvmCustom As String = Setup.Get("VersionAdvanceJvm", Version:=McVersionCurrent)
+        Dim DataJvmCustom As String = Setup.Get("VersionAdvanceJvm", Instance:=McInstanceSelected)
         DataList.Insert(0, ArgumentReplace(If(DataJvmCustom = "", Setup.Get("LaunchAdvanceJvm"), DataJvmCustom))) '可变 JVM 参数
         McLaunchLog("当前剩余内存：" & Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024 * 10) / 10 & "G")
-        DataList.Add("-Xmn" & Math.Floor(PageVersionSetup.GetRam(McVersionCurrent) * 1024 * 0.15) & "m")
-        DataList.Add("-Xmx" & Math.Floor(PageVersionSetup.GetRam(McVersionCurrent) * 1024) & "m")
+        DataList.Add("-Xmn" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024 * 0.15) & "m")
+        DataList.Add("-Xmx" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024) & "m")
         If Not DataList.Any(Function(d) d.Contains("-Dlog4j2.formatMsgNoLookups=true")) Then DataList.Add("-Dlog4j2.formatMsgNoLookups=true")
     End Sub
 

@@ -5,16 +5,6 @@ Public Class MyLocalModItem
 #Region "基础属性"
     Public Uuid As Integer = GetUuid()
 
-    'Logo
-    Public Property Logo As String
-        Get
-            Return PathLogo.Source
-        End Get
-        Set(value As String)
-            PathLogo.Source = value
-        End Set
-    End Property
-
     '标题
     Private _Title As String
     Public Property Title As String
@@ -28,9 +18,6 @@ Public Class MyLocalModItem
                     LabTitle.TextDecorations = Nothing
                 Case McMod.McModState.Disabled
                     LabTitle.TextDecorations = TextDecorations.Strikethrough
-                Case McMod.McModState.Unavailable
-                    LabTitle.TextDecorations = TextDecorations.Strikethrough
-                    value &= " [错误]"
             End Select
             If LabTitle.Text = value Then Return
             LabTitle.Text = value
@@ -63,25 +50,17 @@ Public Class MyLocalModItem
 
     'Tag
     Public WriteOnly Property Tags As List(Of String)
-        Set(value As List(Of String))
+        Set(Tags As List(Of String))
             PanTags.Children.Clear()
-            PanTags.Visibility = If(value.Any(), Visibility.Visible, Visibility.Collapsed)
-            For Each TagText In value
-                Dim NewTag As New Border With {
-                    .Background = New SolidColorBrush(Color.FromArgb(12, 0, 0, 0)),
-                    .Padding = New Thickness(3, 1, 3, 1),
-                    .CornerRadius = New CornerRadius(3),
-                    .Margin = New Thickness(0, 0, 3, 0),
-                    .SnapsToDevicePixels = True,
-                    .UseLayoutRounding = False
-                }
-                Dim TagTextBlock As New TextBlock With {
-                    .Text = TagText,
-                    .Foreground = New SolidColorBrush(Color.FromRgb(136, 136, 136)),
-                    .FontSize = 11
-                }
-                NewTag.Child = TagTextBlock
-                PanTags.Children.Add(NewTag)
+            PanTags.Visibility = If(Tags.Any(), Visibility.Visible, Visibility.Collapsed)
+            For Each TagText In Tags
+                Dim BorderTag As New Border With {
+                    .Background = New MyColor("#0A000000"), .Padding = New Thickness(3, 1, 3, 1), .CornerRadius = New CornerRadius(3),
+                    .Margin = New Thickness(0, 0, 3, 0), .SnapsToDevicePixels = True, .UseLayoutRounding = False}
+                Dim LabTag As New TextBlock With {
+                    .Text = TagText, .Foreground = New MyColor("#B0B0B0"), .FontSize = 11}
+                BorderTag.Child = LabTag
+                PanTags.Children.Add(BorderTag)
             Next
         End Set
     End Property
@@ -131,7 +110,7 @@ Public Class MyLocalModItem
         End Get
         Set(value As Boolean)
             _Swiping = value
-            FrmVersionMod.CardSelect.IsHitTestVisible = Not value
+            FrmInstanceMod.CardSelect.IsHitTestVisible = Not value
         End Set
     End Property
     Private Shared SwipToState As Boolean '被滑动到的目标应将 Checked 改为此值
@@ -321,11 +300,11 @@ Public Class MyLocalModItem
 #End Region
 
     Private Function GetUpdateCompareDescription() As String
-        Dim CurrentName = Entry.CompFile.FileName.Replace(".jar", "")
-        Dim NewestName = Entry.UpdateFile.FileName.Replace(".jar", "")
+        Dim CurrentName = If(Entry.CompFile.Version, Entry.CompFile.DisplayName).Replace(".jar", "")
+        Dim NewestName = If(Entry.UpdateFile.Version, Entry.UpdateFile.DisplayName).Replace(".jar", "")
         '简化名称对比
-        Dim CurrentSegs = CurrentName.Split("-"c).ToList()
-        Dim NewestSegs = NewestName.Split("-"c).ToList()
+        Dim CurrentSegs = CurrentName.Split("-_+ ".ToCharArray).ToList()
+        Dim NewestSegs = NewestName.Split("-_+ ".ToCharArray).ToList()
         Dim Shortened As Boolean = False
         For Each Seg In CurrentSegs.ToList()
             If Not NewestSegs.Contains(Seg) Then Continue For
@@ -340,92 +319,103 @@ Public Class MyLocalModItem
         End If
         Return GetLang("LangMyLocalModItemToolTipModUpdate", CurrentName, GetTimeSpanString(Entry.CompFile.ReleaseDate - Date.Now, False), NewestName, GetTimeSpanString(Entry.UpdateFile.ReleaseDate - Date.Now, False))
     End Function
-    Public Sub Refresh() Handles Me.Loaded
-        RunInUi(
-        Sub()
-            '更新
-            If Entry.CanUpdate Then
-                BtnUpdate.Visibility = Visibility.Visible
-                BtnUpdate.ToolTip = $"{GetUpdateCompareDescription()}{vbCrLf}{GetLang("LangMyLocalModItemToolTipModUpdateUpgradable")}"
+
+    '懒加载
+    Public Sub New()
+        InitializeComponent()
+        OnFirstEnterScrollViewerViewport(AddressOf FirstEnterScrollViewerViewport)
+    End Sub
+    Private HasEnteredViewport As Boolean = False
+    Private Sub FirstEnterScrollViewerViewport()
+        HasEnteredViewport = True
+        Refresh()
+    End Sub
+    Public Sub Refresh()
+        If Not HasEnteredViewport Then Return '避免在未显示时因为 Comp 更新而加载内容
+        '更新
+        If Entry.CanUpdate Then
+            BtnUpdate.Visibility = Visibility.Visible
+            BtnUpdate.ToolTip = $"{GetUpdateCompareDescription()}{vbCrLf}点击以更新，右键查看更新日志。"
+        Else
+            BtnUpdate.Visibility = Visibility.Collapsed
+        End If
+        '标题与描述
+        Dim DescFileName As String
+        If Entry.State = McMod.McModState.Fine OrElse Entry.State = McMod.McModState.Disabled Then
+            DescFileName = IO.Path.GetFileNameWithoutExtension(Entry.Path)
+        Else
+            DescFileName = GetFileNameFromPath(Entry.Path)
+        End If
+        Dim NewDescription As String
+        If Setup.Get("ToolModLocalNameStyle") = 1 Then
+            '标题显示文件名，详情显示译名
+            '标题
+            Title = DescFileName
+            SubTitle = ""
+            '描述
+            If Entry.Comp Is Nothing Then
+                NewDescription = Entry.DisplayName
             Else
-                BtnUpdate.Visibility = Visibility.Collapsed
+                Dim Titles = Entry.Comp.GetControlTitle(False)
+                NewDescription = Titles.Key & Titles.Value
             End If
-            '标题与描述
-            Dim DescFileName As String
-            If Entry.State = McMod.McModState.Fine OrElse Entry.State = McMod.McModState.Disabled Then
-                DescFileName = IO.Path.GetFileNameWithoutExtension(Entry.Path)
+            NewDescription = NewDescription.Replace("  |  ", " / ")
+            If Entry.Version IsNot Nothing Then NewDescription &= $" ({Entry.Version})"
+        Else
+            '标题显示译名，详情显示文件名
+            '标题
+            If Entry.Comp Is Nothing Then
+                Title = Entry.DisplayName
+                SubTitle = If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
             Else
-                DescFileName = GetFileNameFromPath(Entry.Path)
+                Dim Titles = Entry.Comp.GetControlTitle(False)
+                Title = Titles.Key
+                SubTitle = Titles.Value & If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
             End If
-            Dim NewDescription As String
-            If Setup.Get("ToolModLocalNameStyle") = 1 Then
-                '标题显示文件名，详情显示译名
-                '标题
-                Title = DescFileName
-                SubTitle = ""
-                '描述
-                If Entry.Comp Is Nothing Then
-                    NewDescription = Entry.Name
-                Else
-                    Dim Titles = Entry.Comp.GetControlTitle(False)
-                    NewDescription = Titles.Key & Titles.Value
-                End If
-                NewDescription = NewDescription.Replace("  |  ", " / ")
-                If Entry.Version IsNot Nothing Then NewDescription &= $" ({Entry.Version})"
-            Else
-                '标题显示译名，详情显示文件名
-                '标题
-                If Entry.Comp Is Nothing Then
-                    Title = Entry.Name
-                    SubTitle = If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
-                Else
-                    Dim Titles = Entry.Comp.GetControlTitle(False)
-                    Title = Titles.Key
-                    SubTitle = Titles.Value & If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
-                End If
-                '描述
-                NewDescription = DescFileName
+            '描述
+            NewDescription = DescFileName
+        End If
+        If Entry.Comp IsNot Nothing Then
+            NewDescription += ": " & Entry.Comp.Description.Replace(vbCr, "").Replace(vbLf, "")
+        ElseIf Entry.Description IsNot Nothing Then
+            NewDescription += ": " & Entry.Description.Replace(vbCr, "").Replace(vbLf, "")
+        End If
+        Description = NewDescription
+        If Checked Then
+            LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.State = McMod.McModState.Fine, "ColorBrush2", "ColorBrush5"))
+        Else
+            LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.State = McMod.McModState.Fine, "ColorBrush1", "ColorBrushGray4"))
+        End If
+        '主 Logo
+        If Entry.Comp IsNot Nothing Then
+            Entry.Comp.ApplyLogoToMyImage(PathLogo)
+        Else
+            PathLogo.Source = PathImage & "Icons/NoIcon.png"
+        End If
+        '图标右下角的 Logo
+        If Entry.State = McMod.McModState.Fine Then
+            If ImgState IsNot Nothing Then
+                Children.Remove(ImgState)
+                ImgState = Nothing
             End If
-            If Entry.Comp IsNot Nothing Then
-                NewDescription += ": " & Entry.Comp.Description.Replace(vbCr, "").Replace(vbLf, "")
-            ElseIf Entry.Description IsNot Nothing Then
-                NewDescription += ": " & Entry.Description.Replace(vbCr, "").Replace(vbLf, "")
-            ElseIf Not Entry.IsFileAvailable Then
-                NewDescription += ": " & GetLang("LangMyLocalModItemFailGetModInfo")
+        Else
+            If ImgState Is Nothing Then
+                ImgState = New Image With {
+                    .Width = 20, .Height = 20, .Margin = New Thickness(0, 0, -5, -3), .IsHitTestVisible = False,
+                    .HorizontalAlignment = HorizontalAlignment.Right, .VerticalAlignment = VerticalAlignment.Bottom
+                }
+                RenderOptions.SetBitmapScalingMode(ImgState, BitmapScalingMode.HighQuality)
+                SetColumn(ImgState, 1) : SetRow(ImgState, 1) : SetRowSpan(ImgState, 2)
+                Children.Add(ImgState)
+                '<Image x:Name="ImgState" RenderOptions.BitmapScalingMode="HighQuality" Width="16" Height="16" Margin="0,0,-3,-1"
+                '       Grid.Column="1" Grid.Row="1" Grid.RowSpan="2" IsHitTestVisible="False"
+                '       HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                '       Source="/Images/Icons/Unavailable.png" />
             End If
-            Description = NewDescription
-            If Checked Then
-                LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.State = McMod.McModState.Fine, "ColorBrush2", "ColorBrush5"))
-            Else
-                LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.State = McMod.McModState.Fine, "ColorBrush1", "ColorBrushGray4"))
-            End If
-            '主 Logo
-            Logo = If(Entry.Comp Is Nothing, PathImage & "Icons/NoIcon.png", Entry.Comp.GetControlLogo())
-            '图标右下角的 Logo
-            If Entry.State = McMod.McModState.Fine Then
-                If ImgState IsNot Nothing Then
-                    Children.Remove(ImgState)
-                    ImgState = Nothing
-                End If
-            Else
-                If ImgState Is Nothing Then
-                    ImgState = New Image With {
-                        .Width = 20, .Height = 20, .Margin = New Thickness(0, 0, -5, -3), .IsHitTestVisible = False,
-                        .HorizontalAlignment = HorizontalAlignment.Right, .VerticalAlignment = VerticalAlignment.Bottom
-                    }
-                    RenderOptions.SetBitmapScalingMode(ImgState, BitmapScalingMode.HighQuality)
-                    SetColumn(ImgState, 1) : SetRow(ImgState, 1) : SetRowSpan(ImgState, 2)
-                    Children.Add(ImgState)
-                    '<Image x:Name="ImgState" RenderOptions.BitmapScalingMode="HighQuality" Width="16" Height="16" Margin="0,0,-3,-1"
-                    '       Grid.Column="1" Grid.Row="1" Grid.RowSpan="2" IsHitTestVisible="False"
-                    '       HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                    '       Source="/Images/Icons/Unavailable.png" />
-                End If
-                ImgState.Source = New MyBitmap(PathImage & $"Icons/{Entry.State}.png")
-            End If
-            '标签
-            If Entry.Comp IsNot Nothing Then Tags = Entry.Comp.Tags
-        End Sub)
+            ImgState.Source = New MyBitmap(PathImage & $"Icons/{Entry.State}.png")
+        End If
+        '标签
+        If Entry.Comp IsNot Nothing Then Tags = Entry.Comp.Tags
     End Sub
 
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp, Me.Changed
@@ -496,9 +486,9 @@ Public Class MyLocalModItem
 
     '触发更新
     Private Sub BtnUpdate_Click(sender As Object, e As EventArgs) Handles BtnUpdate.Click
-        Select Case MyMsgBox(GetLang("LangMyLocalModItemDialogContentUpdateConfirm", Entry.Name, GetUpdateCompareDescription()), GetLang("LangMyLocalModItemDialogTitleUpdateConfirm"), GetLang("LangMyLocalModItemDialogBtn1UpdateConfirm"), GetLang("LangMyLocalModItemDialogTitleOpenChangelog"),GetLang("LangDialogBtnCancel"))
+        Select Case MyMsgBox(GetLang("LangMyLocalModItemDialogContentUpdateConfirm", Entry.DisplayName, GetUpdateCompareDescription()), GetLang("LangMyLocalModItemDialogTitleUpdateConfirm"), GetLang("LangMyLocalModItemDialogBtn1UpdateConfirm"), GetLang("LangMyLocalModItemDialogTitleOpenChangelog"),GetLang("LangDialogBtnCancel"))
             Case 1 '更新
-                FrmVersionMod.UpdateMods({Entry})
+                FrmInstanceMod.UpdateMods({Entry})
             Case 2 '查看更新日志
                 ShowUpdateLog()
             Case 3 '取消

@@ -92,6 +92,7 @@
         '改变默认的折叠
         If IsSwapped AndAlso SwapControl IsNot Nothing Then
             MainSwap.RenderTransform = New RotateTransform(If(SwapLogoRight, 270, 0))
+            SwapControl.Visibility = Visibility.Collapsed
             '取消由于高度变化被迫触发的高度动画
             Dim RawUseAnimation As Boolean = UseAnimation
             UseAnimation = False
@@ -109,17 +110,21 @@
         '这一部分的代码是好几年前留下的究极屎坑，当时还不知道该咋正确调用这种方法，就写了这么一坨屎
         '但是现在……反正勉强能用……懒得改了就这样吧.jpg
         '别骂了别骂了.jpg
-        If IsNothing(Stack.Tag) Then Return
+        If Stack.Tag Is Nothing Then Return
         '排序
+        Dim HasDuplicates As Boolean = False
         Select Case Type
             Case 3
-                Stack.Tag = CType(Stack.Tag, List(Of DlOptiFineListEntry)).Sort(Function(a, b) VersionSortBoolean(a.NameDisplay, b.NameDisplay))
+                Stack.Tag = CType(Stack.Tag, List(Of DlOptiFineListEntry)).SortByComparison(Function(a, b) CompareVersionGE(a.DisplayName, b.DisplayName))
             Case 4, 10
-                Stack.Tag = CType(Stack.Tag, List(Of DlLiteLoaderListEntry)).Sort(Function(a, b) VersionSortBoolean(a.Inherit, b.Inherit))
+                Stack.Tag = CType(Stack.Tag, List(Of DlLiteLoaderListEntry)).SortByComparison(Function(a, b) CompareVersionGE(a.Inherit, b.Inherit))
             Case 6
-                Stack.Tag = CType(Stack.Tag, List(Of DlForgeVersionEntry)).Sort(Function(a, b) a.Version > b.Version)
+                Stack.Tag = CType(Stack.Tag, List(Of DlForgeVersionEntry)).OrderByDescending(Function(a) a).ToList
             Case 8, 9
-                Stack.Tag = CType(Stack.Tag, List(Of CompFile)).Sort(Function(a, b) a.ReleaseDate > b.ReleaseDate)
+                Stack.Tag = CType(Stack.Tag, List(Of CompFile)).SortByComparison(Function(a, b) a.ReleaseDate > b.ReleaseDate)
+                HasDuplicates =
+                    CType(Stack.Tag, List(Of CompFile)).Distinct(Function(a, b) a.DisplayName = b.DisplayName).Count <>
+                    CType(Stack.Tag, List(Of CompFile)).Count
         End Select
         '控件转换
         Select Case Type
@@ -132,9 +137,7 @@
         For Each Data As Object In Stack.Tag
             Select Case Type
                 Case 0
-                    Dim VersionItem As MyListItem = CType(Data, McVersion).ToListItem
-                    VersionItem.ContentHandler = AddressOf PageSelectRight.McVersionListContent
-                    Stack.Children.Add(VersionItem)
+                    Stack.Children.Add(CType(Data, McInstance).ToListItem(AddressOf PageSelectRight.McInstanceListContent))
                 Case 2
                     Stack.Children.Add(McDownloadListItem(Data, AddressOf McDownloadMenuSave, True))
                 Case 3
@@ -145,23 +148,13 @@
                     '不能使用 AddressOf，这导致了 #535，原因完全不明，疑似是编译器 Bug
                     Stack.Children.Add(McDownloadListItem(Data, Sub(sender, e) FrmDownloadInstall.MinecraftSelected(sender, e), False))
                 Case 8
-                    If CType(Stack.Tag, List(Of CompFile)).Distinct(Function(a, b) a.DisplayName = b.DisplayName).Count <>
-                       CType(Stack.Tag, List(Of CompFile)).Count Then
-                        '存在重复的名称（#1344）
-                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=True))
-                    Else
-                        '不存在重复的名称，正常加载
-                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Save_Click))
-                    End If
+                    '若存在重复的版本名，则显示文件名而非版本名（#1344）
+                    Stack.Children.Add(CType(Data, CompFile).ToListItem(
+                        AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=HasDuplicates))
                 Case 9
-                    If CType(Stack.Tag, List(Of CompFile)).Distinct(Function(a, b) a.DisplayName = b.DisplayName).Count <>
-                       CType(Stack.Tag, List(Of CompFile)).Count Then
-                        '存在重复的名称（#1344）
-                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Install_Click, AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=True))
-                    Else
-                        '不存在重复的名称，正常加载
-                        Stack.Children.Add(CType(Data, CompFile).ToListItem(AddressOf FrmDownloadCompDetail.Install_Click, AddressOf FrmDownloadCompDetail.Save_Click))
-                    End If
+                    '若存在重复的版本名，则显示文件名而非版本名（#1344）
+                    Stack.Children.Add(CType(Data, CompFile).ToListItem(
+                        AddressOf FrmDownloadCompDetail.Install_Click, AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=HasDuplicates))
                 Case 10
                     Stack.Children.Add(LiteLoaderDownloadListItem(Data, AddressOf LiteLoaderSave_Click, True))
                 Case 11
@@ -268,7 +261,7 @@
         Height = PreviousHeight
     End Sub
     ''' <summary>
-    ''' 通知 MyCard，控件内容已改变，需要中断动画并更新高度。
+    ''' 通知 MyCard，控件内容已改变，需要中断动画并瞬间更新高度。
     ''' </summary>
     Public Sub TriggerForceResize()
         Height = If(IsSwapped, SwapedHeight, Double.NaN)
@@ -282,7 +275,7 @@
 
     '若设置了 CanSwap，或 SwapControl 不为空，则判定为会进行折叠
     '这是因为不能直接在 XAML 中设置 SwapControl
-    Public SwapControl As Object
+    Public SwapControl As FrameworkElement
     Public Property CanSwap As Boolean = False
     ''' <summary>
     ''' 被折叠的种类，用于控件虚拟化。

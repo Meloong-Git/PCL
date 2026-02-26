@@ -30,7 +30,7 @@
                 Next
             End If
             '打乱顺序播放
-            MusicWaitingList = If(Setup.Get("UiMusicRandom"), Shuffle(New List(Of String)(MusicAllList)), New List(Of String)(MusicAllList))
+            MusicWaitingList = If(Setup.Get("UiMusicRandom"), New List(Of String)(MusicAllList).Shuffle().ToList, New List(Of String)(MusicAllList))
             If PreventFirst IsNot Nothing AndAlso MusicWaitingList.FirstOrDefault = PreventFirst Then
                 '若需要避免成为第一项的为第一项，则将它放在最后
                 MusicWaitingList.RemoveAt(0)
@@ -261,6 +261,7 @@
 
     ''' <summary>
     ''' 当前正在播放的 NAudio.Wave.WaveOutEvent。
+    ''' 如果为它赋了类别，则会没有必要地加载 NAudio.dll。
     ''' </summary>
     Public MusicNAudio = Nothing
     ''' <summary>

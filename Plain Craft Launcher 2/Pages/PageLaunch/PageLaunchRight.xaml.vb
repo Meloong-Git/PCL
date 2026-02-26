@@ -104,6 +104,15 @@ Public Class PageLaunchRight
                     Case 12
                         Log("[Page] 主页预设：PCL GitHub 仪表盘")
                         Url = "https://ddf.pcl-community.org/Custom.xaml"
+                    Case 13
+                        Log("[Page] 主页预设：PCL 更新摘要")
+                        Url = "https://raw.gitcode.com/ENC_Euphony/PCL-AI-Summary-HomePage/raw/master/Custom.xaml"
+                    Case 14
+                        Log("[Page] 主页预设：今日新闻热点")
+                        Url = "https://pcl.wyc-w.top/index.xaml"
+                    Case 15
+                        Log("[Page] 主页预设：Minecraft 芝士站")
+                        Url = "https://www.xxag.top/mkss"
                 End Select
         End Select
         '联网下载

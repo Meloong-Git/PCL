@@ -1,6 +1,4 @@
-﻿Imports System.Threading.Tasks
-
-Public Class PageSpeedLeft
+﻿Public Class PageSpeedLeft
     Private Const WatcherInterval As Integer = 300
 
     '初始化

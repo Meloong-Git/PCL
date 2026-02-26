@@ -96,11 +96,36 @@ End Module
 ''' 自定义事件。
 ''' </summary>
 Public Class CustomEvent
+    Inherits DependencyObject
 
 #Region "属性与触发"
 
-    Public Property Type As EventType = EventType.None
-    Public Property Data As String = Nothing
+    Public Property Type As EventType
+        Get
+            Dim Value As EventType = EventType.None
+            RunInUiWait(Sub() Value = GetValue(TypeProperty))
+            Return Value
+        End Get
+        Set(value As EventType)
+            SetValue(TypeProperty, value)
+        End Set
+    End Property
+    Public Shared ReadOnly TypeProperty As DependencyProperty =
+        DependencyProperty.Register("Type", GetType(EventType), GetType(CustomEvent), New PropertyMetadata(EventType.None))
+
+    Public Property Data As String
+        Get
+            Dim Value As String = Nothing
+            RunInUiWait(Sub() Value = GetValue(DataProperty))
+            Return Value
+        End Get
+        Set(value As String)
+            SetValue(DataProperty, value)
+        End Set
+    End Property
+    Public Shared ReadOnly DataProperty As DependencyProperty =
+        DependencyProperty.Register("Data", GetType(String), GetType(CustomEvent), New PropertyMetadata(Nothing))
+
     Public Sub New()
     End Sub
     Public Sub New(Type As EventType, Data As String)
@@ -141,6 +166,8 @@ Public Class CustomEvent
         写入设置
         修改变量
         写入变量
+        加入房间
+        检查更新
     End Enum
 
     ''' <summary>
@@ -149,10 +176,10 @@ Public Class CustomEvent
     Public Shared Sub Raise(Type As EventType, Arg As String)
         If Type = EventType.None Then Return
         Log($"[Control] 执行自定义事件：{Type}, {Arg}")
+        If Arg Is Nothing Then Arg = ""
+        Dim Args As String() = Arg.Split("|")
         Try
-            Dim Args As String() = If(Arg?.Split("|"), {""})
             Select Case Type
-
                 Case EventType.打开网页
                     Arg = Arg.Replace("\", "/")
                     If Not Arg.Contains("://") OrElse Arg.StartsWithF("file", True) Then '为了支持更多协议（#2200）
@@ -189,17 +216,17 @@ Public Class CustomEvent
 
                 Case EventType.启动游戏
                     If Args(0) = "\current" Then
-                        If McVersionCurrent Is Nothing Then
+                        If McInstanceSelected Is Nothing Then
                             Hint(GetLang("LangModEventChoseAnInstance"), HintType.Red)
                             Return
                         Else
-                            Args(0) = McVersionCurrent.Name
+                            Args(0) = McInstanceSelected.Name
                         End If
                     End If
                     RunInUi(
                     Sub()
                         If McLaunchStart(New McLaunchOptions With
-                                {.ServerIp = If(Args.Length >= 2, Args(1), Nothing), .Version = New McVersion(Args(0))}) Then
+                                {.ServerIp = If(Args.Length >= 2, Args(1), Nothing), .Instance = New McInstance(Args(0))}) Then
                             Hint(GetLang("LangModEventStartInstance", Args(0)))
                         End If
                     End Sub)
@@ -275,13 +302,27 @@ Public Class CustomEvent
 
                 Case EventType.修改设置, EventType.写入设置
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 UiLauncherTransparent|400")
-                    Setup.SetSafe(Args(0), Args(1), Version:=McVersionCurrent)
+                    Setup.SetSafe(Args(0), Args(1), Instance:=McInstanceSelected)
                     If Args.Length = 2 Then Hint($"已写入设置：{Args(0)} → {Args(1)}", HintType.Green)
 
                 Case EventType.修改变量, EventType.写入变量
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 VariableName|SomeValue")
                     WriteReg("CustomEvent" & Args(0), Args(1))
                     If Args.Length = 2 Then Hint($"已写入变量：{Args(0)} → {Args(1)}", HintType.Green)
+
+                Case EventType.加入房间
+                    RunInUi(
+                    Sub()
+                        If String.IsNullOrWhiteSpace(Arg) Then
+                            PageLinkMain.Join()
+                        Else
+                            If Not EventSafetyConfirm("即将加入第三方联机房间。") Then Return
+                            PageLinkMain.Join(Arg)
+                        End If
+                    End Sub)
+
+                Case EventType.检查更新
+                    UpdateCheckByButton()
 
                 Case Else
                     MyMsgBox(GetLang("LangModEventDialogUnknownEventContent", Type), GetLang("LangModEventDialogEventFailTitle"))

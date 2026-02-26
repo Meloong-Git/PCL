@@ -115,10 +115,10 @@ Public Class ValidateInteger
     End Sub
     Public Overrides Function Validate(Str As String) As String
         If Str.Length > 9 Then Return GetLang("LangModValidateNumTooLong")
-        Dim Valed As Integer = Val(Str)
-        If Valed.ToString <> Str Then Return GetLang("LangModValidateNumInt")
-        If Val(Str) > Max Then Return GetLang("LangModValidateNumNoGreater", Max)
-        If Val(Str) < Min Then Return GetLang("LangModValidateNumNoLess", Min)
+        Dim Valed As Integer
+        If Not Integer.TryParse(Str, Valed) Then Return GetLang("LangModValidateNumInt")
+        If Valed > Max Then Return GetLang("LangModValidateNumNoGreater", Max)
+        If Valed < Min Then Return GetLang("LangModValidateNumNoLess", Min)
         Return ""
     End Function
 End Class

@@ -5,6 +5,7 @@ Imports System.Runtime.CompilerServices
 Imports System.Security.Cryptography
 Imports System.Security.Principal
 Imports System.Text.RegularExpressions
+Imports System.Threading.Tasks
 Imports System.Xaml
 Imports Newtonsoft.Json
 
@@ -13,13 +14,13 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.11.0" '不含分支前缀的显示用版本名
-    Public Const VersionStandardCode As String = "2.11.0." & VersionBranchCode '标准格式的四段式版本号
+    Public Const VersionBaseName As String = "2.12.2" '不含分支前缀的显示用版本名
+    Public Const VersionStandardCode As String = "2.12.2." & VersionBranchCode '标准格式的四段式版本号
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If BETA Then
-    Public Const VersionCode As Integer = 372 'Release
+    Public Const VersionCode As Integer = 379 'Release
 #Else
-    Public Const VersionCode As Integer = 373 'Snapshot
+    Public Const VersionCode As Integer = 380 'Snapshot
 #End If
     '自动生成的版本信息
     Public Const VersionDisplayName As String = VersionBranchName & " " & VersionBaseName
@@ -61,7 +62,7 @@ Public Module ModBase
     ''' <summary>
     ''' 程序的打开计时。
     ''' </summary>
-    Public ApplicationStartTick As Long = GetTimeTick()
+    Public ApplicationStartTick As Long = GetTimeMs()
     ''' <summary>
     ''' 程序打开时的时间。
     ''' </summary>
@@ -588,8 +589,7 @@ Public Module ModBase
     ''' </summary>
     Public Function ReadReg(Key As String, Optional DefaultValue As String = "") As String
         Try
-            Dim SubKey = My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, False)
-            Return If(SubKey?.GetValue(Key), DefaultValue)
+            Return If(My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, False)?.GetValue(Key), DefaultValue)
         Catch ex As Exception
             Log(ex, "读取注册表出错：" & Key, LogLevel.Hint)
             Return DefaultValue
@@ -1211,14 +1211,17 @@ Re:
     Public Class FileChecker
         ''' <summary>
         ''' 文件的准确大小。
+        ''' 不检查则为 -1。
         ''' </summary>
         Public ActualSize As Long = -1
         ''' <summary>
         ''' 文件的最小大小。
+        ''' 不检查则为 -1。
         ''' </summary>
         Public MinSize As Long = -1
         ''' <summary>
         ''' 文件的 MD5、SHA1 或 SHA256。会根据输入字符串的长度自动判断种类。
+        ''' 不检查则为 Nothing。
         ''' </summary>
         Public Hash As String = Nothing
         ''' <summary>
@@ -1226,7 +1229,8 @@ Re:
         ''' </summary>
         Public CanUseExistsFile As Boolean = True
         ''' <summary>
-        ''' 是否为 Json 文件。
+        ''' 是否要求为 JSON 文件。
+        ''' 即，开头结尾必须为 {} 或 []。
         ''' </summary>
         Public IsJson As Boolean = False
         Public Sub New(Optional MinSize As Long = -1, Optional ActualSize As Long = -1, Optional Hash As String = Nothing, Optional CanUseExistsFile As Boolean = True, Optional IsJson As Boolean = False)
@@ -1281,27 +1285,31 @@ Re:
     ''' <summary>
     ''' 尝试根据后缀名判断文件种类并解压文件，支持 gz 与 zip，会尝试将 jar 以 zip 方式解压。
     ''' 会尝试创建，但不会清空目标文件夹。
+    ''' 会先使用 UTF-8 解压，失败后换用 GB18030 解压。
     ''' </summary>
-    Public Sub ExtractFile(CompressFilePath As String, DestDirectory As String, Optional Encode As Encoding = Nothing,
-                           Optional ProgressIncrementHandler As Action(Of Double) = Nothing)
+    Public Sub ExtractCompressedFile(CompressFilePath As String, DestDirectory As String, Optional ProgressIncrementHandler As Action(Of Double) = Nothing)
         Directory.CreateDirectory(DestDirectory)
+        '解压 gz（gz 不需要考虑编码）
         If CompressFilePath.EndsWithF(".gz", True) Then
-            '以 gz 方式解压
-            Dim stream As New GZipStream(New FileStream(CompressFilePath, FileMode.Open, FileAccess.ReadWrite), CompressionMode.Decompress)
-            Dim decompressedFile As New FileStream(DestDirectory & GetFileNameFromPath(CompressFilePath).ToLower.Replace(".tar", "").Replace(".gz", ""), FileMode.OpenOrCreate, FileAccess.Write)
-            Dim data As Integer = stream.ReadByte()
-            While data <> -1
-                decompressedFile.WriteByte(data)
-                data = stream.ReadByte()
-            End While
-            decompressedFile.Close()
-            stream.Close()
-        Else
-            '以 zip 方式解压
-            Using Archive = ZipFile.Open(CompressFilePath, ZipArchiveMode.Read, If(Encode, Encoding.GetEncoding("GB18030")))
-                Dim TotalCount As Long = Archive.Entries.Count
-                For Each Entry As ZipArchiveEntry In Archive.Entries
-                    If ProgressIncrementHandler IsNot Nothing AndAlso TotalCount > 0 Then ProgressIncrementHandler(1 / TotalCount)
+            Using stream As New GZipStream(New FileStream(CompressFilePath, FileMode.Open, FileAccess.Read, FileShare.Read), CompressionMode.Decompress)
+                Using decompressedFile As New FileStream(DestDirectory & GetFileNameFromPath(CompressFilePath).ToLower.Replace(".tar", "").Replace(".gz", ""),
+                                                         FileMode.OpenOrCreate, FileAccess.Write)
+                    Dim data As Integer = stream.ReadByte()
+                    While data <> -1
+                        decompressedFile.WriteByte(data)
+                        data = stream.ReadByte()
+                    End While
+                End Using
+            End Using
+            Return
+        End If
+        '解压 zip
+        Dim TryExtractZip =
+        Sub(Encoding As Encoding)
+            Using Archive = ZipFile.Open(CompressFilePath, ZipArchiveMode.Read, Encoding)
+                Dim EntryCount = Archive.Entries.Count
+                For Each Entry In Archive.Entries
+                    If ProgressIncrementHandler IsNot Nothing AndAlso EntryCount > 0 Then ProgressIncrementHandler(1 / EntryCount)
                     Dim DestinationFullPath As String = IO.Path.Combine(DestDirectory, Entry.FullName)
                     If Not IO.Path.GetFullPath(DestinationFullPath).StartsWithF(IO.Path.GetFullPath(DestDirectory), True) Then Continue For 'ZipSlip 漏洞修复
                     If DestinationFullPath.EndsWithF("\") OrElse DestinationFullPath.EndsWithF("/") Then Continue For '不创建空文件夹
@@ -1310,7 +1318,17 @@ Re:
                     Entry.ExtractToFile(DestinationFullPath.Replace(DestinationDirectory, ShortenPath(DestinationDirectory)), True) '#7329
                 Next
             End Using
-        End If
+        End Sub
+        Try
+            TryExtractZip(Encoding.UTF8)
+        Catch ex As Exception
+            Log(ex, $"首次解压尝试失败，将更换编码并重试（{CompressFilePath} → {DestDirectory}）")
+            Try
+                TryExtractZip(Encoding.GetEncoding("GB18030"))
+            Catch
+                Throw
+            End Try
+        End Try
     End Sub
 
     ''' <summary>
@@ -1429,6 +1447,7 @@ RetryDir:
         If Ex Is Nothing Then Return GetLang("LangModBaseNoExceptionDetail")
 
         '获取最底层的异常
+        Dim OuterEx As Exception = Ex
         Dim InnerEx As Exception = Ex
         Do Until InnerEx.InnerException Is Nothing
             InnerEx = InnerEx.InnerException
@@ -1452,7 +1471,7 @@ RetryDir:
         Loop
 
         '构造输出信息
-        Dim UsualReason As String = AnalyzeUsualReason(InnerEx, Ex, DescList)
+        Dim UsualReason As String = AnalyzeUsualReason(InnerEx, OuterEx, DescList)
         If UsualReason Is Nothing Then
             Return DescList.Join(vbCrLf)
         Else
@@ -1466,6 +1485,7 @@ RetryDir:
         If Ex Is Nothing Then Return GetLang("LangModBaseNoExceptionDetail")
 
         '获取最底层的异常
+        Dim OuterEx As Exception = Ex
         Dim InnerEx As Exception = Ex
         Do Until InnerEx.InnerException Is Nothing
             InnerEx = InnerEx.InnerException
@@ -1481,7 +1501,7 @@ RetryDir:
         Dim Desc As String = Join(DescList, vbCrLf & "→ ")
 
         '构造输出信息
-        Dim UsualReason As String = AnalyzeUsualReason(InnerEx, Ex, DescList)
+        Dim UsualReason As String = AnalyzeUsualReason(InnerEx, OuterEx, DescList)
         If UsualReason IsNot Nothing Then
             Return UsualReason & "详细错误：" & DescList.First
         Else
@@ -1580,16 +1600,6 @@ RetryDir:
         Return Mid(Str.PadRight(Length, Code), Str.Length + 1) & Str
     End Function
     ''' <summary>
-    ''' 将一个小数显示为固定的小数点后位数形式，将向零取整。
-    ''' 如 12 保留 2 位则输出 12.00，而 95.678 保留 2 位则输出 95.67。
-    ''' </summary>
-    Public Function StrFillNum(Num As Double, Length As Integer) As String
-        Num = Math.Round(Num, Length, MidpointRounding.AwayFromZero)
-        StrFillNum = Num
-        If Not StrFillNum.Contains(".") Then Return (StrFillNum & ".").PadRight(StrFillNum.Length + 1 + Length, "0")
-        Return StrFillNum.PadRight(StrFillNum.Split(".")(0).Length + 1 + Length, "0")
-    End Function
-    ''' <summary>
     ''' 移除字符串首尾的标点符号、回车，以及括号中、冒号后的补充说明内容。
     ''' </summary>
     Public Function StrTrim(Str As String, Optional RemoveQuote As Boolean = True)
@@ -1614,6 +1624,7 @@ RetryDir:
     End Function
     ''' <summary>
     ''' 分割字符串。
+    ''' 若原始字符串为空，则返回 {""}。
     ''' </summary>
     <Extension> Public Function Split(FullStr As String, SplitStr As String) As String()
         If SplitStr.Length = 1 Then
@@ -1728,6 +1739,7 @@ RetryDir:
     ''' </summary>
     <Extension> <MethodImpl(MethodImplOptions.AggressiveInlining)>
     Public Function StartsWithF(Str As String, Prefix As String, Optional IgnoreCase As Boolean = False) As Boolean
+        If Str Is Nothing Then Return False
         Return Str.StartsWith(Prefix, If(IgnoreCase, StringComparison.OrdinalIgnoreCase, StringComparison.Ordinal))
     End Function
     ''' <summary>
@@ -1735,6 +1747,7 @@ RetryDir:
     ''' </summary>
     <Extension> <MethodImpl(MethodImplOptions.AggressiveInlining)>
     Public Function EndsWithF(Str As String, Suffix As String, Optional IgnoreCase As Boolean = False) As Boolean
+        If Str Is Nothing Then Return False
         Return Str.EndsWith(Suffix, If(IgnoreCase, StringComparison.OrdinalIgnoreCase, StringComparison.Ordinal))
     End Function
     ''' <summary>
@@ -1742,6 +1755,7 @@ RetryDir:
     ''' </summary>
     <Extension> <MethodImpl(MethodImplOptions.AggressiveInlining)>
     Public Function ContainsF(Str As String, SubStr As String, Optional IgnoreCase As Boolean = False) As Boolean
+        If Str Is Nothing Then Return False
         Return Str.IndexOf(SubStr, If(IgnoreCase, StringComparison.OrdinalIgnoreCase, StringComparison.Ordinal)) >= 0
     End Function
     ''' <summary>
@@ -1778,6 +1792,7 @@ RetryDir:
     ''' 如果输入有误，返回 0。
     ''' </summary>
     Public Function Val(Str As Object) As Double
+        If Str Is Nothing Then Return 0
         Try
             Return If(TypeOf Str Is String AndAlso Str = "&", 0, Conversion.Val(Str))
         Catch
@@ -1960,7 +1975,7 @@ RetryDir:
                 Function(Source) Source.Key.Replace(" ", "").ContainsF(QueryPart, True)))
         Next
         '按照相似度进行排序
-        Entries = Entries.Sort(
+        Entries = Entries.SortByComparison(
         Function(Left, Right) As Boolean
             If Left.AbsoluteRight Xor Right.AbsoluteRight Then
                 Return Left.AbsoluteRight
@@ -2027,7 +2042,7 @@ RetryDir:
         Implements IDictionary(Of TKey, TValue)
         Implements IEnumerable(Of KeyValuePair(Of TKey, TValue))
 
-        Private ReadOnly SyncRoot As New Object
+        Public ReadOnly SyncRoot As New Object
         Private ReadOnly _Dictionary As New Dictionary(Of TKey, TValue)
 
         '构造函数
@@ -2149,6 +2164,29 @@ RetryDir:
     End Function
 
     ''' <summary>
+    ''' 为 Task 设置超时，在超时时抛出 TimeoutException。
+    ''' </summary>
+    <Extension> Public Function GetResultWithTimeout(Of T)(TargetTask As Task(Of T), TokenSource As CancellationTokenSource, TimeoutMs As Integer) As T
+        Dim DelayTask = Task.Delay(TimeoutMs)
+        If Task.WhenAny(TargetTask, DelayTask).GetAwaiter().GetResult() Is DelayTask Then
+            TokenSource.Cancel()
+            Throw New TimeoutException($"任务超时（{TimeoutMs} ms）")
+        End If
+        Return TargetTask.GetAwaiter().GetResult()
+    End Function
+    ''' <summary>
+    ''' 为 Task 设置超时，在超时时抛出 TimeoutException。
+    ''' </summary>
+    <Extension> Public Sub GetResultWithTimeout(TargetTask As Task, TokenSource As CancellationTokenSource, TimeoutMs As Integer)
+        Dim DelayTask = Task.Delay(TimeoutMs)
+        If Task.WhenAny(TargetTask, DelayTask).GetAwaiter().GetResult() Is DelayTask Then
+            TokenSource.Cancel()
+            Throw New TimeoutException($"任务超时（{TimeoutMs} ms）")
+        End If
+        TargetTask.GetAwaiter().GetResult()
+    End Sub
+
+    ''' <summary>
     ''' 可用于临时存放文件的，不含任何特殊字符的文件夹路径，以“\”结尾。
     ''' </summary>
     Public PathPure As String = GetPureASCIIDir()
@@ -2202,6 +2240,19 @@ RetryDir:
         Return CultureInfo.CurrentCulture.Name.StartsWithF("zh-") OrElse CultureInfo.CurrentUICulture.Name.StartsWithF("zh-")
     End Function
 
+    ''' <summary>
+    ''' 判断对象是否为某个泛型类型的实例。
+    ''' </summary>
+    <Extension> Public Function IsInstanceOfGenericType(genericType As Type, obj As Object) As Boolean
+        If obj Is Nothing Then Return False
+        Dim t = obj.GetType()
+        While t IsNot Nothing
+            If t.IsGenericType AndAlso t.GetGenericTypeDefinition() Is genericType Then Return True
+            t = t.BaseType
+        End While
+        Return False
+    End Function
+
     Private Uuid As Integer = 1
     Private UuidLock As Object
     ''' <summary>
@@ -2229,7 +2280,7 @@ RetryDir:
         Next i
     End Function
     ''' <summary>
-    ''' 数组去重。
+    ''' 去重。
     ''' </summary>
     <Extension> Public Function Distinct(Of T)(Arr As ICollection(Of T), IsEqual As ComparisonBoolean(Of T)) As List(Of T)
         Dim ResultArray As New List(Of T)
@@ -2245,6 +2296,15 @@ NextElement:
     <Extension> Public Function Any(Arr As UIElementCollection) As Boolean
         Return Arr?.Count > 0
     End Function
+    ''' <summary>
+    ''' 对集合的每个元素执行指定操作。
+    ''' </summary>
+    <Extension> Public Function ForEach(Of T)(Collection As IEnumerable(Of T), Action As Action(Of T)) As IEnumerable(Of T)
+        For Each Item As T In Collection
+            Action(Item)
+        Next
+        Return Collection
+    End Function
 
     ''' <summary>
     ''' 获取格式类似于“11:08:52.037”的当前时间的字符串。
@@ -2253,10 +2313,10 @@ NextElement:
         Return Date.Now.ToString("HH':'mm':'ss'.'fff")
     End Function
     ''' <summary>
-    ''' 获取系统运行时间（毫秒），保证为正 Long 且大于 1，但可能突变减小。
+    ''' 获取一个单调递增时间值（毫秒）。
     ''' </summary>
-    Public Function GetTimeTick() As Long
-        Return My.Computer.Clock.TickCount + 2147483651L
+    Public Function GetTimeMs() As Long
+        Return Stopwatch.GetTimestamp() \ (Stopwatch.Frequency \ 1000L)
     End Function
     ''' <summary>
     ''' 将时间间隔转换为类似“5 分 10 秒前”的易于阅读的形式。
@@ -2470,10 +2530,46 @@ NextElement:
     End Sub
 
     ''' <summary>
-    ''' 按照既定的函数进行选择排序。
-    ''' 传入两个对象，若第一个对象应该排在前面，则返回 True。
+    ''' 选择最大值对应的对象。
+    ''' 若没有元素则返回 Nothing。
     ''' </summary>
-    <Extension> Public Function Sort(Of T)(List As IList(Of T), SortRule As ComparisonBoolean(Of T)) As List(Of T)
+    <Extension> Public Function MaxOf(Of T, C As IComparable(Of C))(Source As IEnumerable(Of T), Selector As Func(Of T, C)) As T
+        Using Enumerator = Source.GetEnumerator()
+            If Not Enumerator.MoveNext() Then Return Nothing
+            Dim MaxItem As T = Enumerator.Current
+            Dim MaxValue As C = Selector(MaxItem)
+            While Enumerator.MoveNext()
+                Dim Value = Selector(Enumerator.Current)
+                If Value.CompareTo(MaxValue) <= 0 Then Continue While
+                MaxItem = Enumerator.Current
+                MaxValue = Value
+            End While
+            Return MaxItem
+        End Using
+    End Function
+    ''' <summary>
+    ''' 选择最小值对应的对象。
+    ''' 若没有元素则返回 Nothing。
+    ''' </summary>
+    <Extension> Public Function MinOf(Of T, C As IComparable(Of C))(List As IEnumerable(Of T), Selector As Func(Of T, C)) As T
+        Using Enumerator = List.GetEnumerator()
+            If Not Enumerator.MoveNext() Then Return Nothing
+            Dim MinItem As T = Enumerator.Current
+            Dim MinValue As C = Selector(MinItem)
+            While Enumerator.MoveNext()
+                Dim Value = Selector(Enumerator.Current)
+                If Value.CompareTo(MinValue) >= 0 Then Continue While
+                MinItem = Enumerator.Current
+                MinValue = Value
+            End While
+            Return MinItem
+        End Using
+    End Function
+    ''' <summary>
+    ''' 按照既定的函数进行选择排序。
+    ''' 返回第一个对象是否应该排在前面（a > b）。
+    ''' </summary>
+    <Extension> Public Function SortByComparison(Of T)(List As IList(Of T), SortRule As ComparisonBoolean(Of T)) As List(Of T)
         Dim NewList As New List(Of T)
         While List.Any
             Dim Highest = List(0)
@@ -2589,7 +2685,7 @@ Retry:
                 RunInUi(
                 Sub()
                     My.Computer.Clipboard.Clear()
-                    My.Computer.Clipboard.SetText(Text)
+                    If Not String.IsNullOrEmpty(Text) Then My.Computer.Clipboard.SetText(Text)
                 End Sub)
             Catch ex As Exception
                 RetryCount += 1
@@ -2603,6 +2699,21 @@ Retry:
             If ShowSuccessHint Then Hint(GetLang("LangModBaseHintCopySuccess"), HintType.Green)
         End Sub)
     End Sub
+    ''' <summary>
+    ''' 获取剪贴板文本。将在 UI 线程运行，且不会抛出异常。
+    ''' </summary>
+    Public Function ClipboardGetText() As String
+        Dim Result As String = Nothing
+        RunInUiWait(
+        Sub()
+            Try
+                If My.Computer.Clipboard.ContainsText() Then Result = My.Computer.Clipboard.GetText()
+            Catch ex As Exception
+                Log(ex, "获取剪贴板文本失败")
+            End Try
+        End Sub)
+        Return Result
+    End Function
 
     ''' <summary>
     ''' 以 Byte() 形式获取程序中的资源。
@@ -2729,19 +2840,25 @@ Retry:
 
     ''' <summary>
     ''' 将 XML 转换为对应 UI 对象。
+    ''' 注意：性能较差，不应大量使用。
     ''' </summary>
     Public Function GetObjectFromXML(Str As XElement)
         Return GetObjectFromXML(Str.ToString)
     End Function
     ''' <summary>
     ''' 将 XML 转换为对应 UI 对象。
+    ''' 注意：性能较差，不应大量使用。
     ''' </summary>
     Public Function GetObjectFromXML(Str As String) As Object
         Str = Str. '兼容旧版自定义事件写法
             Replace("EventType=""", "local:CustomEventService.EventType=""").
             Replace("EventData=""", "local:CustomEventService.EventData=""").
+            Replace("EventType='", "local:CustomEventService.EventType='").
+            Replace("EventData='", "local:CustomEventService.EventData='").
             Replace("Property=""EventType""", "Property=""local:CustomEventService.EventType""").
-            Replace("Property=""EventData""", "Property=""local:CustomEventService.EventData""")
+            Replace("Property=""EventData""", "Property=""local:CustomEventService.EventData""").
+            Replace("Property='EventType'", "Property='local:CustomEventService.EventType'").
+            Replace("Property='EventData'", "Property='local:CustomEventService.EventData'")
         Using Stream As New MemoryStream(Encoding.UTF8.GetBytes(Str))
             '类型检查
             Using Reader As New XamlXmlReader(Stream)
@@ -3078,7 +3195,7 @@ Retry:
             "操作系统：" & My.Computer.Info.OSFullName & "（32 位：" & Is32BitSystem & "）" & vbCrLf &
             "剩余内存：" & Int(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024) & " M / " & Int(My.Computer.Info.TotalPhysicalMemory / 1024 / 1024) & " M" & vbCrLf &
             "DPI：" & DPI & "（" & Math.Round(DPI / 96, 2) * 100 & "%）" & vbCrLf &
-            "MC 文件夹：" & If(PathMcFolder, "Nothing") & vbCrLf &
+            "MC 文件夹：" & If(McFolderSelected, "Nothing") & vbCrLf &
             "文件位置：" & Path)
     End Sub
 
@@ -3086,6 +3203,7 @@ Retry:
     Public Sub Telemetry([Event] As String, ParamArray Datas As String())
         If Not Setup.Get("SystemSystemTelemetry") Then Return '用户关闭了遥测
         If Not ClsBaseUrl.StartsWithF("http") Then Return '开源版没有设置遥测地址
+        If VersionBranchName = "Debug" Then Return '开发版本不上传遥测
         RunInNewThread(
         Sub()
             Try
@@ -3132,12 +3250,12 @@ Retry:
     ''' <summary>
     ''' 将数组随机打乱。
     ''' </summary>
-    Public Function Shuffle(Of T)(array As IList(Of T)) As IList(Of T)
-        Shuffle = New List(Of T)
-        Do While array.Any
-            Dim i As Integer = RandomInteger(0, array.Count - 1)
-            Shuffle.Add(array(i))
-            array.RemoveAt(i)
+    <Extension> Public Iterator Function Shuffle(Of T)(Raw As IEnumerable(Of T)) As IEnumerable(Of T)
+        Dim RawCopy As New List(Of T)(Raw)
+        Do While RawCopy.Any
+            Dim i As Integer = RandomInteger(0, RawCopy.Count - 1)
+            Yield RawCopy(i)
+            RawCopy.RemoveAt(i)
         Loop
     End Function
 

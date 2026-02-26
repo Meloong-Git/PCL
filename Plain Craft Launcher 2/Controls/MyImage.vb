@@ -85,8 +85,8 @@
             If _ActualSource = value Then Return
             _ActualSource = value
             Try
-                Dim Bitmap As MyBitmap = If(value Is Nothing, Nothing, New MyBitmap(value)) '在这里先触发可能的文件读取，尽量避免在 UI 线程中读取文件
-                RunInUiWait(Sub() MyBase.Source = Bitmap)
+                Dim Bitmap As ImageSource = If(value Is Nothing, Nothing, New MyBitmap(value)) '在这里先触发可能的文件读取，尽量避免在 UI 线程中读取文件
+                RunInUi(Sub() MyBase.Source = Bitmap)
             Catch ex As Exception
                 Log(ex, $"加载图片失败（{value}）")
                 Try
@@ -112,29 +112,25 @@
         End If
         '从缓存加载网络图片
         Dim EnableCache As Boolean = Me.EnableCache
-        Dim TempPath As String = GetTempPath(Source) & If(EnableCache, "", GetUuid()) '不启用缓存时加上随机字符串，避免冲突
+        Dim TempPath As String = $"{PathTemp}MyImage\{GetHash(Source)}.png{If(EnableCache, "", GetUuid())}" '不启用缓存时在末尾加上随机字符串，避免冲突
         Dim TempFile As New FileInfo(TempPath)
         If EnableCache AndAlso TempFile.Exists Then
-            ActualSource = TempPath
+            ActualSource = TempPath '显示缓存的图片
             If (Date.Now - TempFile.LastWriteTime) < FileCacheExpiredTime Then Return '无需刷新缓存
+        Else
+            ActualSource = LoadingSource '显示加载中图片
         End If
         RunInNewThread(
         Sub()
             Dim IsLocalFallback As Boolean = Not String.IsNullOrEmpty(FallbackSource) AndAlso Not FallbackSource.StartsWithF("http")
             Try
                 '下载
-                ActualSource = LoadingSource '显示加载中的占位图片
                 NetDownloadByLoader(
-                    If(FallbackSource?.StartsWithF("http"), {Source, FallbackSource}, {Source}),
+                    If(FallbackSource IsNot Nothing AndAlso FallbackSource.StartsWithF("http") AndAlso Source <> FallbackSource,
+                        {Source, FallbackSource}, {Source}),
                     TempPath, SimulateBrowserHeaders:=True)
-                If EnableCache Then
-                    '保存缓存并显示
-                    RunInUi(Sub() ActualSource = TempPath)
-                Else
-                    '直接显示
-                    RunInUiWait(Sub() ActualSource = TempPath)
-                    File.Delete(TempPath)
-                End If
+                ActualSource = TempPath
+                If Not EnableCache Then File.Delete(TempPath)
             Catch ex As Exception
                 Try
                     If TempPath IsNot Nothing Then File.Delete(TempPath)
@@ -143,7 +139,7 @@
                 '加载本地备用图片
                 If IsLocalFallback Then
                     Try
-                        RunInUiWait(Sub() ActualSource = FallbackSource)
+                        ActualSource = FallbackSource
                         Log(ex, $"下载图片失败，使用本地备用图片（{Source}）")
                         Return
                     Catch exx As Exception
@@ -156,8 +152,5 @@
             End Try
         End Sub, "MyImage PicLoader " & GetUuid() & "#", ThreadPriority.BelowNormal)
     End Sub
-    Public Shared Function GetTempPath(Url As String) As String
-        Return $"{PathTemp}MyImage\{GetHash(Url)}.png"
-    End Function
 
 End Class

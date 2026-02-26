@@ -1,4 +1,4 @@
-﻿Class PageSetupLink
+﻿Public Class PageSetupLink
 
     Private Shadows IsLoaded As Boolean = False
 
@@ -17,13 +17,15 @@
 
     End Sub
     Public Sub Reload()
-        CheckShareMode.Checked = Setup.Get("LinkShareMode")
+        ComboLatencyMode.SelectedIndex = Setup.Get("LinkLatencyMode")
+        TextCustomPeer.Text = Setup.Get("LinkCustomPeer")
     End Sub
 
     '初始化
     Public Sub Reset()
         Try
-            Setup.Reset("LinkShareMode")
+            Setup.Reset("LinkLatencyMode")
+            Setup.Reset("LinkCustomPeer")
 
             Log("[Setup] 已初始化联机页设置")
             Hint("已初始化联机页设置！", HintType.Green, False)
@@ -35,11 +37,11 @@
     End Sub
 
     '将控件改变路由到设置改变
-    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) 'Handles TextLinkName.ValidatedTextChanged
+    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextCustomPeer.ValidatedTextChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Text)
     End Sub
-    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckShareMode.Change
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Checked)
+    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboLatencyMode.SelectionChanged
+        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex)
     End Sub
 
 End Class

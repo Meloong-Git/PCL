@@ -743,9 +743,9 @@ Public Module ModAnimation
     ''' <param name="AniGroup">由 Aa 开头的函数初始化的 AniData 对象集合。</param>
     ''' <param name="Name">动画组的名称。如果重复会直接停止同名动画组。</param>
     Public Sub AniStart(AniGroup As IList, Optional Name As String = "", Optional RefreshTime As Boolean = False)
-        If RefreshTime Then AniLastTick = GetTimeTick() '避免处理动画时已经造成了极大的延迟，导致动画突然结束
+        If RefreshTime Then AniLastTick = GetTimeMs() '避免处理动画时已经造成了极大的延迟，导致动画突然结束
         '添加到正在执行的动画组
-        Dim NewEntry As New AniGroupEntry With {.Data = GetFullList(Of AniData)(AniGroup), .StartTick = GetTimeTick()}
+        Dim NewEntry As New AniGroupEntry With {.Data = GetFullList(Of AniData)(AniGroup), .StartTick = GetTimeMs()}
         If Name = "" Then
             Name = NewEntry.Uuid
         Else
@@ -788,7 +788,7 @@ Public Module ModAnimation
     ''' </summary>
     Public Sub AniStart()
         '初始化计时器
-        AniLastTick = GetTimeTick()
+        AniLastTick = GetTimeMs()
         AniFPSTimer = AniLastTick
         AniRunning = True '标记动画执行开始
 
@@ -798,9 +798,9 @@ Public Module ModAnimation
                 Log("[Animation] 动画线程开始")
                 Do While True
                     '两帧之间的间隔时间
-                    Dim DeltaTime As Long = MathClamp(GetTimeTick() - AniLastTick, 0, 100000)
+                    Dim DeltaTime As Long = MathClamp(GetTimeMs() - AniLastTick, 0, 100000)
                     If DeltaTime < 3 Then GoTo Sleeper
-                    AniLastTick = GetTimeTick()
+                    AniLastTick = GetTimeMs()
                     '记录 FPS
                     If ModeDebug Then
                         If MathClamp(AniLastTick - AniFPSTimer, 0, 100000) >= 500 Then
@@ -840,7 +840,7 @@ Sleeper:
     Public Sub AniTimer(DeltaTick As Integer)
         Try
 
-            If DeltaTick / AniSpeed > 200 Then Log("[Animation] 两个动画帧间隔 " & DeltaTick & " ms", LogLevel.Developer)
+            If DeltaTick / AniSpeed > 100 Then Log("[Animation] 两个动画帧间隔 " & DeltaTick & " ms", LogLevel.Developer)
             Dim i As Integer = -1
             '循环每个动画组
             Do While i + 1 < AniGroups.Count

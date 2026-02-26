@@ -2,15 +2,15 @@
 
     '窗口基础
     Private Sub PageSelectRight_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-        LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\")
+        LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\")
         PanBack.ScrollToHome()
     End Sub
     Private Sub LoaderInit() Handles Me.Initialized
-        PageLoaderInit(Load, PanLoad, PanAllBack, Nothing, McVersionListLoader, AddressOf McVersionListUI, AutoRun:=False)
+        PageLoaderInit(Load, PanLoad, PanAllBack, Nothing, McInstanceListLoader, AddressOf McInstanceListUI, AutoRun:=False)
     End Sub
     Private Sub Load_Click(sender As Object, e As MouseButtonEventArgs) Handles Load.Click
-        If McVersionListLoader.State = LoadState.Failed Then
-            LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+        If McInstanceListLoader.State = LoadState.Failed Then
+            LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
         End If
     End Sub
 
@@ -22,30 +22,29 @@
 
 #Region "结果 UI 化"
 
-    Private Sub McVersionListUI(Loader As LoaderTask(Of String, Integer))
+    Private Sub McInstanceListUI(Loader As LoaderTask(Of String, Integer))
         Try
-            Dim Path As String = Loader.Input
             '加载 UI
             PanMain.Children.Clear()
 
-            For Each Card As KeyValuePair(Of McVersionCardType, List(Of McVersion)) In McVersionList.ToArray
+            For Each Card As KeyValuePair(Of McInstanceCardType, List(Of McInstance)) In McInstanceList.ToArray
                 '确认是否为隐藏版本显示状态
-                If Card.Key = McVersionCardType.Hidden Xor ShowHidden Then Continue For
+                If Card.Key = McInstanceCardType.Hidden Xor ShowHidden Then Continue For
 #Region "确认卡片名称"
                 Dim CardName As String = ""
                 Select Case Card.Key
-                    Case McVersionCardType.OriginalLike
+                    Case McInstanceCardType.OriginalLike
                         CardName = GetLang("LangSelectVersionTypeRegular")
-                    Case McVersionCardType.API
+                    Case McInstanceCardType.API
                         Dim IsForgeExists As Boolean = False
                         Dim IsNeoForgeExists As Boolean = False
                         Dim IsFabricExists As Boolean = False
                         Dim IsLiteExists As Boolean = False
-                        For Each Version As McVersion In Card.Value
-                            If Version.Version.HasFabric Then IsFabricExists = True
-                            If Version.Version.HasLiteLoader Then IsLiteExists = True
-                            If Version.Version.HasForge Then IsForgeExists = True
-                            If Version.Version.HasNeoForge Then IsNeoForgeExists = True
+                        For Each Instance As McInstance In Card.Value
+                            If Instance.Version.HasFabric Then IsFabricExists = True
+                            If Instance.Version.HasLiteLoader Then IsLiteExists = True
+                            If Instance.Version.HasForge Then IsForgeExists = True
+                            If Instance.Version.HasNeoForge Then IsNeoForgeExists = True
                         Next
                         If If(IsLiteExists, 1, 0) + If(IsForgeExists, 1, 0) + If(IsFabricExists, 1, 0) + If(IsNeoForgeExists, 1, 0) > 1 Then
                             CardName = GetLang("LangSelectVersionTypeModAbility")
@@ -58,15 +57,15 @@
                         Else
                             CardName = GetLang("LangSelectVersionTypeFabric")
                         End If
-                    Case McVersionCardType.Error
+                    Case McInstanceCardType.Error
                         CardName = GetLang("LangSelectVersionTypeError")
-                    Case McVersionCardType.Hidden
+                    Case McInstanceCardType.Hidden
                         CardName = GetLang("LangSelectVersionTypeHidden")
-                    Case McVersionCardType.Rubbish
+                    Case McInstanceCardType.Rubbish
                         CardName = GetLang("LangSelectVersionTypeNotCommonlyUsed")
-                    Case McVersionCardType.Star
+                    Case McInstanceCardType.Star
                         CardName = GetLang("LangSelectVersionTypeFavorites")
-                    Case McVersionCardType.Fool
+                    Case McInstanceCardType.Fool
                         CardName = GetLang("LangSelectVersionTypeAprilFool")
                     Case Else
                         Throw New ArgumentException(GetLang("LangSelectVersionTypeUnknown") & "（" & Card.Key & "）")
@@ -80,7 +79,7 @@
                 NewCard.SwapControl = NewStack
                 PanMain.Children.Add(NewCard)
                 '确定卡片是否展开
-                If Card.Key = McVersionCardType.Rubbish OrElse Card.Key = McVersionCardType.Error OrElse Card.Key = McVersionCardType.Fool Then
+                If Card.Key = McInstanceCardType.Rubbish OrElse Card.Key = McInstanceCardType.Error OrElse Card.Key = McInstanceCardType.Fool Then
                     NewCard.IsSwapped = True
                 Else
                     MyCard.StackInstall(NewStack, 0, CardTitle)
@@ -114,13 +113,13 @@
             Log(ex, GetLang("LangSelectVersionListLoadFail"), LogLevel.Feedback)
         End Try
     End Sub
-    Public Shared Sub McVersionListContent(sender As MyListItem, e As EventArgs)
-        Dim Version As McVersion = sender.Tag
+    Public Shared Sub McInstanceListContent(sender As MyListItem, e As EventArgs)
+        Dim Instance As McInstance = sender.Tag
         '注册点击事件
         AddHandler sender.Click, AddressOf Item_Click
         '图标按钮
         Dim BtnStar As New MyIconButton
-        If Version.IsStar Then
+        If Instance.IsStar Then
             BtnStar.ToolTip = GetLang("LangSelectBtnCancelFavorite")
             ToolTipService.SetPlacement(BtnStar, Primitives.PlacementMode.Center)
             ToolTipService.SetVerticalOffset(BtnStar, 30)
@@ -136,17 +135,17 @@
             BtnStar.Logo = Logo.IconButtonLikeLine
         End If
         AddHandler BtnStar.Click, Sub()
-                                      WriteIni(Version.Path & "PCL\Setup.ini", "IsStar", Not Version.IsStar)
-                                      McVersionListForceRefresh = True
-                                      LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+                                      WriteIni(Instance.PathVersion & "PCL\Setup.ini", "IsStar", Not Instance.IsStar)
+                                      McInstanceListForceRefresh = True
+                                      LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
                                   End Sub
         Dim BtnDel As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonDelete}
         BtnDel.ToolTip = GetLang("LangSelectDelete")
         ToolTipService.SetPlacement(BtnDel, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnDel, 30)
         ToolTipService.SetHorizontalOffset(BtnDel, 2)
-        AddHandler BtnDel.Click, Sub() DeleteVersion(sender, Version)
-        If Version.State <> McVersionState.Error Then
+        AddHandler BtnDel.Click, Sub() DeleteInstance(sender, Instance)
+        If Instance.State <> McInstanceState.Error Then
             Dim BtnCont As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonSetup}
             BtnCont.ToolTip = GetLang("LangSelectBtnSet")
             ToolTipService.SetPlacement(BtnCont, Primitives.PlacementMode.Center)
@@ -154,13 +153,13 @@
             ToolTipService.SetHorizontalOffset(BtnCont, 2)
             AddHandler BtnCont.Click,
             Sub()
-                PageVersionLeft.Version = Version
-                FrmMain.PageChange(FormMain.PageType.VersionSetup, 0)
+                PageInstanceLeft.Instance = Instance
+                FrmMain.PageChange(FormMain.PageType.InstanceSetup, 0)
             End Sub
             AddHandler sender.MouseRightButtonUp,
             Sub()
-                PageVersionLeft.Version = Version
-                FrmMain.PageChange(FormMain.PageType.VersionSetup, 0)
+                PageInstanceLeft.Instance = Instance
+                FrmMain.PageChange(FormMain.PageType.InstanceSetup, 0)
             End Sub
             sender.Buttons = {BtnStar, BtnDel, BtnCont}
         Else
@@ -169,8 +168,8 @@
             ToolTipService.SetPlacement(BtnCont, Primitives.PlacementMode.Center)
             ToolTipService.SetVerticalOffset(BtnCont, 30)
             ToolTipService.SetHorizontalOffset(BtnCont, 2)
-            AddHandler BtnCont.Click, Sub() PageVersionOverall.OpenVersionFolder(Version)
-            AddHandler sender.MouseRightButtonUp, Sub() PageVersionOverall.OpenVersionFolder(Version)
+            AddHandler BtnCont.Click, Sub() PageInstanceOverall.OpenInstanceFolder(Instance)
+            AddHandler sender.MouseRightButtonUp, Sub() PageInstanceOverall.OpenInstanceFolder(Instance)
             sender.Buttons = {BtnStar, BtnDel, BtnCont}
         End If
     End Sub
@@ -181,15 +180,15 @@
 
     '点击选项
     Public Shared Sub Item_Click(sender As MyListItem, e As EventArgs)
-        Dim Version As McVersion = sender.Tag
-        If New McVersion(Version.Path).Check Then
+        Dim Instance As McInstance = sender.Tag
+        If New McInstance(Instance.PathVersion).Check Then
             '正常版本
-            McVersionCurrent = Version
-            Setup.Set("LaunchVersionSelect", McVersionCurrent.Name)
+            McInstanceSelected = Instance
+            Setup.Set("LaunchVersionSelect", McInstanceSelected.Name)
             FrmMain.PageBack()
         Else
             '错误版本
-            PageVersionOverall.OpenVersionFolder(Version)
+            PageInstanceOverall.OpenInstanceFolder(Instance)
         End If
     End Sub
 
@@ -197,31 +196,30 @@
         FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadInstall)
     End Sub
 
-    '修改此代码时，同时修改 PageVersionOverall 中的代码
-    Public Shared Sub DeleteVersion(Item As MyListItem, Version As McVersion)
+    '修改此代码时，同时修改 PageInstanceOverall 中的代码
+    Public Shared Sub DeleteInstance(Item As MyListItem, Instance As McInstance)
         Try
             Dim IsShiftPressed As Boolean = My.Computer.Keyboard.ShiftKeyDown
-            Dim IsHintIndie As Boolean = Version.State <> McVersionState.Error AndAlso Version.PathIndie <> PathMcFolder
-            Dim MsgBoxContent As String = If(IsShiftPressed, GetLang("LangSelectDeleteVersionContentB", Version.Name), GetLang("LangSelectDeleteVersionContentA", Version.Name)) & If(IsHintIndie, vbCrLf & GetLang("LangSelectDeleteVersionContentC"), "")
+            Dim IsHintIndie As Boolean = Instance.State <> McInstanceState.Error AndAlso Instance.PathIndie <> McFolderSelected
+            Dim MsgBoxContent As String = If(IsShiftPressed, GetLang("LangSelectDeleteVersionContentB", Version.Name), GetLang("LangSelectDeleteVersionContentA", Instance.Name)) & If(IsHintIndie, vbCrLf & GetLang("LangSelectDeleteVersionContentC"), "")
             Select Case MyMsgBox(MsgBoxContent, GetLang("LangSelectDeleteVersionTitle"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel"),, True)
 
                 Case 1
-                    IniClearCache(Version.PathIndie & "options.txt")
-                    IniClearCache(Version.Path & "PCL\Setup.ini")
+                    IniClearCache(Instance.PathIndie & "options.txt")
+                    IniClearCache(Instance.PathVersion & "PCL\Setup.ini")
                     If IsShiftPressed Then
-                        DeleteDirectory(Version.Path)
-                        Hint(GetLang("LangSelectVersionDeletedPermanently", Version.Name), HintType.Green)
+                        DeleteDirectory(Instance.PathVersion)
                     Else
-                        FileIO.FileSystem.DeleteDirectory(Version.Path, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
-                        Hint(GetLang("LangSelectVersionDeletedToRecycleBin", Version.Name), HintType.Green)
+                        FileIO.FileSystem.DeleteDirectory(Instance.PathVersion, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
                     End If
+                    Hint( GetLang("LangSelectVersionDeleted", Instance.Name), HintType.Green)
                 Case 2
                     Return
                 Case Else
                     Exit Sub
             End Select
             '从 UI 中移除
-            If Version.DisplayType = McVersionCardType.Hidden OrElse Not Version.IsStar Then
+            If Instance.DisplayType = McInstanceCardType.Hidden OrElse Not Instance.IsStar Then
                 '仅出现在当前卡片
                 Dim Parent As StackPanel = Item.Parent
                 If Parent.Children.Count > 2 Then '当前的项目与一个占位符
@@ -229,23 +227,23 @@
                     Dim Card As MyCard = Parent.Parent
                     Card.Title = Card.Title.Replace(Parent.Children.Count - 1, Parent.Children.Count - 2) '有一个占位符
                     Parent.Children.Remove(Item)
-                    If McVersionCurrent IsNot Nothing AndAlso Version.Path = McVersionCurrent.Path Then
+                    If McInstanceSelected IsNot Nothing AndAlso Instance.PathVersion = McInstanceSelected.PathVersion Then
                         '删除当前版本就更改选择
-                        McVersionCurrent = CType(Parent.Children(0), MyListItem).Tag
+                        McInstanceSelected = MyVirtualizingElement.TryInit(Parent.Children(0)).Tag
                     End If
-                    LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.UpdateOnly, MaxDepth:=1, ExtraPath:="versions\")
+                    LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.UpdateOnly, MaxDepth:=1, ExtraPath:="versions\")
                 Else
                     '删除后没剩了
-                    LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+                    LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
                 End If
             Else
                 '同时出现在当前卡片与收藏夹
-                LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+                LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             End If
         Catch ex As OperationCanceledException
-            Log(ex, GetLang("LangSelectVersionDeleteCancelled", Version.Name))
+            Log(ex, GetLang("LangSelectVersionDeleteCancelled", Instance.Name))
         Catch ex As Exception
-            Log(ex, GetLang("LangSelectVersionDeleteFail"), LogLevel.Msgbox)
+            Log(ex, GetLang("LangSelectVersionDeleteFail", Instance.Name), LogLevel.Msgbox)
         End Try
     End Sub
 

@@ -401,6 +401,7 @@ Public Class MyListItem
                 Dim CheckedCount As Integer = 0
                 '收集控件列表与选中个数
                 For Each Control In CType(Parent, Object).Children
+                    Control = MyVirtualizingElement.TryInit(Control)
                     If TypeOf Control Is MyListItem AndAlso CType(Control, MyListItem).Type = CheckType.RadioBox Then
                         RadioboxList.Add(Control)
                         If Control.Checked Then CheckedCount += 1
@@ -549,7 +550,7 @@ Public Class MyListItem
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp
         '菜单虚拟化检测
         If ContentHandler IsNot Nothing Then
-            ContentHandler(sender, e)
+            ContentHandler(Me, e)
             ContentHandler = Nothing
         End If
         '判断当前颜色

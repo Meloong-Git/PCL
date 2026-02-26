@@ -102,7 +102,7 @@ Public Class MyHint
         If CanClose AndAlso Setup.Get(RelativeSetup) Then Visibility = Visibility.Collapsed
     End Sub
     Private Sub BtnClose_Click(sender As Object, e As EventArgs) Handles BtnClose.Click
-        Setup.Set(RelativeSetup, True)
+        Setup.SetSafe(RelativeSetup, True)
         AniDispose(Me, False)
     End Sub
 

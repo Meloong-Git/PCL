@@ -178,7 +178,7 @@
             Try
                 '更新缓存
                 WriteIni(PathTemp & "Cache\Skin\IndexMs.ini", Setup.Get("CacheMsV2Uuid"), SkinAddress)
-                Log(String.Format("[Skin] 已写入皮肤地址缓存 {0} -> {1}", Setup.Get("CacheMsV2Uuid"), SkinAddress))
+                Log($"[Skin] 已写入皮肤地址缓存 {Setup.Get("CacheMsV2Uuid")} -> {SkinAddress}")
                 '刷新控件
                 For Each SkinLoader In {PageLaunchLeft.SkinMs, PageLaunchLeft.SkinLegacy}
                     SkinLoader.WaitForExit(IsForceRestart:=True)
@@ -232,7 +232,7 @@ Retry:
                 Dim Uuid As String = McLoginMsLoader.Output.Uuid
                 Dim SkinData As JObject = GetJson(McLoginMsLoader.Output.ProfileJson)
                 '获取玩家的所有披风
-                Dim SelId As Integer? = Nothing
+                Dim SelectedIndex As Integer? = Nothing
                 RunInUiWait(
                 Sub()
                     Try
@@ -243,25 +243,26 @@ Retry:
                             {"Minecon2013", GetLang("LangMySkinCapeNameMinecon2013")}, {"Minecon2015", GetLang("LangMySkinCapeNameMinecon2015")}, {"Minecon2016", GetLang("LangMySkinCapeNameMinecon2016")},
                             {"Cherry Blossom", GetLang("LangMySkinCapeNameCherryBlossom")}, {"15th Anniversary", GetLang("LangMySkinCapeName15th-Anniversary")}, {"Purple Heart", GetLang("LangMySkinCapeNamePurpleHeart")},
                             {"Follower's", GetLang("LangMySkinCapeNameFollower's")}, {"MCC 15th Year", GetLang("LangMySkinCapeNameMCC15thYear")}, {"Minecraft Experience", GetLang("LangMySkinCapeNameMinecraftExperience")},
-                            {"Mojang Office", GetLang("LangMySkinCapeNameMojangOffice")}, {"Waiting", GetLang("LangMySkinCapeNameHome")}, {"Menace", GetLang("LangMySkinCapeNameMenace")}, {"Yearn", GetLang("LangMySkinCapeNameYearn")},
-                            {"Common", GetLang("LangMySkinCapeNameCommon")}, {"Pan", GetLang("LangMySkinCapeNamePan")}, {"Founder's", GetLang("LangMySkinCapeNameFounders")}, {"Copper", GetLang("LangMySkinCapeNameCopper")}
+                            {"Mojang Office", GetLang("LangMySkinCapeNameMojangOffice")}, {"Home", GetLang("LangMySkinCapeNameHome")}, {"Menace", GetLang("LangMySkinCapeNameMenace")}, {"Yearn", GetLang("LangMySkinCapeNameYearn")},
+                            {"Common", GetLang("LangMySkinCapeNameCommon")}, {"Pan", GetLang("LangMySkinCapeNamePan")}, {"Founder's", GetLang("LangMySkinCapeNameFounders")}, {"Copper", GetLang("LangMySkinCapeNameCopper")}, {"Zombie Horse", GetLang("LangMySkinCapeNameZombieHorse")}
                         }
-                        Dim SelectionControl As New List(Of IMyRadio) From {New MyRadioBox With {.Text = GetLang("LangMySkinCapeNameNone")}}
+                        Dim SelectionControl As New List(Of IMyRadio) From {
+                            New MyRadioBox With {.Text = GetLang("LangMySkinCapeNameNone"), .Checked = Not SkinData("capes").Any(Function(c) c("state")?.ToString = "ACTIVE")}}
                         For Each Cape In SkinData("capes")
                             Dim CapeName As String = Cape("alias").ToString
                             If CapeNames.ContainsKey(CapeName) Then CapeName = CapeNames(CapeName)
-                            SelectionControl.Add(New MyRadioBox With {.Text = CapeName})
+                            SelectionControl.Add(New MyRadioBox With {.Text = CapeName, .Checked = Cape("state")?.ToString = "ACTIVE"})
                         Next
-                        SelId = MyMsgBoxSelect(SelectionControl, GetLang("LangMySkinDialogChooseCape"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel"))
+                        SelectedIndex = MyMsgBoxSelect(SelectionControl, GetLang("LangMySkinDialogChooseCape"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel"))
                     Catch ex As Exception
                         Log(ex, "获取玩家皮肤列表失败", LogLevel.Feedback)
                     End Try
                 End Sub)
-                If SelId Is Nothing Then Return
+                If SelectedIndex Is Nothing Then Return
                 '发送请求
                 Dim Result As String = NetRequestByClientRetry("https://api.minecraftservices.com/minecraft/profile/capes/active",
-                    If(SelId = 0, HttpMethod.Delete, HttpMethod.Put),
-                    Content:=If(SelId = 0, "", New JObject(New JProperty("capeId", SkinData("capes")(SelId - 1)("id"))).ToString(0)),
+                    If(SelectedIndex = 0, HttpMethod.Delete, HttpMethod.Put),
+                    Content:=If(SelectedIndex = 0, "", New JObject(New JProperty("capeId", SkinData("capes")(SelectedIndex - 1)("id"))).ToString(0)),
                     ContentType:="application/json",
                     Headers:={{"Authorization", "Bearer " & AccessToken}})
                 If Result.Contains("""errorMessage""") Then
@@ -269,6 +270,12 @@ Retry:
                     Return
                 Else
                     Hint(GetLang("LangMySkinHintChangeCapeSuccess"), HintType.Green)
+                    '更新当前选择的披风
+                    For Each Cape In SkinData("capes")
+                        Cape("state") = "INACTIVE"
+                    Next
+                    If SelectedIndex > 0 Then SkinData("capes")(SelectedIndex - 1)("state") = "ACTIVE"
+                    McLoginMsLoader.Output.ProfileJson = SkinData.ToString()
                 End If
             Catch ex As Exception
                 Log(ex, GetLang("LangMySkinHintChangeCapeFail"), LogLevel.Hint)

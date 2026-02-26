@@ -1,9 +1,6 @@
 ﻿Public Class ModSetup
+    Private Const VersionSetup As Integer = 1
 
-    ''' <summary>
-    ''' 设置的更新号。
-    ''' </summary>
-    Public Const VersionSetup As Integer = 1
     ''' <summary>
     ''' 设置列表。
     ''' </summary>
@@ -43,6 +40,7 @@
         {"SystemSystemUpdate", New SetupEntry(0)},
         {"SystemSystemActivity", New SetupEntry(0)},
         {"SystemSystemTelemetry", New SetupEntry(True, Source:=SetupSource.Registry)},
+        {"CacheDrops", New SetupEntry("", Source:=SetupSource.Registry)},
         {"CacheConfig", New SetupEntry(0, Source:=SetupSource.Registry)},
         {"CacheExportConfig", New SetupEntry("", Source:=SetupSource.Registry)},
         {"CacheSavedPageUrl", New SetupEntry("", Source:=SetupSource.Registry)},
@@ -111,8 +109,9 @@
         {"LaunchAdvanceGraphicCard", New SetupEntry(True, Source:=SetupSource.Registry)},
         {"LaunchRamType", New SetupEntry(0)},
         {"LaunchRamCustom", New SetupEntry(15)},
-        {"LinkOfflineHint", New SetupEntry(False, Source:=SetupSource.Registry)},
-        {"LinkShareMode", New SetupEntry(True, Source:=SetupSource.Registry)},
+        {"LinkLastAutoJoinInviteCode", New SetupEntry("", Source:=SetupSource.Registry)},
+        {"LinkLatencyMode", New SetupEntry(0, Source:=SetupSource.Registry)},
+        {"LinkCustomPeer", New SetupEntry("")},
         {"LinkEasyTierVersion", New SetupEntry(-1, Source:=SetupSource.Registry)},
         {"ToolHelpLanguage", New SetupEntry(True, Source:=SetupSource.Registry)},
         {"ToolDownloadThread", New SetupEntry(63, Source:=SetupSource.Registry)},
@@ -172,29 +171,29 @@
         {"UiHiddenOtherVote", New SetupEntry(False)},
         {"UiHiddenOtherAbout", New SetupEntry(False)},
         {"UiHiddenOtherTest", New SetupEntry(False)},
-        {"VersionAdvanceJvm", New SetupEntry("", Source:=SetupSource.Version)},
-        {"VersionAdvanceGame", New SetupEntry("", Source:=SetupSource.Version)},
-        {"VersionAdvanceAssets", New SetupEntry(0, Source:=SetupSource.Version)},
-        {"VersionAdvanceAssetsV2", New SetupEntry(False, Source:=SetupSource.Version)},
-        {"VersionAdvanceJava", New SetupEntry(False, Source:=SetupSource.Version)},
-        {"VersionAdvanceRun", New SetupEntry("", Source:=SetupSource.Version)},
-        {"VersionAdvanceRunWait", New SetupEntry(True, Source:=SetupSource.Version)},
-        {"VersionAdvanceDisableJLW", New SetupEntry(False, Source:=SetupSource.Version)},
-        {"VersionAdvanceDisableModUpdate", New SetupEntry(False, Source:=SetupSource.Version)},
-        {"VersionRamType", New SetupEntry(2, Source:=SetupSource.Version)},
-        {"VersionRamCustom", New SetupEntry(15, Source:=SetupSource.Version)},
-        {"VersionRamOptimize", New SetupEntry(0, Source:=SetupSource.Version)},
-        {"VersionArgumentTitle", New SetupEntry("", Source:=SetupSource.Version)},
-        {"VersionArgumentInfo", New SetupEntry("", Source:=SetupSource.Version)},
-        {"VersionArgumentIndie", New SetupEntry(-1, Source:=SetupSource.Version)},
-        {"VersionArgumentIndieV2", New SetupEntry(False, Source:=SetupSource.Version)},
-        {"VersionArgumentJavaSelect", New SetupEntry("使用全局设置", Source:=SetupSource.Version)},
-        {"VersionServerEnter", New SetupEntry("", Source:=SetupSource.Version)},
-        {"VersionServerLogin", New SetupEntry(If(IsLocationZH(), 0, 1), Source:=SetupSource.Version)},
-        {"VersionServerNide", New SetupEntry("", Source:=SetupSource.Version)},
-        {"VersionServerAuthRegister", New SetupEntry("", Source:=SetupSource.Version)},
-        {"VersionServerAuthName", New SetupEntry("", Source:=SetupSource.Version)},
-        {"VersionServerAuthServer", New SetupEntry("", Source:=SetupSource.Version)}
+        {"VersionAdvanceJvm", New SetupEntry("", Source:=SetupSource.Instance)},
+        {"VersionAdvanceGame", New SetupEntry("", Source:=SetupSource.Instance)},
+        {"VersionAdvanceAssets", New SetupEntry(0, Source:=SetupSource.Instance)},
+        {"VersionAdvanceAssetsV2", New SetupEntry(False, Source:=SetupSource.Instance)},
+        {"VersionAdvanceJava", New SetupEntry(False, Source:=SetupSource.Instance)},
+        {"VersionAdvanceRun", New SetupEntry("", Source:=SetupSource.Instance)},
+        {"VersionAdvanceRunWait", New SetupEntry(True, Source:=SetupSource.Instance)},
+        {"VersionAdvanceDisableJLW", New SetupEntry(False, Source:=SetupSource.Instance)},
+        {"VersionAdvanceDisableModUpdate", New SetupEntry(False, Source:=SetupSource.Instance)},
+        {"VersionRamType", New SetupEntry(2, Source:=SetupSource.Instance)},
+        {"VersionRamCustom", New SetupEntry(15, Source:=SetupSource.Instance)},
+        {"VersionRamOptimize", New SetupEntry(0, Source:=SetupSource.Instance)},
+        {"VersionArgumentTitle", New SetupEntry("", Source:=SetupSource.Instance)},
+        {"VersionArgumentInfo", New SetupEntry("", Source:=SetupSource.Instance)},
+        {"VersionArgumentIndie", New SetupEntry(-1, Source:=SetupSource.Instance)},
+        {"VersionArgumentIndieV2", New SetupEntry(False, Source:=SetupSource.Instance)},
+        {"VersionArgumentJavaSelect", New SetupEntry("使用全局设置", Source:=SetupSource.Instance)},
+        {"VersionServerEnter", New SetupEntry("", Source:=SetupSource.Instance)},
+        {"VersionServerLogin", New SetupEntry(If(IsLocationZH(), 0, 1), Source:=SetupSource.Instance)},
+        {"VersionServerNide", New SetupEntry("", Source:=SetupSource.Instance)},
+        {"VersionServerAuthRegister", New SetupEntry("", Source:=SetupSource.Instance)},
+        {"VersionServerAuthName", New SetupEntry("", Source:=SetupSource.Instance)},
+        {"VersionServerAuthServer", New SetupEntry("", Source:=SetupSource.Instance)}
     }
 
 #Region "基础"
@@ -202,7 +201,7 @@
     Private Enum SetupSource
         Normal
         Registry
-        Version
+        Instance
     End Enum
     Private Class SetupEntry
 
@@ -237,18 +236,18 @@
     ''' <summary>
     ''' 改变某个设置项的值。
     ''' </summary>
-    Public Sub [Set](Key As String, Value As Object, Optional ForceReload As Boolean = False, Optional Version As McVersion = Nothing)
-        [Set](Key, Value, SetupDict(Key), ForceReload, Version)
+    Public Sub [Set](Key As String, Value As Object, Optional ForceReload As Boolean = False, Optional Instance As McInstance = Nothing)
+        [Set](Key, Value, SetupDict(Key), ForceReload, Instance)
     End Sub
     ''' <summary>
     ''' 写入某个未经加密的设置项。
     ''' 若该设置项经过了加密，则会抛出异常。
     ''' </summary>
-    Public Sub SetSafe(Key As String, Value As Object, Optional ForceReload As Boolean = False, Optional Version As McVersion = Nothing)
+    Public Sub SetSafe(Key As String, Value As Object, Optional ForceReload As Boolean = False, Optional Instance As McInstance = Nothing)
         If SetupDict(Key).Encoded Then Throw New InvalidOperationException("禁止写入加密设置项：" & Key)
-        [Set](Key, Version, ForceReload, Version)
+        [Set](Key, Instance, ForceReload, Instance)
     End Sub
-    Private Sub [Set](Key As String, Value As Object, E As SetupEntry, ForceReload As Boolean, Version As McVersion)
+    Private Sub [Set](Key As String, Value As Object, E As SetupEntry, ForceReload As Boolean, Instance As McInstance)
         Try
 
             Value = CTypeDynamic(Value, E.Type)
@@ -257,7 +256,7 @@
                 If E.Value = Value AndAlso Not ForceReload Then Return
             Else
                 '如果未应用，则直接更改并应用
-                If E.Source <> SetupSource.Version Then E.State = 2
+                If E.Source <> SetupSource.Instance Then E.State = 2
             End If
             '设置新值
             E.Value = Value
@@ -275,9 +274,9 @@
                     WriteIni("Setup", Key, Value)
                 Case SetupSource.Registry
                     WriteReg(Key, Value)
-                Case SetupSource.Version
-                    If Version Is Nothing Then Throw New Exception($"更改版本设置 {Key} 时未提供目标版本")
-                    WriteIni(Version.Path & "PCL\Setup.ini", Key, Value)
+                Case SetupSource.Instance
+                    If Instance Is Nothing Then Throw New Exception($"更改版本设置 {Key} 时未提供目标版本")
+                    WriteIni(Instance.PathVersion & "PCL\Setup.ini", Key, Value)
             End Select
             '应用
             '例如 VersionServerLogin 要求在设置之后再引发事件
@@ -292,15 +291,15 @@
     ''' <summary>
     ''' 应用某个设置项的值。
     ''' </summary>
-    Public Function Load(Key As String, Optional ForceReload As Boolean = False, Optional Version As McVersion = Nothing)
-        Return Load(Key, SetupDict(Key), ForceReload, Version)
+    Public Function Load(Key As String, Optional ForceReload As Boolean = False, Optional Instance As McInstance = Nothing)
+        Return Load(Key, SetupDict(Key), ForceReload, Instance)
     End Function
-    Private Function Load(Key As String, E As SetupEntry, ForceReload As Boolean, Version As McVersion)
+    Private Function Load(Key As String, E As SetupEntry, ForceReload As Boolean, Instance As McInstance)
         '如果已经应用过，则什么也不干
         If E.State = 2 AndAlso Not ForceReload Then Return E.Value
         '读取，应用并设置状态
-        Read(Key, E, Version)
-        If E.Source <> SetupSource.Version Then E.State = 2
+        Read(Key, E, Instance)
+        If E.Source <> SetupSource.Instance Then E.State = 2
         Dim Method As Reflection.MethodInfo = GetType(ModSetup).GetMethod(Key)
         If Method IsNot Nothing Then Method.Invoke(Me, {E.Value})
         Return E.Value
@@ -309,19 +308,19 @@
     ''' <summary>
     ''' 获取某个设置项的值。
     ''' </summary>
-    Public Function [Get](Key As String, Optional Version As McVersion = Nothing)
+    Public Function [Get](Key As String, Optional Instance As McInstance = Nothing)
         If Not SetupDict.ContainsKey(Key) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
-        Return [Get](Key, SetupDict(Key), Version)
+        Return [Get](Key, SetupDict(Key), Instance)
     End Function
     ''' <summary>
     ''' 获取某个未经加密的设置项的值。
     ''' 若该设置项经过了加密，则会抛出异常。
     ''' </summary>
-    Public Function GetSafe(Key As String, Optional Version As McVersion = Nothing)
+    Public Function GetSafe(Key As String, Optional Instance As McInstance = Nothing)
         If SetupDict(Key).Encoded Then Throw New InvalidOperationException("禁止读取加密设置项：" & Key)
-        Return [Get](Key, Version)
+        Return [Get](Key, Instance)
     End Function
-    Private Function [Get](Key As String, E As SetupEntry, Version As McVersion)
+    Private Function [Get](Key As String, E As SetupEntry, Instance As McInstance)
         '获取强制值
         Dim Force As String = ForceValue(Key)
         If Force IsNot Nothing Then
@@ -330,8 +329,8 @@
         End If
         '如果尚未读取过，则读取
         If E.State = 0 Then
-            Read(Key, E, Version)
-            If E.Source <> SetupSource.Version Then E.State = 1
+            Read(Key, E, Instance)
+            If E.Source <> SetupSource.Instance Then E.State = 1
         End If
         '返回现在的值
         Return E.Value
@@ -340,17 +339,17 @@
     ''' <summary>
     ''' 初始化某个设置项的值。
     ''' </summary>
-    Public Sub Reset(Key As String, Optional ForceReload As Boolean = False, Optional Version As McVersion = Nothing)
+    Public Sub Reset(Key As String, Optional ForceReload As Boolean = False, Optional Instance As McInstance = Nothing)
         Dim E As SetupEntry = SetupDict(Key)
-        [Set](Key, E.DefaultValue, E, ForceReload, Version)
+        [Set](Key, E.DefaultValue, E, ForceReload, Instance)
         Select Case SetupDict(Key).Source
             Case SetupSource.Normal
                 DeleteIniKey("Setup", Key)
             Case SetupSource.Registry
                 DeleteReg(Key)
-            Case Else 'SetupSource.Version
-                If Version Is Nothing Then Throw New Exception($"重置版本设置 {Key} 时未提供目标版本")
-                DeleteIniKey(Version.Path & "PCL\Setup.ini", Key)
+            Case Else 'SetupSource.Instance
+                If Instance Is Nothing Then Throw New Exception($"重置版本设置 {Key} 时未提供目标版本")
+                DeleteIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
         End Select
     End Sub
     ''' <summary>
@@ -362,22 +361,22 @@
     ''' <summary>
     ''' 某个设置项是否从未被设置过。
     ''' </summary>
-    Public Function IsUnset(Key As String, Optional Version As McVersion = Nothing) As Boolean
+    Public Function IsUnset(Key As String, Optional Instance As McInstance = Nothing) As Boolean
         Select Case SetupDict(Key).Source
             Case SetupSource.Normal
                 Return Not HasIniKey("Setup", Key)
             Case SetupSource.Registry
                 Return Not HasReg(Key)
-            Case Else 'SetupSource.Version
-                If Version Is Nothing Then Throw New Exception($"判断版本设置 {Key} 是否存在时未提供目标版本")
-                Return Not HasIniKey(Version.Path & "PCL\Setup.ini", Key)
+            Case Else 'SetupSource.Instance
+                If Instance Is Nothing Then Throw New Exception($"判断版本设置 {Key} 是否存在时未提供目标版本")
+                Return Not HasIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
         End Select
     End Function
 
     ''' <summary>
     ''' 读取设置。
     ''' </summary>
-    Private Sub Read(Key As String, ByRef E As SetupEntry, Version As McVersion)
+    Private Sub Read(Key As String, ByRef E As SetupEntry, Instance As McInstance)
         Try
             If Not E.State = 0 Then Return
             Dim SourceValue As String = Nothing '先用 String 储存，避免类型转换
@@ -386,11 +385,11 @@
                     SourceValue = ReadIni("Setup", Key, E.DefaultValueEncoded)
                 Case SetupSource.Registry
                     SourceValue = ReadReg(Key, E.DefaultValueEncoded)
-                Case SetupSource.Version
-                    If Version Is Nothing Then
+                Case SetupSource.Instance
+                    If Instance Is Nothing Then
                         Throw New Exception("读取版本设置 " & Key & " 时未提供目标版本")
                     Else
-                        SourceValue = ReadIni(Version.Path & "PCL\Setup.ini", Key, E.DefaultValueEncoded)
+                        SourceValue = ReadIni(Instance.PathVersion & "PCL\Setup.ini", Key, E.DefaultValueEncoded)
                     End If
             End Select
             If E.Encoded Then
@@ -418,6 +417,8 @@
 #If BETA Then
         If Key = "UiLauncherTheme" Then Return "0"
 #End If
+        If Key = "UiHiddenPageLink" Then Return True
+        If Key = "UiHiddenSetupLink" Then Return True
         Return Nothing
     End Function
 
@@ -428,11 +429,11 @@
     '切换选择
     Public Sub LaunchVersionSelect(Value As String)
         Log("[Setup] 当前选择的 Minecraft 版本：" & Value)
-        WriteIni(PathMcFolder & "PCL.ini", "Version", If(IsNothing(McVersionCurrent), "", McVersionCurrent.Name))
+        WriteIni(McFolderSelected & "PCL.ini", "Version", If(IsNothing(McInstanceSelected), "", McInstanceSelected.Name))
     End Sub
     Public Sub LaunchFolderSelect(Value As String)
         Log("[Setup] 当前选择的 Minecraft 文件夹：" & Value.ToString.Replace("$", Path))
-        PathMcFolder = Value.ToString.Replace("$", Path)
+        McFolderSelected = Value.ToString.Replace("$", Path)
     End Sub
 
     '游戏内存
@@ -765,18 +766,18 @@
 
     '游戏内存
     Public Sub VersionRamType(Type As Integer)
-        If FrmVersionSetup Is Nothing Then Return
-        FrmVersionSetup.RamType(Type)
+        If FrmInstanceSetup Is Nothing Then Return
+        FrmInstanceSetup.RamType(Type)
     End Sub
 
     '服务器
     Public Sub VersionServerLogin(Type As Integer)
-        If FrmVersionSetup Is Nothing Then Return
+        If FrmInstanceSetup Is Nothing Then Return
         '为第三方登录清空缓存以更新描述
-        WriteIni(PathMcFolder & "PCL.ini", "VersionCache", "")
-        If PageVersionLeft.Version Is Nothing Then Return
-        PageVersionLeft.Version = New McVersion(PageVersionLeft.Version.Name).Load()
-        LoaderFolderRun(McVersionListLoader, PathMcFolder, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+        WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "")
+        If PageInstanceLeft.Instance Is Nothing Then Return
+        PageInstanceLeft.Instance = New McInstance(PageInstanceLeft.Instance.Name).Load()
+        LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
     End Sub
 
 #End Region

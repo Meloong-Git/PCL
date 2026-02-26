@@ -295,7 +295,7 @@
 
             If (State = LoadState.Loading OrElse State = LoadState.Finished) AndAlso '正在加载或已结束…
                (IgnoreReloadTimeout OrElse ReloadTimeout = -1 OrElse
-               LastFinishedTime = 0 OrElse GetTimeTick() - LastFinishedTime < ReloadTimeout) Then '…且没有超时…
+               LastFinishedTime = 0 OrElse GetTimeMs() - LastFinishedTime < ReloadTimeout) Then '…且没有超时…
                 Return False '…则不重试
             Else
                 Return True '否则需要重启
@@ -328,7 +328,7 @@
                     If ModeDebug AndAlso Not LogBlackList.Contains(Name) Then Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已完成")
                     RaisePreviewFinish()
                     State = LoadState.Finished
-                    LastFinishedTime = GetTimeTick() '未中断，本次输出有效
+                    LastFinishedTime = GetTimeMs() '未中断，本次输出有效
                 Catch ex As CancelledException
                     If ModeDebug Then Log(ex, $"加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已触发取消中断，已完成 {Math.Round(Progress * 100)}%")
                     If Not IsAborted Then State = LoadState.Aborted
@@ -341,15 +341,20 @@
                     Failed(ex)
                 End Try
             End Sub) With {.Name = "L/" & Name, .Priority = ThreadPriority}
-            LastRunningThread.Start() '不能使用 RunInNewThread，否则在函数返回前线程就会运行完，导致误判 IsAborted
+            Try
+                LastRunningThread.Start() '不能使用 RunInNewThread，否则在函数返回前线程就会运行完，导致误判 IsAborted
+            Catch ex As ThreadStateException '若遇到偶发的 “线程正在运行或被终止”，则等待后重试
+                Thread.Sleep(500)
+                LastRunningThread.Start()
+            End Try
         End Sub
         Public Overrides Sub Failed(ex As Exception)
+            [Error] = ex
             SyncLock LockState
                 If IsAborted OrElse State >= LoadState.Finished Then Return
                 State = LoadState.Failed
             End SyncLock
             Log(ex, $"加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 出错，已完成 {Math.Round(Progress * 100)}%", LogLevel.Developer)
-            [Error] = ex
             TriggerThreadAbort()
         End Sub
         Public Overrides Sub Abort()
@@ -464,11 +469,11 @@
             End Sub)
         End Sub
         Public Overrides Sub Failed(Ex As Exception)
+            [Error] = Ex '先设置错误再调整状态，防止父加载器获取不到异常
             SyncLock LockState
                 If State >= LoadState.Finished Then Return
                 State = LoadState.Failed
             End SyncLock
-            [Error] = Ex
             For Each Loader In Loaders
                 Loader.Abort()
             Next

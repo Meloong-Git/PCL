@@ -121,7 +121,7 @@ Retry:
                 Next
                 Throw New Exception("未知错误（" & Result & "）")
             Catch ex As Exception
-                If TypeOf ex Is OperationCanceledException Then
+                If TypeOf ex Is OperationCanceledException OrElse TypeOf ex Is TimeoutException Then
                     Hint(GetLang("LangPageLoginMsSkinChangeSkinFailByTimeOut"), HintType.Red)
                 Else
                     Log(ex, GetLang("LangPageLoginMsSkinChangeSkinFail"), LogLevel.Hint)

@@ -218,6 +218,10 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ValueTuple, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="mscorlib" />
@@ -237,6 +241,7 @@
     </ApplicationDefinition>
     <Compile Include="Controls\Behaviors\ClipboardInterceptor.vb" />
     <Compile Include="Controls\Behaviors\Interfaces.vb" />
+    <Compile Include="Controls\Behaviors\LazyLoadBehavior.vb" />
     <Compile Include="Controls\MyComboBox.vb" />
     <Compile Include="Controls\MyComboBoxItem.vb" />
     <Compile Include="Controls\MyCard.vb" />
@@ -249,12 +254,13 @@
     <Compile Include="Controls\MyIconTextButton.xaml.vb">
       <DependentUpon>MyIconTextButton.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\MyVirtualizingElement.vb" />
     <Compile Include="Modules\Minecraft\ModComp.vb" />
     <Compile Include="Modules\Minecraft\ModJava.vb" />
     <Compile Include="Modules\Minecraft\ModMod.vb" />
     <Compile Include="Modules\Minecraft\ModModpack.vb" />
     <Compile Include="Modules\ThirdParty\DragHelper.vb" />
-    <Compile Include="Pages\PageVersion\MyLocalModItem.xaml.vb">
+    <Compile Include="Pages\PageInstance\MyLocalModItem.xaml.vb">
       <DependentUpon>MyLocalModItem.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modules\ModEvent.vb" />
@@ -340,23 +346,23 @@
     <Compile Include="Pages\PageOther\PageOtherHelpDetail.xaml.vb">
       <DependentUpon>PageOtherHelpDetail.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionExport.xaml.vb">
-      <DependentUpon>PageVersionExport.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceExport.xaml.vb">
+      <DependentUpon>PageInstanceExport.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionLeft.xaml.vb">
-      <DependentUpon>PageVersionLeft.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceLeft.xaml.vb">
+      <DependentUpon>PageInstanceLeft.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionMod.xaml.vb">
-      <DependentUpon>PageVersionMod.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceMod.xaml.vb">
+      <DependentUpon>PageInstanceMod.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionModDisabled.xaml.vb">
-      <DependentUpon>PageVersionModDisabled.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceModDisabled.xaml.vb">
+      <DependentUpon>PageInstanceModDisabled.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionOverall.xaml.vb">
-      <DependentUpon>PageVersionOverall.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceOverall.xaml.vb">
+      <DependentUpon>PageInstanceOverall.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageVersion\PageVersionSetup.xaml.vb">
-      <DependentUpon>PageVersionSetup.xaml</DependentUpon>
+    <Compile Include="Pages\PageInstance\PageInstanceSetup.xaml.vb">
+      <DependentUpon>PageInstanceSetup.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\MyDropShadow.vb" />
     <Compile Include="Modules\Base\ModLoader.vb" />
@@ -524,7 +530,7 @@
       <DependentUpon>FormMain.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Pages\PageVersion\MyLocalModItem.xaml">
+    <Page Include="Pages\PageInstance\MyLocalModItem.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -602,7 +608,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionExport.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceExport.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -742,23 +748,23 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionLeft.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceLeft.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionMod.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceMod.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionModDisabled.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceModDisabled.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionOverall.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceOverall.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageVersion\PageVersionSetup.xaml">
+    <Page Include="Pages\PageInstance\PageInstanceSetup.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -990,7 +996,9 @@
   <ItemGroup>
     <None Include="Resources\libwebp64.dll" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Images\Heads\EasyTier.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <Import Project="..\packages\Fody.6.8.2\build\Fody.targets" Condition="Exists('..\packages\Fody.6.8.2\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
