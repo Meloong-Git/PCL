@@ -201,7 +201,7 @@
         Try
             Dim IsShiftPressed As Boolean = My.Computer.Keyboard.ShiftKeyDown
             Dim IsHintIndie As Boolean = Instance.State <> McInstanceState.Error AndAlso Instance.PathIndie <> McFolderSelected
-            Dim MsgBoxContent As String = If(IsShiftPressed, GetLang("LangSelectDeleteVersionContentB", Version.Name), GetLang("LangSelectDeleteVersionContentA", Instance.Name)) & If(IsHintIndie, vbCrLf & GetLang("LangSelectDeleteVersionContentC"), "")
+            Dim MsgBoxContent As String = If(IsShiftPressed, GetLang("LangSelectDeleteVersionContentB", Instance.Name), GetLang("LangSelectDeleteVersionContentA", Instance.Name)) & If(IsHintIndie, vbCrLf & GetLang("LangSelectDeleteVersionContentC"), "")
             Select Case MyMsgBox(MsgBoxContent, GetLang("LangSelectDeleteVersionTitle"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel"),, True)
 
                 Case 1

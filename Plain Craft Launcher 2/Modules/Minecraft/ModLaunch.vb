@@ -1946,10 +1946,10 @@ NextInstance:
                     RequiredLang = Lang.ToLower.Replace("-", "_")
                 End If
             End If
-            If McVersionCurrent.Version.McCodeMain < 15 And RequiredLang.Equals("lzh") Then '1.15 之前的版本不支持 lzh
+            If McInstanceSelected.Version.Drop < 15 And RequiredLang.Equals("lzh") Then '1.15 之前的版本不支持 lzh
                 RequiredLang = "zh_cn"
             End If
-            If McVersionCurrent.Version.McCodeMain < 15 And RequiredLang.Equals("zh_hk") Then '1.15 之前的版本不支持 zh_hk
+            If McInstanceSelected.Version.Drop < 15 And RequiredLang.Equals("zh_hk") Then '1.15 之前的版本不支持 zh_hk
                 RequiredLang = "zh_tw"
             End If
 

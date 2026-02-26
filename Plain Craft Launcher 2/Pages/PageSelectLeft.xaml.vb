@@ -316,9 +316,9 @@
     End Sub
     Public Sub Delete_Click(sender As Object, e As RoutedEventArgs)
         Dim Folder As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
-        Dim DeleteText As String = If((Folder.Type = McFolderType.Original OrElse Folder.Type = McFolderType.RenamedOriginal) AndAlso Folder.Path = Path & ".minecraft\" AndAlso McFolderList.Count = 1, "清空", "删除")
-        If MyMsgBox("你确定要" & DeleteText & "这个文件夹吗？" & vbCrLf & "目标文件夹：" & Folder.Path & vbCrLf & vbCrLf & "这会导致该文件夹中的所有存档与其他文件永久丢失，且不可恢复！", "删除警告", "取消", "确认", "取消") <> 2 Then Return
-        If MyMsgBox("如果你在该文件夹中存放了除 MC 以外的其他文件，这些文件也会被一同删除！" & vbCrLf & "继续删除会导致该文件夹中的所有文件永久丢失，请在仔细确认后再继续！" & vbCrLf & "目标文件夹：" & Folder.Path & vbCrLf & vbCrLf & "这是最后一次警告！", "删除警告", "确认" & DeleteText, "取消", IsWarn:=True) <> 1 Then Return
+        Dim DeleteText As String = If((Folder.Type = McFolder.Types.Original OrElse Folder.Type = McFolder.Types.RenamedOriginal) AndAlso Folder.Location = Path & ".minecraft\" AndAlso McFolderList.Count = 1, "清空", "删除")
+        If MyMsgBox("你确定要" & DeleteText & "这个文件夹吗？" & vbCrLf & "目标文件夹：" & Folder.Location & vbCrLf & vbCrLf & "这会导致该文件夹中的所有存档与其他文件永久丢失，且不可恢复！", "删除警告", "取消", "确认", "取消") <> 2 Then Return
+        If MyMsgBox("如果你在该文件夹中存放了除 MC 以外的其他文件，这些文件也会被一同删除！" & vbCrLf & "继续删除会导致该文件夹中的所有文件永久丢失，请在仔细确认后再继续！" & vbCrLf & "目标文件夹：" & Folder.Location & vbCrLf & vbCrLf & "这是最后一次警告！", "删除警告", "确认" & DeleteText, "取消", IsWarn:=True) <> 1 Then Return
         '移出列表
         If Folder.Type = McFolder.Types.Custom Then
             Dim Folders As New List(Of String)(Setup.Get("LaunchFolders").ToString.Split("|"))
@@ -337,8 +337,8 @@
             '删除文件夹
             Try
                 Hint("正在" & DeleteText & "文件夹 " & Folder.Name & "！", HintType.Blue)
-                DeleteDirectory(Folder.Path)
-                If DeleteText = "清空" Then Directory.CreateDirectory(Folder.Path)
+                DeleteDirectory(Folder.Location)
+                If DeleteText = "清空" Then Directory.CreateDirectory(Folder.Location)
                 Hint("已" & DeleteText & "文件夹 " & Folder.Name & "！", HintType.Green)
             Catch ex As Exception
                 Log(ex, DeleteText & "文件夹 " & Folder.Name & " 失败", LogLevel.Hint)
@@ -388,7 +388,7 @@
                 End If
             Next
             '如果没有添加过，则添加进去（因为修改了默认项的名称）
-            If Not IsAdded Then Folders.Add(NewName & ">" & Folder.Path)
+            If Not IsAdded Then Folders.Add(NewName & ">" & Folder.Location)
             Hint("文件夹名称已更新为 " & NewName & " ！", HintType.Green)
             '保存
             Setup.Set("LaunchFolders", Join(Folders.ToArray, "|"))

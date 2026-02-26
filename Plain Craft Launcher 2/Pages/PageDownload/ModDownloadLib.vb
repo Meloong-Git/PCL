@@ -430,7 +430,7 @@ pause"
                     WikiName = "爪哇版Beta_1.9_Prerelease_6"
                 ElseIf Id.Contains("b1.9") Then
                     WikiName = "爪哇版Beta_1.9_Prerelease"
-                ElseIf VersionJson("type") = "release" OrElse VersionJson("type") = "snapshot" OrElse VersionJson("type") = "special" Then
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
                     WikiName = If(Id.Contains("w"), "", "爪哇版") & Id.Replace(" Pre-Release ", "-pre")
                 ElseIf Id.StartsWithF("b") Then
                     WikiName = "爪哇版" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "復測版")
@@ -491,7 +491,7 @@ pause"
                     WikiName = "Java_Edition_Beta_1.9_Prerelease_6"
                 ElseIf Id.Contains("b1.9") Then
                     WikiName = "Java_Edition_Beta_1.9_Prerelease"
-                ElseIf VersionJson("type") = "release" OrElse VersionJson("type") = "snapshot" OrElse VersionJson("type") = "special" Then
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
                     WikiName = If(Id.Contains("w"), "", "Java_Edition_") & Id.Replace(" Pre-Release ", "-pre")
                 ElseIf Id.StartsWithF("b") Then
                     WikiName = "Java_Edition_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_")
@@ -551,7 +551,7 @@ pause"
                     WikiName = "Java_Edition_Beta_1.9_Prerelease_6"
                 ElseIf Id.Contains("b1.9") Then
                     WikiName = "Java_Edition_Beta_1.9_Prerelease"
-                ElseIf VersionJson("type") = "release" OrElse VersionJson("type") = "snapshot" OrElse VersionJson("type") = "special" Then
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
                     WikiName = If(Id.Contains("w"), "", "Java_Edition_") & Id.Replace(" Pre-Release ", "-pre")
                 ElseIf Id.StartsWithF("b") Then
                     WikiName = "Java_Edition_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_")
@@ -611,7 +611,7 @@ pause"
                     WikiName = "Java_Edition_Beta_1.9_Prerelease_6"
                 ElseIf Id.Contains("b1.9") Then
                     WikiName = "Java_Edition_Beta_1.9_Prerelease"
-                ElseIf VersionJson("type") = "release" OrElse VersionJson("type") = "snapshot" OrElse VersionJson("type") = "special" Then
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
                     WikiName = If(Id.Contains("w"), "", "Java_Edition_") & Id.Replace(" Pre-Release ", "-pre")
                 ElseIf Id.StartsWithF("b") Then
                     WikiName = "Java_Edition_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_")
@@ -675,7 +675,7 @@ pause"
                     WikiName = "Beta_1.9_Prerelease_6_(Java_Edition)"
                 ElseIf Id.Contains("b1.9") Then
                     WikiName = "Beta_1.9_Prerelease_(Java_Edition)"
-                ElseIf VersionJson("type") = "release" OrElse VersionJson("type") = "snapshot" OrElse VersionJson("type") = "special" Then
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
                     WikiName = Id.Replace("-pre", "_Pre-release")
                 ElseIf Id.StartsWithF("b") Then
                     WikiName = Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_") & "_(Java_Edition)"
@@ -737,7 +737,7 @@ pause"
                     WikiName = "Édition_Java_Beta_1.9_Prerelease_6"
                 ElseIf Id.Contains("b1.9") Then
                     WikiName = "Édition_Java_Beta_1.9_Prerelease"
-                ElseIf VersionJson("type") = "release" OrElse VersionJson("type") = "snapshot" OrElse VersionJson("type") = "special" Then
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
                     WikiName = If(Id.Contains("w"), "", "Édition_Java_") & Id.Replace(" Pre-Release ", "-pre")
                 ElseIf Id.StartsWithF("b") Then
                     WikiName = "Édition_Java_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_")
@@ -801,7 +801,7 @@ pause"
                     WikiName = "Beta_1.9_Prerelease_6_(Java_Edition)"
                 ElseIf Id.Contains("b1.9") Then
                     WikiName = "Beta_1.9_Prerelease_(Java_Edition)"
-                ElseIf VersionJson("type") = "release" OrElse VersionJson("type") = "snapshot" OrElse VersionJson("type") = "special" Then
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
                     WikiName = Id.Replace("-pre", "_Pre-release")
                 ElseIf Id.StartsWithF("b") Then
                     WikiName = Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_") & "_(Java_Edition)"
@@ -1387,20 +1387,20 @@ Retry:
                 '新建版本文件夹
                 Directory.CreateDirectory(VersionFolder)
                 '构造版本 Json
-                Dim VersionJson As New JObject
-                VersionJson.Add("id", VersionName)
-                VersionJson.Add("time", Date.ParseExact(DownloadInfo.ReleaseTime, "yyyy/MM/dd HH:mm", Globalization.CultureInfo.InvariantCulture))
-                VersionJson.Add("releaseTime", Date.ParseExact(DownloadInfo.ReleaseTime, "yyyy/MM/dd HH:mm", Globalization.CultureInfo.InvariantCulture))
-                VersionJson.Add("type", "release")
-                VersionJson.Add("arguments", GetJson("{""game"":[""--tweakClass"",""" & DownloadInfo.JsonToken("tweakClass").ToString & """]}"))
-                VersionJson.Add("libraries", DownloadInfo.JsonToken("libraries"))
-                CType(VersionJson("libraries"), JContainer).Add(GetJson("{""name"": ""com.mumfrey:liteloader:" & DownloadInfo.JsonToken("version").ToString & """,""url"": ""https://dl.liteloader.com/versions/""}"))
-                VersionJson.Add("mainClass", "net.minecraft.launchwrapper.Launch")
-                VersionJson.Add("minimumLauncherVersion", 18)
-                VersionJson.Add("inheritsFrom", DownloadInfo.Inherit)
-                VersionJson.Add("jar", DownloadInfo.Inherit)
+                Dim InstanceJson As New JObject
+                InstanceJson.Add("id", VersionName)
+                InstanceJson.Add("time", Date.ParseExact(DownloadInfo.ReleaseTime, "yyyy/MM/dd HH:mm", Globalization.CultureInfo.InvariantCulture))
+                InstanceJson.Add("releaseTime", Date.ParseExact(DownloadInfo.ReleaseTime, "yyyy/MM/dd HH:mm", Globalization.CultureInfo.InvariantCulture))
+                InstanceJson.Add("type", "release")
+                InstanceJson.Add("arguments", GetJson("{""game"":[""--tweakClass"",""" & DownloadInfo.JsonToken("tweakClass").ToString & """]}"))
+                InstanceJson.Add("libraries", DownloadInfo.JsonToken("libraries"))
+                CType(InstanceJson("libraries"), JContainer).Add(GetJson("{""name"": ""com.mumfrey:liteloader:" & DownloadInfo.JsonToken("version").ToString & """,""url"": ""https://dl.liteloader.com/versions/""}"))
+                InstanceJson.Add("mainClass", "net.minecraft.launchwrapper.Launch")
+                InstanceJson.Add("minimumLauncherVersion", 18)
+                InstanceJson.Add("inheritsFrom", DownloadInfo.Inherit)
+                InstanceJson.Add("jar", DownloadInfo.Inherit)
                 '输出 Json 文件
-                WriteFile(VersionFolder & VersionName & ".json", VersionJson.ToString)
+                WriteFile(VersionFolder & VersionName & ".json", InstanceJson.ToString)
             Catch ex As Exception
                 Throw New Exception(GetLang("LangModDownloadLibExceptionInstallLiteLoaderFail"), ex)
             End Try

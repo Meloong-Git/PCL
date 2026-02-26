@@ -324,7 +324,7 @@
             If IsShiftPressed Then
                 MsgContent = GetLang("LangPageVersionOverallDialogDeleteA", PageInstanceLeft.Instance.Name)
             Else
-                MsgContent = GetLang("LangPageVersionOverallDialogDeleteB", PageVersionLeft.Version.Name)
+                MsgContent = GetLang("LangPageVersionOverallDialogDeleteB", PageInstanceLeft.Instance.Name)
             End If
             Select Case MyMsgBox(MsgContent,
                         GetLang("LangPageVersionOverallDialogDeleteTitle"), , GetLang("LangDialogBtnCancel"),, IsHintIndie OrElse IsShiftPressed)

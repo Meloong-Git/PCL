@@ -1,4 +1,7 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xml:space="preserve">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib"
+                    xml:space="preserve">
     <s:String x:Key="LangTaskAbort">已取消！</s:String>
     <s:String x:Key="LangDialogBtnOK">确定</s:String>
     <s:String x:Key="LangDialogBtnCancel">取消</s:String>
@@ -266,6 +269,9 @@
     <s:String x:Key="LangSetHomePagePresetPageK">OpenMCIM 仪表盘（作者：SALTWOOD）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageL">杂志主页（作者：CreeperIsASpy）</s:String>
     <s:String x:Key="LangSetHomePagePresetPageM">PCL GitHub 仪表盘（作者：Deep-Dark-Forest）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageN">Minecraft 更新摘要（作者：pynickle，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageO">今日新闻热点（作者：EYicheng，部分由 AI 生成）</s:String>
+    <s:String x:Key="LangSetHomePagePresetPageP">Minecraft 芝士站（作者：awaEric233，部分由 AI 生成）</s:String>
     <s:String x:Key="LangSetFuncHidden">功能隐藏</s:String>
     <s:String x:Key="LangSetFuncHiddenToolTip">你可以隐藏不需要的页面或关闭特定功能。在任意界面按 F12 可以暂时显示被隐藏的功能。</s:String>
     <s:String x:Key="LangSetFuncHiddenLaunch">主页面</s:String>
@@ -380,8 +386,7 @@
     <s:String x:Key="LangSelectDeleteVersionContentA">你确定要删除版本 {0} 吗？</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentB">你确定要永久地删除版本 {0} 吗？</s:String>
     <s:String x:Key="LangSelectDeleteVersionContentC">由于该版本开启了版本隔离，删除版本时该版本对应的存档、资源包、Mod 等文件也将被一并删除！</s:String>
-    <s:String x:Key="LangSelectVersionDeletedPermanently">版本 {0} 已永久删除！</s:String>
-    <s:String x:Key="LangSelectVersionDeletedToRecycleBin">版本 {0} 已删除！</s:String>
+    <s:String x:Key="LangSelectVersionDeleted">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangSelectVersionDeleteCancelled">删除版本 {0} 被主动取消</s:String>
     <s:String x:Key="LangSelectVersionDeleteFail">删除版本 {0} 失败</s:String>
     <s:String x:Key="LangSpeedTotalProgress">总进度</s:String>
@@ -442,7 +447,7 @@
     <s:String x:Key="LangDownloadCompLoadingList">正在获取版本列表</s:String>
     <s:String x:Key="LangDownloadCompApiSlow">由于版本信息更新缓慢，可能无法识别刚更新的 MC 版本。几天后即可正常识别。</s:String>
     <s:String x:Key="LangDownloadCompSearchingSuitableInstance">正在查找适合的游戏版本……</s:String>
-    <s:String x:Key="LangDownloadCompNoSuitableInstance">当前 MC 文件夹中没有找到适合这个资源的版本！</s:String>
+    <s:String x:Key="LangDownloadCompNoSuitableInstance">当前 MC 文件夹中没有找到合适的版本！</s:String>
     <s:String x:Key="LangDownloadCompSelectedVersion">所选版本：</s:String>
     <s:String x:Key="LangDownloadCompDownloadModpack">整合包下载：</s:String>
     <s:String x:Key="LangDownloadCompInputInstanceName">输入版本名称</s:String>
@@ -547,6 +552,7 @@
     <s:String x:Key="LangDownloadModTypeMobs">生物</s:String>
     <s:String x:Key="LangDownloadModTypeEquipment">装备与工具</s:String>
     <s:String x:Key="LangDownloadModTypeOptimization">性能优化</s:String>
+    <s:String x:Key="LangDownloadModTypeCreativeMode">创造模式</s:String>
     <s:String x:Key="LangDownloadModTypeDisplay">信息显示</s:String>
     <s:String x:Key="LangDownloadModTypeServer">服务器</s:String>
     <s:String x:Key="LangDownloadModTypeUtility">实用</s:String>
@@ -696,6 +702,7 @@
     <s:String x:Key="LangMySkinCapeNamePan">薄煎饼披风</s:String>
     <s:String x:Key="LangMySkinCapeNameFounders">创始人披风</s:String>
     <s:String x:Key="LangMySkinCapeNameCopper">铜披风</s:String>
+    <s:String x:Key="LangMySkinCapeNameZombieHorse">僵尸马披风</s:String>
     <s:String x:Key="LangMySkinCapeNameNone">无披风</s:String>
     <s:String x:Key="LangLaunchLeftInstanceChoose">版本选择</s:String>
     <s:String x:Key="LangLaunchLeftInstanceConfig">版本设置</s:String>
@@ -826,6 +833,8 @@
     <s:String x:Key="LangPageOtherAboutThanks00ll00">提供了 Java Launch Wrapper 和一些重要服务支持！</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4">提供了 MCIM 社区资源镜像源和帮助库图床！</s:String>
     <s:String x:Key="LangPageOtherAboutThanksz0z0r4Detail">MCIM 主页</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytier">提供了联机模块！</s:String>
+    <s:String x:Key="LangPageOtherAboutThanksEasytierDetail">GitHub 页面</s:String>
     <s:String x:Key="LangPageOtherAboutThanksPatrick">设计并制作了 PCL 图标，让我从做图标的水深火热中得到了解脱……</s:String>
     <s:String x:Key="LangPageOtherAboutThanksHao_Tian">在内测中找出了一大堆没人想得到的诡异 Bug，有非同寻常的 Bug 体质</s:String>
     <s:String x:Key="LangPageOtherAboutThanksMCBBSTitle">Minecraft 中文论坛</s:String>
@@ -956,9 +965,9 @@
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsDisableJLW">禁用 Java Launch Wrapper</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsDisableJLWToolTip">PCL 会使用 Java Launch Wrapper 来修复老版本 Java 在中文路径下无法启动的问题。
 如果这被反作弊拦截，或遇到其他问题，也可以将其关闭。</s:String>
-    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfence">要求 Java 使用高性能显卡</s:String>
-    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfenceToolTip">自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 Java 改为使用高性能显卡。
-如果电脑同时有集显和独显，这能确保 MC 使用独显进行渲染，以大幅提高性能。</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfence">使用高性能显卡</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfenceToolTip">自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 PCL 和 Java 改为使用高性能显卡。
+如果同时有集成显卡和独立显卡，这能确保 MC 使用独立显卡进行渲染，以大幅提高帧率。</s:String>
     <s:String x:Key="LangPageSetupLaunchGotoVersionSetting">版本独立设置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadByError">启动设置项存在异常，已被自动重置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadFail">重载启动设置时出错</s:String>
@@ -1229,8 +1238,7 @@
 由于该版本开启了版本隔离，删除版本时该版本对应的存档、资源包、Mod 等文件也将被一并删除！</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteB">你确定要删除版本 {0} 吗？</s:String>
     <s:String x:Key="LangPageVersionOverallDialogDeleteTitle">版本删除确认</s:String>
-    <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">版本 {0} 已删除到回收站！</s:String>
-    <s:String x:Key="LangPageVersionOverallHintPermanentDeleteSuccess">版本 {0} 已永久删除！</s:String>
+    <s:String x:Key="LangPageVersionOverallHintDeleteSuccess">版本 {0} 已删除！</s:String>
     <s:String x:Key="LangPageVersionOverallHintEnableInstanceAssetsCheck">请先关闭 [版本设置 → 设置 → 高级启动选项 → 关闭文件校验]，然后再尝试补全文件！</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetSuccess">已初始化版本独立设置！</s:String>
     <s:String x:Key="LangPageVersionSetupHintIndependentSetResetFail">初始化版本独立设置失败</s:String>
@@ -1393,16 +1401,15 @@ PCL 不支持其他乱七八糟的下载协议。</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonIncorrect">版本 JSON 文件有误，内容为：{0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionDependencyNestingAppears">版本依赖项出现嵌套：{0}</s:String>
     <s:String x:Key="LangModMinecraftExceptionJsonContentIncorrect">初始化版本 JSON 时失败（{0}）</s:String>
+    <s:String x:Key="LangModMinecraftVersionStable">正式版</s:String>
     <s:String x:Key="LangModMinecraftVersionPre">预发布版</s:String>
     <s:String x:Key="LangModMinecraftVersionRC">发布候选</s:String>
-    <s:String x:Key="LangModMinecraftVersionSnapshot">快照</s:String>
+    <s:String x:Key="LangModMinecraftVersionSnapshot">快照版</s:String>
     <s:String x:Key="LangModMinecraftVersionExperimental">实验性快照</s:String>
     <s:String x:Key="LangModMinecraftVersionOld">远古版本</s:String>
     <s:String x:Key="LangModMinecraftUnknownError">发生了未知错误，请向作者反馈此问题</s:String>
     <s:String x:Key="LangModMinecraftNideAuth">统一通行证验证</s:String>
     <s:String x:Key="LangModMinecraftAuthlibAuth">Authlib 验证</s:String>
-    <s:String x:Key="LangModMinecraftInvalidFabricVersion">无效的 Fabric 版本：{0}</s:String>
-    <s:String x:Key="LangModMinecraftInvalidForgeVersion">无效的 Neo/Forge 版本：{0}</s:String>
     <s:String x:Key="LangModMinecraftFoolName24w14potato">毒马铃薯一直都被大家忽视和低估，于是我们超级加强了它！</s:String>
     <s:String x:Key="LangModMinecraftFoolName25w14craftmine">你可以合成任何东西——包括合成你的世界！</s:String>
     <s:String x:Key="LangModMinecraftFoolName23w13ab">研究表明：玩家喜欢作出选择——越多越好！</s:String>
@@ -1560,7 +1567,7 @@ PCL 不支持其他乱七八糟的下载协议。</s:String>
     <s:String x:Key="LangModDownloadMcAssetsUpdateDownload">后台下载资源文件索引</s:String>
     <s:String x:Key="LangModDownloadMcAssetsUpdateCopy">后台复制资源文件索引</s:String>
     <s:String x:Key="LangModDownloadMcAssetsUpdateRefresh">后台更新资源文件索引</s:String>
-    <s:String x:Key="LangModDownloadMcResFixAnalysis">分析缺失资源文件</s:String>
+    <s:String x:Key="LangModDownloadMcResFixAnalysis">获取资源文件列表</s:String>
     <s:String x:Key="LangModDownloadMcResDownload">下载资源文件</s:String>
     <s:String x:Key="LangModDownloadMcResDownloadMainLoader">下载资源文件（主加载器）</s:String>
     <s:String x:Key="LangModDownloadExceptionShortVersionList">获取到的版本列表长度不足（{0}）</s:String>
@@ -1605,11 +1612,11 @@ PCL 不支持其他乱七八糟的下载协议。</s:String>
 如果你已经安装了 {1}，可以在 设置 → 启动选项 → 游戏 Java 中手动导入。</s:String>
     <s:String x:Key="LangModJavaDialogBtn1DownloadJava">自动下载</s:String>
     <s:String x:Key="LangModJavaTaskDownloadJavaFile">下载 Java 文件</s:String>
-    <s:String x:Key="LangModJavaTaskDownloadJava">下载 Java {0}</s:String>
+    <s:String x:Key="LangModJavaTaskDownloadJava">下载 Java</s:String>
     <s:String x:Key="LangModJavaTaskGetJavaDownloadInfo">获取 Java 下载信息</s:String>
     <s:String x:Key="LangModLaunchExceptionRunNotInUI">McLaunchStart 必须在 UI 线程调用！</s:String>
     <s:String x:Key="LangModLaunchAlreadyLaunchGame">已有游戏正在启动中！</s:String>
-    <s:String x:Key="LangModLaunchLaunchFail">无法启动 Minecraft：{0}</s:String>
+    <s:String x:Key="LangModLaunchLaunchFail">无法启动 {0}：{1}</s:String>
     <s:String x:Key="LangModLaunchExceptionStateSwitchError">错误的状态改变：{0}</s:String>
     <s:String x:Key="LangModLaunchExceptionPathIncorrect">游戏路径中不可包含 ! 或 ;（{0}）</s:String>
     <s:String x:Key="LangModLaunchExceptionNoInstanceSelected">未选择 Minecraft 版本！</s:String>
@@ -1741,7 +1748,7 @@ PCL 不支持其他乱七八糟的下载协议。</s:String>
 即将打开：{0}</s:String>
     <s:String x:Key="LangModModpackDialogBtnAnotherLauncher1">换用</s:String>
     <s:String x:Key="LangModModpackDialogBtnAnotherLauncher2">不换用</s:String>
-    <s:String x:Key="LangModModpackExceptionNoModpackFound">未能找到适合的文件结构，这可能不是一个 MC 压缩包</s:String>
+    <s:String x:Key="LangModModpackExceptionNoModpackFound">文件结构不匹配，这可能不是 Minecraft 客户端压缩包？</s:String>
     <s:String x:Key="LangModWatcherMcCrashed">检测到 Minecraft 出现错误，错误分析已开始……</s:String>
     <s:String x:Key="LangModBaseExceptionRenameSubKeyNotSupport">不支持对包含子键的子键进行重命名：{0}。</s:String>
     <s:String x:Key="LangModBaseExceptionPathIncorrect">不包含路径：{0}</s:String>
