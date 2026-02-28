@@ -100,7 +100,7 @@ Public Class PageLaunchRight
                         Url = "https://files.mcimirror.top/PCL"
                     Case 11
                         Log("[Page] 主页预设：杂志主页")
-                        Url = "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Ext1nguisher/Custom.xaml"
+                        Url = "http://118.195.192.193:26995/d/magazine-homepage-pcl/Custom.xaml"
                     Case 12
                         Log("[Page] 主页预设：PCL GitHub 仪表盘")
                         Url = "https://ddf.pcl-community.org/Custom.xaml"
