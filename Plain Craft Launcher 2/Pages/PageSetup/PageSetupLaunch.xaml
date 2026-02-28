@@ -135,9 +135,12 @@
                                       ToolTip="根据安装的 Mod 量与电脑剩余内存，动态调整为游戏分配的内存" ToolTipService.Placement="Right" ToolTipService.HorizontalOffset="-10" ToolTipService.VerticalOffset="-3" />
                         <local:MyRadioBox Grid.Row="2" Text="自定义" x:Name="RadioRamType1" Tag="LaunchRamType/1" Margin="0,0,20,0" />
                         <local:MySlider Grid.Row="2" Grid.Column="1" IsEnabled="False" x:Name="SliderRamCustom" Tag="LaunchRamCustom" MaxValue="49" Value="13" />
-                        <local:MyCheckBox Grid.Row="4" Grid.ColumnSpan="3" Text="启动游戏前进行内存优化" Height="22" x:Name="CheckArgumentRam" Tag="LaunchArgumentRam"
-                                      ToolTipService.Placement="Left" ToolTipService.HorizontalOffset="525" ToolTipService.VerticalOffset="-30"
-                                      ToolTip="内存优化能将当前物理内存占用降低约 1/3，不仅限于 MC！&#xa;如果使用机械硬盘，这还可能会导致一小段时间的严重卡顿。&#xa;使用 --memory 参数启动 PCL 可以静默执行内存优化。" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="内存优化" />
+                        <local:MyComboBox x:Name="ComboArgumentRam" Tag="LaunchArgumentRam" Grid.Row="4" Grid.Column="1" Height="28">
+                            <local:MyComboBoxItem Content="启动游戏前不进行内存优化" IsSelected="True" />
+                            <local:MyComboBoxItem Content="优化可安装 Mod 的版本" />
+                            <local:MyComboBoxItem Content="优化所有版本" />
+                        </local:MyComboBox>
                         <!--<local:MyTextBox Grid.Row="2" Grid.Column="3" Width="100" VerticalAlignment="Center" Margin="30,0,0,0" Text="2048 MB" />-->
                     </Grid>
                     <Grid x:Name="PanRamDisplay" Margin="0,11,2,0" SnapsToDevicePixels="True" Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="1">
