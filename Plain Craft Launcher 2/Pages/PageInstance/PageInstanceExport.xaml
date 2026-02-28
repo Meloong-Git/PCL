@@ -1,283 +1,357 @@
 ﻿<local:MyPageRight
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-    xmlns:System="clr-namespace:System;assembly=mscorlib" 
-    mc:Ignorable="d" x:Class="PageInstanceExport"
+    xmlns:local="clr-namespace:PCL"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:System="clr-namespace:System;assembly=mscorlib"
+    mc:Ignorable="d"
+        x:Class="PageInstanceExport"
     PanScroll="PanBack">
     <Grid x:Name="PanAllBack">
         <Grid.Resources>
             <Style TargetType="local:MyCheckBox">
-                <Setter Property="Height" Value="26" />
+                <Setter Property="Height"
+                        Value="26"/>
             </Style>
         </Grid.Resources>
-        <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <local:MyScrollViewer VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Disabled"
+                x:Name="PanBack">
             <StackPanel Margin="25,10,25,65">
-                <local:MyHint Margin="0,15,0,0" Text="受 Modrinth 整合包规范限制，导出的整合包中不会包含 OptiFine。" Theme="Yellow" x:Name="HintOptiFine" />
+                <local:MyHint Margin="0,15,0,0"
+                        Text="{StaticResource LangPageVersionExportNoOptifine}"
+                        Theme="Yellow"
+                        x:Name="HintOptiFine"/>
                 <local:MyCard Margin="0,15">
                     <Grid Margin="22,15,25,15">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="1*" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="0.3*" />
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="0.3*"/>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="28" />
+                            <RowDefinition Height="28"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="整合包名称" Margin="0,0,20,0" />
-                        <local:MyTextBox Grid.Row="0" Grid.Column="1" x:Name="TextExportName" MaxLength="100" />
-                        <TextBlock Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="整合包版本" Margin="30,0,20,0" />
-                        <local:MyTextBox Grid.Row="0" Grid.Column="3" x:Name="TextExportVersion" Tag="VersionArgumentTitle" MaxLength="100" />
+                        <TextBlock Grid.Row="0"
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Left"
+                                Text="{StaticResource LangPageVersionExportPackName}"
+                                Margin="0,0,20,0"/>
+                        <local:MyTextBox Grid.Row="0"
+                                Grid.Column="1"
+                                x:Name="TextExportName"
+                                MaxLength="100"/>
+                        <TextBlock Grid.Row="0"
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Left"
+                                Text="{StaticResource LangPageVersionExportPackVersion}"
+                                Margin="30,0,20,0"/>
+                        <local:MyTextBox Grid.Row="0"
+                                Grid.Column="3"
+                                x:Name="TextExportVersion"
+                                Tag="VersionArgumentTitle"
+                                MaxLength="100"/>
                     </Grid>
                 </local:MyCard>
-                <local:MyCard Margin="0,0,0,15" x:Name="CardOptions" MinHeight="39">
-                    <local:MyIconTextButton x:Name="BtnOverrideCancel" Height="24" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0"
-                                            IsHitTestVisible="False" Opacity="0.5"
-                                            Text="重置" Logo="M530 0c287 0 521 229 521 511s-233 511-521 511c-233 0-436-151-500-368a63 63 0 0 1 44-79 65 65 0 0 1 80 43c48 162 200 276 375 276 215 0 390-171 390-383s-174-383-390-383c-103 0-199 39-270 106l21-5a63 63 0 0 1 33 123l-157 42a65 65 0 0 1-90-42l-49-183a65 65 0 1 1 126-33l6 26A524 524 0 0 1 530 0z" LogoScale="0.9"  />
-                    <StackPanel Margin="25,38,15,15" Name="PanOptions">
-                        <local:MyCheckBox IsEnabled="False" x:Name="CheckOptionsBasic">
+                <local:MyCard Margin="0,0,0,15"
+                        x:Name="CardOptions"
+                        MinHeight="39">
+                    <local:MyIconTextButton x:Name="BtnOverrideCancel"
+                            Height="24"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Margin="0,0,5,0"
+                                            IsHitTestVisible="False"
+                            Opacity="0.5"
+                                            Text="{StaticResource LangReset}"
+                            Logo="M530 0c287 0 521 229 521 511s-233 511-521 511c-233 0-436-151-500-368a63 63 0 0 1 44-79 65 65 0 0 1 80 43c48 162 200 276 375 276 215 0 390-171 390-383s-174-383-390-383c-103 0-199 39-270 106l21-5a63 63 0 0 1 33 123l-157 42a65 65 0 0 1-90-42l-49-183a65 65 0 1 1 126-33l6 26A524 524 0 0 1 530 0z"
+                            LogoScale="0.9"/>
+                    <StackPanel Margin="25,38,15,15"
+                            Name="PanOptions">
+                        <local:MyCheckBox IsEnabled="False"
+                                x:Name="CheckOptionsBasic">
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="游戏本体"
-                                DefaultChecked="True" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportGameInstance}"
+                                    DefaultChecked="True"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
-                        <local:MyCheckBox x:Name="CheckOptionsOptions" Margin="30,0,0,0">
+                        <local:MyCheckBox x:Name="CheckOptionsOptions"
+                                Margin="30,0,0,0">
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="游戏本体设置"
-                                Description="键位、音量、视频设置等"
-                                Rules="options.txt|configureddefaults/"
-                                DefaultChecked="True" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportGameSettings}"
+                                    Description="{StaticResource LangPageVersionExportGameSettingsDesc}"
+                                    Rules="options.txt|configureddefaults/"
+                                    DefaultChecked="True"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <local:MyCheckBox Margin="30,0,0,0">
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="游戏本体个人信息"
-                                Description="命令历史、已保存的快捷栏"
-                                Rules="hotbar.nbt|command_history.txt"
-                                DefaultChecked="False" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportGameProfile}"
+                                    Description="{StaticResource LangPageVersionExportGameProfileDesc}"
+                                    Rules="hotbar.nbt|command_history.txt"
+                                    DefaultChecked="False"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <local:MyCheckBox Margin="30,0,0,0">
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="OptiFine 设置"
-                                Rules="optionsof.txt|optionsshaders.txt"
-                                DefaultChecked="True"
-                                RequireOptiFine="True" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportOptiFineSettings}"
+                                    Rules="optionsof.txt|optionsshaders.txt"
+                                    DefaultChecked="True"
+                                    RequireOptiFine="True"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <local:MyCheckBox x:Name="CheckOptionsMod">
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="Mod"
-                                Description="模组"
-                                Rules="mods/|!mods/*.disabled|!mods/*.old|!mods/.connector/|coremods/|lib/"
-                                DefaultChecked="True"
-                                RequireModLoader="True" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportMod}"
+                                    Description="{StaticResource LangPageVersionExportModDesc}"
+                                    Rules="mods/|!mods/*.disabled|!mods/*.old|!mods/.connector/|coremods/|lib/"
+                                    DefaultChecked="True"
+                                    RequireModLoader="True"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <StackPanel Margin="30,0,0,0"
-                                Visibility="{Binding Checked, ElementName=CheckOptionsMod, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    Visibility="{Binding Checked, ElementName=CheckOptionsMod, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <local:MyCheckBox>
                                 <local:MyCheckBox.Tag>
-                                    <local:ExportOption 
-                                Title="已禁用的 Mod"
-                                Rules="mods/*.disabled|mods/*.old" />
+                                    <local:ExportOption
+                                        Title="{StaticResource LangPageVersionExportModDisabled}"
+                                        Rules="mods/*.disabled|mods/*.old"/>
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                             <local:MyCheckBox>
                                 <local:MyCheckBox.Tag>
-                                    <local:ExportOption 
-                                Title="整合包重要数据"
-                                Description="脚本文件、内置资源包、数据包等"
-                                Rules="addons/|multiblocked/|modpack-update-checker/|global_packs/|global_resource_packs/|global_data_packs/|optional_data_packs/|moonlight-global-datapacks/|maps/|icon.png|mods-resourcepacks/|matmos/|resource_assorts/|resource_assorts.json|patchouli_books/|datapacks/|kubejs*/|!kubejs*/probe/|!kubejs*/exported/|!kubejs*/jsconfig.json|!kubejs*/README.txt|openloader/|worldshape/|resources/|scripts/|structures/|fontfiles/|oresources/|packmenu/|craftpresence/|pointblanks/|template*/|!template*/playerdata/|!template*/stats/"
-                                DefaultChecked="True" />
+                                    <local:ExportOption
+                                        Title="{StaticResource LangPageVersionExportPackAddons}"
+                                        Description="{StaticResource LangPageVersionExportPackAddonsDesc}"
+                                        Rules="addons/|multiblocked/|modpack-update-checker/|global_packs/|global_resource_packs/|global_data_packs/|optional_data_packs/|moonlight-global-datapacks/|maps/|icon.png|mods-resourcepacks/|matmos/|resource_assorts/|resource_assorts.json|patchouli_books/|datapacks/|kubejs*/|!kubejs*/probe/|!kubejs*/exported/|!kubejs*/jsconfig.json|!kubejs*/README.txt|openloader/|worldshape/|resources/|scripts/|structures/|fontfiles/|oresources/|packmenu/|craftpresence/|pointblanks/|template*/|!template*/playerdata/|!template*/stats/"
+                                        DefaultChecked="True"/>
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                             <local:MyCheckBox>
                                 <local:MyCheckBox.Tag>
-                                    <local:ExportOption 
-                                Title="Mod 设置"
-                                Rules="config/|!config/jei/world/|!config/worldedit/|config/worldedit/worldedit.properties|!config/spark/|config/spark/config.json|defaultconfigs/|journeymap/config/|journeymap/server/|TrashSlotSaveState.json|customfov.txt|gg.essential.mod/|essential/|!essential/*/|!essential/*.jar*|!essential/screenshot-checksum-caches.json|!essential/microsoft_accounts.json|paragliderSettings.nbt|local/client_config.json|local/ftbl.json|local/client/sidebar_buttons.json|local/client/ftbutilities.cfg|local/client/ftblib.cfg|local/client/xencraft.cfg|liteloader.properties|default_reference.xml|CustomSkinLoader/CustomSkinLoader.json|!config/tacz/custom"
-                                DefaultChecked="True" />
+                                    <local:ExportOption
+                                        Title="{StaticResource LangPageVersionExportModSettings}"
+                                        Rules="config/|!config/jei/world/|!config/worldedit/|config/worldedit/worldedit.properties|!config/spark/|config/spark/config.json|defaultconfigs/|journeymap/config/|journeymap/server/|TrashSlotSaveState.json|customfov.txt|gg.essential.mod/|essential/|!essential/*/|!essential/*.jar*|!essential/screenshot-checksum-caches.json|!essential/microsoft_accounts.json|paragliderSettings.nbt|local/client_config.json|local/ftbl.json|local/client/sidebar_buttons.json|local/client/ftbutilities.cfg|local/client/ftblib.cfg|local/client/xencraft.cfg|liteloader.properties|default_reference.xml|CustomSkinLoader/CustomSkinLoader.json|!config/tacz/custom"
+                                        DefaultChecked="True"/>
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                             <local:MyCheckBox>
                                 <local:MyCheckBox.Tag>
-                                    <local:ExportOption 
-                                Title="TaCZ 枪包"
-                                Rules="tacz/|config/tacz/custom/"
-                                DefaultChecked="True" />
+                                    <local:ExportOption
+                                        Title="TaCZ 枪包"
+                                        Rules="tacz/|config/tacz/custom/"
+                                        DefaultChecked="True"/>
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                             <local:MyCheckBox>
                                 <local:MyCheckBox.Tag>
-                                    <local:ExportOption 
-                                Title="已上传的沉浸画"
-                                Rules="immersive_paintings/"
-                                DefaultChecked="True" />
+                                    <local:ExportOption
+                                        Title="已上传的沉浸画"
+                                        Rules="immersive_paintings/"
+                                        DefaultChecked="True"/>
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                             <local:MyCheckBox>
                                 <local:MyCheckBox.Tag>
-                                    <local:ExportOption 
-                                Title="已绘制的地图"
-                                Description="地图类 Mod 为现有的存档、服务器记录的地图、路标点等"
-                                Rules="journeymap/data/|xaero/|XaeroWaypoints/|XaeroWorldMap/"
-                                DefaultChecked="False" />
+                                    <local:ExportOption
+                                        Title="{StaticResource LangPageVersionExportMapRecord}"
+                                        Description="{StaticResource LangPageVersionExportMapRecordDesc}"
+                                        Rules="journeymap/data/|xaero/|XaeroWaypoints/|XaeroWorldMap/"
+                                        DefaultChecked="False"/>
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                             <local:MyCheckBox>
                                 <local:MyCheckBox.Tag>
-                                    <local:ExportOption 
-                                Title="JEI 个人信息"
-                                Description="物品收藏夹等"
-                                Rules="config/jei/world/"
-                                DefaultChecked="False" />
+                                    <local:ExportOption
+                                        Title="{StaticResource LangPageVersionExportJEIProfile}"
+                                        Description="{StaticResource LangPageVersionExportJEIProfileDesc}"
+                                        Rules="config/jei/world/"
+                                        DefaultChecked="False"/>
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                             <local:MyCheckBox>
                                 <local:MyCheckBox.Tag>
-                                    <local:ExportOption 
-                                Title="EMI 个人信息"
-                                Description="物品收藏夹、默认配方、合成历史记录等"
-                                Rules="emi.json"
-                                DefaultChecked="False" />
+                                    <local:ExportOption
+                                        Title="{StaticResource LangPageVersionExportEMIProfile}"
+                                        Description="{StaticResource LangPageVersionExportEMIProfileDesc}"
+                                        Rules="emi.json"
+                                        DefaultChecked="False"/>
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                             <local:MyCheckBox>
                                 <local:MyCheckBox.Tag>
-                                    <local:ExportOption 
-                                Title="帕秋莉手册个人信息"
-                                Description="教程书的已读记录、书签、阅读历史记录等"
-                                Rules="patchouli_data.json"
-                                DefaultChecked="False" />
+                                    <local:ExportOption
+                                        Title="{StaticResource LangPageVersionExportPatchouliProfile}"
+                                        Description="{StaticResource LangPageVersionExportPatchouliProfileDesc}"
+                                        Rules="patchouli_data.json"
+                                        DefaultChecked="False"/>
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                         </StackPanel>
                         <local:MyCheckBox x:Name="CheckOptionsResourcePacks">
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="资源包"
-                                Description="纹理包/材质包"
-                                ShowRules="resourcepacks/|texturepacks/"
-                                DefaultChecked="True" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportResourcepacks}"
+                                    Description="{StaticResource LangPageVersionExportResourcepacksDesc}"
+                                    ShowRules="resourcepacks/|texturepacks/"
+                                    DefaultChecked="True"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
-                        <StackPanel Margin="30,0,0,0" x:Name="PanOptionsResourcePacks"
-                                Visibility="{Binding Checked, ElementName=CheckOptionsResourcePacks, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Margin="30,0,0,0"
+                                x:Name="PanOptionsResourcePacks"
+                                    Visibility="{Binding Checked, ElementName=CheckOptionsResourcePacks, Converter={StaticResource BooleanToVisibilityConverter}}">
                         </StackPanel>
                         <local:MyCheckBox x:Name="CheckOptionsShaderPacks">
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="光影包"
-                                ShowRules="shaderpacks/"
-                                DefaultChecked="True"
-                                RequireModLoaderOrOptiFine="True" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportShaderpacks}"
+                                    ShowRules="shaderpacks/"
+                                    DefaultChecked="True"
+                                    RequireModLoaderOrOptiFine="True"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
-                        <StackPanel Margin="30,0,0,0" x:Name="PanOptionsShaderPacks"
-                                Visibility="{Binding Checked, ElementName=CheckOptionsShaderPacks, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Margin="30,0,0,0"
+                                x:Name="PanOptionsShaderPacks"
+                                    Visibility="{Binding Checked, ElementName=CheckOptionsShaderPacks, Converter={StaticResource BooleanToVisibilityConverter}}">
                         </StackPanel>
                         <local:MyCheckBox>
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="截图"
-                                Rules="screenshots/"
-                                DefaultChecked="False" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportScreenshot}"
+                                    Rules="screenshots/"
+                                    DefaultChecked="False"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <local:MyCheckBox>
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="导出的结构"
-                                Description="schematics 文件夹"
-                                Rules="schematics/"
-                                DefaultChecked="False" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportSchematics}"
+                                    Description="{StaticResource LangPageVersionExportSchematicsDesc}"
+                                    Rules="schematics/"
+                                    DefaultChecked="False"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <local:MyCheckBox>
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="录像回放"
-                                Description="Replay Mod 的录像文件"
-                                Rules="replay_recordings/|replay_videos/"
-                                RequireModLoader="True"
-                                DefaultChecked="False" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportReplay}"
+                                    Description="{StaticResource LangPageVersionExportReplayDesc}"
+                                    Rules="replay_recordings/|replay_videos/"
+                                    RequireModLoader="True"
+                                    DefaultChecked="False"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <local:MyCheckBox x:Name="CheckOptionsSaves">
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="单人游戏存档"
-                                Description="世界/地图"
-                                ShowRules="saves/"
-                                DefaultChecked="False" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportWorld}"
+                                    Description="{StaticResource LangPageVersionExportWorldDesc}"
+                                    ShowRules="saves/"
+                                    DefaultChecked="False"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
-                        <StackPanel Margin="30,0,0,0" x:Name="PanOptionsSaves"
-                                Visibility="{Binding Checked, ElementName=CheckOptionsSaves, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Margin="30,0,0,0"
+                                x:Name="PanOptionsSaves"
+                                    Visibility="{Binding Checked, ElementName=CheckOptionsSaves, Converter={StaticResource BooleanToVisibilityConverter}}">
                         </StackPanel>
                         <local:MyCheckBox>
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="多人游戏服务器列表"
-                                Rules="servers.dat"
-                                DefaultChecked="False" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportServerList}"
+                                    Rules="servers.dat"
+                                    DefaultChecked="False"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <local:MyCheckBox x:Name="CheckOptionsPcl">
                             <local:MyCheckBox.Tag>
-                                <local:ExportOption 
-                                Title="PCL 启动器程序"
-                                Description="打包正式版 PCL，以便没有启动器的玩家安装整合包"
-                                DefaultChecked="True" />
+                                <local:ExportOption
+                                    Title="{StaticResource LangPageVersionExportPCL}"
+                                    Description="{StaticResource LangPageVersionExportPCLDesc}"
+                                    DefaultChecked="True"/>
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <StackPanel Margin="30,0,0,0"
-                                Visibility="{Binding Checked, ElementName=CheckOptionsPcl, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    Visibility="{Binding Checked, ElementName=CheckOptionsPcl, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <local:MyCheckBox x:Name="CheckOptionsPclCustom">
                                 <local:MyCheckBox.Tag>
-                                    <local:ExportOption 
-                                Title="PCL 个性化内容"
-                                Description="功能隐藏设置、主页、背景音乐和图片等"
-                                DefaultChecked="True" />
+                                    <local:ExportOption
+                                        Title="{StaticResource LangPageVersionExportPCLProfile}"
+                                        Description="{StaticResource LangPageVersionExportPCLProfileDesc}"
+                                        DefaultChecked="True"/>
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
                         </StackPanel>
                     </StackPanel>
                 </local:MyCard>
-                <local:MyCard Title="高级选项" Margin="0,0,0,15" CanSwap="True" IsSwapped="True">
+                <local:MyCard Title="{StaticResource LangPageVersionExportAdvancedOptions}"
+                        Margin="0,0,0,15"
+                        CanSwap="True"
+                        IsSwapped="True">
                     <StackPanel Margin="25,37,23,20">
-                        <local:MyHint Text="建议仅在无法稳定连接 CurseForge 或 Modrinth 时才打包资源文件。&#xa;请不要公开发布含资源文件的整合包，这会违反部分 Mod 的使用协议！"
-                                      Theme="Yellow" Margin="0,2,0,8" Visibility="{Binding Checked, ElementName=CheckAdvancedInclude, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                        <local:MyCheckBox Text="打包资源文件，以避免在导入时下载" x:Name="CheckAdvancedInclude"
-                                          ToolTip="将 Mod、资源包、光影包的文件直接放入整合包中，这样在导入时就无需联网下载它们。&#xa;建议仅在无法稳定连接 CurseForge 或 Modrinth 时才考虑勾选。" />
-                        <local:MyCheckBox Text="仅从 Modrinth 下载资源文件" x:Name="CheckAdvancedModrinth"
-                                          ToolTip="若资源未在 Modrinth 上托管，则将其原始文件直接放入整合包中。&#xa;如果你想将整合包上传到 Modrinth，这能帮助你分辨哪些文件未在 Modrinth 上托管。" />
-                        <local:MyHint Theme="Blue" RelativeSetup="HintExportConfig" CanClose="True" Margin="0,20,0,2"
-                                      Text="配置文件中含有更多高级选项，例如精准控制导出的文件、设置整合包存放位置等。&#xa;要修改这些选项，请先点击 “保存配置”，在编辑配置文件后再导入。" />
-                        <Grid Height="35" Margin="0,12,0,0">
+                        <local:MyHint Text="{StaticResource LangPageVersionExportArchiveModeHint}"
+                                      Theme="Yellow"
+                                Margin="0,2,0,8"
+                                Visibility="{Binding Checked, ElementName=CheckAdvancedInclude, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        <local:MyCheckBox Text="打包资源文件，以避免在导入时下载"
+                                x:Name="CheckAdvancedInclude"
+                                          ToolTip="将 Mod、资源包、光影包的文件直接放入整合包中，这样在导入时就无需联网下载它们。&#xa;建议仅在无法稳定连接 CurseForge 或 Modrinth 时才考虑勾选。"/>
+                        <local:MyCheckBox Text="Modrinth 上传模式"
+                                x:Name="CheckAdvancedModrinth"
+                                          ToolTip="如果你想要打包上传到 Modrinth，勾选此项会生成完全符合 Modrinth 要求的整合包文件。&#xa;由于 Modrinth 要求，只能从 CurseForge 下载的资源将无法联网下载，会被直接放入整合包中。&#xa;此外，勾选后也不能在整合包中包含 PCL 启动器文件。"/>
+                        <local:MyHint Theme="Blue"
+                                RelativeSetup="HintExportConfig"
+                                CanClose="True"
+                                Margin="0,20,0,2"
+                                      Text="{StaticResource LangPageVersionExportExportConfigDesc}"/>
+                        <Grid Height="35"
+                                Margin="0,12,0,0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
-                                <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
+                                <ColumnDefinition Width="Auto"
+                                        SharedSizeGroup="Button"/>
+                                <ColumnDefinition Width="Auto"
+                                        SharedSizeGroup="Button"/>
+                                <ColumnDefinition Width="Auto"
+                                        SharedSizeGroup="Button"/>
                             </Grid.ColumnDefinitions>
-                            <local:MyButton Grid.Column="0" x:Name="BtnAdvancedImport" MinWidth="140" Text="读取配置" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" />
-                            <local:MyButton Grid.Column="1" x:Name="BtnAdvancedExport" MinWidth="140" Text="保存配置" Padding="13,0" Margin="0,0,20,0" />
-                            <local:MyButton Grid.Column="2" MinWidth="140" Text="整合包制作指南" Padding="13,0" Margin="0,0,20,0" x:Name="BtnAdvancedHelp"
-                                            local:CustomEventService.EventType="打开帮助" />
+                            <local:MyButton Grid.Column="0"
+                                    x:Name="BtnAdvancedImport"
+                                    MinWidth="140"
+                                    Text="{StaticResource LangPageVersionExportExportConfigRead}"
+                                    Padding="13,0"
+                                    Margin="0,0,20,0"
+                                    ColorType="Highlight"/>
+                            <local:MyButton Grid.Column="1"
+                                    x:Name="BtnAdvancedExport"
+                                    MinWidth="140"
+                                    Text="{StaticResource LangPageVersionExportExportConfigSave}"
+                                    Padding="13,0"
+                                    Margin="0,0,20,0"/>
+                            <local:MyButton Grid.Column="2"
+                                    MinWidth="140"
+                                    Text="{StaticResource LangPageVersionExportModpackGuide}"
+                                    Padding="13,0"
+                                    Margin="0,0,20,0"
+                                    x:Name="BtnAdvancedHelp"
+                                            local:CustomEventService.EventType="打开帮助"/>
                         </Grid>
                     </StackPanel>
                 </local:MyCard>
             </StackPanel>
         </local:MyScrollViewer>
-        <local:MyExtraTextButton HorizontalAlignment="Center" VerticalAlignment="Bottom"
-            x:Name="BtnExport" Text="开始导出"
-            LogoScale="1.1" Logo="M511 995a128 128 0 0 1-57-13L70 791a126 126 0 0 1-70-113V311a126 126 0 0 1 15-60V248c1-2 3-5 5-8a127 127 0 0 1 49-42L454 13a128 128 0 0 1 112 0l383 190a126 126 0 0 1 72 113v360a126 126 0 0 1-70 115L568 984c-17 7-37 11-57 11z m42-470v370l360-178c14-7 23-21 23-38v-335L554 524zM85 330v347a42 42 0 0 0 23 38l360 178V523L85 330zM135 260l375 189 137-65L286 188 135 260z m245-118l363 197 150-71-365-180a42 42 0 0 0-37 0l-111 53z" />
+        <local:MyExtraTextButton HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                                 x:Name="BtnExport"
+                Text="{StaticResource LangPageVersionExportStart}"
+                                 LogoScale="1.1"
+                Logo="M511 995a128 128 0 0 1-57-13L70 791a126 126 0 0 1-70-113V311a126 126 0 0 1 15-60V248c1-2 3-5 5-8a127 127 0 0 1 49-42L454 13a128 128 0 0 1 112 0l383 190a126 126 0 0 1 72 113v360a126 126 0 0 1-70 115L568 984c-17 7-37 11-57 11z m42-470v370l360-178c14-7 23-21 23-38v-335L554 524zM85 330v347a42 42 0 0 0 23 38l360 178V523L85 330zM135 260l375 189 137-65L286 188 135 260z m245-118l363 197 150-71-365-180a42 42 0 0 0-37 0l-111 53z"/>
     </Grid>
 </local:MyPageRight>

@@ -16,9 +16,9 @@
         <ColumnDefinition Width="224" />
     </Grid.ColumnDefinitions>
     <local:MyComboBox Grid.Row="0" Grid.Column="1" IsEditable="True" Height="28" x:Name="ComboName" />
-    <TextBlock Text="账号" Grid.Row="0" VerticalAlignment="Center" />
+    <TextBlock Text="{StaticResource LangPageLoginNideAccount}" Grid.Row="0" VerticalAlignment="Center" />
     <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="TextPass" />
-    <TextBlock Text="密码" Grid.Row="2" VerticalAlignment="Center" />
-    <local:MyCheckBox x:Name="CheckRemember" Tag="LoginRemember" Height="20" Margin="-1,12,80,0" Text="记住密码" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" />
-    <local:MyTextButton Margin="0,12,2,0" x:Name="BtnLink" Content="注册账号" Grid.Row="3" HorizontalAlignment="Right" Grid.Column="1" Padding="20,0,0,0" HorizontalContentAlignment="Right" FontSize="13" VerticalContentAlignment="Center" />
+    <TextBlock Text="{StaticResource LangPageLoginNidePassword}" Grid.Row="2" VerticalAlignment="Center" />
+    <local:MyCheckBox x:Name="CheckRemember" Tag="LoginRemember" Height="20" Margin="-1,12,80,0" Text="{StaticResource LangPageLoginNideRememberPassword}" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" />
+    <local:MyTextButton Margin="0,12,2,0" x:Name="BtnLink" Content="{StaticResource LangPageLoginNideRegister}" Grid.Row="3" HorizontalAlignment="Right" Grid.Column="1" Padding="20,0,0,0" HorizontalContentAlignment="Right" FontSize="13" VerticalContentAlignment="Center" />
 </Grid>

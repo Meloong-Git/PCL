@@ -8,7 +8,7 @@
         <StackPanel Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True">
             <StackPanel x:Name="PanCustom">
             </StackPanel>
-            <local:MyCard Margin="0,0,0,15" Title="快照版提示" x:Name="PanHint">
+            <local:MyCard Margin="0,0,0,15" Title="{StaticResource LangLaunchRightSnapshot}" x:Name="PanHint">
                 <local:MyIconButton LogoScale="1.1" Logo="F1 M2,0 L0,2 8,10 0,18 2,20 10,12 18,20 20,18 12,10 20,2 18,0 10,8 2,0Z"
                                     Height="20" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Top"
                                     x:Name="BtnHintClose" />
@@ -17,7 +17,7 @@
                     <TextBlock x:Name="LabHint2" TextWrapping="Wrap" Margin="0,0,0,2" FontSize="13.5" />
                 </StackPanel>
             </local:MyCard>
-            <local:MyCard Margin="0,0,0,15" Title="启动日志" x:Name="PanLog">
+            <local:MyCard Margin="0,0,0,15" Title="{StaticResource LangLaunchRightLog}" x:Name="PanLog">
                 <TextBlock x:Name="LabLog" Margin="20,38,20,18" TextTrimming="None" TextWrapping="Wrap" />
             </local:MyCard>
         </StackPanel>

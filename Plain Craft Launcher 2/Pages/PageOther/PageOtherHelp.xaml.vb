@@ -5,6 +5,11 @@
 
     '滚动条
     Private Sub PageOther_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
+        If Lang = "zh-CN" Then
+            HintSCOnly.Visibility = Visibility.Collapsed
+        Else
+            HintSCOnly.Visibility = Visibility.Visible
+        End If
         PanBack.ScrollToHome()
     End Sub
     '初始化加载器信息

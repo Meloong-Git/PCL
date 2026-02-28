@@ -56,11 +56,11 @@
 
 #Region "下载支持库文件"
         Dim LoadersLib As New List(Of LoaderBase) From {
-            New LoaderTask(Of String, List(Of NetFile))("分析缺失支持库文件", Sub(Task As LoaderTask(Of String, List(Of NetFile))) Task.Output = McLibNetFilesFromInstance(Instance)) With {.ProgressWeight = 1},
-            New LoaderDownload("下载支持库文件", New List(Of NetFile)) With {.ProgressWeight = 15}
+            New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadMcLibFixAnalysis"), Sub(Task As LoaderTask(Of String, List(Of NetFile))) Task.Output = McLibNetFilesFromInstance(Instance)) With {.ProgressWeight = 1},
+            New LoaderDownload(GetLang("LangModDownloadMcLibFixDownload"), New List(Of NetFile)) With {.ProgressWeight = 15}
         }
         '构造加载器
-        Loaders.Add(New LoaderCombo(Of String)("下载支持库文件（主加载器）", LoadersLib) With {.Block = False, .Show = False, .ProgressWeight = 16})
+        Loaders.Add(New LoaderCombo(Of String)(GetLang("LangModDownloadMcLibFixDownloadMainLoader"), LoadersLib) With {.Block = False, .Show = False, .ProgressWeight = 16})
 #End Region
 
 #Region "下载资源文件"
@@ -69,7 +69,7 @@
         Else
             Dim LoadersAssets As New List(Of LoaderBase)
             '获取资源文件索引地址
-            LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))("分析资源文件索引地址",
+            LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadMcAssetsAnalysis"),
             Sub(Task As LoaderTask(Of String, List(Of NetFile)))
                 Try
                     Dim IndexFile = DlClientAssetIndexGet(Instance)
@@ -82,17 +82,17 @@
                         Task.Output = New List(Of NetFile) From {IndexFile}
                     End If
                 Catch ex As Exception
-                    Throw New Exception("分析资源文件索引地址失败", ex)
+                    Throw New Exception(GetLang("LangModDownloadExceptionAssetsAnalysis"), ex)
                 End Try
             End Sub) With {.ProgressWeight = 0.5, .Show = False})
             '下载资源文件索引
-            LoadersAssets.Add(New LoaderDownload("下载资源文件索引", New List(Of NetFile)) With {.ProgressWeight = 2})
+            LoadersAssets.Add(New LoaderDownload(GetLang("LangModDownloadMcAssetsDownload"), New List(Of NetFile)) With {.ProgressWeight = 2})
             '要求独立更新索引
             If AssetsIndexBehaviour = AssetsIndexExistsBehaviour.DownloadInBackground Then
                 Dim LoadersAssetsUpdate As New List(Of LoaderBase)
                 Dim TempAddress As String = Nothing
                 Dim RealAddress As String = Nothing
-                LoadersAssetsUpdate.Add(New LoaderTask(Of String, List(Of NetFile))("后台分析资源文件索引地址",
+                LoadersAssetsUpdate.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadMcAssetsUpdateAnalysis"),
                 Sub(Task As LoaderTask(Of String, List(Of NetFile)))
                     Dim BackAssetsFile As NetFile = DlClientAssetIndexGet(Instance)
                     If BackAssetsFile Is Nothing Then
@@ -110,23 +110,23 @@
                         Task.Abort()
                     End If
                 End Sub))
-                LoadersAssetsUpdate.Add(New LoaderDownload("后台下载资源文件索引", New List(Of NetFile)))
-                LoadersAssetsUpdate.Add(New LoaderTask(Of List(Of NetFile), String)("后台复制资源文件索引",
+                LoadersAssetsUpdate.Add(New LoaderDownload(GetLang("LangModDownloadMcAssetsUpdateDownload"), New List(Of NetFile)))
+                LoadersAssetsUpdate.Add(New LoaderTask(Of List(Of NetFile), String)(GetLang("LangModDownloadMcAssetsUpdateCopy"),
                 Sub(Task As LoaderTask(Of List(Of NetFile), String))
                     CopyFile(TempAddress, RealAddress)
                     McLaunchLog("后台更新资源文件索引成功：" & TempAddress)
                 End Sub))
-                Dim Updater As New LoaderCombo(Of String)("后台更新资源文件索引", LoadersAssetsUpdate)
+                Dim Updater As New LoaderCombo(Of String)(GetLang("LangModDownloadMcAssetsUpdateRefresh"), LoadersAssetsUpdate)
                 Log("[Download] 开始后台检查资源文件索引")
                 Updater.Start()
             End If
             '获取资源文件地址
-            LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))("获取资源文件列表",
+            LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadMcResFixAnalysis"),
                 Sub(Task) Task.Output = McAssetsFixList(Instance, CheckAssetsHash, Task)) With {.ProgressWeight = 0.01})
             '下载资源文件
-            LoadersAssets.Add(New LoaderDownload("下载资源文件", New List(Of NetFile)) With {.ProgressWeight = 25})
+            LoadersAssets.Add(New LoaderDownload(GetLang("LangModDownloadMcResDownload"), New List(Of NetFile)) With {.ProgressWeight = 25})
             '构造加载器
-            Loaders.Add(New LoaderCombo(Of String)("下载资源文件（主加载器）", LoadersAssets) With {.Block = False, .Show = False, .ProgressWeight = 27})
+            Loaders.Add(New LoaderCombo(Of String)(GetLang("LangModDownloadMcResDownloadMainLoader"), LoadersAssets) With {.Block = False, .Show = False, .ProgressWeight = 27})
         End If
 #End Region
 
@@ -226,7 +226,7 @@
         Dim Json As JObject = GetJson(NetRequestByClientRetry("https://launchermeta.mojang.com/mc/game/version_manifest.json", RequireJson:=True))
         Try
             Dim Versions As JArray = Json("versions")
-            If Versions.Count < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Json.ToString & "）")
+            If Versions.Count < 200 Then Throw New Exception(GetLang("LangModDownloadExceptionShortVersionList", Json.ToString()))
             '确定官方源是否可用
             If Not DlPreferMojang Then
                 Dim DeltaTime = GetTimeMs() - StartTime
@@ -236,7 +236,7 @@
             '添加 PCL 特供项
             If File.Exists(PathTemp & "Cache\download.json") Then Versions.Merge(GetJson(ReadFile(PathTemp & "Cache\download.json")))
             '返回
-            Loader.Output = New DlClientListResult With {.IsOfficial = True, .SourceName = "Mojang 官方源", .Value = Json}
+            Loader.Output = New DlClientListResult With {.IsOfficial = True, .SourceName = GetLang("LangModDownloadSourceOfficial", "Mojang"), .Value = Json}
             'MC 更新提示
             Static IsHinted As Boolean = False
             Dim Version As String
@@ -257,7 +257,7 @@
             End If
             Setup.Set("ToolUpdateReleaseLast", Version)
         Catch ex As Exception
-            Throw New Exception("Minecraft 官方源版本列表解析失败", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceOfficialListLoad", "Minecraft", "Fail"), ex)
         End Try
     End Sub
     ''' <summary>
@@ -268,20 +268,20 @@
         Dim Json As JObject = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/mc/game/version_manifest.json", RequireJson:=True))
         Try
             Dim Versions As JArray = Json("versions")
-            If Versions.Count < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Json.ToString & "）")
+            If Versions.Count < 200 Then Throw New Exception(GetLang("LangModDownloadExceptionShortVersionList", Json.ToString()))
             '添加 PCL 特供项
             If File.Exists(PathTemp & "Cache\download.json") Then Versions.Merge(GetJson(ReadFile(PathTemp & "Cache\download.json")))
             '检查是否有要求的版本（#5195）
             If Not String.IsNullOrEmpty(Loader.Input) Then
                 Dim Id = Loader.Input
                 If DlClientListLoader.Output.Value IsNot Nothing AndAlso Not DlClientListLoader.Output.Value("versions").Any(Function(v) v("id") = Id) Then
-                    Throw New Exception("BMCLAPI 源未包含目标版本 " & Id)
+                    Throw New Exception(GetLang("LangModDownloadExceptionBMCLMissInstance", Id))
                 End If
             End If
             '返回
             Loader.Output = New DlClientListResult With {.IsOfficial = False, .SourceName = "BMCLAPI", .Value = Json}
         Catch ex As Exception
-            Throw New Exception("Minecraft BMCLAPI 版本列表解析失败（" & Json.ToString & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceMirrorListLoad", "Minecraft BMCLAPI", Json.ToString()), ex)
         End Try
     End Sub
 
@@ -408,15 +408,15 @@
     Public DlOptiFineListOfficialLoader As New LoaderTask(Of Integer, DlOptiFineListResult)("DlOptiFineList Official", AddressOf DlOptiFineListOfficialMain)
     Private Sub DlOptiFineListOfficialMain(Loader As LoaderTask(Of Integer, DlOptiFineListResult))
         Dim Result As String = NetRequestByClientRetry("https://optifine.net/downloads", Encoding:=Encoding.Default)
-        If Result.Length < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Result & "）")
+        If Result.Length < 200 Then Throw New Exception(GetLang("LangModDownloadExceptionShortVersionList", Result))
         Try
             '获取所有版本信息
             Dim Forge As List(Of String) = RegexSearch(Result, "(?<=colForge'>)[^<]*")
             Dim ReleaseTime As List(Of String) = RegexSearch(Result, "(?<=colDate'>)[^<]+")
             Dim Name As List(Of String) = RegexSearch(Result, "(?<=OptiFine_)[0-9A-Za-z_.]+(?=.jar"")")
-            If Not ReleaseTime.Count = Name.Count Then Throw New Exception("版本与发布时间数据无法对应")
-            If Not Forge.Count = Name.Count Then Throw New Exception("版本与 Forge 兼容数据无法对应")
-            If ReleaseTime.Count < 10 Then Throw New Exception("获取到的版本数量不足（" & Result & "）")
+            If Not ReleaseTime.Count = Name.Count Then Throw New Exception(GetLang("LangModDownloadExceptionOptiFineTime"))
+            If Not Forge.Count = Name.Count Then Throw New Exception(GetLang("LangModDownloadExceptionOptiFineNoCorresponding"))
+            If ReleaseTime.Count < 10 Then Throw New Exception(GetLang("LangModDownloadExceptionShortVersion", Result))
             '转化为列表输出
             Dim Versions As New List(Of DlOptiFineListEntry)
             For i = 0 To ReleaseTime.Count - 1
@@ -432,9 +432,9 @@
                 Entry.InstanceName = Entry.Inherit & "-OptiFine_" & Name(i).ToString.Replace(" ", "_").Replace(Entry.Inherit & "_", "")
                 Versions.Add(Entry)
             Next
-            Loader.Output = New DlOptiFineListResult With {.IsOfficial = True, .SourceName = "OptiFine 官方源", .Value = Versions}
+            Loader.Output = New DlOptiFineListResult With {.IsOfficial = True, .SourceName = GetLang("LangModDownloadSourceOfficial", "OptiFine"), .Value = Versions}
         Catch ex As Exception
-            Throw New Exception("OptiFine 官方源版本列表解析失败（" & Result & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceOfficialListLoad", "OptiFine", Result), ex)
         End Try
     End Sub
 
@@ -461,7 +461,7 @@
             Next
             Loader.Output = New DlOptiFineListResult With {.IsOfficial = False, .SourceName = "BMCLAPI", .Value = Versions}
         Catch ex As Exception
-            Throw New Exception("OptiFine BMCLAPI 版本列表解析失败（" & Json.ToString & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceMirrorListLoad", "OptiFine BMCLAPI", Json.ToString()), ex)
         End Try
     End Sub
 
@@ -514,12 +514,12 @@
     Public DlForgeListOfficialLoader As New LoaderTask(Of Integer, DlForgeListResult)("DlForgeList Official", AddressOf DlForgeListOfficialMain)
     Private Sub DlForgeListOfficialMain(Loader As LoaderTask(Of Integer, DlForgeListResult))
         Dim Result As String = NetRequestByClientRetry("https://files.minecraftforge.net/maven/net/minecraftforge/forge/index_1.2.4.html", Encoding:=Encoding.Default, Accept:="text/html", SimulateBrowserHeaders:=True)
-        If Result.Length < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Result & "）")
+        If Result.Length < 200 Then Throw New Exception(GetLang("LangModDownloadExceptionShortVersionList", Result))
         '获取所有版本信息
         Dim Names As List(Of String) = RegexSearch(Result, "(?<=a href=""index_)[0-9.]+((_pre|[_-]snapshot[_-]?)[0-9]?)?(?=.html)")
         Names.Add("1.2.4") '1.2.4 不会被匹配上
-        If Names.Count < 10 Then Throw New Exception("获取到的版本数量不足（" & Result & "）")
-        Loader.Output = New DlForgeListResult With {.IsOfficial = True, .SourceName = "Forge 官方源", .Value = Names}
+        If Names.Count < 10 Then Throw New Exception(GetLang("LangModDownloadExceptionShortVersion", Result))
+        Loader.Output = New DlForgeListResult With {.IsOfficial = True, .SourceName = GetLang("LangModDownloadSourceOfficial", "Forge"), .Value = Names}
     End Sub
 
     ''' <summary>
@@ -530,7 +530,7 @@
         Dim Result As JArray = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/forge/minecraft",
                                                        Encoding:=Encoding.Default, RequireJson:=True))
         Dim Names As List(Of String) = Result.Select(Function(v) v.ToString).ToList
-        If Names.Count < 10 Then Throw New Exception("获取到的版本数量不足")
+        If Names.Count < 10 Then Throw New Exception(GetLang("LangModDownloadExceptionShortVersion", Result))
         Loader.Output = New DlForgeListResult With {.IsOfficial = False, .SourceName = "BMCLAPI", .Value = Names}
     End Sub
 
@@ -668,12 +668,12 @@
                                           ".html", SimulateBrowserHeaders:=True)
         Catch ex As Exception
             If ex.GetBrief().Contains("(404)") Then
-                Throw New Exception("无")
+                Throw New Exception(GetLang("LangDownloadInstallNoAvailableVersion"))
             Else
                 Throw
             End If
         End Try
-        If Result.Length < 1000 Then Throw New Exception("获取到的版本列表长度不足（" & Result & "）")
+        If Result.Length < 1000 Then Throw New Exception(GetLang("LangModDownloadExceptionShortVersionList", Result))
         Dim Versions As New List(Of DlForgeVersionEntry)
         Try
             '分割版本信息
@@ -695,7 +695,7 @@
                     Dim ReleaseDate As New Date(ReleaseTimeSplit(0), ReleaseTimeSplit(1), ReleaseTimeSplit(2), '年月日
                                                 ReleaseTimeSplit(3), ReleaseTimeSplit(4), ReleaseTimeSplit(5), '时分秒
                                                 0, DateTimeKind.Utc) '以 UTC 时间作为标准
-                    Dim ReleaseTime As String = ReleaseDate.ToLocalTime.ToString("yyyy'/'MM'/'dd HH':'mm") '时区与格式转换
+                    Dim ReleaseTime As String = GetLocalTimeFormat(ReleaseDate.ToLocalTime) '时区与格式转换
                     '分类与 MD5 获取
                     Dim MD5 As String, Category As String
                     If VersionCode.Contains("classifier-installer""") Then
@@ -720,13 +720,13 @@
                     '添加进列表
                     Versions.Add(New DlForgeVersionEntry(Name, Branch, Inherit) With {.Category = Category, .IsRecommended = IsRecommended, .Hash = MD5.Trim(vbCr, vbLf), .ReleaseTime = ReleaseTime})
                 Catch ex As Exception
-                    Throw New Exception("Forge 官方源版本信息提取失败（" & VersionCode & "）", ex)
+                    Throw New Exception(GetLang("LangModDownloadExceptionForgeGetInfoFail", VersionCode), ex)
                 End Try
             Next
         Catch ex As Exception
-            Throw New Exception("Forge 官方源版本列表解析失败（" & Result & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceOfficialListLoad", "Forge", Result), ex)
         End Try
-        If Not Versions.Any() Then Throw New Exception("无")
+        If Not Versions.Any() Then Throw New Exception(GetLang("LangDownloadInstallNoAvailableVersion"))
         Loader.Output = Versions
     End Sub
 
@@ -773,14 +773,14 @@
                 '基础信息获取
                 Dim Entry = New DlForgeVersionEntry(Name, Branch, Loader.Input) With {.Hash = Hash, .Category = Category, .IsRecommended = Recommended = Name}
                 Dim TimeSplit = Token("modified").ToString.Split("-"c, "T"c, ":"c, "."c, " "c, "/"c)
-                Entry.ReleaseTime = Token("modified").ToObject(Of Date).ToLocalTime.ToString("yyyy'/'MM'/'dd HH':'mm")
+                Entry.ReleaseTime = GetLocalTimeFormat(Token("modified").ToObject(Of Date).ToLocalTime)
                 '添加项
                 Versions.Add(Entry)
             Next
         Catch ex As Exception
-            Throw New Exception("Forge BMCLAPI 版本列表解析失败（" & Json.ToString & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadSourceBMCLAPIForge", Json.ToString()), ex)
         End Try
-        If Not Versions.Any() Then Throw New Exception("无")
+        If Not Versions.Any() Then Throw New Exception(GetLang("LangDownloadInstallNoAvailableVersion"))
         Loader.Output = Versions
     End Sub
 
@@ -899,13 +899,13 @@
         '获取版本列表 JSON
         Dim ResultLatest As String = NetRequestByClientRetry("https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/neoforge", RequireJson:=True)
         Dim ResultLegacy As String = NetRequestByClientRetry("https://maven.neoforged.net/api/maven/versions/releases/net/neoforged/forge", RequireJson:=True)
-        If ResultLatest.Length < 100 OrElse ResultLegacy.Length < 100 Then Throw New Exception("获取到的版本列表长度不足（" & ResultLatest & "）")
+        If ResultLatest.Length < 100 OrElse ResultLegacy.Length < 100 Then Throw New Exception(GetLang("LangModDownloadExceptionShortVersionList", ResultLatest))
         '解析
         Try
-            Loader.Output = New DlNeoForgeListResult With {.IsOfficial = True, .SourceName = "NeoForge 官方源",
+            Loader.Output = New DlNeoForgeListResult With {.IsOfficial = True, .SourceName = GetLang("LangModDownloadSourceOfficial", "NeoForge"),
                 .Value = GetNeoForgeEntries(ResultLatest, ResultLegacy)}
         Catch ex As Exception
-            Throw New Exception("NeoForge 官方源版本列表解析失败（" & ResultLatest & vbCrLf & vbCrLf & ResultLegacy & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceOfficialListLoad", "NeoForge", ResultLatest & vbCrLf & vbCrLf & ResultLegacy), ex)
         End Try
     End Sub
 
@@ -917,13 +917,13 @@
         '获取版本列表 JSON
         Dim ResultLatest As String = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/neoforge/meta/api/maven/details/releases/net/neoforged/neoforge", RequireJson:=True)
         Dim ResultLegacy As String = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/neoforge/meta/api/maven/details/releases/net/neoforged/forge", RequireJson:=True)
-        If ResultLatest.Length < 100 OrElse ResultLegacy.Length < 100 Then Throw New Exception("获取到的版本列表长度不足（" & ResultLatest & "）")
+        If ResultLatest.Length < 100 OrElse ResultLegacy.Length < 100 Then Throw New Exception(GetLang("LangModDownloadExceptionShortVersionList", ResultLatest))
         '解析
         Try
             Loader.Output = New DlNeoForgeListResult With {.IsOfficial = True, .SourceName = "BMCLAPI",
                 .Value = GetNeoForgeEntries(ResultLatest, ResultLegacy)}
         Catch ex As Exception
-            Throw New Exception("NeoForge BMCLAPI 版本列表解析失败（" & ResultLatest & vbCrLf & vbCrLf & ResultLegacy & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceMirrorListLoad", "NeoForge BMCLAPI", ResultLatest & vbCrLf & vbCrLf & ResultLegacy), ex)
         End Try
     End Sub
 
@@ -1034,13 +1034,13 @@
                              .IsPreview = RealEntry("stream").ToString.ToLower = "snapshot",
                              .FileName = "liteloader-installer-" & Pair.Key & If(Pair.Key = "1.8" OrElse Pair.Key = "1.9", ".0", "") & "-00-SNAPSHOT.jar",
                              .MD5 = RealEntry("md5"),
-                             .ReleaseTime = GetLocalTime(GetDate(RealEntry("timestamp"))).ToString("yyyy'/'MM'/'dd HH':'mm"),
+                             .ReleaseTime = GetLocalTimeFormat(GetLocalTime(GetDate(RealEntry("timestamp")))),
                              .JsonToken = RealEntry
                          })
             Next
-            Loader.Output = New DlLiteLoaderListResult With {.IsOfficial = True, .SourceName = "LiteLoader 官方源", .Value = Versions}
+            Loader.Output = New DlLiteLoaderListResult With {.IsOfficial = True, .SourceName = GetLang("LangModDownloadSourceOfficial", "LiteLoader"), .Value = Versions}
         Catch ex As Exception
-            Throw New Exception("LiteLoader 官方源版本列表解析失败（" & Result.ToString & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceOfficialListLoad", "LiteLoader", Result.ToString()), ex)
         End Try
     End Sub
 
@@ -1062,13 +1062,13 @@
                              .IsPreview = RealEntry("stream").ToString.ToLower = "snapshot",
                              .FileName = "liteloader-installer-" & Pair.Key & If(Pair.Key = "1.8" OrElse Pair.Key = "1.9", ".0", "") & "-00-SNAPSHOT.jar",
                              .MD5 = RealEntry("md5"),
-                             .ReleaseTime = GetLocalTime(GetDate(RealEntry("timestamp"))).ToString("yyyy'/'MM'/'dd HH':'mm"),
+                             .ReleaseTime = GetLocalTimeFormat(GetLocalTime(GetDate(RealEntry("timestamp")))),
                              .JsonToken = RealEntry
                          })
             Next
             Loader.Output = New DlLiteLoaderListResult With {.IsOfficial = False, .SourceName = "BMCLAPI", .Value = Versions}
         Catch ex As Exception
-            Throw New Exception("LiteLoader BMCLAPI 版本列表解析失败（" & Result.ToString & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceMirrorListLoad", "LiteLoader BMCLAPI", Result.ToString), ex)
         End Try
     End Sub
 
@@ -1122,11 +1122,11 @@
     Private Sub DlFabricListOfficialMain(Loader As LoaderTask(Of Integer, DlFabricListResult))
         Dim Result As JObject = GetJson(NetRequestByClientRetry("https://meta.fabricmc.net/v2/versions", RequireJson:=True))
         Try
-            Dim Output = New DlFabricListResult With {.IsOfficial = True, .SourceName = "Fabric 官方源", .Value = Result}
-            If Output.Value("game") Is Nothing OrElse Output.Value("loader") Is Nothing OrElse Output.Value("installer") Is Nothing Then Throw New Exception("获取到的列表缺乏必要项")
+            Dim Output = New DlFabricListResult With {.IsOfficial = True, .SourceName = GetLang("LangModDownloadSourceOfficial", "Fabric"), .Value = Result}
+            If Output.Value("game") Is Nothing OrElse Output.Value("loader") Is Nothing OrElse Output.Value("installer") Is Nothing Then Throw New Exception(GetLang("LangModDownloadExceptionMissNecessary"))
             Loader.Output = Output
         Catch ex As Exception
-            Throw New Exception("Fabric 官方源版本列表解析失败（" & Result.ToString & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceOfficialListLoad", "Fabric", Result.ToString()), ex)
         End Try
     End Sub
 
@@ -1138,10 +1138,10 @@
         Dim Result As JObject = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/fabric-meta/v2/versions", RequireJson:=True))
         Try
             Dim Output = New DlFabricListResult With {.IsOfficial = False, .SourceName = "BMCLAPI", .Value = Result}
-            If Output.Value("game") Is Nothing OrElse Output.Value("loader") Is Nothing OrElse Output.Value("installer") Is Nothing Then Throw New Exception("获取到的列表缺乏必要项")
+            If Output.Value("game") Is Nothing OrElse Output.Value("loader") Is Nothing OrElse Output.Value("installer") Is Nothing Then Throw New Exception(GetLang("LangModDownloadExceptionMissNecessary"))
             Loader.Output = Output
         Catch ex As Exception
-            Throw New Exception("Fabric BMCLAPI 版本列表解析失败（" & Result.ToString & "）", ex)
+            Throw New Exception(GetLang("LangModDownloadExceptionSourceMirrorListLoad", "Fabric BMCLAPI", Result.ToString()), ex)
         End Try
     End Sub
 
@@ -1349,12 +1349,12 @@
                     For ii = 0 To LoaderList.Count - 1
                         LoaderList(ii).Key.Input = Nothing '重置输入，以免以同样的输入“重试加载”时直接失败
                         If LoaderList(ii).Key.Error IsNot Nothing Then
-                            If ErrorInfo Is Nothing OrElse LoaderList(ii).Key.Error.Message = "无" Then
+                            If ErrorInfo Is Nothing OrElse LoaderList(ii).Key.Error.Message.Contains(GetLang("LangDownloadInstallNoAvailableVersion")) Then
                                 ErrorInfo = LoaderList(ii).Key.Error
                             End If
                         End If
                     Next
-                    If ErrorInfo Is Nothing Then ErrorInfo = New TimeoutException("下载源连接超时")
+                    If ErrorInfo Is Nothing Then ErrorInfo = New TimeoutException(GetLang("LangModDownloadExceptionConnectionTimeout"))
                     DlSourceLoaderAbort(LoaderList)
                     Throw ErrorInfo
                 End If

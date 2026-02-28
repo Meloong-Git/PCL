@@ -22,7 +22,7 @@ Namespace My.Resources
     '''<summary>
     '''  一个强类型的资源类，用于查找本地化的字符串等。
     '''</summary>
-    <Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0"),  _
+    <Global.System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0"),  _
      Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
      Global.System.Runtime.CompilerServices.CompilerGeneratedAttribute(),  _
      Global.Microsoft.VisualBasic.HideModuleNameAttribute()>  _
@@ -63,36 +63,6 @@ Namespace My.Resources
         '''<summary>
         '''  查找 System.Byte[] 类型的本地化资源。
         '''</summary>
-        Friend ReadOnly Property CacheCow_Client() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("CacheCow.Client", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
-        Friend ReadOnly Property CacheCow_Client_FileStore() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("CacheCow.Client.FileStore", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
-        Friend ReadOnly Property CacheCow_Common() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("CacheCow.Common", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
         Friend ReadOnly Property Custom() As Byte()
             Get
                 Dim obj As Object = ResourceManager.GetObject("Custom", resourceCulture)
@@ -123,16 +93,6 @@ Namespace My.Resources
         '''<summary>
         '''  查找 System.Byte[] 类型的本地化资源。
         '''</summary>
-        Friend ReadOnly Property Imazen_WebP() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("Imazen.WebP", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
         Friend ReadOnly Property JavaWrapper() As Byte()
             Get
                 Dim obj As Object = ResourceManager.GetObject("JavaWrapper", resourceCulture)
@@ -156,56 +116,6 @@ Namespace My.Resources
         Friend ReadOnly Property ModData() As Byte()
             Get
                 Dim obj As Object = ResourceManager.GetObject("ModData", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
-        Friend ReadOnly Property NAudio() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("NAudio", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
-        Friend ReadOnly Property Newtonsoft_Json() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("Newtonsoft.Json", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
-        Friend ReadOnly Property Ookii_Dialogs_Wpf() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("Ookii.Dialogs.Wpf", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
-        Friend ReadOnly Property System_Net_Http_Formatting() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("System.Net.Http.Formatting", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
-        Friend ReadOnly Property System_ValueTuple() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("System.ValueTuple", resourceCulture)
                 Return CType(obj,Byte())
             End Get
         End Property

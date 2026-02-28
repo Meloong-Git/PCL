@@ -9,12 +9,14 @@
     '属性
     Public Property HintText() As String
         Get
-            Return TextBox.HintText
+            Return GetValue(HintTextProperty)
         End Get
         Set(value As String)
-            TextBox.HintText = value
+            SetValue(HintTextProperty, value)
         End Set
     End Property
+    Public Shared ReadOnly HintTextProperty As DependencyProperty = DependencyProperty.Register("HintText", GetType(String), GetType(MySearchBox), New PropertyMetadata(""))
+
     Public Property Text() As String
         Get
             Return TextBox.Text

@@ -1,39 +1,59 @@
-name: "Minecraft 崩溃"
-description: "PCL 提示 “Minecraft 出现错误”，或游戏崩溃"
+name: "Minecraft 崩溃 | Minecraft Crashed"
+description: | 
+  PCL 提示 “Minecraft 出现错误”，或游戏崩溃。
+  PCL hinted \"Minecraft Crashed\" or the game crashed.
 labels: [· Bug, 新提交]
 body:
 - type: checkboxes
   id: "yml-1"
   attributes:
-    label: "检查项"
-    description: "请逐个检查下列项目，并勾选确认。"
+    label: 检查项 Checklist
+    description: |
+      请逐个检查下列项目，并勾选确认。
+      Please check each of the following items individually and mark your confirmation.
     options:
-    - label: "**我所启动的游戏不是整合包，且未安装任何 Mod。** 安装 Mod 后的游戏崩溃基本不是 PCL 的原因，请 **不要** 提交反馈。你可以在论坛或社区找人求助，但这里并不是你求助的地方。"
+    - label: |
+        **我所启动的游戏不是整合包，且未安装任何 Mod。** 安装 Mod 后的游戏崩溃基本不是 PCL 的原因，请 **不要** 提交反馈。你可以在论坛或社区找人求助，但这里并不是你求助的地方。
+        The game I launched is not a modpack, and no mods are installed. **Crashes that occur after installing mods are generally not caused by PCL, please **DO NOT** submit feedback.** You may seek help from forums or community groups, but this is not the place for assistance.
       required: false
-    - label: "**我已尝试使用 HMCL 启动，HMCL 没有出现问题。** 如果 HMCL 也无法启动就不是 PCL 导致的问题，请 **不要** 提交反馈。[下载 HMCL](https://hmcl.huangyuhui.net/download)"
+    - label: |
+        **我已尝试使用 HMCL 启动，HMCL 没有出现问题。** 如果 HMCL 也无法启动就不是 PCL 导致的问题，请 **不要** 提交反馈。[下载 HMCL](https://hmcl.huangyuhui.net/download)
+        **I have tried launching the game with other launchers, and no issues occurred.** If other launchers also fail to launch, it is not a problem caused by PCL, please **DO NOT** submit feedback. [Download HMCL](https://hmcl.huangyuhui.net/download)
       required: true
-    - label: "我已在 [Issues 页面](https://github.com/Meloong-Git/PCL/issues?q=is%3Aissue+) 和 [常见&难检反馈及问题列表](https://github.com/Meloong-Git/PCL/discussions/1930) 中搜索，确认了这一 Bug 未被提交过。"
+    - label: |
+        我已在 [Issues 页面](https://github.com/Meloong-Git/PCL/issues?q=is%3Aissue+) 和 [常见&难检反馈及问题列表](https://github.com/Meloong-Git/PCL/discussions/1930) 中搜索，确认了这一 Bug 未被提交过。
+        I have searched the [Issues page](https://github.com/Meloong-Git/PCL2/issues?q=is%3Aissue+) and the [Common & Hard-to-Diagnose Feedback and Issue List](https://github.com/Meloong-Git/PCL2/discussions/1930) to confirm that this bug has not been submitted before.
       required: true
 - type: textarea
   id: "yml-2"
   attributes:
-    label: 描述
-    description: "详细描述具体表现。"
+    label: 描述 Description
+    description: |
+      详细描述具体表现。
+      Provide a detailed description of the specific issue or behavior.
   validations:
     required: true
 - type: textarea
   id: "yml-3"
   attributes:
-    label: PCL 错误报告、日志与附件
-    description: "上传 PCL 提供的错误报告（在崩溃时选择导出错误报告）。如果没有，也可以上传 PCL 文件夹中的 Log1~5.txt。"
-    placeholder: "先点击这个文本框，然后再将文件直接拖拽到文本框中以上传。"
+    label: PCL 错误报告、日志与附件 Crash Reports & Logs & Attachments
+    description: |
+      上传 PCL 提供的错误报告（在崩溃时选择导出错误报告）。如果没有，也可以上传 PCL 文件夹中的 Log1~5.txt。
+      Upload the crash report provided by PCL (select \"Export Crash Report\" when the crash occurs). If it is not available, you can also upload the Log1~5.txt files from the PCL folder.
+    placeholder: |
+      先点击这个文本框，然后再将文件直接拖拽到文本框中以上传。
+      Click on this text box first, then drag and drop the file directly into the text box to upload.
   validations:
     required: true
 - type: textarea
   id: "yml-4"
   attributes:
-    label: HMCL 启动脚本
-    description: "在 HMCL 中进入版本列表，点击版本右侧的三个点，选择 生成启动脚本。"
-    placeholder: "先点击这个文本框，然后再将文件直接拖拽到文本框中以上传。"
+    label: HMCL 启动脚本 HMCL Launch Script
+    description: |
+      在 HMCL 中进入版本列表，点击版本右侧的三个点，选择 “生成启动脚本”。
+      In HMCL, go to the instance list (All Instances), click the three dots on the right side of the instance, and select Export Launch Script.
+    placeholder: |
+      先点击这个文本框，然后再将文件直接拖拽到文本框中以上传。
+      Click on this text box first, then drag and drop the file directly into the text box to upload.
   validations:
     required: false

@@ -11,8 +11,8 @@ Public Class PageLaunchRight
         PanHint.Visibility = Visibility.Collapsed
 #Else
         PanHint.Visibility = If(ThemeCheckGold(), Visibility.Collapsed, Visibility.Visible)
-        LabHint1.Text = "快照版包含尚未正式发布的测试功能，仅用于赞助者本人尝鲜。请不要发给其他人或者用来制作整合包哦！"
-        LabHint2.Text = $"若已累积赞助￥23.33，在爱发电私信发送 {vbLQ}解锁码{vbRQ} 即可永久隐藏此提示。"
+        LabHint1.Text = GetLang("LangLaunchRightLabHint1")
+        LabHint2.Text = GetLang("LangLaunchRightLabHint2")
 #End If
     End Sub
 
@@ -56,7 +56,7 @@ Public Class PageLaunchRight
                     Case 0
                         Log("[Page] 主页预设：你知道吗")
                         Content = "
-                            <local:MyCard Title=""你知道吗？"" Margin=""0,0,0,15"">
+                            <local:MyCard Title=""{StaticResource LangLaunchRightPageTips}"" Margin=""0,0,0,15"">
                                 <TextBlock Margin=""25,38,23,15"" FontSize=""13.5"" IsHitTestVisible=""False"" Text=""{hint}"" TextWrapping=""Wrap"" Foreground=""{DynamicResource ColorBrush1}"" />
                                 <local:MyIconButton Height=""22"" Width=""22"" Margin=""9"" VerticalAlignment=""Top"" HorizontalAlignment=""Right"" 
                                     EventType=""刷新主页"" EventData=""/""
@@ -65,7 +65,7 @@ Public Class PageLaunchRight
                     Case 1
                         Log("[Page] 主页预设：回声洞")
                         Content = "
-                            <local:MyCard Title=""回声洞"" Margin=""0,0,0,15"">
+                            <local:MyCard Title=""{StaticResource LangLaunchRightPageEcho}"" Margin=""0,0,0,15"">
                                 <TextBlock Margin=""25,38,23,15"" FontSize=""13.5"" IsHitTestVisible=""False"" Text=""{cave}"" TextWrapping=""Wrap"" Foreground=""{DynamicResource ColorBrush1}"" />
                                 <local:MyIconButton Height=""22"" Width=""22"" Margin=""9"" VerticalAlignment=""Top"" HorizontalAlignment=""Right"" 
                                     EventType=""刷新主页"" EventData=""/""

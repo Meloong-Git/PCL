@@ -45,7 +45,7 @@
         OpenWebsite("https://account.live.com/password/Change")
     End Sub
     Public Sub BtnEditName_Click(sender As Object, e As RoutedEventArgs)
-        OpenWebsite("https://www.minecraft.net/zh-hans/msaprofile/mygames/editprofile")
+        OpenWebsite("https://www.minecraft.net/msaprofile/mygames/editprofile")
     End Sub
 
     '退出登录
@@ -73,16 +73,16 @@
     Public Sub BtnSkinEdit_Click(sender As Object, e As RoutedEventArgs)
         '检查条件，获取新皮肤
         If IsChanging Then
-            Hint("正在更改皮肤中，请稍候！")
+            Hint(GetLang("LangPageLoginMsSkinChangingSkinPlzWait"))
             Return
         End If
         If McLoginLoader.State = LoadState.Failed Then
-            Hint("登录失败，无法更改皮肤！", HintType.Red)
+            Hint(GetLang("LangPageLoginMsSkinChangeSkinFailByLoginFail"), HintType.Red)
             Return
         End If
         Dim SkinInfo As McSkinInfo = McSkinSelect()
         If Not SkinInfo.IsVaild Then Return
-        Hint("正在更改皮肤……")
+        Hint(GetLang("LangPageLoginMsSkinChangingSkin"))
         IsChanging = True
         '开始实际获取
         RunInNewThread(
@@ -102,11 +102,11 @@ Retry:
                     },
                     Headers:={{"Authorization", "Bearer " & AccessToken}, {"Accept", "*/*"}, {"User-Agent", "MojangSharp/0.1"}})
                 If Result.Contains("request requires user authentication") Then
-                    Hint("正在登录，将在登录完成后继续更改皮肤……")
+                    Hint(GetLang("LangPageLoginMsSkinLoginBeforeChangeSkin"))
                     McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
                     GoTo Retry
                 ElseIf Result.Contains("""error""") Then
-                    Hint("更改皮肤失败：" & GetJson(Result)("error").ToString, HintType.Red)
+                    Hint(GetLang("LangPageLoginMsSkinChangeSkinFail") & ":" & GetJson(Result)("error").ToString, HintType.Red)
                     Return
                 End If
                 '获取新皮肤地址
@@ -122,9 +122,9 @@ Retry:
                 Throw New Exception("未知错误（" & Result & "）")
             Catch ex As Exception
                 If TypeOf ex Is OperationCanceledException OrElse TypeOf ex Is TimeoutException Then
-                    Hint("更改皮肤失败：连接皮肤服务器超时，请稍后再试，或使用 VPN 改善网络环境", HintType.Red)
+                    Hint(GetLang("LangPageLoginMsSkinChangeSkinFailByTimeOut"), HintType.Red)
                 Else
-                    Log(ex, "更改皮肤失败", LogLevel.Hint)
+                    Log(ex, GetLang("LangPageLoginMsSkinChangeSkinFail"), LogLevel.Hint)
                 End If
             Finally
                 IsChanging = False

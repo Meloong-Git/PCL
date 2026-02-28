@@ -9,12 +9,21 @@
     <Application.Resources>
         <ResourceDictionary>
             
+            <!-- 本地化 -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Resources/Language/zh-CN.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Resources/Language/zh-CN.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            
             <!-- Converter -->
             <local:AdditionConverter x:Key="AdditionConverter"/>
             <local:MultiplicationConverter x:Key="MultiplicationConverter"/>
             <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
             <local:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+            <!--字体-->
+            <FontFamily x:Key="LaunchFontFamily"/>
 
             <!-- 颜色表 -->
             <SolidColorBrush x:Key="ColorBrush1">#343d4a</SolidColorBrush>
@@ -120,14 +129,14 @@
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
                 <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                <Setter Property="FontFamily" Value="Resources/#PCL English, Microsoft YaHei UI" />
+                <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
             </Style>
             <Style TargetType="TextBlock" x:Key="BasedOnTextBlock">
                 <Setter Property="OverridesDefaultStyle" Value="True" />
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
                 <Setter Property="TextTrimming" Value="CharacterEllipsis" />
-                <Setter Property="FontFamily" Value="Resources/#PCL English, Microsoft YaHei UI" />
+                <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
             </Style>
 
             <!-- ToolTip -->
@@ -269,7 +278,7 @@
                 <Setter Property="FontSize" Value="13" />
                 <Setter Property="SelectionBrush" Value="{DynamicResource ColorBrush3}" />
                 <Setter Property="Foreground" Value="{DynamicResource ColorBrush1}" />
-                <Setter Property="FontFamily" Value="Resources/#PCL English, Microsoft YaHei UI" />
+                <Setter Property="FontFamily" Value="{DynamicResource LaunchFontFamily}" />
                 <Setter Property="VerticalContentAlignment" Value="Center" />
                 <Setter Property="SnapsToDevicePixels" Value="True" />
                 <Setter Property="IsUndoEnabled" Value="True" />
@@ -296,7 +305,7 @@
                                     <!-- 由于未知原因，TextView 会有 2,0 的 Margin -->
                                 </Border>
                                 <Border Margin="{TemplateBinding Padding}" IsHitTestVisible="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" BorderThickness="0">
-                                    <TextBlock x:Name="labHint" Foreground="{StaticResource ColorBrushGray4}" Margin="7,0,0,0" Padding="{TemplateBinding BorderThickness}" FontSize="{TemplateBinding FontSize}" FontFamily="Resources/#PCL English, Microsoft YaHei UI" />
+                                    <TextBlock x:Name="labHint" Foreground="{StaticResource ColorBrushGray4}" Margin="7,0,0,0" Padding="{TemplateBinding BorderThickness}" FontSize="{TemplateBinding FontSize}" FontFamily="{DynamicResource LaunchFontFamily}" />
                                 </Border>
                                 <TextBlock Grid.Row="1" x:Name="labWrong" Height="0" Foreground="{TemplateBinding BorderBrush}" Padding="0,4,0,0" Margin="0,0,0,-3" />
                             </Grid>

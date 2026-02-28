@@ -25,16 +25,16 @@ Public Module ModDownloadLib
 
             '重复任务检查
             For Each OngoingLoader In LoaderTaskbar.ToList()
-                If OngoingLoader.Name <> $"Minecraft {Id} 下载" Then Continue For
+                If OngoingLoader.Name <> GetLang("LangModDownloadLibTaskMcDownload", Id) Then Continue For
                 If Behaviour = NetPreDownloadBehaviour.ExitWhileExistsOrDownloading Then Return OngoingLoader
-                Hint("该版本正在下载中！", HintType.Red)
+                Hint(GetLang("LangModDownloadLibHintInstanceDownloading"), HintType.Red)
                 Return OngoingLoader
             Next
 
             '已有版本检查
             If Behaviour <> NetPreDownloadBehaviour.IgnoreCheck AndAlso File.Exists(VersionFolder & Id & ".json") AndAlso File.Exists(VersionFolder & Id & ".jar") Then
                 If Behaviour = NetPreDownloadBehaviour.ExitWhileExistsOrDownloading Then Return Nothing
-                If MyMsgBox("版本 " & Id & " 已存在，是否重新下载？" & vbCrLf & "这会覆盖版本的 json 与 jar 文件，但不会影响版本隔离的文件。", "版本已存在", "继续", "取消") = 1 Then
+                If MyMsgBox(GetLang("LangModDownloadLibDialogContentRedownloadInstance", Id), GetLang("LangModDownloadLibDialogTitleRedownloadInstance"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel")) = 1 Then
                     File.Delete(VersionFolder & Id & ".jar")
                     File.Delete(VersionFolder & Id & ".json")
                 Else
@@ -43,7 +43,7 @@ Public Module ModDownloadLib
             End If
 
             '启动
-            Dim Loader As New LoaderCombo(Of String)("Minecraft " & Id & " 下载", McDownloadClientLoader(Id, JsonUrl)) With {.OnStateChanged = AddressOf McInstallState}
+            Dim Loader As New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskMcDownload", Id), McDownloadClientLoader(Id, JsonUrl)) With {.OnStateChanged = AddressOf McInstallState}
             Loader.Start(VersionFolder)
             LoaderTaskbarAdd(Loader)
             FrmMain.BtnExtraDownload.ShowRefresh()
@@ -68,7 +68,7 @@ Public Module ModDownloadLib
 
         '下载版本 Json 文件
         If JsonUrl Is Nothing Then
-            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("获取原版 json 文件下载地址",
+            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadLibTaskMcDownloadVanillaJsonUrl"),
             Sub(Task As LoaderTask(Of String, List(Of NetFile)))
                 Dim JsonAddress As String = DlClientListGet(Id)
                 Task.Output = New List(Of NetFile) From {New NetFile(DlSourceLauncherOrMetaGet(JsonAddress), VersionFolder & InstanceName & ".json")}
@@ -80,24 +80,24 @@ Public Module ModDownloadLib
 
         '下载支持库文件
         Dim LoadersLib As New List(Of LoaderBase)
-        LoadersLib.Add(New LoaderTask(Of String, List(Of NetFile))("分析原版支持库文件（副加载器）",
+        LoadersLib.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadLibTaskMcDownloadVanillaAnalysisLibSubLoader"),
         Sub(Task As LoaderTask(Of String, List(Of NetFile)))
             Thread.Sleep(50) '等待 JSON 文件实际写入硬盘（#3710）
             Log("[Download] 开始分析原版支持库文件：" & VersionFolder)
             Task.Output = McLibNetFilesFromInstance(New McInstance(VersionFolder))
         End Sub) With {.ProgressWeight = 1, .Show = False})
-        LoadersLib.Add(New LoaderDownload("下载原版支持库文件（副加载器）", New List(Of NetFile)) With {.ProgressWeight = 13, .Show = False})
+        LoadersLib.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskMcDownloadVanillaDownloadLibSubLoader"), New List(Of NetFile)) With {.ProgressWeight = 13, .Show = False})
         Loaders.Add(New LoaderCombo(Of String)(McDownloadClientLibName, LoadersLib) With {.Block = False, .ProgressWeight = 14})
 
         '下载资源文件
         Dim LoadersAssets As New List(Of LoaderBase)
-        LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))("分析资源文件索引地址（副加载器）",
+        LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadLibTaskMcDownloadAnalysisAssetsIndexSubLoader"),
         Sub(Task As LoaderTask(Of String, List(Of NetFile)))
             Try
                 Dim AssetIndex = DlClientAssetIndexGet(New McInstance(VersionFolder))
                 Task.Output = If(AssetIndex Is Nothing, New List(Of NetFile), New List(Of NetFile) From {AssetIndex})
             Catch ex As Exception
-                Throw New Exception("分析资源文件索引地址失败", ex)
+                Throw New Exception(GetLang("LangModDownloadLibExceptionAnalysisAssetsIndexFail"), ex)
             End Try
             '顺手添加 Json 项目
             Try
@@ -105,20 +105,20 @@ Public Module ModDownloadLib
                 InstanceJson.Add("clientVersion", Id)
                 WriteFile($"{VersionFolder}{InstanceName}.json", InstanceJson.ToString)
             Catch ex As Exception
-                Throw New Exception("添加客户端版本失败", ex)
+                Throw New Exception(GetLang("LangModDownloadLibExceptionAddVersionInfoFail"), ex)
             End Try
         End Sub) With {.ProgressWeight = 1, .Show = False})
-        LoadersAssets.Add(New LoaderDownload("下载资源文件索引（副加载器）", New List(Of NetFile)) With {.ProgressWeight = 3, .Show = False})
-        LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))("分析所需资源文件（副加载器）",
+        LoadersAssets.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskDownloadAssetsIndexFail"), New List(Of NetFile)) With {.ProgressWeight = 3, .Show = False})
+        LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadLibTaskAnalysisDownloadAssets"),
             Sub(Task) Task.Output = McAssetsFixList(New McInstance(VersionFolder), True, Task)) With {.ProgressWeight = 0.01, .Show = False})
-        LoadersAssets.Add(New LoaderDownload("下载资源文件（副加载器）", New List(Of NetFile)) With {.ProgressWeight = 14, .Show = False})
-        Loaders.Add(New LoaderCombo(Of String)("下载原版资源文件", LoadersAssets) With {.Block = False, .ProgressWeight = 18})
+        LoadersAssets.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskDownloadAssets"), New List(Of NetFile)) With {.ProgressWeight = 14, .Show = False})
+        Loaders.Add(New LoaderCombo(Of String)(GetLang("LangPageSpeedRightDownloadVanillaResource"), LoadersAssets) With {.Block = False, .ProgressWeight = 18})
 
         Return Loaders
 
     End Function
-    Private Const McDownloadClientLibName As String = "下载原版支持库文件"
-    Private Const McDownloadClientJsonName As String = "下载原版 json 文件"
+    Private McDownloadClientLibName As String = GetLang("LangPageSpeedRightDownloadVanillaSupportLibrary")
+    Private McDownloadClientJsonName As String = GetLang("LangPageSpeedRightDownloadVanillaJSON")
 
 #End Region
 
@@ -142,11 +142,11 @@ Public Module ModDownloadLib
             '建立控件
             Dim NewItem As New MyListItem With {.Logo = Logo, .SnapsToDevicePixels = True, .Title = Entry("id").ToString, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry}
             If Entry("lore") Is Nothing Then
-                NewItem.Info = Entry("releaseTime").Value(Of Date).ToString("yyyy'/'MM'/'dd HH':'mm")
+                NewItem.Info = GetLocalTimeFormat(Entry("releaseTime").Value(Of Date))
             Else
                 NewItem.Info = Entry("lore").ToString
             End If
-            If Entry("url").ToString.Contains("pcl") Then NewItem.Info = "[PCL 特供下载] " & NewItem.Info
+            If Entry("url").ToString.Contains("pcl") Then NewItem.Info = "[" & GetLang("LangDownloadPCLProvided") & "] " & NewItem.Info
             AddHandler NewItem.Click, OnClick
             '建立菜单
             If IsSaveOnly Then
@@ -159,12 +159,12 @@ Public Module ModDownloadLib
         End Function) With {.Height = 42}
     End Function
     Private Sub McDownloadSaveMenuBuild(sender As Object, e As EventArgs)
-        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = "更新日志"}
+        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = GetLang("LangDownloadChangelog")}
         ToolTipService.SetPlacement(BtnInfo, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnInfo, 30)
         ToolTipService.SetHorizontalOffset(BtnInfo, 2)
         AddHandler BtnInfo.Click, AddressOf McDownloadMenuLog
-        Dim BtnServer As New MyIconButton With {.LogoScale = 1, .Logo = Logo.IconButtonServer, .ToolTip = "下载服务端"}
+        Dim BtnServer As New MyIconButton With {.LogoScale = 1, .Logo = Logo.IconButtonServer, .ToolTip = GetLang("LangDownloadServer")}
         ToolTipService.SetPlacement(BtnServer, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnServer, 30)
         ToolTipService.SetHorizontalOffset(BtnServer, 2)
@@ -172,17 +172,17 @@ Public Module ModDownloadLib
         sender.Buttons = {BtnServer, BtnInfo}
     End Sub
     Private Sub McDownloadMenuBuild(sender As Object, e As EventArgs)
-        Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = "另存为"}
+        Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = GetLang("LangDownloadSaveAs")}
         ToolTipService.SetPlacement(BtnSave, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnSave, 30)
         ToolTipService.SetHorizontalOffset(BtnSave, 2)
         AddHandler BtnSave.Click, AddressOf McDownloadMenuSave
-        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = "更新日志"}
+        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = GetLang("LangDownloadChangelog")}
         ToolTipService.SetPlacement(BtnInfo, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnInfo, 30)
         ToolTipService.SetHorizontalOffset(BtnInfo, 2)
         AddHandler BtnInfo.Click, AddressOf McDownloadMenuLog
-        Dim BtnServer As New MyIconButton With {.LogoScale = 1, .Logo = Logo.IconButtonServer, .ToolTip = "下载服务端"}
+        Dim BtnServer As New MyIconButton With {.LogoScale = 1, .Logo = Logo.IconButtonServer, .ToolTip = GetLang("LangDownloadServer")}
         ToolTipService.SetPlacement(BtnServer, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnServer, 30)
         ToolTipService.SetHorizontalOffset(BtnServer, 2)
@@ -218,18 +218,18 @@ Public Module ModDownloadLib
 
             '重复任务检查
             For Each OngoingLoader In LoaderTaskbar.ToList()
-                If OngoingLoader.Name <> $"Minecraft {Id} 服务端下载" Then Continue For
-                Hint("该服务端正在下载中！", HintType.Red)
+                If OngoingLoader.Name <> GetLang("LangModDownloadLibTaskDownloadServer", Id) Then Continue For
+                Hint(GetLang("LangModDownloadLibTaskDownloadServerHintDownloading"), HintType.Red)
                 Return
             Next
 
             Dim Loaders As New List(Of LoaderBase)
             '下载版本 JSON 文件
-            Loaders.Add(New LoaderDownload("下载版本 JSON 文件", New List(Of NetFile) From {
+            Loaders.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskMcDownloadJson"), New List(Of NetFile) From {
                 New NetFile(DlSourceLauncherOrMetaGet(JsonUrl), VersionFolder & Id & ".json", New FileChecker(CanUseExistsFile:=False, IsJson:=True))
             }) With {.ProgressWeight = 2})
             '构建服务端
-            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("构建服务端",
+            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadLibTaskDownloadServerBuildServer"),
             Sub(Task As LoaderTask(Of String, List(Of NetFile)))
                 '分析服务端 JAR 文件下载地址
                 Dim Instance As New McInstance(VersionFolder)
@@ -237,7 +237,7 @@ Public Module ModDownloadLib
                     File.Delete(VersionFolder & Id & ".json")
                     If Not New DirectoryInfo(VersionFolder).GetFileSystemInfos.Any() Then Directory.Delete(VersionFolder)
                     Task.Output = New List(Of NetFile)
-                    Hint($"Mojang 没有给 Minecraft {Id} 提供官方服务端下载，没法下，撤退！", HintType.Red)
+                    Hint(GetLang("LangModDownloadLibExceptionTaskDownloadServerNoResource", Id), HintType.Red)
                     Thread.Sleep(2000) '等玩家把上一个提示看完
                     Task.Abort()
                     Return
@@ -264,10 +264,10 @@ pause"
                 File.Delete(VersionFolder & Id & ".json")
             End Sub) With {.ProgressWeight = 0.5, .Show = False})
             '下载服务端文件
-            Loaders.Add(New LoaderDownload("下载服务端文件", New List(Of NetFile)) With {.ProgressWeight = 5})
+            Loaders.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskDownloadServerDownloading"), New List(Of NetFile)) With {.ProgressWeight = 5})
 
             '启动
-            Dim Loader As New LoaderCombo(Of String)("Minecraft " & Id & " 服务端下载", Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
+            Dim Loader As New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskDownloadServer", Id), Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
             Loader.Start(Id)
             LoaderTaskbarAdd(Loader)
             FrmMain.BtnExtraDownload.ShowRefresh()
@@ -294,25 +294,25 @@ pause"
 
             '重复任务检查
             For Each OngoingLoader In LoaderTaskbar.ToList()
-                If OngoingLoader.Name <> $"Minecraft {Id} 下载" Then Continue For
-                Hint("该版本正在下载中！", HintType.Red)
+                If OngoingLoader.Name <> GetLang("LangModDownloadLibTaskMcDownload") Then Continue For
+                Hint(GetLang("LangModDownloadLibHintInstanceDownloading"), HintType.Red)
                 Return
             Next
 
             Dim Loaders As New List(Of LoaderBase)
             '下载版本 JSON 文件
-            Loaders.Add(New LoaderDownload("下载版本 JSON 文件", New List(Of NetFile) From {
+            Loaders.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskMcDownloadJson"), New List(Of NetFile) From {
                 New NetFile(DlSourceLauncherOrMetaGet(JsonUrl), VersionFolder & Id & ".json", New FileChecker(CanUseExistsFile:=False, IsJson:=True))
             }) With {.ProgressWeight = 2})
             '获取支持库文件地址
-            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("分析核心 JAR 文件下载地址",
+            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadLibTaskMcDownloadJarUrl"),
                 Sub(Task) Task.Output = New List(Of NetFile) From {DlClientJarGet(New McInstance(VersionFolder), False)}
             ) With {.ProgressWeight = 0.5, .Show = False})
             '下载支持库文件
-            Loaders.Add(New LoaderDownload("下载核心 JAR 文件", New List(Of NetFile)) With {.ProgressWeight = 5})
+            Loaders.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskMcDownloadJar"), New List(Of NetFile)) With {.ProgressWeight = 5})
 
             '启动
-            Dim Loader As New LoaderCombo(Of String)("Minecraft " & Id & " 下载", Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
+            Dim Loader As New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskMcDownload", Id), Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
             Loader.Start(Id)
             LoaderTaskbarAdd(Loader)
             FrmMain.BtnExtraDownload.ShowRefresh()
@@ -326,62 +326,517 @@ pause"
     ''' </summary>
     ''' <param name="InstanceJson">在 version_manifest.json 中的对应项。</param>
     Public Sub McUpdateLogShow(InstanceJson As JToken)
-        Dim WikiName As String
         Dim Id As String = InstanceJson("id").ToString.ToLower
-        If Id = "3d shareware v1.34" Then
-            WikiName = "3D_Shareware_v1.34"
-        ElseIf Id = "2.0" Then
-            WikiName = "Java版2.0"
-        ElseIf Id = "1.rv-pre1" Then
-            WikiName = "Java版1.RV-Pre1"
-        ElseIf Id = "combat test 1" OrElse Id.Contains("combat-1") OrElse Id.Contains("combat-212796") Then
-            WikiName = "Java版1.14.3_-_Combat_Test"
-        ElseIf Id = "combat test 2" OrElse Id.Contains("combat-2") OrElse Id.Contains("combat-0") Then
-            WikiName = "Java版Combat_Test_2"
-        ElseIf Id = "combat test 3" OrElse Id = "1.14_combat-3" Then
-            WikiName = "Java版Combat_Test_3"
-        ElseIf Id = "combat test 4" OrElse Id = "1.15_combat-1" Then
-            WikiName = "Java版Combat_Test_4"
-        ElseIf Id = "combat test 5" OrElse Id = "1.15_combat-6" Then
-            WikiName = "Java版Combat_Test_5"
-        ElseIf Id = "combat test 6" OrElse Id = "1.16_combat-0" Then
-            WikiName = "Java版Combat_Test_6"
-        ElseIf Id = "combat test 7c" OrElse Id = "1.16_combat-3" Then
-            WikiName = "Java版Combat_Test_7c"
-        ElseIf Id = "combat test 8b" OrElse Id = "1.16_combat-5" Then
-            WikiName = "Java版Combat_Test_8b"
-        ElseIf Id = "combat test 8c" OrElse Id = "1.16_combat-6" Then
-            WikiName = "Java版Combat_Test_8c"
-        ElseIf Id = "1.0.0-rc2-2" Then
-            WikiName = "Java版RC2"
-        ElseIf Id.StartsWithF("1.19_deep_dark_experimental_snapshot-") OrElse Id.StartsWithF("1_19_deep_dark_experimental_snapshot-") Then
-            WikiName = Id.Replace("1_19", "1.19").Replace("1.19_deep_dark_experimental_snapshot-", "Java版Deep_Dark_Experimental_Snapshot_")
-        ElseIf Id = "b1.9-pre6" Then
-            WikiName = "Java版Beta_1.9_Prerelease_6"
-        ElseIf Id.Contains("b1.9") Then
-            WikiName = "Java版Beta_1.9_Prerelease"
-        ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
-            WikiName = If(Id.Contains("w"), "", "Java版") & Id.Replace(" Pre-Release ", "-pre")
-        ElseIf Id.StartsWithF("b") Then
-            WikiName = "Java版" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_")
-        ElseIf Id.StartsWithF("a") Then
-            WikiName = "Java版" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("a", "Alpha_v")
-        ElseIf Id = "inf-20100618" Then
-            WikiName = "Java版Infdev_20100618"
-        ElseIf Id = "c0.30_01c" OrElse Id = "c0.30_survival" OrElse Id.Contains("生存测试") Then
-            WikiName = "Java版Classic_0.30（生存模式）"
-        ElseIf Id.StartsWithF("c0.31") Then
-            WikiName = "Java版Indev_0.31_20100130"
-        ElseIf Id.StartsWithF("c") Then
-            WikiName = "Java版" & Id.Replace("c", "Classic_")
-        ElseIf Id.StartsWithF("rd-") Then
-            WikiName = "Java版Pre-classic_" & Id
-        Else
-            Log("[Error] 未知的版本格式：" & Id & "。", LogLevel.Feedback)
-            Return
-        End If
-        OpenWebsite("https://zh.minecraft.wiki/w/" & WikiName.Replace("_experimental-snapshot-", "-exp"))
+        Dim WikiName As String = Id
+        '本地化
+        Dim subLocation As String = ""
+        Select Case Lang
+            Case "zh-CN", "zh-HK", "zh-TW"
+                subLocation = "zh."
+                If Id = "3d shareware v1.34" Then
+                    WikiName = "3D_Shareware_v1.34"
+                ElseIf Id = "20w14∞" Then
+                    WikiName = "20w14infinite"
+                ElseIf Id = "2.0" Then
+                    WikiName = "Java版2.0"
+                ElseIf Id = "1.rv-pre1" Then
+                    WikiName = "Java版1.RV-Pre1"
+                ElseIf Id = "combat test 1" OrElse Id.Contains("combat-1") OrElse Id.Contains("combat-212796") Then
+                    WikiName = "Java版1.14.3_-_Combat_Test"
+                ElseIf Id = "combat test 2" OrElse Id.Contains("combat-2") OrElse Id.Contains("combat-0") Then
+                    WikiName = "Java版Combat_Test_2"
+                ElseIf Id = "combat test 3" OrElse Id = "1.14_combat-3" Then
+                    WikiName = "Java版Combat_Test_3"
+                ElseIf Id = "combat test 4" OrElse Id = "1.15_combat-1" Then
+                    WikiName = "Java版Combat_Test_4"
+                ElseIf Id = "combat test 5" OrElse Id = "1.15_combat-6" Then
+                    WikiName = "Java版Combat_Test_5"
+                ElseIf Id = "combat test 6" OrElse Id = "1.16_combat-0" Then
+                    WikiName = "Java版Combat_Test_6"
+                ElseIf Id = "combat test 7c" OrElse Id = "1.16_combat-3" Then
+                    WikiName = "Java版Combat_Test_7c"
+                ElseIf Id = "combat test 8b" OrElse Id = "1.16_combat-5" Then
+                    WikiName = "Java版Combat_Test_8b"
+                ElseIf Id = "combat test 8c" OrElse Id = "1.16_combat-6" Then
+                    WikiName = "Java版Combat_Test_8c"
+                ElseIf Id = "1.0.0-rc2-2" Then
+                    WikiName = "Java版1.0.0-rc2"
+                ElseIf Id.StartsWithF("1.19_deep_dark_experimental_snapshot-") OrElse Id.StartsWithF("1_19_deep_dark_experimental_snapshot-") Then
+                    WikiName = Id.Replace("1_19", "1.19").Replace("1.19_deep_dark_experimental_snapshot-", "Java版Deep_Dark_Experimental_Snapshot_")
+                ElseIf Id = "b1.9-pre6" Then
+                    WikiName = "Java版Beta_1.9_Prerelease_6"
+                ElseIf Id.Contains("b1.9") Then
+                    WikiName = "Java版Beta_1.9_Prerelease"
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
+                    WikiName = If(Id.Contains("w"), "", "Java版") & Id.Replace(" Pre-Release ", "-pre")
+                ElseIf Id.StartsWithF("b") Then
+                    WikiName = "Java版" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_")
+                ElseIf Id.StartsWithF("a") Then
+                    WikiName = "Java版" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("a", "Alpha_v")
+                ElseIf Id = "inf-20100618" Then
+                    WikiName = "Java版Infdev_20100618"
+                ElseIf Id = "c0.30_01c" OrElse Id = "c0.30_survival" OrElse Id.Contains("生存测试") Then
+                    WikiName = "Java版Classic_0.30（生存模式）"
+                ElseIf Id.StartsWithF("c0.31") Then
+                    WikiName = "Java版Indev_0.31_20100130"
+                ElseIf Id.StartsWithF("c") Then
+                    WikiName = "Java版" & Id.Replace("c", "Classic_")
+                ElseIf Id.StartsWithF("rd-") Then
+                    WikiName = "Java版Pre-classic_" & Id
+                Else
+                    Log("[Error] 未知的版本格式：" & Id & "。", LogLevel.Feedback)
+                    Return
+                End If
+            Case "lzh"
+                subLocation = "lzh."
+                If Id = "3d shareware v1.34" Then
+                    subLocation = "zh."
+                    WikiName = "3D_Shareware_v1.34"
+                ElseIf Id = "2.0" Then
+                    WikiName = "爪哇版爪哇版二點〇"
+                ElseIf Id = "1.rv-pre1" Then
+                    WikiName = "爪哇版爪哇版一點真視之預一"
+                ElseIf Id = "combat test 1" OrElse Id.Contains("combat-1") OrElse Id.Contains("combat-212796") Then
+                    subLocation = "zh."
+                    WikiName = "Java版1.14.3_-_Combat_Test"
+                ElseIf Id = "combat test 2" OrElse Id.Contains("combat-2") OrElse Id.Contains("combat-0") Then
+                    subLocation = "zh."
+                    WikiName = "Java版Combat_Test_2"
+                ElseIf Id = "combat test 3" OrElse Id = "1.14_combat-3" Then
+                    subLocation = "zh."
+                    WikiName = "Java版Combat_Test_3"
+                ElseIf Id = "combat test 4" OrElse Id = "1.15_combat-1" Then
+                    subLocation = "zh."
+                    WikiName = "Java版Combat_Test_4"
+                ElseIf Id = "combat test 5" OrElse Id = "1.15_combat-6" Then
+                    subLocation = "zh."
+                    WikiName = "Java版Combat_Test_5"
+                ElseIf Id = "combat test 6" OrElse Id = "1.16_combat-0" Then
+                    subLocation = "zh."
+                    WikiName = "Java版Combat_Test_6"
+                ElseIf Id = "combat test 7c" OrElse Id = "1.16_combat-3" Then
+                    subLocation = "zh."
+                    WikiName = "Java版Combat_Test_7c"
+                ElseIf Id = "combat test 8b" OrElse Id = "1.16_combat-5" Then
+                    WikiName = "爪哇版爪哇版鬭測八乙"
+                ElseIf Id = "combat test 8c" OrElse Id = "1.16_combat-6" Then
+                    WikiName = "爪哇版爪哇版鬭測八丙"
+                ElseIf Id = "1.0.0-rc2-2" Then
+                    WikiName = "爪哇版一點〇點〇之候二"
+                ElseIf Id.StartsWithF("1.19_deep_dark_experimental_snapshot-") OrElse Id.StartsWithF("1_19_deep_dark_experimental_snapshot-") Then
+                    subLocation = "zh." 'lzh 无此
+                    WikiName = Id.Replace("1_19", "1.19").Replace("1.19_deep_dark_experimental_snapshot-", "Java版Deep_Dark_Experimental_Snapshot_")
+                ElseIf Id = "b1.9-pre6" Then
+                    WikiName = "爪哇版Beta_1.9_Prerelease_6"
+                ElseIf Id.Contains("b1.9") Then
+                    WikiName = "爪哇版Beta_1.9_Prerelease"
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
+                    WikiName = If(Id.Contains("w"), "", "爪哇版") & Id.Replace(" Pre-Release ", "-pre")
+                ElseIf Id.StartsWithF("b") Then
+                    WikiName = "爪哇版" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "復測版")
+                ElseIf Id.StartsWithF("a") Then
+                    WikiName = "爪哇版" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("a", "首測版")
+                ElseIf Id = "inf-20100618" Then
+                    WikiName = "爪哇版方製無垠版二〇一〇〇六一八"
+                ElseIf Id = "c0.30_01c" OrElse Id = "c0.30_survival" OrElse Id.Contains("生存测试") Then
+                    WikiName = "爪哇版爪哇版古典版〇點三〇"
+                ElseIf Id.StartsWithF("c0.31") Then
+                    subLocation = "zh." 'lzh 无此
+                    WikiName = "Java版Indev_0.31_20100130"
+                    Exit Select
+                ElseIf Id.StartsWithF("c") Then
+                    WikiName = "爪哇版" & Id.Replace("c", "古典版")
+                ElseIf Id.StartsWithF("rd-") Then
+                    WikiName = "爪哇版" & Id
+                Else
+                    Log("[Error] 未知的版本格式：" & Id & "。", LogLevel.Feedback)
+                    Exit Sub
+                End If
+                Dim keyWord As New Dictionary(Of String, String) From {
+                      {"Java版", "爪哇版"}, {"Combat_Test", "鬭測"}, {"Beta", "復測版"}, {"rc", "候"}, {"rd-", "先典版璐璧鐺"}, {"RC", "候"}, {"pre", "預"}, {"prerelease", "之預"}, {".", "點"}, {"-", "之"}, {"1", "一"}, {"2", "二"}, {"3", "三"}, {"4", "四"}, {"5", "五"}, {"6", "六"}, {"7", "七"}, {"8", "八"}, {"9", "九"}, {"0", "〇"}, {"w", "週"}, {"a", "甲"}, {"b", "乙"}, {"c", "丙"}, {"_", ""}, {" ", ""}}
+                For Each key In keyWord.Keys
+                    WikiName = WikiName.Replace(key, keyWord(key))
+                Next
+            Case "en-US", "en-GB"
+                subLocation = ""
+                If Id = "3d shareware v1.34" Then
+                    WikiName = "Java_Edition_3D_Shareware_v1.34"
+                ElseIf Id = "2.0" Then
+                    WikiName = "Java_Edition_2.0"
+                ElseIf Id = "1.rv-pre1" Then
+                    WikiName = "Java_Edition_1.RV-Pre1"
+                ElseIf Id = "combat test 1" OrElse Id.Contains("combat-1") OrElse Id.Contains("combat-212796") Then
+                    WikiName = "Java_Edition_1.14.3_-_Combat_Test"
+                ElseIf Id = "combat test 2" OrElse Id.Contains("combat-2") OrElse Id.Contains("combat-0") Then
+                    WikiName = "Java_Edition_Combat_Test_2"
+                ElseIf Id = "combat test 3" OrElse Id = "1.14_combat-3" Then
+                    WikiName = "Java_Edition_Combat_Test_3"
+                ElseIf Id = "combat test 4" OrElse Id = "1.15_combat-1" Then
+                    WikiName = "Java_Edition_Combat_Test_4"
+                ElseIf Id = "combat test 5" OrElse Id = "1.15_combat-6" Then
+                    WikiName = "Java_Edition_Combat_Test_5"
+                ElseIf Id = "combat test 6" OrElse Id = "1.16_combat-0" Then
+                    WikiName = "Java_Edition_Combat_Test_6"
+                ElseIf Id = "combat test 7c" OrElse Id = "1.16_combat-3" Then
+                    WikiName = "Java_Edition_Combat_Test_7c"
+                ElseIf Id = "combat test 8b" OrElse Id = "1.16_combat-5" Then
+                    WikiName = "Java_Edition_Combat_Test_8b"
+                ElseIf Id = "combat test 8c" OrElse Id = "1.16_combat-6" Then
+                    WikiName = "Java_Edition_Combat_Test_8c"
+                ElseIf Id = "1.0.0-rc2-2" Then
+                    WikiName = "Java_Edition_RC2"
+                ElseIf Id.StartsWithF("1.19_deep_dark_experimental_snapshot-") OrElse Id.StartsWithF("1_19_deep_dark_experimental_snapshot-") Then
+                    WikiName = Id.Replace("1_19", "1.19").Replace("1.19_deep_dark_experimental_snapshot-", "Java_Edition_Deep_Dark_Experimental_Snapshot_")
+                ElseIf Id = "b1.9-pre6" Then
+                    WikiName = "Java_Edition_Beta_1.9_Prerelease_6"
+                ElseIf Id.Contains("b1.9") Then
+                    WikiName = "Java_Edition_Beta_1.9_Prerelease"
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
+                    WikiName = If(Id.Contains("w"), "", "Java_Edition_") & Id.Replace(" Pre-Release ", "-pre")
+                ElseIf Id.StartsWithF("b") Then
+                    WikiName = "Java_Edition_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_")
+                ElseIf Id.StartsWithF("a") Then
+                    WikiName = "Java_Edition_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("a", "Alpha_v")
+                ElseIf Id = "inf-20100618" Then
+                    WikiName = "Java_Edition_Infdev_20100618"
+                ElseIf Id = "c0.30_01c" OrElse Id = "c0.30_survival" OrElse Id.Contains("生存测试") Then
+                    WikiName = "Java_Edition_Classic_0.30"
+                ElseIf Id.StartsWithF("c0.31") Then
+                    WikiName = "Java_Edition_Indev_0.31_20100130"
+                ElseIf Id.StartsWithF("c") Then
+                    WikiName = "Java_Edition_" & Id.Replace("c", "Classic_")
+                ElseIf Id.StartsWithF("rd-") Then
+                    WikiName = "Java_Edition_Pre-classic_" & Id
+                Else
+                    Log("[Error] 未知的版本格式：" & Id & "。", LogLevel.Feedback)
+                    Exit Sub
+                End If
+                Dim keyWord As New Dictionary(Of String, String) From {
+                      {"Java版", "Java Edition "}, {"-rc", "_Release_Candidate"}, {"-RC", "_Release_Candidate"}, {"-pre", "_Pre-release"}, {"pre-release", "Pre-release"}, {" ", "_"}}
+                For Each key In keyWord.Keys
+                    WikiName = WikiName.Replace(key, keyWord(key))
+                Next
+                WikiName = FormatWikiNameEndDigit(WikiName)
+            Case "ko-KR"
+                subLocation = "ko."
+                If Id = "3d shareware v1.34" Then
+                    WikiName = "Java_Edition_3D_Shareware_v1.34"
+                ElseIf Id = "2.0" Then
+                    WikiName = "Java_Edition_2.0"
+                ElseIf Id = "1.rv-pre1" Then
+                    WikiName = "Java_Edition_1.RV-Pre1"
+                ElseIf Id = "combat test 1" OrElse Id.Contains("combat-1") OrElse Id.Contains("combat-212796") Then
+                    WikiName = "Java_Edition_1.14.3_-_Combat_Test"
+                ElseIf Id = "combat test 2" OrElse Id.Contains("combat-2") OrElse Id.Contains("combat-0") Then
+                    WikiName = "Java_Edition_Combat_Test_2"
+                ElseIf Id = "combat test 3" OrElse Id = "1.14_combat-3" Then
+                    WikiName = "Java_Edition_Combat_Test_3"
+                ElseIf Id = "combat test 4" OrElse Id = "1.15_combat-1" Then
+                    WikiName = "Java_Edition_Combat_Test_4"
+                ElseIf Id = "combat test 5" OrElse Id = "1.15_combat-6" Then
+                    WikiName = "Java_Edition_Combat_Test_5"
+                ElseIf Id = "combat test 6" OrElse Id = "1.16_combat-0" Then
+                    WikiName = "Java_Edition_Combat_Test_6"
+                ElseIf Id = "combat test 7c" OrElse Id = "1.16_combat-3" Then
+                    WikiName = "Java_Edition_Combat_Test_7c"
+                ElseIf Id = "combat test 8b" OrElse Id = "1.16_combat-5" Then
+                    WikiName = "Java_Edition_Combat_Test_8b"
+                ElseIf Id = "combat test 8c" OrElse Id = "1.16_combat-6" Then
+                    WikiName = "Java_Edition_Combat_Test_8c"
+                ElseIf Id = "1.0.0-rc2-2" Then
+                    WikiName = "Java_Edition_RC2"
+                ElseIf Id.StartsWithF("1.19_deep_dark_experimental_snapshot-") OrElse Id.StartsWithF("1_19_deep_dark_experimental_snapshot-") Then
+                    WikiName = Id.Replace("1_19", "1.19").Replace("1.19_deep_dark_experimental_snapshot-", "Java_Edition_Deep_Dark_Experimental_Snapshot_")
+                ElseIf Id = "b1.9-pre6" Then
+                    WikiName = "Java_Edition_Beta_1.9_Prerelease_6"
+                ElseIf Id.Contains("b1.9") Then
+                    WikiName = "Java_Edition_Beta_1.9_Prerelease"
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
+                    WikiName = If(Id.Contains("w"), "", "Java_Edition_") & Id.Replace(" Pre-Release ", "-pre")
+                ElseIf Id.StartsWithF("b") Then
+                    WikiName = "Java_Edition_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_")
+                ElseIf Id.StartsWithF("a") Then
+                    WikiName = "Java_Edition_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("a", "Alpha_v")
+                ElseIf Id = "inf-20100618" Then
+                    WikiName = "Java_Edition_Infdev_20100618"
+                ElseIf Id = "c0.30_01c" OrElse Id = "c0.30_survival" OrElse Id.Contains("生存测试") Then
+                    WikiName = "Java_Edition_Classic_0.30"
+                ElseIf Id.StartsWithF("c0.31") Then
+                    WikiName = "Java_Edition_Indev_0.31_20100130"
+                ElseIf Id.StartsWithF("c") Then
+                    WikiName = "Java_Edition_" & Id.Replace("c", "Classic_")
+                ElseIf Id.StartsWithF("rd-") Then
+                    WikiName = "Java_Edition_Pre-classic_" & Id
+                Else
+                    Log("[Error] 未知的版本格式：" & Id & "。", LogLevel.Feedback)
+                    Exit Sub
+                End If
+                Dim keyWord As New Dictionary(Of String, String) From {
+                      {"Java版", "Java Edition "}, {"-rc", "_RC#"}, {"-RC", "_RC#"}, {"pre", "프리릴리스"}, {"pre-release", "프리릴리스"}, {" ", "_"}}
+                For Each key In keyWord.Keys
+                    WikiName = WikiName.Replace(key, keyWord(key))
+                Next
+                WikiName = FormatWikiNameEndDigit(WikiName)
+            Case "ja-JP"
+                subLocation = "ja."
+                If Id = "3d shareware v1.34" Then
+                    WikiName = "Java_Edition_3D_Shareware_v1.34"
+                ElseIf Id = "2.0" Then
+                    WikiName = "Java_Edition_2.0"
+                ElseIf Id = "1.rv-pre1" Then
+                    WikiName = "Java_Edition_1.RV-Pre1"
+                ElseIf Id = "combat test 1" OrElse Id.Contains("combat-1") OrElse Id.Contains("combat-212796") Then
+                    WikiName = "Java_Edition_1.14.3_-_Combat_Test"
+                ElseIf Id = "combat test 2" OrElse Id.Contains("combat-2") OrElse Id.Contains("combat-0") Then
+                    WikiName = "Java_Edition_Combat_Test_2"
+                ElseIf Id = "combat test 3" OrElse Id = "1.14_combat-3" Then
+                    WikiName = "Java_Edition_Combat_Test_3"
+                ElseIf Id = "combat test 4" OrElse Id = "1.15_combat-1" Then
+                    WikiName = "Java_Edition_Combat_Test_4"
+                ElseIf Id = "combat test 5" OrElse Id = "1.15_combat-6" Then
+                    WikiName = "Java_Edition_Combat_Test_5"
+                ElseIf Id = "combat test 6" OrElse Id = "1.16_combat-0" Then
+                    WikiName = "Java_Edition_Combat_Test_6"
+                ElseIf Id = "combat test 7c" OrElse Id = "1.16_combat-3" Then
+                    WikiName = "Java_Edition_Combat_Test_7c"
+                ElseIf Id = "combat test 8b" OrElse Id = "1.16_combat-5" Then
+                    WikiName = "Java_Edition_Combat_Test_8b"
+                ElseIf Id = "combat test 8c" OrElse Id = "1.16_combat-6" Then
+                    WikiName = "Java_Edition_Combat_Test_8c"
+                ElseIf Id = "1.0.0-rc2-2" Then
+                    WikiName = "Java_Edition_RC2"
+                ElseIf Id.StartsWithF("1.19_deep_dark_experimental_snapshot-") OrElse Id.StartsWithF("1_19_deep_dark_experimental_snapshot-") Then
+                    WikiName = Id.Replace("1_19", "1.19").Replace("1.19_deep_dark_experimental_snapshot-", "Java_Edition_Deep_Dark_Experimental_Snapshot_")
+                ElseIf Id = "b1.9-pre6" Then
+                    WikiName = "Java_Edition_Beta_1.9_Prerelease_6"
+                ElseIf Id.Contains("b1.9") Then
+                    WikiName = "Java_Edition_Beta_1.9_Prerelease"
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
+                    WikiName = If(Id.Contains("w"), "", "Java_Edition_") & Id.Replace(" Pre-Release ", "-pre")
+                ElseIf Id.StartsWithF("b") Then
+                    WikiName = "Java_Edition_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_")
+                ElseIf Id.StartsWithF("a") Then
+                    WikiName = "Java_Edition_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("a", "Alpha_v")
+                ElseIf Id = "inf-20100618" Then
+                    WikiName = "Java_Edition_Infdev_20100618"
+                ElseIf Id = "c0.30_01c" OrElse Id = "c0.30_survival" OrElse Id.Contains("生存测试") Then
+                    WikiName = "Java_Edition_Classic_0.30"
+                ElseIf Id.StartsWithF("c0.31") Then
+                    WikiName = "Java_Edition_Indev_0.31_20100130"
+                ElseIf Id.StartsWithF("c") Then
+                    WikiName = "Java_Edition_" & Id.Replace("c", "Classic_")
+                ElseIf Id.StartsWithF("rd-") Then
+                    WikiName = "Java_Edition_Pre-classic_" & Id
+                Else
+                    Log("[Error] 未知的版本格式：" & Id & "。", LogLevel.Feedback)
+                    Exit Sub
+                End If
+                Dim keyWord As New Dictionary(Of String, String) From {
+                      {"-rc", "_Release_Candidate"}, {"-RC", "_Release_Candidate"}, {"pre", "Pre-release"}, {"pre-release", "Pre-release"}, {" ", "_"}}
+                For Each key In keyWord.Keys
+                    WikiName = WikiName.Replace(key, keyWord(key))
+                Next
+                WikiName = FormatWikiNameEndDigit(WikiName)
+            Case "ru-RU"
+                subLocation = "ru."
+                If Id = "3d shareware v1.34" Then
+                    WikiName = "3D_Shareware_v1.34_(Java_Edition)"
+                ElseIf Id = "22w13oneblockatatime" Then
+                    WikiName = "22w13oneBlockAtATime_(Java_Edition)"
+                ElseIf Id = "20w14∞" Then
+                    WikiName = "20w14infinite_(Java_Edition)"
+                ElseIf Id = "2.0" Then
+                    WikiName = "2.0_(Java_Edition)"
+                ElseIf Id = "1.rv-pre1" Then
+                    WikiName = "1.RV-Pre1_(Java_Edition)"
+                ElseIf Id = "combat test 1" OrElse Id.Contains("combat-1") OrElse Id.Contains("combat-212796") Then
+                    WikiName = "1.14.3_-_Combat_Test_(Java_Edition)"
+                ElseIf Id = "combat test 2" OrElse Id.Contains("combat-2") OrElse Id.Contains("combat-0") Then
+                    WikiName = "Combat_Test_2_(Java_Edition)"
+                ElseIf Id = "combat test 3" OrElse Id = "1.14_combat-3" Then
+                    WikiName = "Combat_Test_3_(Java_Edition)"
+                ElseIf Id = "combat test 4" OrElse Id = "1.15_combat-1" Then
+                    WikiName = "Combat_Test_4_(Java_Edition)"
+                ElseIf Id = "combat test 5" OrElse Id = "1.15_combat-6" Then
+                    WikiName = "Combat_Test_5_(Java_Edition)"
+                ElseIf Id = "combat test 6" OrElse Id = "1.16_combat-0" Then
+                    WikiName = "Combat_Test_6_(Java_Edition)"
+                ElseIf Id = "combat test 7c" OrElse Id = "1.16_combat-3" Then
+                    WikiName = "Combat_Test_7c_(Java_Edition)"
+                ElseIf Id = "combat test 8b" OrElse Id = "1.16_combat-5" Then
+                    WikiName = "Combat_Test_8b_(Java_Edition)"
+                ElseIf Id = "combat test 8c" OrElse Id = "1.16_combat-6" Then
+                    WikiName = "Combat_Test_8c_(Java_Edition)"
+                ElseIf Id = "1.0.0-rc2-2" Then
+                    WikiName = "RC2_(Java_Edition)"
+                ElseIf Id.StartsWithF("1.19_deep_dark_experimental_snapshot-") OrElse Id.StartsWithF("1_19_deep_dark_experimental_snapshot-") Then
+                    WikiName = Id.Replace("1_19", "1.19").Replace("1.19_deep_dark_experimental_snapshot-", "Deep_Dark_Experimental_Snapshot_") & "_(Java_Edition)"
+                ElseIf Id = "b1.9-pre6" Then
+                    WikiName = "Beta_1.9_Prerelease_6_(Java_Edition)"
+                ElseIf Id.Contains("b1.9") Then
+                    WikiName = "Beta_1.9_Prerelease_(Java_Edition)"
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
+                    WikiName = Id.Replace("-pre", "_Pre-release")
+                ElseIf Id.StartsWithF("b") Then
+                    WikiName = Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_") & "_(Java_Edition)"
+                ElseIf Id.StartsWithF("a") Then
+                    WikiName = Id.TrimEnd("a", "b", "c", "d", "e").Replace("a", "Alpha_v") & "_(Java_Edition)"
+                ElseIf Id = "inf-20100618" Then
+                    WikiName = "Infdev_20100618_(Java_Edition)"
+                ElseIf Id = "c0.30_01c" OrElse Id = "c0.30_survival" OrElse Id.Contains("生存测试") Then
+                    WikiName = "Classic_0.30_(Java_Edition)"
+                ElseIf Id.StartsWithF("c0.31") Then
+                    WikiName = "Indev_0.31_20100130_(Java_Edition)"
+                ElseIf Id.StartsWithF("c") Then
+                    WikiName = Id.Replace("c", "Classic_") & "_(Java_Edition)"
+                ElseIf Id.StartsWithF("rd-") Then
+                    WikiName = "Pre-classic_" & Id & "_(Java_Edition)"
+                Else
+                    Log("[Error] 未知的版本格式：" & Id & "。", LogLevel.Feedback)
+                    Exit Sub
+                End If
+                Dim keyWord As New Dictionary(Of String, String) From {
+                    {"-rc", "_Release_Candidate"}, {"-RC", "_Release_Candidate"}, {"-pre", "_Pre-release"}, {"pre-release", "Pre-release"}, {" ", "_"}}
+                For Each key In keyWord.Keys
+                    WikiName = WikiName.Replace(key, keyWord(key))
+                Next
+                WikiName = FormatWikiNameEndDigit(WikiName)
+                If Not WikiName.EndsWithF("_(Java_Edition)") Then WikiName += "_(Java_Edition)"
+            Case "fr-FR"
+                subLocation = "fr."
+                If Id = "3d shareware v1.34" Then
+                    WikiName = "Édition_Java_3D_Shareware_v1.34"
+                ElseIf Id = "2.0" Then
+                    WikiName = "Édition_Java_2.0"
+                ElseIf Id = "1.rv-pre1" Then
+                    WikiName = "Édition_Java_1.RV-Pre1"
+                ElseIf Id = "combat test 1" OrElse Id.Contains("combat-1") OrElse Id.Contains("combat-212796") Then
+                    WikiName = "Édition_Java_1.14.3_-_Combat_Test"
+                ElseIf Id = "combat test 2" OrElse Id.Contains("combat-2") OrElse Id.Contains("combat-0") Then
+                    WikiName = "Édition_Java_Combat_Test_2"
+                ElseIf Id = "combat test 3" OrElse Id = "1.14_combat-3" Then
+                    WikiName = "Édition_Java_Combat_Test_3"
+                ElseIf Id = "combat test 4" OrElse Id = "1.15_combat-1" Then
+                    WikiName = "Édition_Java_Combat_Test_4"
+                ElseIf Id = "combat test 5" OrElse Id = "1.15_combat-6" Then
+                    WikiName = "Édition_Java_Combat_Test_5"
+                ElseIf Id = "combat test 6" OrElse Id = "1.16_combat-0" Then
+                    WikiName = "Édition_Java_Combat_Test_6"
+                ElseIf Id = "combat test 7c" OrElse Id = "1.16_combat-3" Then
+                    WikiName = "Édition_Java_Combat_Test_7c"
+                ElseIf Id = "combat test 8b" OrElse Id = "1.16_combat-5" Then
+                    WikiName = "Édition_Java_Combat_Test_8b"
+                ElseIf Id = "combat test 8c" OrElse Id = "1.16_combat-6" Then
+                    WikiName = "Édition_Java_Combat_Test_8c"
+                ElseIf Id = "1.0.0-rc2-2" Then
+                    WikiName = "Édition_Java_RC2"
+                    Exit Select
+                ElseIf Id.StartsWithF("1.19_deep_dark_experimental_snapshot-") OrElse Id.StartsWithF("1_19_deep_dark_experimental_snapshot-") Then
+                    WikiName = Id.Replace("1_19", "1.19").Replace("1.19_deep_dark_experimental_snapshot-", "Édition_Java_Deep_Dark_Experimental_Snapshot_")
+                ElseIf Id = "b1.9-pre6" Then
+                    WikiName = "Édition_Java_Beta_1.9_Prerelease_6"
+                ElseIf Id.Contains("b1.9") Then
+                    WikiName = "Édition_Java_Beta_1.9_Prerelease"
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
+                    WikiName = If(Id.Contains("w"), "", "Édition_Java_") & Id.Replace(" Pre-Release ", "-pre")
+                ElseIf Id.StartsWithF("b") Then
+                    WikiName = "Édition_Java_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_")
+                ElseIf Id.StartsWithF("a") Then
+                    WikiName = "Édition_Java_" & Id.TrimEnd("a", "b", "c", "d", "e").Replace("a", "Alpha_v")
+                ElseIf Id = "inf-20100618" Then
+                    WikiName = "Édition_Java_Infdev_20100618"
+                ElseIf Id = "c0.30_01c" OrElse Id = "c0.30_survival" OrElse Id.Contains("生存测试") Then
+                    WikiName = "Édition_Java_Classic_0.30"
+                ElseIf Id.StartsWithF("c0.31") Then
+                    WikiName = "Édition_Java_Indev_0.31_20100130"
+                ElseIf Id.StartsWithF("c") Then
+                    WikiName = "Édition_Java_" & Id.Replace("c", "Classic_")
+                ElseIf Id.StartsWithF("rd-") Then
+                    WikiName = "Édition_Java_Pre-classic_" & Id
+                Else
+                    Log("[Error] 未知的版本格式：" & Id & "。", LogLevel.Feedback)
+                    Exit Sub
+                End If
+                Dim keyWord As New Dictionary(Of String, String) From {
+                       {"-rc", "_Release_Candidate"}, {"-RC", "_Release_Candidate"}, {"-pre", "_Pre-Release"}, {"pre-release", "Pre-Release"}, {" ", "_"}}
+                For Each key In keyWord.Keys
+                    WikiName = WikiName.Replace(key, keyWord(key))
+                Next
+                WikiName = FormatWikiNameEndDigit(WikiName)
+            Case "es-ES"
+                subLocation = "es."
+                If Id = "3d shareware v1.34" Then
+                    WikiName = "3D_Shareware_v1.34_(Java_Edition)"
+                ElseIf Id = "22w13oneblockatatime" Then
+                    WikiName = "22w13oneBlockAtATime_(Java_Edition)"
+                ElseIf Id = "20w14∞" Then
+                    WikiName = "20w14infinite_(Java_Edition)"
+                ElseIf Id = "2.0" Then
+                    WikiName = "2.0_(Java_Edition)"
+                ElseIf Id = "1.rv-pre1" Then
+                    WikiName = "1.RV-Pre1_(Java_Edition)"
+                ElseIf Id = "combat test 1" OrElse Id.Contains("combat-1") OrElse Id.Contains("combat-212796") Then
+                    WikiName = "1.14.3_-_Combat_Test_(Java_Edition)"
+                ElseIf Id = "combat test 2" OrElse Id.Contains("combat-2") OrElse Id.Contains("combat-0") Then
+                    WikiName = "Combat_Test_2_(Java_Edition)"
+                ElseIf Id = "combat test 3" OrElse Id = "1.14_combat-3" Then
+                    WikiName = "Combat_Test_3_(Java_Edition)"
+                ElseIf Id = "combat test 4" OrElse Id = "1.15_combat-1" Then
+                    WikiName = "Combat_Test_4_(Java_Edition)"
+                ElseIf Id = "combat test 5" OrElse Id = "1.15_combat-6" Then
+                    WikiName = "Combat_Test_5_(Java_Edition)"
+                ElseIf Id = "combat test 6" OrElse Id = "1.16_combat-0" Then
+                    WikiName = "Combat_Test_6_(Java_Edition)"
+                ElseIf Id = "combat test 7c" OrElse Id = "1.16_combat-3" Then
+                    WikiName = "Combat_Test_7c_(Java_Edition)"
+                ElseIf Id = "combat test 8b" OrElse Id = "1.16_combat-5" Then
+                    WikiName = "Combat_Test_8b_(Java_Edition)"
+                ElseIf Id = "combat test 8c" OrElse Id = "1.16_combat-6" Then
+                    WikiName = "Combat_Test_8c_(Java_Edition)"
+                ElseIf Id = "1.0.0-rc2-2" Then
+                    WikiName = "RC2_(Java_Edition)"
+                ElseIf Id.StartsWithF("1.19_deep_dark_experimental_snapshot-") OrElse Id.StartsWithF("1_19_deep_dark_experimental_snapshot-") Then
+                    WikiName = Id.Replace("1_19", "1.19").Replace("1.19_deep_dark_experimental_snapshot-", "Deep_Dark_Experimental_Snapshot_") & "_(Java_Edition)"
+                ElseIf Id = "b1.9-pre6" Then
+                    WikiName = "Beta_1.9_Prerelease_6_(Java_Edition)"
+                ElseIf Id.Contains("b1.9") Then
+                    WikiName = "Beta_1.9_Prerelease_(Java_Edition)"
+                ElseIf InstanceJson("type") = "release" OrElse InstanceJson("type") = "snapshot" OrElse InstanceJson("type") = "special" Then
+                    WikiName = Id.Replace("-pre", "_Pre-release")
+                ElseIf Id.StartsWithF("b") Then
+                    WikiName = Id.TrimEnd("a", "b", "c", "d", "e").Replace("b", "Beta_") & "_(Java_Edition)"
+                ElseIf Id.StartsWithF("a") Then
+                    WikiName = Id.TrimEnd("a", "b", "c", "d", "e").Replace("a", "Alpha_v") & "_(Java_Edition)"
+                ElseIf Id = "inf-20100618" Then
+                    WikiName = "Infdev_20100618_(Java_Edition)"
+                ElseIf Id = "c0.30_01c" OrElse Id = "c0.30_survival" OrElse Id.Contains("生存测试") Then
+                    WikiName = "Classic_0.30_(Java_Edition)"
+                ElseIf Id.StartsWithF("c0.31") Then
+                    WikiName = "Indev_0.31_20100130_(Java_Edition)"
+                ElseIf Id.StartsWithF("c") Then
+                    WikiName = Id.Replace("c", "Classic_") & "_(Java_Edition)"
+                ElseIf Id.StartsWithF("rd-") Then
+                    WikiName = "Pre-classic_" & Id & "_(Java_Edition)"
+                Else
+                    Log("[Error] 未知的版本格式：" & Id & "。", LogLevel.Feedback)
+                    Exit Sub
+                End If
+                Dim keyWord As New Dictionary(Of String, String) From {
+                      {"Java版", "Java_Edition_"}, {"-rc", "_Release_Candidate"}, {"-RC", "_Release_Candidate"}, {"-pre", "_Pre-release"}, {"pre-release", "Pre-Release"}, {" ", "_"}}
+                For Each key In keyWord.Keys
+                    WikiName = WikiName.Replace(key, keyWord(key))
+                Next
+                WikiName = FormatWikiNameEndDigit(WikiName)
+        End Select
+        OpenWebsite($"https://{subLocation}minecraft.wiki/w/{WikiName.Replace("_experimental-snapshot-", "-exp")}")
     End Sub
+
+    Private Function FormatWikiNameEndDigit(WikiName As String) As String
+        If Char.IsDigit(WikiName(WikiName.Length - 1)) And Not {".", "_", " "}.Any(Function(i) i.Equals(WikiName(WikiName.Length - 2))) And Not Char.IsDigit(WikiName(WikiName.Length - 2)) Then
+            Return WikiName.Insert(WikiName.Length - 1, "_")
+        End If
+        Return WikiName
+    End Function
 
 #End Region
 
@@ -390,17 +845,17 @@ pause"
     Private Sub McDownloadOptiFineSave(DownloadInfo As DlOptiFineListEntry)
         Try
             Dim Id As String = DownloadInfo.InstanceName
-            Dim Target As String = SelectSaveFile("选择保存位置", DownloadInfo.FileName, "OptiFine Jar (*.jar)|*.jar")
+            Dim Target As String = SelectSaveFile(GetLang("LangSaveAs"), DownloadInfo.FileName, "OptiFine Jar (*.jar)|*.jar")
             If Not Target.Contains("\") Then Return
 
             '重复任务检查
             For Each OngoingLoader In LoaderTaskbar.ToList()
-                If OngoingLoader.Name <> $"OptiFine {DownloadInfo.DisplayName} 下载" Then Continue For
-                Hint("该版本正在下载中！", HintType.Red)
+                If OngoingLoader.Name <> GetLang("LangModDownloadLibTaskOptiFineDownload", DownloadInfo.DisplayName) Then Continue For
+                Hint(GetLang("LangModDownloadLibHintInstanceDownloading"), HintType.Red)
                 Return
             Next
 
-            Dim Loader As New LoaderCombo(Of DlOptiFineListEntry)("OptiFine " & DownloadInfo.DisplayName & " 下载", McDownloadOptiFineSaveLoader(DownloadInfo, Target)) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
+            Dim Loader As New LoaderCombo(Of DlOptiFineListEntry)(GetLang("LangModDownloadLibTaskOptiFineDownload", DownloadInfo.DisplayName), McDownloadOptiFineSaveLoader(DownloadInfo, Target)) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
             Loader.Start(DownloadInfo)
             LoaderTaskbarAdd(Loader)
             FrmMain.BtnExtraDownload.ShowRefresh()
@@ -414,7 +869,7 @@ pause"
         '选择 Java
         Dim Java As JavaEntry
         SyncLock JavaLock
-            Java = JavaSelect("已取消安装。", New Version(1, 8, 0, 0))
+            Java = JavaSelect(GetLang("LangModDownloadLibCancelJavaDownload"), New Version(1, 8, 0, 0))
             If Java Is Nothing Then
                 '开始自动下载
                 Dim JavaLoader = GetJavaDownloadLoader()
@@ -427,9 +882,9 @@ pause"
                     JavaLoader.Abort() '确保取消时中止 Java 下载
                 End Try
                 '检查下载结果
-                Java = JavaSelect("已取消安装。", New Version(1, 8, 0, 0))
+                Java = JavaSelect(GetLang("LangModDownloadLibCancelJavaDownload"), New Version(1, 8, 0, 0))
                 If Task.IsAborted Then Return
-                If Java Is Nothing Then Throw New Exception("由于未找到 Java，已取消安装。")
+                If Java Is Nothing Then Throw New Exception(GetLang("LangModDownloadLibExceptionOptiFineDownloadCancelJava"))
             End If
         End SyncLock
         '添加 Java Wrapper 作为主 Jar
@@ -521,7 +976,7 @@ pause"
                     outputWaitHandle.WaitOne(10000)
                     errorWaitHandle.WaitOne(10000)
                     process.Dispose()
-                    If TotalLength < 1000 OrElse LastResult.Contains("at ") Then Throw New Exception("安装器运行出错，末行为 " & LastResult)
+                    If TotalLength < 1000 OrElse LastResult.Contains("at ") Then Throw New Exception(GetLang("LangModDownloadLibExceptionInstallerException", LastResult))
                 End Using
             End Using
         End SyncLock
@@ -544,11 +999,11 @@ pause"
         Dim Loaders As New List(Of LoaderBase)
 
         '获取下载地址
-        Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("获取 OptiFine 主文件下载地址",
+        Loaders.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangPageSpeedRightGetOptiFineDownloadAddress"),
         Sub(Task As LoaderTask(Of String, List(Of NetFile)))
             '启动依赖版本的下载
             If ClientDownloadLoader Is Nothing Then
-                If IsCustomFolder Then Throw New Exception("如果没有指定原版下载器，则不能指定 MC 安装文件夹")
+                If IsCustomFolder Then Throw New Exception(GetLang("LangModDownloadLibExceptionNoCustomFolder"))
                 ClientDownloadLoader = McDownloadClient(NetPreDownloadBehaviour.ExitWhileExistsOrDownloading, DownloadInfo.Inherit)
             End If
             Task.Progress = 0.1
@@ -575,8 +1030,8 @@ pause"
             '构造文件请求
             Task.Output = New List(Of NetFile) From {New NetFile(Sources.ToArray, Target, New FileChecker(MinSize:=300 * 1024))}
         End Sub) With {.ProgressWeight = 8})
-        Loaders.Add(New LoaderDownload("下载 OptiFine 主文件", New List(Of NetFile)) With {.ProgressWeight = 8})
-        Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)("等待原版下载",
+        Loaders.Add(New LoaderDownload(GetLang("LangPageSpeedRightDownloadOptiFineMainFile"), New List(Of NetFile)) With {.ProgressWeight = 8})
+        Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)(GetLang("LangModDownloadLibTaskOptiFineWaitForVanilla"),
         Sub(Task As LoaderTask(Of List(Of NetFile), Boolean))
             '等待原版文件下载完成
             If ClientDownloadLoader Is Nothing Then Return
@@ -606,7 +1061,7 @@ pause"
         '安装（新旧方式均需要原版 Jar 和 Json）
         If IsNewerVersion Then
             Log("[Download] 检测为新版 OptiFine：" & DownloadInfo.Inherit)
-            Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)("安装 OptiFine（方式 A）",
+            Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)(GetLang("LangPageSpeedRightInstallOptiFineMethodA"),
             Sub(Task As LoaderTask(Of List(Of NetFile), Boolean))
                 Dim BaseMcFolderHome As String = RequestTaskTempFolder()
                 Dim BaseMcFolder As String = BaseMcFolderHome & ".minecraft\"
@@ -633,7 +1088,7 @@ Retry:
                             UseJavaWrapper = False
                             GoTo Retry
                         Else
-                            Throw New Exception("运行 OptiFine 安装器失败", ex)
+                            Throw New Exception(GetLang("LangModDownloadLibExceptionOptiFineInstallerRunFail"), ex)
                         End If
                     End Try
                     Task.Progress = 0.96
@@ -645,12 +1100,12 @@ Retry:
                     File.Delete(Target)
                     DeleteDirectory(BaseMcFolderHome)
                 Catch ex As Exception
-                    Throw New Exception("安装 OptiFine（方式 A）失败", ex)
+                    Throw New Exception(GetLang("LangModDownloadLibExceptionInstallOptiFineMethodAFail"), ex)
                 End Try
             End Sub) With {.ProgressWeight = 8})
         Else
             Log("[Download] 检测为旧版 OptiFine：" & DownloadInfo.Inherit)
-            Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)("安装 OptiFine（方式 B）",
+            Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)(GetLang("LangModDownloadLibTaskInstallOptiFineMethodB"),
             Sub(Task As LoaderTask(Of List(Of NetFile), Boolean))
                 Try
                     '新建版本文件夹
@@ -694,16 +1149,16 @@ Retry:
                     End If
                     WriteFile(VersionFolder & Id & ".json", Json)
                 Catch ex As Exception
-                    Throw New Exception("安装 OptiFine（方式 B）失败", ex)
+                    Throw New Exception(GetLang("LangModDownloadLibExceptionInstallOptiFineMethodBFail"), ex)
                 End Try
             End Sub) With {.ProgressWeight = 1})
         End If
 
         '下载支持库
         If FixLibrary Then
-            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("分析 OptiFine 支持库文件",
+            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadLibTaskAnalysisOptiFineLib"),
                 Sub(Task) Task.Output = McLibNetFilesFromInstance(New McInstance(VersionFolder))) With {.ProgressWeight = 1, .Show = False})
-            Loaders.Add(New LoaderDownload("下载 OptiFine 支持库文件", New List(Of NetFile)) With {.ProgressWeight = 4})
+            Loaders.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskDownloadOptiFineLib"), New List(Of NetFile)) With {.ProgressWeight = 4})
         End If
 
         Return Loaders
@@ -714,7 +1169,7 @@ Retry:
     Private Function McDownloadOptiFineSaveLoader(DownloadInfo As DlOptiFineListEntry, TargetFolder As String) As List(Of LoaderBase)
         Dim Loaders As New List(Of LoaderBase)
         '获取下载地址
-        Loaders.Add(New LoaderTask(Of DlOptiFineListEntry, List(Of NetFile))("获取 OptiFine 下载地址",
+        Loaders.Add(New LoaderTask(Of DlOptiFineListEntry, List(Of NetFile))(GetLang("LangModDownloadLibTaskGetOptiFineDownloadUrl"),
         Sub(Task As LoaderTask(Of DlOptiFineListEntry, List(Of NetFile)))
             Dim Sources As New List(Of String)
             'BMCLAPI 源
@@ -741,7 +1196,7 @@ Retry:
             Task.Output = New List(Of NetFile) From {New NetFile(Sources.ToArray, TargetFolder, New FileChecker(MinSize:=64 * 1024))}
         End Sub) With {.ProgressWeight = 6})
         '下载
-        Loaders.Add(New LoaderDownload("下载 OptiFine 主文件", New List(Of NetFile)) With {.ProgressWeight = 10, .Block = True})
+        Loaders.Add(New LoaderDownload(GetLang("LangPageSpeedRightDownloadOptiFineMainFile"), New List(Of NetFile)) With {.ProgressWeight = 10, .Block = True})
         Return Loaders
     End Function
 
@@ -755,9 +1210,9 @@ Retry:
             '建立控件
             Dim NewItem As New MyListItem With {
                 .Title = Entry.DisplayName, .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
-                .Info = If(Entry.IsPreview, "测试版", "正式版") &
-                        If(Entry.ReleaseTime = "", "", "，发布于 " & Entry.ReleaseTime) &
-                        If(Entry.RequiredForgeVersion Is Nothing, "，不兼容 Forge", If(Entry.RequiredForgeVersion = "", "", "，兼容 Forge " & Entry.RequiredForgeVersion)),
+                .Info = If(Entry.IsPreview, GetLang("LangDownloadPreviewOptiFine"), GetLang("LangDownloadStable")) &
+                        If(Entry.ReleaseTime = "", "", GetLang("LangComma") & GetLang("LangDownloadReleaseOn", Entry.ReleaseTime)) &
+                        If(Entry.RequiredForgeVersion Is Nothing, GetLang("LangComma") & GetLang("LangDownloadForgeIncompatible"), If(Entry.RequiredForgeVersion = "", "", GetLang("LangComma") & GetLang("LangDownloadRecommendForge", Entry.RequiredForgeVersion))),
                 .Logo = PathImage & "Blocks/GrassPath.png"
             }
             AddHandler NewItem.Click, OnClick
@@ -771,7 +1226,7 @@ Retry:
         End Function) With {.Height = 42}
     End Function
     Private Sub OptiFineSaveContMenuBuild(sender As Object, e As EventArgs)
-        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = "更新日志"}
+        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = GetLang("LangDownloadChangelog")}
         ToolTipService.SetPlacement(BtnInfo, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnInfo, 30)
         ToolTipService.SetHorizontalOffset(BtnInfo, 2)
@@ -779,12 +1234,12 @@ Retry:
         sender.Buttons = {BtnInfo}
     End Sub
     Private Sub OptiFineContMenuBuild(sender As Object, e As EventArgs)
-        Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = "另存为"}
+        Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = GetLang("LangDownloadSaveAs")}
         ToolTipService.SetPlacement(BtnSave, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnSave, 30)
         ToolTipService.SetHorizontalOffset(BtnSave, 2)
         AddHandler BtnSave.Click, AddressOf OptiFineSave_Click
-        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = "更新日志"}
+        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = GetLang("LangDownloadChangelog")}
         ToolTipService.SetPlacement(BtnInfo, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnInfo, 30)
         ToolTipService.SetHorizontalOffset(BtnInfo, 2)
@@ -827,14 +1282,14 @@ Retry:
 
             '重复任务检查
             For Each OngoingLoader In LoaderTaskbar.ToList()
-                If OngoingLoader.Name <> $"LiteLoader {Id} 下载" Then Continue For
-                Hint("该版本正在下载中！", HintType.Red)
+                If OngoingLoader.Name <> GetLang("LangModDownloadLibTaskLiteLoaderDownload", Id) Then Continue For
+                Hint(GetLang("LangModDownloadLibHintInstanceDownloading"), HintType.Red)
                 Return
             Next
 
             '已有版本检查
             If File.Exists(VersionFolder & InstanceName & ".json") Then
-                If MyMsgBox("版本 " & InstanceName & " 已存在，是否重新下载？" & vbCrLf & "这会覆盖版本的 json 和 jar 文件，但不会影响版本隔离的文件。", "版本已存在", "继续", "取消") = 1 Then
+                If MyMsgBox(GetLang("LangModDownloadLibDialogContentRedownloadInstance", InstanceName), GetLang("LangModDownloadLibDialogTitleRedownloadInstance"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel")) = 1 Then
                     File.Delete(VersionFolder & InstanceName & ".jar")
                     File.Delete(VersionFolder & InstanceName & ".json")
                 Else
@@ -843,7 +1298,7 @@ Retry:
             End If
 
             '启动
-            Dim Loader As New LoaderCombo(Of String)("LiteLoader " & Id & " 下载", McDownloadLiteLoaderLoader(DownloadInfo)) With {.OnStateChanged = AddressOf McInstallState}
+            Dim Loader As New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskLiteLoaderDownload", Id), McDownloadLiteLoaderLoader(DownloadInfo)) With {.OnStateChanged = AddressOf McInstallState}
             Loader.Start(VersionFolder)
             LoaderTaskbarAdd(Loader)
             FrmMain.BtnExtraDownload.ShowRefresh()
@@ -856,13 +1311,13 @@ Retry:
     Private Sub McDownloadLiteLoaderSave(DownloadInfo As DlLiteLoaderListEntry)
         Try
             Dim Id As String = DownloadInfo.Inherit
-            Dim Target As String = SelectSaveFile("选择保存位置", DownloadInfo.FileName.Replace("-SNAPSHOT", ""), "LiteLoader 安装器 (*.jar)|*.jar")
+            Dim Target As String = SelectSaveFile(GetLang("LangSaveAs"), DownloadInfo.FileName.Replace("-SNAPSHOT", ""), "LiteLoader 安装器 (*.jar)|*.jar")
             If Not Target.Contains("\") Then Return
 
             '重复任务检查
             For Each OngoingLoader In LoaderTaskbar.ToList()
-                If OngoingLoader.Name <> $"LiteLoader {Id} 下载" Then Continue For
-                Hint("该版本正在下载中！", HintType.Red)
+                If OngoingLoader.Name <> GetLang("LangModDownloadLibTaskLiteLoaderDownload", Id) Then Continue For
+                Hint(GetLang("LangModDownloadLibHintInstanceDownloading"), HintType.Red)
                 Return
             Next
 
@@ -884,15 +1339,15 @@ Retry:
                     Case "1.5.2"
                         Address.Add("https://dl.liteloader.com/redist/1.5.2/liteloader-installer-1.5.2-01.jar")
                     Case Else
-                        Throw New NotSupportedException("未知的 Minecraft 版本（" & DownloadInfo.Inherit & "）")
+                        Throw New NotSupportedException(GetLang("LangModDownloadLibExceptionNotSupportVersion", DownloadInfo.Inherit))
                 End Select
             Else
                 '官方源
                 Address.Add("http://jenkins.liteloader.com/job/LiteLoaderInstaller%20" & DownloadInfo.Inherit & "/lastSuccessfulBuild/artifact/" & If(DownloadInfo.Inherit = "1.8", "ant/dist/", "build/libs/") & DownloadInfo.FileName)
             End If
-            Loaders.Add(New LoaderDownload("下载主文件", New List(Of NetFile) From {New NetFile(Address.ToArray, Target, New FileChecker(MinSize:=1024 * 1024))}) With {.ProgressWeight = 15})
+            Loaders.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskDownloadMainFile"), New List(Of NetFile) From {New NetFile(Address.ToArray, Target, New FileChecker(MinSize:=1024 * 1024))}) With {.ProgressWeight = 15})
             '启动
-            Dim Loader As New LoaderCombo(Of DlLiteLoaderListEntry)("LiteLoader " & Id & " 安装器下载", Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
+            Dim Loader As New LoaderCombo(Of DlLiteLoaderListEntry)(GetLang("LangModDownloadLibTaskLiteLoaderInstallerDownload", Id), Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
             Loader.Start(DownloadInfo)
             LoaderTaskbarAdd(Loader)
             FrmMain.BtnExtraDownload.ShowRefresh()
@@ -919,42 +1374,42 @@ Retry:
 
         '启动依赖版本的下载
         If ClientDownloadLoader Is Nothing Then
-            Loaders.Add(New LoaderTask(Of String, String)("启动 LiteLoader 依赖版本下载",
+            Loaders.Add(New LoaderTask(Of String, String)(GetLang("LangModDownloadLibTaskLiteLoaderMcVersionDownload"),
             Sub()
-                If IsCustomFolder Then Throw New Exception("如果没有指定原版下载器，则不能指定 MC 安装文件夹")
+                If IsCustomFolder Then Throw New Exception(GetLang("LangModDownloadLibExceptionNoCustomFolder"))
                 ClientDownloadLoader = McDownloadClient(NetPreDownloadBehaviour.ExitWhileExistsOrDownloading, DownloadInfo.Inherit)
             End Sub) With {.ProgressWeight = 0.2, .Show = False, .Block = False})
         End If
         '安装
-        Loaders.Add(New LoaderTask(Of String, String)("安装 LiteLoader",
+        Loaders.Add(New LoaderTask(Of String, String)(GetLang("LangModDownloadLibTaskInstallLiteLoader"),
         Sub(Task As LoaderTask(Of String, String))
             Try
                 '新建版本文件夹
                 Directory.CreateDirectory(VersionFolder)
                 '构造版本 Json
-                Dim VersionJson As New JObject
-                VersionJson.Add("id", VersionName)
-                VersionJson.Add("time", Date.ParseExact(DownloadInfo.ReleaseTime, "yyyy/MM/dd HH:mm", Globalization.CultureInfo.InvariantCulture))
-                VersionJson.Add("releaseTime", Date.ParseExact(DownloadInfo.ReleaseTime, "yyyy/MM/dd HH:mm", Globalization.CultureInfo.InvariantCulture))
-                VersionJson.Add("type", "release")
-                VersionJson.Add("arguments", GetJson("{""game"":[""--tweakClass"",""" & DownloadInfo.JsonToken("tweakClass").ToString & """]}"))
-                VersionJson.Add("libraries", DownloadInfo.JsonToken("libraries"))
-                CType(VersionJson("libraries"), JContainer).Add(GetJson("{""name"": ""com.mumfrey:liteloader:" & DownloadInfo.JsonToken("version").ToString & """,""url"": ""https://dl.liteloader.com/versions/""}"))
-                VersionJson.Add("mainClass", "net.minecraft.launchwrapper.Launch")
-                VersionJson.Add("minimumLauncherVersion", 18)
-                VersionJson.Add("inheritsFrom", DownloadInfo.Inherit)
-                VersionJson.Add("jar", DownloadInfo.Inherit)
+                Dim InstanceJson As New JObject
+                InstanceJson.Add("id", VersionName)
+                InstanceJson.Add("time", Date.ParseExact(DownloadInfo.ReleaseTime, "yyyy/MM/dd HH:mm", Globalization.CultureInfo.InvariantCulture))
+                InstanceJson.Add("releaseTime", Date.ParseExact(DownloadInfo.ReleaseTime, "yyyy/MM/dd HH:mm", Globalization.CultureInfo.InvariantCulture))
+                InstanceJson.Add("type", "release")
+                InstanceJson.Add("arguments", GetJson("{""game"":[""--tweakClass"",""" & DownloadInfo.JsonToken("tweakClass").ToString & """]}"))
+                InstanceJson.Add("libraries", DownloadInfo.JsonToken("libraries"))
+                CType(InstanceJson("libraries"), JContainer).Add(GetJson("{""name"": ""com.mumfrey:liteloader:" & DownloadInfo.JsonToken("version").ToString & """,""url"": ""https://dl.liteloader.com/versions/""}"))
+                InstanceJson.Add("mainClass", "net.minecraft.launchwrapper.Launch")
+                InstanceJson.Add("minimumLauncherVersion", 18)
+                InstanceJson.Add("inheritsFrom", DownloadInfo.Inherit)
+                InstanceJson.Add("jar", DownloadInfo.Inherit)
                 '输出 Json 文件
-                WriteFile(VersionFolder & VersionName & ".json", VersionJson.ToString)
+                WriteFile(VersionFolder & VersionName & ".json", InstanceJson.ToString)
             Catch ex As Exception
-                Throw New Exception("安装新 LiteLoader 版本失败", ex)
+                Throw New Exception(GetLang("LangModDownloadLibExceptionInstallLiteLoaderFail"), ex)
             End Try
         End Sub) With {.ProgressWeight = 1})
         '下载支持库
         If FixLibrary Then
-            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("分析 LiteLoader 支持库文件",
+            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadLibTaskLiteLoaderAnalysisLib"),
                 Sub(Task) Task.Output = McLibNetFilesFromInstance(New McInstance(VersionFolder))) With {.ProgressWeight = 1, .Show = False})
-            Loaders.Add(New LoaderDownload("下载 LiteLoader 支持库文件", New List(Of NetFile)) With {.ProgressWeight = 6})
+            Loaders.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskLiteLoaderDownloadLib"), New List(Of NetFile)) With {.ProgressWeight = 6})
         End If
 
         Return Loaders
@@ -970,7 +1425,7 @@ Retry:
             '建立控件
             Dim NewItem As New MyListItem With {
                 .Title = Entry.Inherit, .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
-                .Info = If(Entry.IsPreview, "测试版", "稳定版") & If(Entry.ReleaseTime = "", "", "，发布于 " & Entry.ReleaseTime),
+                .Info = If(Entry.IsPreview, GetLang("LangDownloadPreviewLiteLoader"), GetLang("LangDownloadStable")) & If(Entry.ReleaseTime = "", "", GetLang("LangComma") & GetLang("LangDownloadReleaseOn", Entry.ReleaseTime)),
                 .Logo = PathImage & "Blocks/Egg.png"
             }
             AddHandler NewItem.Click, OnClick
@@ -988,7 +1443,7 @@ Retry:
         If sender.Tag.IsLegacy Then
             sender.Buttons = {}
         Else
-            Dim BtnList As New MyIconButton With {.Logo = Logo.IconButtonList, .ToolTip = "查看全部版本", .Tag = sender}
+            Dim BtnList As New MyIconButton With {.Logo = Logo.IconButtonList, .ToolTip = GetLang("LangDownloadShowAll"), .Tag = sender}
             ToolTipService.SetPlacement(BtnList, Primitives.PlacementMode.Center)
             ToolTipService.SetVerticalOffset(BtnList, 30)
             ToolTipService.SetHorizontalOffset(BtnList, 2)
@@ -997,7 +1452,7 @@ Retry:
         End If
     End Sub
     Private Sub LiteLoaderContMenuBuild(sender As MyListItem, e As EventArgs)
-        Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = "保存安装器", .Tag = sender}
+        Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = GetLang("LangDownloadSaveInstaller"), .Tag = sender}
         ToolTipService.SetPlacement(BtnSave, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnSave, 30)
         ToolTipService.SetHorizontalOffset(BtnSave, 2)
@@ -1005,7 +1460,7 @@ Retry:
         If sender.Tag.IsLegacy Then
             sender.Buttons = {BtnSave}
         Else
-            Dim BtnList As New MyIconButton With {.Logo = Logo.IconButtonList, .ToolTip = "查看全部版本", .Tag = sender}
+            Dim BtnList As New MyIconButton With {.Logo = Logo.IconButtonList, .ToolTip = GetLang("LangDownloadShowAll"), .Tag = sender}
             ToolTipService.SetPlacement(BtnList, Primitives.PlacementMode.Center)
             ToolTipService.SetVerticalOffset(BtnList, 30)
             ToolTipService.SetHorizontalOffset(BtnList, 2)
@@ -1039,15 +1494,15 @@ Retry:
 
     Public Sub McDownloadForgelikeSave(Info As DlForgelikeEntry)
         Try
-            Dim Target As String = SelectSaveFile("选择保存位置", $"{Info.LoaderName}-{Info.Inherit}-{Info.VersionName}.{Info.FileExtension}",
+            Dim Target As String = SelectSaveFile(GetLang("LangSaveAs"), $"{Info.LoaderName}-{Info.Inherit}-{Info.VersionName}.{Info.FileExtension}",
                                             $"{Info.LoaderName} 安装器 (*.{Info.FileExtension})|*.{Info.FileExtension}")
             Dim DisplayName As String = $"{Info.LoaderName} {Info.Inherit} - {Info.VersionName}"
             If Not Target.Contains("\") Then Return
 
             '重复任务检查
             For Each OngoingLoader In LoaderTaskbar.ToList()
-                If OngoingLoader.Name <> $"{DisplayName} 下载" Then Continue For
-                Hint("该版本正在下载中！", HintType.Red)
+                If OngoingLoader.Name <> GetLang("LangModDownloadLibTaskForgelikeDownload", DisplayName) Then Continue For
+                Hint(GetLang("LangModDownloadLibHintInstanceDownloading"), HintType.Red)
                 Return
             Next
 
@@ -1071,10 +1526,10 @@ Retry:
 
             '构造加载器
             Dim Loaders As New List(Of LoaderBase)
-            Loaders.Add(New LoaderDownload("下载主文件", Files) With {.ProgressWeight = 6})
+            Loaders.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskDownloadMainFile"), Files) With {.ProgressWeight = 6})
 
             '启动
-            Dim Loader = New LoaderCombo(Of DlForgelikeEntry)(DisplayName & " 下载", Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
+            Dim Loader = New LoaderCombo(Of DlForgelikeEntry)(GetLang("LangModDownloadLibTaskForgelikeDownload", DisplayName), Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
             Loader.Start(Info)
             LoaderTaskbarAdd(Loader)
             FrmMain.BtnExtraDownload.ShowRefresh()
@@ -1089,7 +1544,7 @@ Retry:
         '选择 Java
         Dim Java As JavaEntry
         SyncLock JavaLock
-            Java = JavaSelect("已取消安装。", New Version(1, 8, 0, 60))
+            Java = JavaSelect(GetLang("LangModDownloadLibCancelJavaDownload"), New Version(1, 8, 0, 60))
             If Java Is Nothing Then
                 '开始自动下载
                 Dim JavaLoader = GetJavaDownloadLoader()
@@ -1102,9 +1557,9 @@ Retry:
                     JavaLoader.Abort() '确保取消时中止 Java 下载
                 End Try
                 '检查下载结果
-                Java = JavaSelect("已取消安装。", New Version(1, 8, 0, 60))
+                Java = JavaSelect(GetLang("LangModDownloadLibCancelJavaDownload"), New Version(1, 8, 0, 60))
                 If Task.IsAborted Then Return
-                If Java Is Nothing Then Throw New Exception("由于未找到 Java，已取消安装。")
+                If Java Is Nothing Then Throw New Exception(GetLang("LangModDownloadLibExceptionOptiFineDownloadCancelJava"))
             End If
         End SyncLock
         '添加 Java Wrapper 作为主 Jar
@@ -1272,7 +1727,7 @@ Retry:
 
         '获取 Forge 下载信息
         If Info Is Nothing Then
-            Loaders.Add(New LoaderTask(Of String, String)($"获取 {LoaderName} 详细信息",
+            Loaders.Add(New LoaderTask(Of String, String)(GetLang("LangModDownloadLibTaskForgelikeGetDetailInfo", LoaderName),
             Sub(Task As LoaderTask(Of String, String))
                 '获取 Forge 对应 MC 版本列表
                 Dim ForgeLoader = New LoaderTask(Of String, List(Of DlForgeVersionEntry))("McDownloadForgeLoader " & Inherit, AddressOf DlForgeVersionMain)
@@ -1285,15 +1740,15 @@ Retry:
                         Return
                     End If
                 Next
-                Throw New Exception($"未能找到 {LoaderName} " & Inherit & "-" & LoaderVersion & " 的详细信息！")
+                Throw New Exception(GetLang("LangModDownloadLibExceptionForgelikeGetDetailInfoFail", LoaderName & Inherit & "-" & LoaderVersion))
             End Sub) With {.ProgressWeight = 3})
         End If
         '下载 Forgelike 主文件
-        Loaders.Add(New LoaderTask(Of String, List(Of NetFile))($"准备下载 {LoaderName}",
+        Loaders.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadLibTaskForgelikeReadyDownload", LoaderName),
         Sub(Task As LoaderTask(Of String, List(Of NetFile)))
             '启动依赖版本的下载
             If ClientDownloadLoader Is Nothing Then
-                If IsCustomFolder Then Throw New Exception("如果没有指定原版下载器，则不能指定 MC 安装文件夹")
+                If IsCustomFolder Then Throw New Exception(GetLang("LangModDownloadLibExceptionNoCustomFolder"))
                 ClientDownloadLoader = McDownloadClient(NetPreDownloadBehaviour.ExitWhileExistsOrDownloading, Inherit)
             End If
             '添加主文件下载
@@ -1317,13 +1772,13 @@ Retry:
             End If
             Task.Output = Files
         End Sub) With {.ProgressWeight = 0.5, .Show = False})
-        Loaders.Add(New LoaderDownload($"下载 {LoaderName} 主文件", New List(Of NetFile)) With {.ProgressWeight = 9})
+        Loaders.Add(New LoaderDownload(GetLang("LangPageSpeedRightDownloadModLoaderMainFile", LoaderName), New List(Of NetFile)) With {.ProgressWeight = 9})
 
         '安装（仅在新版安装时需要原版 Jar）
         If IsNeoForge OrElse LoaderVersion.BeforeFirst(".") >= 20 Then
             Log($"[Download] 检测为{If(IsNeoForge, " Neo", "新版 ")}Forge：" & LoaderVersion)
             Dim Libs As List(Of McLibToken) = Nothing
-            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))($"分析 {LoaderName} 支持库文件",
+            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangPageSpeedRightAnalyzeModLoaderSupportLibrary", LoaderName),
             Sub(Task As LoaderTask(Of String, List(Of NetFile)))
                 Task.Output = New List(Of NetFile)
                 Dim Installer As ZipArchive = Nothing
@@ -1368,8 +1823,8 @@ Retry:
                     If Installer IsNot Nothing Then Installer.Dispose()
                 End Try
             End Sub) With {.ProgressWeight = 1})
-            Loaders.Add(New LoaderDownload($"下载 {LoaderName} 支持库文件", New List(Of NetFile)) With {.ProgressWeight = 12})
-            Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)($"获取 {LoaderName} 支持库文件",
+            Loaders.Add(New LoaderDownload(GetLang("LangPageSpeedRightDownloadModLoaderSupportLibrary", LoaderName), New List(Of NetFile)) With {.ProgressWeight = 12})
+            Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)(GetLang("LangModDownloadLibTaskForgelikeGetLibFile", LoaderName),
             Sub(Task As LoaderTask(Of List(Of NetFile), Boolean))
 #Region "Forgelike 文件"
                 If IsCustomFolder Then
@@ -1409,7 +1864,7 @@ Retry:
                 End SyncLock
 #End Region
             End Sub) With {.ProgressWeight = 0.1, .Show = False})
-            Loaders.Add(New LoaderTask(Of Boolean, Boolean)(If(IsNeoForge, "安装 NeoForge", "安装 Forge（方式 A）"),
+            Loaders.Add(New LoaderTask(Of Boolean, Boolean)(If(IsNeoForge, GetLang("LangPageSpeedRightInstallNeoForge"), GetLang("LangPageSpeedRightInstallForgeMethodA")),
             Sub(Task As LoaderTask(Of Boolean, Boolean))
                 Dim Installer As ZipArchive = Nothing
                 Try
@@ -1441,7 +1896,7 @@ Retry:
                             UseJavaWrapper = False
                             GoTo Retry
                         Else
-                            Throw New Exception($"运行 {LoaderName} 安装器失败", ex)
+                            Throw New Exception(GetLang("LangModDownloadLibExceptionForgelikeRunInstallerFail", LoaderName), ex)
                         End If
                     End Try
                     '拷贝新增的版本 Json
@@ -1466,7 +1921,7 @@ Retry:
                         Log("[Download] 未找到新增的版本文件夹")
                     End If
                 Catch ex As Exception
-                    Throw New Exception($"安装新 {LoaderName} 版本失败", ex)
+                    Throw New Exception(GetLang("LangModDownloadLibExceptionForgelikeInstallInstanceFail", LoaderName), ex)
                 Finally
                     '清理文件
                     Try
@@ -1479,7 +1934,7 @@ Retry:
             End Sub) With {.ProgressWeight = 10})
         Else
             Log("[Download] 检测为非新版 Forge：" & LoaderVersion)
-            Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)($"安装 {LoaderName}（方式 B）",
+            Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)(GetLang("LangModDownloadLibTaskForgelikeInstallMethodB", LoaderName),
             Sub(Task As LoaderTask(Of List(Of NetFile), Boolean))
                 Dim Installer As ZipArchive = Nothing
                 Try
@@ -1518,7 +1973,7 @@ Retry:
                         WriteFile(VersionFolder & NewInstanceName & ".json", Json("versionInfo").ToString)
                     End If
                 Catch ex As Exception
-                    Throw New Exception("非新版方式安装 Forge 失败", ex)
+                    Throw New Exception(GetLang("LangModDownloadLibExceptionForgelikeInstallFail"), ex)
                 Finally
                     Try
                         '清理文件
@@ -1557,26 +2012,28 @@ Retry:
         If FreshVersion IsNot Nothing AndAlso FreshVersion Is RecommendedVersion Then FreshVersion = Nothing
         '显示各个版本
         If RecommendedVersion IsNot Nothing Then
-            Dim Recommended = ForgeDownloadListItem(RecommendedVersion, OnClick, IsSaveOnly).Init()
-            Recommended.Info = "推荐版" & If(Recommended.Info = "", "", "，" & Recommended.Info)
+            Dim Recommended = ForgeDownloadListItem(RecommendedVersion, OnClick, IsSaveOnly, False).Init()
+            Recommended.Info = GetLang("LangDownloadRecommend") & If(Recommended.Info = "", "", GetLang("LangComma") & Recommended.Info)
             Stack.Children.Add(Recommended)
         End If
         If FreshVersion IsNot Nothing Then
-            Dim Fresh = ForgeDownloadListItem(FreshVersion, OnClick, IsSaveOnly).Init()
-            Fresh.Info = "最新版" & If(Fresh.Info = "", "", "，" & Fresh.Info)
+            Dim Fresh = ForgeDownloadListItem(FreshVersion, OnClick, IsSaveOnly, False).Init()
+            Fresh.Info = GetLang("LangDownloadLatest") & If(Fresh.Info = "", "", GetLang("LangComma") & Fresh.Info)
             Stack.Children.Add(Fresh)
         End If
         '添加间隔
-        Stack.Children.Add(New TextBlock With {.Text = "全部版本 (" & Entries.Count & ")", .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 13, 0, 4)})
+        Stack.Children.Add(New TextBlock With {.Text = GetLang("LangDownloadAll") & " (" & Entries.Count & ")", .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 13, 0, 4)})
     End Sub
-    Public Function ForgeDownloadListItem(Entry As DlForgeVersionEntry, OnClick As MyListItem.ClickEventHandler, IsSaveOnly As Boolean) As MyVirtualizingElement(Of MyListItem)
+    Public Function ForgeDownloadListItem(Entry As DlForgeVersionEntry, OnClick As MyListItem.ClickEventHandler, IsSaveOnly As Boolean, Optional IsUpperCase As Boolean = True) As MyVirtualizingElement(Of MyListItem)
         Return New MyVirtualizingElement(Of MyListItem)(
         Function()
             '建立控件
             Dim NewItem As New MyListItem With {
                 .Title = Entry.VersionName, .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
-                .Info = {If(Entry.ReleaseTime = "", "", "发布于 " & Entry.ReleaseTime), If(ModeDebug, "种类：" & Entry.Category, "")}.
-                    Where(Function(d) d <> "").Join("，"),
+                .Info = {
+                If(Entry.ReleaseTime = "", "", GetLang(If(IsUpperCase = False, "LangDownloadReleaseOn", "LangDownloadReleaseOnU"), Entry.ReleaseTime)),
+                If(ModeDebug, GetLang("LangDownloadCategory") & Entry.Category, "")
+                }.Where(Function(d) d <> "").Join(GetLang("LangComma")),
                 .Logo = PathImage & "Blocks/Anvil.png"
             }
             AddHandler NewItem.Click, OnClick
@@ -1591,12 +2048,12 @@ Retry:
         End Function) With {.Height = 42}
     End Function
     Private Sub ForgeContMenuBuild(sender As MyListItem, e As EventArgs)
-        Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = "另存为"}
+        Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = GetLang("LangDownloadSaveAs")}
         ToolTipService.SetPlacement(BtnSave, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnSave, 30)
         ToolTipService.SetHorizontalOffset(BtnSave, 2)
         AddHandler BtnSave.Click, AddressOf ForgeSave_Click
-        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = "更新日志"}
+        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = GetLang("LangDownloadChangelog")}
         ToolTipService.SetPlacement(BtnInfo, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnInfo, 30)
         ToolTipService.SetHorizontalOffset(BtnInfo, 2)
@@ -1604,7 +2061,7 @@ Retry:
         sender.Buttons = {BtnSave, BtnInfo}
     End Sub
     Private Sub ForgeSaveContMenuBuild(sender As MyListItem, e As EventArgs)
-        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = "更新日志"}
+        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = GetLang("LangDownloadChangelog")}
         ToolTipService.SetPlacement(BtnInfo, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnInfo, 30)
         ToolTipService.SetHorizontalOffset(BtnInfo, 2)
@@ -1717,16 +2174,16 @@ Retry:
         '显示各个版本
         If FreshStableVersion IsNot Nothing Then
             Dim Fresh = NeoForgeDownloadListItem(FreshStableVersion, OnClick, IsSaveOnly).Init()
-            Fresh.Info = If(Fresh.Info = "", "最新稳定版", "最新" & Fresh.Info)
+            Fresh.Info = If(Fresh.Info = "", GetLang("LangDownloadNewStable"), GetLang("LangDownloadNewStable"))
             Stack.Children.Add(Fresh)
         End If
         If FreshBetaVersion IsNot Nothing Then
             Dim Fresh = NeoForgeDownloadListItem(FreshBetaVersion, OnClick, IsSaveOnly).Init()
-            Fresh.Info = If(Fresh.Info = "", "最新测试版", "最新" & Fresh.Info)
+            Fresh.Info = If(Fresh.Info = "", GetLang("LangDownloadNewTest"), GetLang("LangDownloadNewTest"))
             Stack.Children.Add(Fresh)
         End If
         '添加间隔
-        Stack.Children.Add(New TextBlock With {.Text = "全部版本 (" & Entries.Count & ")", .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 13, 0, 4)})
+        Stack.Children.Add(New TextBlock With {.Text = GetLang("LangDownloadAll") & " (" & Entries.Count & ")", .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 13, 0, 4)})
     End Sub
     Public Function NeoForgeDownloadListItem(Info As DlNeoForgeListEntry, OnClick As MyListItem.ClickEventHandler, IsSaveOnly As Boolean) As MyVirtualizingElement(Of MyListItem)
         Return New MyVirtualizingElement(Of MyListItem)(
@@ -1734,7 +2191,7 @@ Retry:
             '建立控件
             Dim NewItem As New MyListItem With {
                 .Title = Info.VersionName, .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Info,
-                .Info = If(Info.IsBeta, "测试版", "稳定版"),
+                .Info = If(Info.IsBeta, GetLang("LangDownloadTest"), GetLang("LangDownloadStable")),
                 .Logo = PathImage & "Blocks/NeoForge.png"
             }
             AddHandler NewItem.Click, OnClick
@@ -1749,12 +2206,12 @@ Retry:
         ) With {.Height = 42}
     End Function
     Private Sub NeoForgeContMenuBuild(sender As MyListItem, e As EventArgs)
-        Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = "另存为"}
+        Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = GetLang("LangDownloadSaveAs")}
         ToolTipService.SetPlacement(BtnSave, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnSave, 30)
         ToolTipService.SetHorizontalOffset(BtnSave, 2)
         AddHandler BtnSave.Click, AddressOf NeoForgeSave_Click
-        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = "更新日志"}
+        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = GetLang("LangDownloadChangelog")}
         ToolTipService.SetPlacement(BtnInfo, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnInfo, 30)
         ToolTipService.SetHorizontalOffset(BtnInfo, 2)
@@ -1762,7 +2219,7 @@ Retry:
         sender.Buttons = {BtnSave, BtnInfo}
     End Sub
     Private Sub NeoForgeSaveContMenuBuild(sender As MyListItem, e As EventArgs)
-        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = "更新日志"}
+        Dim BtnInfo As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonInfo, .ToolTip = GetLang("LangDownloadChangelog")}
         ToolTipService.SetPlacement(BtnInfo, Primitives.PlacementMode.Center)
         ToolTipService.SetVerticalOffset(BtnInfo, 30)
         ToolTipService.SetHorizontalOffset(BtnInfo, 2)
@@ -1801,13 +2258,13 @@ Retry:
             Dim Url As String = DownloadInfo("url").ToString
             Dim FileName As String = GetFileNameFromPath(Url)
             Dim Version As String = GetFileNameFromPath(DownloadInfo("version").ToString)
-            Dim Target As String = SelectSaveFile("选择保存位置", FileName, "Fabric 安装器 (*.jar)|*.jar")
+            Dim Target As String = SelectSaveFile(GetLang("LangSaveAs"), FileName, "Fabric 安装器 (*.jar)|*.jar")
             If Not Target.Contains("\") Then Return
 
             '重复任务检查
             For Each OngoingLoader In LoaderTaskbar.ToList()
-                If OngoingLoader.Name <> $"Fabric {Version} 安装器下载" Then Continue For
-                Hint("该版本正在下载中！", HintType.Red)
+                If OngoingLoader.Name <> GetLang("LangModDownloadLibTaskFabricInstallerDownload", Version) Then Continue For
+                Hint(GetLang("LangModDownloadLibHintInstanceDownloading"), HintType.Red)
                 Return
             Next
 
@@ -1817,9 +2274,9 @@ Retry:
             'BMCLAPI 不支持 Fabric Installer 下载
             Dim Address As New List(Of String)
             Address.Add(Url)
-            Loaders.Add(New LoaderDownload("下载主文件", New List(Of NetFile) From {New NetFile(Address.ToArray, Target, New FileChecker(MinSize:=1024 * 64))}) With {.ProgressWeight = 15})
+            Loaders.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskDownloadMainFile"), New List(Of NetFile) From {New NetFile(Address.ToArray, Target, New FileChecker(MinSize:=1024 * 64))}) With {.ProgressWeight = 15})
             '启动
-            Dim Loader As New LoaderCombo(Of JObject)("Fabric " & Version & " 安装器下载", Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
+            Dim Loader As New LoaderCombo(Of JObject)(GetLang("LangModDownloadLibTaskFabricInstallerDownload", Version), Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
             Loader.Start(DownloadInfo)
             LoaderTaskbarAdd(Loader)
             FrmMain.BtnExtraDownload.ShowRefresh()
@@ -1844,7 +2301,7 @@ Retry:
 
         '下载 Json
         MinecraftName = MinecraftName.Replace("∞", "infinite") '放在 ID 后面避免影响版本文件夹名称
-        Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("获取 Fabric 主文件下载地址",
+        Loaders.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangPageSpeedRightGetFabricMainFileDownloadAddress"),
         Sub(Task As LoaderTask(Of String, List(Of NetFile)))
             '启动依赖版本的下载
             If FixLibrary Then
@@ -1857,13 +2314,13 @@ Retry:
                 "https://meta.fabricmc.net/v2/versions/loader/" & MinecraftName & "/" & FabricVersion & "/profile/json"
             }, VersionFolder & Id & ".json", New FileChecker(IsJson:=True))}
         End Sub) With {.ProgressWeight = 0.5})
-        Loaders.Add(New LoaderDownload("下载 Fabric 主文件", New List(Of NetFile)) With {.ProgressWeight = 2.5})
+        Loaders.Add(New LoaderDownload(GetLang("LangPageSpeedRightDownloadFabricMainFile"), New List(Of NetFile)) With {.ProgressWeight = 2.5})
 
         '下载支持库
         If FixLibrary Then
-            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("分析 Fabric 支持库文件",
+            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModDownloadLibTaskFabricAnalysisLib"),
                 Sub(Task) Task.Output = McLibNetFilesFromInstance(New McInstance(VersionFolder))) With {.ProgressWeight = 1, .Show = False})
-            Loaders.Add(New LoaderDownload("下载 Fabric 支持库文件", New List(Of NetFile)) With {.ProgressWeight = 8})
+            Loaders.Add(New LoaderDownload(GetLang("LangModDownloadLibTaskFabricDownloadLib"), New List(Of NetFile)) With {.ProgressWeight = 8})
         End If
 
         Return Loaders
@@ -1878,7 +2335,7 @@ Retry:
         Function()
             Dim NewItem As New MyListItem With {
                 .Title = Entry("version").ToString.Replace("+build", ""), .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
-                .Info = If(Entry("stable").ToObject(Of Boolean), "稳定版", "测试版"),
+                .Info = If(Entry("stable").ToObject(Of Boolean), GetLang("LangDownloadStable"), GetLang("LangDownloadTest")),
                 .Logo = PathImage & "Blocks/Fabric.png"
             }
             AddHandler NewItem.Click, OnClick
@@ -1890,7 +2347,7 @@ Retry:
         Function()
             Dim NewItem As New MyListItem With {
                 .Title = Entry.DisplayName.Split("]")(1).Replace("Fabric API ", "").Replace(" build ", ".").BeforeFirst("+").Trim, .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
-                .Info = Entry.StatusDescription & "，发布于 " & Entry.ReleaseDate.ToString("yyyy'/'MM'/'dd HH':'mm"),
+                .Info = Entry.StatusDescription & GetLang("LangComma") & GetLang("LangDownloadReleaseOn", GetLocalTimeFormat(Entry.ReleaseDate)),
                 .Logo = PathImage & "Blocks/Fabric.png"
             }
             AddHandler NewItem.Click, OnClick
@@ -1902,7 +2359,7 @@ Retry:
         Function()
             Dim NewItem As New MyListItem With {
                .Title = Entry.DisplayName.ToLower.Replace("optifabric-", "").Replace(".jar", "").Trim.TrimStart("v"), .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
-               .Info = Entry.StatusDescription & "，发布于 " & Entry.ReleaseDate.ToString("yyyy'/'MM'/'dd HH':'mm"),
+               .Info = Entry.StatusDescription & GetLang("LangComma") & GetLang("LangDownloadReleaseOn", GetLocalTimeFormat(Entry.ReleaseDate)),
                .Logo = PathImage & "Blocks/OptiFabric.png"
             }
             AddHandler NewItem.Click, OnClick
@@ -1996,11 +2453,11 @@ Retry:
     Public Sub LoaderStateChangedHintOnly(Loader As LoaderBase)
         Select Case Loader.State
             Case LoadState.Finished
-                Hint(Loader.Name & "成功！", HintType.Green)
+                Hint(GetLang("LangModDownloadLibSuccess", Loader.Name), HintType.Green)
             Case LoadState.Failed
-                Hint(Loader.Name & "失败：" & Loader.Error.GetBrief(), HintType.Red)
+                Hint(GetLang("LangModDownloadLibFail", Loader.Name, Loader.Error.GetBrief()), HintType.Red)
             Case LoadState.Aborted
-                Hint(Loader.Name & "已取消！", HintType.Blue)
+                Hint(GetLang("LangModDownloadLibCancel", Loader.Name), HintType.Blue)
         End Select
     End Sub
     ''' <summary>
@@ -2010,11 +2467,11 @@ Retry:
         Select Case Loader.State
             Case LoadState.Finished
                 WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '清空缓存（合并安装会先生成文件夹，这会在刷新时误判为可以使用缓存）
-                Hint(Loader.Name & "成功！", HintType.Green)
+                Hint(GetLang("LangModDownloadLibSuccess", Loader.Name), HintType.Green)
             Case LoadState.Failed
-                Hint(Loader.Name & "失败：" & Loader.Error.GetBrief(), HintType.Red)
+                Hint(GetLang("LangModDownloadLibFail", Loader.Name, Loader.Error.GetBrief()), HintType.Red)
             Case LoadState.Aborted
-                Hint(Loader.Name & "已取消！", HintType.Blue)
+                Hint(GetLang("LangModDownloadLibCancel", Loader.Name), HintType.Blue)
             Case LoadState.Loading
                 Return '不重新加载版本列表
         End Select
@@ -2045,7 +2502,7 @@ Retry:
         Try
             Dim SubLoaders = McInstallLoader(Request)
             If SubLoaders Is Nothing Then Return False
-            Dim Loader As New LoaderCombo(Of String)(Request.NewInstanceName & " 安装", SubLoaders) With {.OnStateChanged = AddressOf McInstallState}
+            Dim Loader As New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskMcInstall", Request.NewInstanceName), SubLoaders) With {.OnStateChanged = AddressOf McInstallState}
 
             '启动
             Loader.Start(Request.VersionFolder)
@@ -2057,7 +2514,7 @@ Retry:
         Catch ex As CancelledException
             Return False
         Catch ex As Exception
-            Log(ex, "开始合并安装失败", LogLevel.Feedback)
+            Log(ex, GetLang("LangModDownloadLibExceptionInstallInstallFail"), LogLevel.Feedback)
             Return False
         End Try
     End Function
@@ -2115,57 +2572,57 @@ Retry:
 
         '重复版本检查
         If File.Exists($"{VersionFolder}{Request.NewInstanceName}.json") Then
-            Hint("版本 " & Request.NewInstanceName & " 已经存在！", HintType.Red)
+            Hint(GetLang("LangModDownloadLibHintMcExist", Request.NewInstanceName), HintType.Red)
             Throw New CancelledException
         End If
 
         Dim LoaderList As New List(Of LoaderBase)
         '添加忽略标识
-        LoaderList.Add(New LoaderTask(Of Integer, Integer)("添加忽略标识", Sub() WriteFile(VersionFolder & ".pclignore", "用于临时地在 PCL 的版本列表中屏蔽此版本。")) With {.Show = False, .Block = False})
+        LoaderList.Add(New LoaderTask(Of Integer, Integer)(GetLang("LangModDownloadLibTaskAddIgnore"), Sub() WriteFile(VersionFolder & ".pclignore", $"用于临时地在 PCL 的版本列表中屏蔽此版本。{vbCr}This file is used to temporarily hide this instance in the PCL instance list.")) With {.Show = False, .Block = False})
         'Fabric API
         If Request.FabricApi IsNot Nothing Then
-            LoaderList.Add(New LoaderDownload("下载 Fabric API", New List(Of NetFile) From {Request.FabricApi.ToNetFile(ModsTempFolder)}) With {.ProgressWeight = 3, .Block = False})
+            LoaderList.Add(New LoaderDownload(GetLang("LangPageSpeedRightDownloadFabricAPI"), New List(Of NetFile) From {Request.FabricApi.ToNetFile(ModsTempFolder)}) With {.ProgressWeight = 3, .Block = False})
         End If
         'OptiFabric
         If Request.OptiFabric IsNot Nothing Then
-            LoaderList.Add(New LoaderDownload("下载 OptiFabric", New List(Of NetFile) From {Request.OptiFabric.ToNetFile(ModsTempFolder)}) With {.ProgressWeight = 3, .Block = False})
+            LoaderList.Add(New LoaderDownload(GetLang("LangPageSpeedRightDownloadOptiFabric"), New List(Of NetFile) From {Request.OptiFabric.ToNetFile(ModsTempFolder)}) With {.ProgressWeight = 3, .Block = False})
         End If
         '原版
-        Dim ClientLoader = New LoaderCombo(Of String)("下载原版 " & Request.MinecraftName, McDownloadClientLoader(Request.MinecraftName, Request.MinecraftJson, Request.NewInstanceName)) With {.Show = False, .ProgressWeight = 39,
+        Dim ClientLoader = New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskDownloadVanilla", Request.MinecraftName), McDownloadClientLoader(Request.MinecraftName, Request.MinecraftJson, Request.NewInstanceName)) With {.Show = False, .ProgressWeight = 39,
             .Block = Request.ForgeVersion Is Nothing AndAlso Request.NeoForgeVersion Is Nothing AndAlso Request.OptiFineEntry Is Nothing AndAlso Request.FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing}
         LoaderList.Add(ClientLoader)
         'OptiFine
         If Request.OptiFineEntry IsNot Nothing Then
             If OptiFineAsMod Then
-                LoaderList.Add(New LoaderCombo(Of String)("下载 OptiFine " & Request.OptiFineEntry.DisplayName, McDownloadOptiFineSaveLoader(Request.OptiFineEntry, OptiFineFolder & Request.OptiFineEntry.FileName)) With {.Show = False, .ProgressWeight = 16,
+                LoaderList.Add(New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskDownloadOptiFine", Request.OptiFineEntry.DisplayName), McDownloadOptiFineSaveLoader(Request.OptiFineEntry, OptiFineFolder & Request.OptiFineEntry.FileName)) With {.Show = False, .ProgressWeight = 16,
                     .Block = Request.ForgeVersion Is Nothing AndAlso Request.NeoForgeVersion Is Nothing AndAlso Request.FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing})
             Else
-                LoaderList.Add(New LoaderCombo(Of String)("下载 OptiFine " & Request.OptiFineEntry.DisplayName, McDownloadOptiFineLoader(Request.OptiFineEntry, TempMcFolder, ClientLoader, Request.VersionFolder, False)) With {.Show = False, .ProgressWeight = 24,
+                LoaderList.Add(New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskDownloadOptiFine", Request.OptiFineEntry.DisplayName), McDownloadOptiFineLoader(Request.OptiFineEntry, TempMcFolder, ClientLoader, Request.VersionFolder, False)) With {.Show = False, .ProgressWeight = 24,
                     .Block = Request.ForgeVersion Is Nothing AndAlso Request.NeoForgeVersion Is Nothing AndAlso Request.FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing})
             End If
         End If
         'Forge
         If Request.ForgeVersion IsNot Nothing Then
-            LoaderList.Add(New LoaderCombo(Of String)("下载 Forge " & Request.ForgeVersion, McDownloadForgelikeLoader(False, Request.ForgeVersion, "forge-" & Request.ForgeVersion, Request.MinecraftName, Request.ForgeEntry, TempMcFolder, ClientLoader, Request.VersionFolder)) With {.Show = False, .ProgressWeight = 25,
+            LoaderList.Add(New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskDownloadForge", Request.ForgeVersion), McDownloadForgelikeLoader(False, Request.ForgeVersion, "forge-" & Request.ForgeVersion, Request.MinecraftName, Request.ForgeEntry, TempMcFolder, ClientLoader, Request.VersionFolder)) With {.Show = False, .ProgressWeight = 25,
                 .Block = Request.FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing AndAlso Request.NeoForgeEntry Is Nothing})
         End If
         'NeoForge
         If Request.NeoForgeVersion IsNot Nothing Then
-            LoaderList.Add(New LoaderCombo(Of String)("下载 NeoForge " & Request.NeoForgeVersion, McDownloadForgelikeLoader(True, Request.NeoForgeVersion, "neoforge-" & Request.NeoForgeVersion, Request.MinecraftName, Request.NeoForgeEntry, TempMcFolder, ClientLoader, Request.VersionFolder)) With {.Show = False, .ProgressWeight = 25,
+            LoaderList.Add(New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskDownloadNeoForge", Request.NeoForgeVersion), McDownloadForgelikeLoader(True, Request.NeoForgeVersion, "neoforge-" & Request.NeoForgeVersion, Request.MinecraftName, Request.NeoForgeEntry, TempMcFolder, ClientLoader, Request.VersionFolder)) With {.Show = False, .ProgressWeight = 25,
                 .Block = Request.ForgeEntry Is Nothing AndAlso Request.FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing})
         End If
         'LiteLoader
         If Request.LiteLoaderEntry IsNot Nothing Then
-            LoaderList.Add(New LoaderCombo(Of String)("下载 LiteLoader " & Request.MinecraftName, McDownloadLiteLoaderLoader(Request.LiteLoaderEntry, TempMcFolder, ClientLoader, False)) With {.Show = False, .ProgressWeight = 1,
+            LoaderList.Add(New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskDownloadLiteLoader", Request.MinecraftName), McDownloadLiteLoaderLoader(Request.LiteLoaderEntry, TempMcFolder, ClientLoader, False)) With {.Show = False, .ProgressWeight = 1,
                 .Block = Request.FabricVersion Is Nothing})
         End If
         'Fabric
         If Request.FabricVersion IsNot Nothing Then
-            LoaderList.Add(New LoaderCombo(Of String)("下载 Fabric " & Request.FabricVersion, McDownloadFabricLoader(Request.FabricVersion, Request.MinecraftName, TempMcFolder, False)) With {.Show = False, .ProgressWeight = 2,
+            LoaderList.Add(New LoaderCombo(Of String)(GetLang("LangModDownloadLibTaskDownloadFabric", Request.FabricVersion), McDownloadFabricLoader(Request.FabricVersion, Request.MinecraftName, TempMcFolder, False)) With {.Show = False, .ProgressWeight = 2,
                 .Block = True})
         End If
         '合并安装
-        LoaderList.Add(New LoaderTask(Of String, String)("安装游戏",
+        LoaderList.Add(New LoaderTask(Of String, String)(GetLang("LangPageSpeedRightInstallGame"),
         Sub(Task As LoaderTask(Of String, String))
             '合并 JSON
             MergeJson(VersionFolder, VersionFolder, OptiFineFolder, OptiFineAsMod, ForgeFolder, Request.ForgeVersion, NeoForgeFolder, Request.NeoForgeVersion, FabricFolder, LiteLoaderFolder)
@@ -2188,12 +2645,12 @@ Retry:
         '补全文件
         If Request.OptiFineEntry IsNot Nothing OrElse (Request.ForgeVersion IsNot Nothing AndAlso Request.ForgeVersion.BeforeFirst(".") >= 20) OrElse Request.NeoForgeVersion IsNot Nothing OrElse Request.FabricVersion IsNot Nothing OrElse Request.LiteLoaderEntry IsNot Nothing Then
             Dim LoadersLib As New List(Of LoaderBase)
-            LoadersLib.Add(New LoaderTask(Of String, List(Of NetFile))("分析游戏支持库文件（副加载器）", Sub(Task) Task.Output = McLibNetFilesFromInstance(New McInstance(VersionFolder))) With {.ProgressWeight = 1, .Show = False})
-            LoadersLib.Add(New LoaderDownload("下载游戏支持库文件（副加载器）", New List(Of NetFile)) With {.ProgressWeight = 7, .Show = False})
-            LoaderList.Add(New LoaderCombo(Of String)("下载游戏支持库文件", LoadersLib) With {.ProgressWeight = 8})
+            LoadersLib.Add(New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModModpackTaskAnalysisLibSideLoader"), Sub(Task) Task.Output = McLibNetFilesFromInstance(New McInstance(VersionFolder))) With {.ProgressWeight = 1, .Show = False})
+            LoadersLib.Add(New LoaderDownload(GetLang("LangModModpackTaskDownloadLibSideLoader"), New List(Of NetFile)) With {.ProgressWeight = 7, .Show = False})
+            LoaderList.Add(New LoaderCombo(Of String)(GetLang("LangPageSpeedRightDownloadGameSupportLibrary"), LoadersLib) With {.ProgressWeight = 8})
         End If
         '删除忽略标识
-        LoaderList.Add(New LoaderTask(Of Integer, Integer)("删除忽略标识", Sub() File.Delete(VersionFolder & ".pclignore")) With {.Show = False})
+        LoaderList.Add(New LoaderTask(Of Integer, Integer)(GetLang("LangModDownloadLibTaskDelIgnore"), Sub() File.Delete(VersionFolder & ".pclignore")) With {.Show = False})
         '总加载器
         Return LoaderList
     End Function

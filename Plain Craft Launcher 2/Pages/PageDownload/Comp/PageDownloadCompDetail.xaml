@@ -13,9 +13,9 @@
             <local:MyCard Margin="0,0,0,25" x:Name="CardIntro">
                 <StackPanel Margin="22,18,22,19" x:Name="PanIntro">
                     <StackPanel Orientation="Horizontal" Height="35">
-                        <local:MyButton x:Name="BtnIntroWeb"   MinWidth="140" Text="转到 CurseForge" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
-                        <local:MyButton x:Name="BtnIntroWiki"  MinWidth="140" Text="转到 MC 百科" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
-                        <local:MyButton x:Name="BtnIntroCopy"  MinWidth="140" Text="复制名称" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnIntroWeb"   MinWidth="140" Text="{StaticResource LangDownloadCompToCurseForge}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
+                        <local:MyButton x:Name="BtnIntroWiki"  MinWidth="140" Text="{StaticResource LangDownloadCompToMCMod}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnIntroCopy"  MinWidth="140" Text="{StaticResource LangDownloadCompCopyName}" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
                     </StackPanel>
                 </StackPanel>
             </local:MyCard>
@@ -26,7 +26,7 @@
                 <StackPanel Name="PanResults" />
             </StackPanel>
             <local:MyCard Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" x:Name="PanLoad" UseAnimation="False" Margin="0,0,0,8">
-                <local:MyLoading Text="正在获取版本列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <local:MyLoading Text="{StaticResource LangDownloadCompLoadingList}" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
             </local:MyCard>
         </Grid>
     </local:MyScrollViewer>

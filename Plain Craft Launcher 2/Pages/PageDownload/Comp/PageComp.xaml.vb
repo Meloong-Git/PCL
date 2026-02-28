@@ -39,8 +39,8 @@ Public Class PageComp
         Set(Value As String)
             If _TypeNameSpaced = Value Then Return
             _TypeNameSpaced = Value
-            PanAlways.Title = $"搜索{Value}"
-            Load.Text = $"正在获取{Value}列表"
+            PanAlways.Title = GetLang("LangDownloadCompSearchTitle", Value)
+            Load.Text = GetLang("LangDownloadCompGettingList", Value)
         End Set
     End Property
     Private _TypeNameSpaced As String = ""
@@ -120,7 +120,7 @@ Public Class PageComp
     End Sub
     Private Function LoaderInput() As CompProjectRequest
         Dim Request As New CompProjectRequest(PageType, Storage, (Page + 1) * PAGE_SIZE)
-        Dim GameVersion As String = If(TextSearchVersion.Text = "全部 (也可自行输入)", Nothing,
+        Dim GameVersion As String = If(TextSearchVersion.Text = GetLang("LangDownloadCompSearchVersionAll"), Nothing,
             If(TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w"), TextSearchVersion.Text, Nothing))
         With Request
             .SearchText = TextSearchName.Text
@@ -232,7 +232,7 @@ Public Class PageComp
     '重置按钮
     Private Sub ResetFilter() Handles BtnSearchReset.Click
         TextSearchName.Text = ""
-        TextSearchVersion.Text = "全部 (也可自行输入)"
+        TextSearchVersion.Text = GetLang("LangDownloadCompSearchVersionAll")
         TextSearchVersion.SelectedIndex = 0
         ComboSearchSource.SelectedIndex = 0
         ComboSearchTag.SelectedIndex = 0

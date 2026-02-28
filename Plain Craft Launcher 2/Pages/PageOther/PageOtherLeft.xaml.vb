@@ -116,7 +116,7 @@
                 RefreshHelp()
                 ItemHelp.Checked = True
         End Select
-        Hint("正在刷新……", Log:=False)
+        Hint(GetLang("LangPageOtherRefreshing"), Log:=False)
     End Sub
     Public Shared Sub RefreshHelp()
         Setup.Set("SystemHelpVersion", 0) '强制重新解压文件
@@ -132,8 +132,8 @@
     End Sub
     Public Shared Sub TryFeedback()
         If Not CanFeedback(True) Then Return
-        Select Case MyMsgBox("在提交新反馈前，建议先搜索反馈列表，以避免重复提交。" & vbCrLf & "如果无法打开该网页，请使用 VPN 改善网络环境。",
-                    "反馈", "提交新反馈", "查看反馈列表", "取消")
+        Select Case MyMsgBox(GetLang("LangPageOtherDialogFeedbackContent"),
+                    GetLang("LangPageOtherDialogFeedbackTitle"), GetLang("LangPageOtherDialogFeedbackBtn1"), GetLang("LangPageOtherDialogFeedbackBtn2"), GetLang("LangDialogBtnCancel"))
             Case 1
                 Feedback(True, False)
             Case 2

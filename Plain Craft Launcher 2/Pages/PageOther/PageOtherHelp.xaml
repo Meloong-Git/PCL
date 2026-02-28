@@ -7,7 +7,8 @@
     <Grid>
         <local:MyScrollViewer Visibility="Collapsed" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
             <StackPanel x:Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True">
-                <local:MySearchBox Margin="0,0,0,15" HintText="搜索帮助" x:Name="SearchBox" />
+                <local:MySearchBox Margin="0,0,0,15" HintText="{StaticResource LangPageOtherHelpSearch}" x:Name="SearchBox" />
+                <local:MyHint Text="{StaticResource LangPageOtherHelpSimpleChineseOnly}" x:Name="HintSCOnly" Visibility="Collapsed" Margin="0,0,0,15"/>
                 <Grid>
                     <local:MyCard x:Name="PanSearch" Visibility="Collapsed" VerticalAlignment="Top" Opacity="0" Margin="0,0,0,15" Title=" " MinHeight="40">
                         <StackPanel Margin="20,40,18,18" Name="PanSearchList" VerticalAlignment="Top" />
@@ -17,7 +18,7 @@
             </StackPanel>
         </local:MyScrollViewer>
         <local:MyCard Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40,0" SnapsToDevicePixels="True" x:Name="PanLoad" UseAnimation="False">
-            <local:MyLoading Text="正在加载帮助列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <local:MyLoading Text="{StaticResource LangPageOtherHelpLoading}" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
         </local:MyCard>
     </Grid>
 </local:MyPageRight>

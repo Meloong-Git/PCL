@@ -98,9 +98,9 @@
             JavaSearchLoader.Start(IsForceRestart:=True)
 
             Log("[Setup] 已初始化版本独立设置")
-            Hint("已初始化版本独立设置！", HintType.Green, False)
+            Hint(GetLang("LangPageVersionSetupHintIndependentSetResetSuccess"), HintType.Green, False)
         Catch ex As Exception
-            Log(ex, "初始化版本独立设置失败", LogLevel.Msgbox)
+            Log(ex, GetLang("LangPageVersionSetupHintIndependentSetResetFail"), LogLevel.Msgbox)
         End Try
 
         Reload()
@@ -162,7 +162,7 @@
         End If
         '设置文本
         LabRamGame.Text = If(RamGame = Math.Floor(RamGame), RamGame & ".0", RamGame) & " GB" &
-                          If(RamGame <> RamGameActual, " (可用 " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
+                          If(RamGame <> RamGameActual, " (" & GetLang("LangPageSetupLaunchMemAvailable") & " " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
         LabRamUsed.Text = If(RamUsed = Math.Floor(RamUsed), RamUsed & ".0", RamUsed) & " GB"
         LabRamTotal.Text = " / " & If(RamTotal = Math.Floor(RamTotal), RamTotal & ".0", RamTotal) & " GB"
         LabRamWarn.Visibility = If(RamGame = 1 AndAlso Not JavaIs64Bit(PageInstanceLeft.Instance) AndAlso Not Is32BitSystem AndAlso JavaList.Any, Visibility.Visible, Visibility.Collapsed)
@@ -403,11 +403,11 @@ PreFin:
     'LittleSkin
     Private Sub BtnServerAuthLittle_Click(sender As Object, e As EventArgs) Handles BtnServerAuthLittle.Click
         If TextServerAuthServer.Text <> "" AndAlso TextServerAuthServer.Text <> "https://littleskin.cn/api/yggdrasil" AndAlso
-            MyMsgBox("即将把第三方登录设置覆盖为 LittleSkin 登录。" & vbCrLf & "除非你是服主，或者服主要求你这样做，否则请不要继续。" & vbCrLf & vbCrLf & "是否确实需要覆盖当前设置？",
-                     "设置覆盖确认", "继续", "取消") = 2 Then Return
+            MyMsgBox(GetLang("LangPageVersionSetupDialogLittleSkinContent"),
+                     GetLang("LangPageVersionSetupDialogLittleSkinTitle"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel")) = 2 Then Return
         TextServerAuthServer.Text = "https://littleskin.cn/api/yggdrasil"
         TextServerAuthRegister.Text = "https://littleskin.cn/auth/register"
-        TextServerAuthName.Text = "LittleSkin 登录"
+        TextServerAuthName.Text = GetLang("LangPageVersionSetupLittleSkinLogin")
     End Sub
 
 #End Region
@@ -419,8 +419,8 @@ PreFin:
         If ComboArgumentJava Is Nothing Then Return
         '初始化列表
         ComboArgumentJava.Items.Clear()
-        ComboArgumentJava.Items.Add(New MyComboBoxItem With {.Content = "跟随全局设置", .Tag = "使用全局设置"})
-        ComboArgumentJava.Items.Add(New MyComboBoxItem With {.Content = "自动选择合适的 Java", .Tag = "自动选择"})
+        ComboArgumentJava.Items.Add(New MyComboBoxItem With {.Content = GetLang("LangPageVersionSetupUseGlobal"), .Tag = "使用全局设置"})
+        ComboArgumentJava.Items.Add(New MyComboBoxItem With {.Content = GetLang("LangPageSetupLaunchJavaAutoChoice"), .Tag = "自动选择"})
         '更新列表
         Dim SelectedItem As MyComboBoxItem = Nothing
         Dim SelectedBySetup As String = Setup.Get("VersionArgumentJavaSelect", Instance:=PageInstanceLeft.Instance)
@@ -435,7 +435,7 @@ PreFin:
             Next
         Catch ex As Exception
             Setup.Set("VersionArgumentJavaSelect", "使用全局设置", Instance:=PageInstanceLeft.Instance)
-            Log(ex, "更新版本设置 Java 下拉框失败", LogLevel.Feedback)
+            Log(ex, GetLang("LangPageSetupLaunchJavaUpdateListFail"), LogLevel.Feedback)
         End Try
         '更新选择项
         If SelectedItem Is Nothing AndAlso JavaList.Any Then
@@ -449,13 +449,13 @@ PreFin:
         '结束处理
         If SelectedItem Is Nothing Then
             ComboArgumentJava.Items.Clear()
-            ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = "未找到可用的 Java", .IsSelected = True})
+            ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = GetLang("LangPageSetupLaunchJavaNoAvailableJava"), .IsSelected = True})
         End If
         RefreshRam(True)
     End Sub
     '阻止在特定情况下展开下拉框
     Private Sub ComboArgumentJava_DropDownOpened(sender As Object, e As EventArgs) Handles ComboArgumentJava.DropDownOpened
-        If ComboArgumentJava.SelectedItem Is Nothing OrElse ComboArgumentJava.Items(0).Content = "未找到可用的 Java" OrElse ComboArgumentJava.Items(0).Content = "加载中……" Then
+        If ComboArgumentJava.SelectedItem Is Nothing OrElse ComboArgumentJava.Items(0).Content = GetLang("LangPageSetupLaunchJavaNoAvailableJava") OrElse ComboArgumentJava.Items(0).Content = GetLang("LangPageSetupLaunchLaunchJavaLoading") Then
             ComboArgumentJava.IsDropDownOpen = False
         End If
     End Sub
