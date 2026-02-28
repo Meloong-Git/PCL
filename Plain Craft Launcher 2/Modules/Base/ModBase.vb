@@ -1075,15 +1075,17 @@ Public Module ModBase
 Re:
         Try
             '获取 MD5
-            Dim Result As New StringBuilder()
-            Dim File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-            Dim MD5 As MD5 = New MD5CryptoServiceProvider()
-            Dim Retval As Byte() = MD5.ComputeHash(File)
-            File.Close()
-            For i = 0 To Retval.Length - 1
-                Result.Append(Retval(i).ToString("x2"))
-            Next
-            Return Result.ToString
+            Using File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                Using h = MD5Cng.Create()
+                    Dim Retval As Byte() = h.ComputeHash(File)
+                    Dim Result As New StringBuilder(Retval.Length * 2)
+                    For i = 0 To Retval.Length - 1
+                        Result.Append(Retval(i).ToString("x2"))
+                    Next
+
+                    Return Result.ToString
+                End Using
+            End Using
         Catch ex As Exception
             If Retry OrElse TypeOf ex Is FileNotFoundException Then
                 Log(ex, "获取文件 MD5 失败：" & FilePath)
@@ -1106,15 +1108,17 @@ Re:
             ''检测该文件是否在下载中，若在下载则放弃检测
             'If IgnoreOnDownloading AndAlso NetManage.Files.ContainsKey(FilePath) AndAlso NetManage.Files(FilePath).State <= NetState.Merge Then Return ""
             '获取 SHA512
-            Dim file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-            Dim sha512 As SHA512 = New SHA512CryptoServiceProvider()
-            Dim retval As Byte() = sha512.ComputeHash(file)
-            file.Close()
-            Dim Result As New StringBuilder()
-            For i As Integer = 0 To retval.Length - 1
-                Result.Append(retval(i).ToString("x2"))
-            Next
-            Return Result.ToString
+            Using file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                Using h = SHA512Cng.Create()
+                    Dim retval As Byte() = h.ComputeHash(file)
+                    Dim Result As New StringBuilder(retval.Length * 2)
+                    For i As Integer = 0 To retval.Length - 1
+                        Result.Append(retval(i).ToString("x2"))
+                    Next
+
+                    Return Result.ToString
+                End Using
+            End Using
         Catch ex As Exception
             If Retry OrElse TypeOf ex Is FileNotFoundException Then
                 Log(ex, "获取文件 SHA512 失败：" & FilePath)
@@ -1137,15 +1141,17 @@ Re:
             ''检测该文件是否在下载中，若在下载则放弃检测
             'If IgnoreOnDownloading AndAlso NetManage.Files.ContainsKey(FilePath) AndAlso NetManage.Files(FilePath).State <= NetState.Merge Then Return ""
             '获取 SHA256
-            Dim file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-            Dim sha256 As SHA256 = New SHA256CryptoServiceProvider()
-            Dim retval As Byte() = sha256.ComputeHash(file)
-            file.Close()
-            Dim Result As New StringBuilder()
-            For i As Integer = 0 To retval.Length - 1
-                Result.Append(retval(i).ToString("x2"))
-            Next
-            Return Result.ToString
+            Using file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                Using h = SHA256Cng.Create()
+                    Dim retval As Byte() = h.ComputeHash(file)
+                    Dim Result As New StringBuilder(retval.Length * 2)
+                    For i As Integer = 0 To retval.Length - 1
+                        Result.Append(retval(i).ToString("x2"))
+                    Next
+
+                    Return Result.ToString()
+                End Using
+            End Using
         Catch ex As Exception
             If Retry OrElse TypeOf ex Is FileNotFoundException Then
                 Log(ex, "获取文件 SHA256 失败：" & FilePath)
@@ -1166,15 +1172,17 @@ Re:
 Re:
         Try
             '获取 SHA1
-            Dim file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-            Dim sha1 As SHA1 = New SHA1CryptoServiceProvider()
-            Dim retval As Byte() = sha1.ComputeHash(file)
-            file.Close()
-            Dim Result As New StringBuilder()
-            For i As Integer = 0 To retval.Length - 1
-                Result.Append(retval(i).ToString("x2"))
-            Next
-            Return Result.ToString
+            Using file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                Using h = SHA1Cng.Create()
+                    Dim retval As Byte() = h.ComputeHash(file)
+                    Dim Result As New StringBuilder(retval.Length * 2)
+                    For i As Integer = 0 To retval.Length - 1
+                        Result.Append(retval(i).ToString("x2"))
+                    Next
+
+                    Return Result.ToString
+                End Using
+            End Using
         Catch ex As Exception
             If Retry OrElse TypeOf ex Is FileNotFoundException Then
                 Log(ex, "获取文件 SHA1 失败：" & FilePath)
@@ -1647,14 +1655,14 @@ RetryDir:
     ''' 获取字符串 MD5。
     ''' </summary>
     Public Function GetStringMD5(Str As String) As String
-        Dim md5Hasher As New MD5CryptoServiceProvider
-        Dim hashedDataBytes As Byte()
-        hashedDataBytes = md5Hasher.ComputeHash(Encoding.GetEncoding("gb2312").GetBytes(Str))
-        Dim tmp As New StringBuilder()
-        For Each i As Byte In hashedDataBytes
-            tmp.Append(i.ToString("x2"))
-        Next
-        Return tmp.ToString()
+        Using h = MD5Cng.Create()
+            Dim hashedDataBytes = h.ComputeHash(Encoding.GetEncoding("gb2312").GetBytes(Str))
+            Dim tmp As New StringBuilder(hashedDataBytes.Length * 2)
+            For Each i As Byte In hashedDataBytes
+                tmp.Append(i.ToString("x2"))
+            Next
+            Return tmp.ToString()
+        End Using
     End Function
     ''' <summary>
     ''' 检查字符串中的字符是否均为 ASCII 字符。
