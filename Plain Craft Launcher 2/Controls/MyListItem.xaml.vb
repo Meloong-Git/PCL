@@ -239,7 +239,11 @@ Public Class MyListItem
                             .SnapsToDevicePixels = True, .UseLayoutRounding = False,
                             .HorizontalAlignment = HorizontalAlignment.Stretch, .VerticalAlignment = VerticalAlignment.Stretch
                     }
-                    RenderOptions.SetBitmapScalingMode(PathLogo, BitmapScalingMode.Linear)
+                    If _Logo.Contains(PathTemp & $"Cache\Skin\Head") OrElse _Logo.Contains(PathTemp & $"Cache\Cape") Then
+                        RenderOptions.SetBitmapScalingMode(PathLogo, BitmapScalingMode.NearestNeighbor)
+                    Else
+                        RenderOptions.SetBitmapScalingMode(PathLogo, BitmapScalingMode.Linear)
+                    End If
                 Else
                     '矢量图
                     PathLogo = New Shapes.Path With {
