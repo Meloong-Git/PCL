@@ -39,6 +39,7 @@
         {"SystemSystemCache", New SetupEntry("", Source:=SetupSource.Registry)},
         {"SystemSystemUpdate", New SetupEntry(0)},
         {"SystemSystemActivity", New SetupEntry(0)},
+        {"SystemSystemAuth", New SetupEntry(0)},
         {"SystemSystemTelemetry", New SetupEntry(True, Source:=SetupSource.Registry)},
         {"CacheDrops", New SetupEntry("", Source:=SetupSource.Registry)},
         {"CacheConfig", New SetupEntry(0, Source:=SetupSource.Registry)},
