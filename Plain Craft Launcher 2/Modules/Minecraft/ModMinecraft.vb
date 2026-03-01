@@ -471,6 +471,7 @@ VersionSearchFinish:
                         If Not JsonCandidate.ContainsKey("type") Then Continue For
                         If Not JsonCandidate.ContainsKey("id") Then Continue For
                     Catch
+                        Continue For
                     End Try
                     JsonPath = JsonCandidatePath
                     Exit For
