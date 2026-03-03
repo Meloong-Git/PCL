@@ -544,7 +544,7 @@ NextInner:
         '检查是否已经登录完成
         If Not Data.IsForceRestarting AndAlso '不要求强行重启
            Input.AccessToken <> "" AndAlso '已经登录过了
-           (McLoginMsRefreshTime > 0 AndAlso GetTimeMs() - McLoginMsRefreshTime < 1000 * 60 * 10) Then '完成时间在 10 分钟内
+           (McLoginMsRefreshTime > 0 AndAlso GetTimeMs() - McLoginMsRefreshTime < 1000 * 60 * 60 * 5) Then '完成时间在 5小时内
             Data.Output = New McLoginResult With
                 {.AccessToken = Input.AccessToken, .Name = Input.UserName, .Uuid = Input.Uuid, .Type = "Microsoft", .ClientToken = Input.Uuid, .ProfileJson = Input.ProfileJson}
             GoTo SkipLogin
