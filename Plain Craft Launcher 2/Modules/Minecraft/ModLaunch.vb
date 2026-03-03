@@ -535,7 +535,7 @@ NextInner:
     Public McLoginAuthLoader As New LoaderTask(Of McLoginServer, McLoginResult)("Loader Login Auth", AddressOf McLoginServerStart) With {.ReloadTimeout = 1000 * 60 * 10}
 
     '主加载函数，返回所有需要的登录信息
-    Private McLoginMsRefreshTime As Long = 0 '上次刷新登录的时间
+    Private McLoginMsRefreshTime As Long = 0 'Minecraft Access Token到期时间
     Private Sub McLoginMsStart(Data As LoaderTask(Of McLoginMs, McLoginResult))
         Dim Input As McLoginMs = Data.Input
         Dim LogUsername As String = Input.UserName
@@ -544,7 +544,7 @@ NextInner:
         '检查是否已经登录完成
         If Not Data.IsForceRestarting AndAlso '不要求强行重启
            Input.AccessToken <> "" AndAlso '已经登录过了
-           (McLoginMsRefreshTime > 0 AndAlso GetTimeMs() - McLoginMsRefreshTime < 1000 * 60 * 60 * 5) Then '完成时间在 5小时内
+           (McLoginMsRefreshTime > 0 AndAlso GetTimeMs() < McLoginMsRefreshTime) Then '在有效期过期前
             Data.Output = New McLoginResult With
                 {.AccessToken = Input.AccessToken, .Name = Input.UserName, .Uuid = Input.Uuid, .Type = "Microsoft", .ClientToken = Input.Uuid, .ProfileJson = Input.ProfileJson}
             GoTo SkipLogin
@@ -571,7 +571,9 @@ Relogin:
         Dim Tokens = MsLoginStep3(XBLToken)
         Data.Progress = 0.55
         If Data.IsAborted Then Throw New ThreadInterruptedException
-        Dim AccessToken As String = MsLoginStep4(Tokens)
+        Dim MinecraftAPI As String() = MsLoginStep4(Tokens) '更改了第4步验证的返回格式，第一项为Minecraft Access Token，第二项为Token有效期
+        Dim AccessToken As String = MinecraftAPI(0) 'Access Token 
+        McLoginMsRefreshTime = GetTimeMs() + MinecraftAPI(1) 'Token 到期时间
         Data.Progress = 0.7
         If Data.IsAborted Then Throw New ThreadInterruptedException
         MsLoginStep5(AccessToken)
@@ -1002,7 +1004,7 @@ Retry:
         }
     End Function
     '微软登录步骤 4：从 {XSTSToken, UHS} 获取 Minecraft AccessToken
-    Private Function MsLoginStep4(Tokens As String()) As String
+    Private Function MsLoginStep4(Tokens As String()) As String()
         McLaunchLog("开始微软登录步骤 4/6")
 
         Dim Request As String = New JObject(New JProperty("identityToken", $"XBL3.0 x={Tokens(1)};{Tokens(0)}")).ToString(0)
@@ -1023,7 +1025,10 @@ Retry:
             End If
         End Try
 
-        Return GetJson(Result)("access_token").ToString
+        Return {
+                   GetJson(Result)("access_token").ToString,
+                   GetJson(Result)("expires_in").ToString
+        }
     End Function
     '微软登录步骤 5：验证微软账号是否持有 MC，这也会刷新 XGP
     Private Sub MsLoginStep5(AccessToken As String)
