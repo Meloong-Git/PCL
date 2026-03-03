@@ -808,6 +808,7 @@ LoginFinish:
             Data.Output.Uuid = SelectedId
             Data.Output.Type = Data.Input.Token
             '保存缓存
+            If LoginJson("selectedProfile") IsNot Nothing Then Setup.Set("CacheAuthDisallowChangePlayer", True)
             Setup.Set("Cache" & Data.Input.Token & "Access", Data.Output.AccessToken)
             Setup.Set("Cache" & Data.Input.Token & "Client", Data.Output.ClientToken)
             Setup.Set("Cache" & Data.Input.Token & "Uuid", Data.Output.Uuid)
