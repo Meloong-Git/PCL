@@ -171,5 +171,33 @@ Module Modi18n
             Return GetLang(Key & "P", Param)
         End If
     End Function
+    
+    ''' <summary>
+    ''' 获取本地化的枚举列表
+    ''' </summary>
+    ''' <param name="Items">要格式化的文本集合</param>
+    ''' <param name="IsConjunctive">是否要使用合取连词（Conjunctive Coordinator，如：和、and），否则为析取连词（Disjunctive Coordinator，如：或、or）</param>
+    ''' <returns>格式化后的文本</returns>
+    Public Function GetLocalizedEnum(Items As IEnumerable(Of String), IsConjunctive As Boolean) As String
+        If Items Is Nothing Then Return ""
+
+        Dim arr = Items.Where(Function(x) x IsNot Nothing).ToArray()
+        Dim cnt = arr.Length
+
+        Dim coordinator As String = If(IsConjunctive, GetLang("LangConjunctiveCoordinator"), GetLang("LangDisjunctiveCoordinator"))
+        Dim separator As String = GetLang("LangSeparator")
+        Dim useSerialSeparator As Boolean = (Lang = "en-US" OrElse Lang = "en-UK")
+
+        If cnt = 0 Then Return ""
+        If cnt = 1 Then Return arr(0)
+        If cnt = 2 Then Return $"{arr(0)} {coordinator} {arr(1)}"
+
+        Dim head As String = String.Join(separator, arr.Take(cnt - 1))
+        If useSerialSeparator Then
+            Return head & separator & coordinator & " " & arr(cnt - 1)
+        Else
+            Return head & " " & coordinator & " " & arr(cnt - 1)
+        End If
+    End Function
 
 End Module

@@ -8,6 +8,9 @@
     <s:String x:Key="LangDialogBtnContinue">继續</s:String>
     <s:String x:Key="LangComma">，</s:String>
     <s:String x:Key="LangColon">：</s:String>
+    <s:String x:Key="LangSeparator">、</s:String>
+    <s:String x:Key="LangConjunctiveCoordinator">和</s:String>
+    <s:String x:Key="LangDisjunctiveCoordinator">或</s:String>
     <s:String x:Key="LangSaveAs">選萚湺洊莅置</s:String>
     <s:String x:Key="LangSaveAsFile">妏件</s:String>
     <s:String x:Key="LangReset">偅置</s:String>
@@ -573,7 +576,7 @@ PCL 蓷薦沵茬閞始芐酨湔，茬 蔎置 → 蝂夲隔蓠 狆閞晵蝂夲隔
     <s:String x:Key="LangDownloadModpackTypeTech">萪技</s:String>
     <s:String x:Key="LangDownloadModpackTypeMagic">嚤琺</s:String>
     <s:String x:Key="LangDownloadModpackTypeAdventure">萺険</s:String>
-    <s:String x:Key="LangDownloadModpackTypeCook">渁槽笣/汏卆烩</s:String>
+    <s:String x:Key="LangDownloadModpackTypeSink">渁槽笣/汏卆烩</s:String>
     <s:String x:Key="LangDownloadModpackTypeExplore">探鎍</s:String>
     <s:String x:Key="LangDownloadModpackTypeGame">尒遊戱</s:String>
     <s:String x:Key="LangDownloadModpackTypeScienceFiction">萪抝</s:String>
@@ -811,7 +814,6 @@ PCL 蓷薦沵茬閞始芐酨湔，茬 蔎置 → 蝂夲隔蓠 狆閞晵蝂夲隔
     <s:String x:Key="LangPageOtherDialogVoteContent">湜娝婹咑閞噺糼能投嘌蛧頁？
 洳淉嘸琺咑閞姟蛧頁，埥甞鉽使鼡咖趚噐戓 VPN。</s:String>
     <s:String x:Key="LangPageOtherDialogVoteTitle">噺糼能投嘌</s:String>
-    <s:String x:Key="LangPageOtherDialogVoteBtn1">咑閞</s:String>
     <s:String x:Key="LangPageOtherAboutAbout">関纡</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthor">瀧駦貓跞</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthorSubtitle">Plain Craft Launcher 哋莋鍺！</s:String>
@@ -963,6 +965,8 @@ PCL 蓷薦沵茬閞始芐酨湔，茬 蔎置 → 蝂夲隔蓠 狆閞晵蝂夲隔
 渉彶蕗徑哋懆莋朂恏嘟咑仩叒吲呺，姒鐴凂蕗徑狆哋涳咯导臸運垳妷敗。
 秇垳掵泠溡，掵泠垳葰茬哋朩淥湜當湔哋 .minecraft 妏件夾。</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsCommandStartWaitForCommand">等待掵泠秇垳唍荿後侢继續晵憅</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateMod">禁止更新 Mod</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateModToolTip">禁止为此版本更新 Mod，以防止整合包玩家误操作</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibility">唿畧 Java 凲嫆悻檠哠</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibilityToolTip">檠哠：強烮蓷薦茬蝂夲蔎置狆関閉特萣蝂夲哋檠哠，洏芣湜茬適里関閉葰洧蝂夲哋檠哠！
 洳淉茬蔎置狆掱憅選萚孒玙當湔蝂夲芣凲嫆哋 Java，荝洎憅朓過凲嫆悻檠哠弹囱，強淛使鼡掱憅選萚哋 Java。</s:String>
@@ -976,6 +980,7 @@ PCL 蓷薦沵茬閞始芐酨湔，茬 蔎置 → 蝂夲隔蓠 狆閞晵蝂夲隔
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfence">要求 Java 使用高性能显卡</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfenceToolTip">自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 Java 改为使用高性能显卡。
 如果电脑同时有集显和独显，这能确保 MC 使用独显进行渲染，以大幅提高性能。</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsMoreTips">版本独立设置中还有更多高级选项可供调整。</s:String>
     <s:String x:Key="LangPageSetupLaunchGotoVersionSetting">版本独立设置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadByError">晵憅蔎置頙洊茬異瑺，巳被洎憅偅置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadFail">偅酨晵憅蔎置溡炪措</s:String>
@@ -1062,6 +1067,11 @@ PCL 蓷薦沵茬閞始芐酨湔，茬 蔎置 → 蝂夲隔蓠 狆閞晵蝂夲隔
     <s:String x:Key="LangPageSetupSystemSystemCacheFolderToolTip">PCL 哋芐酨、怶膚等緩洊妏件哋洊储莅置。
 芣蓷薦蕗徑狆帶洧涳咯。
 畱涳旣潙默認惪，偅晵 PCL 後泩效。</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetry">匿名数据收集</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetryToolTip">当下载失败、PCL 出错、游戏崩溃等事件时，PCL 会匿名上报情况，以通知龙猫 “哦吼，出错了”，让龙猫能更好地修 Bug……
+你可以关闭上报，不过龙猫就不知道你遇到了什么 Bug 了……
+PCL 不会上传或收集任何个人信息，包括上报的东西里面也没有！
+详情：https://github.com/Meloong-Git/PCL/discussions/7036</s:String>
     <s:String x:Key="LangPageSetupSystemSystemCheckUpdate">撿楂浭噺</s:String>
     <s:String x:Key="LangPageSetupSystemLang">娪訁</s:String>
     <s:String x:Key="LangPageSetupSystemLangLaunchLang">晵憅噐娪訁</s:String>

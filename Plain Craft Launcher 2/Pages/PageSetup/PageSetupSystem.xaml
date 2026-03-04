@@ -148,9 +148,9 @@
                             <local:ValidateFolderPath UseMinecraftCharCheck="False" />
                         </local:MyTextBox.ValidateRules>
                     </local:MyTextBox>
-                    <local:MyCheckBox Margin="0,5,0,4" Text="匿名数据收集" Grid.Row="6" Height="22" Grid.ColumnSpan="2"
+                    <local:MyCheckBox Margin="0,5,0,4" Text="{StaticResource LangPageSetupSystemSystemTelemetry}" Grid.Row="6" Height="22" Grid.ColumnSpan="2"
                         x:Name="CheckSystemTelemetry" Tag="SystemSystemTelemetry" 
-                        ToolTip="当下载失败、PCL 出错、游戏崩溃等事件时，PCL 会匿名上报情况，以通知龙猫 “哦吼，出错了”，让龙猫能更好地修 Bug……&#xa;你可以关闭上报，不过龙猫就不知道你遇到了什么 Bug 了……&#13;PCL 不会上传或收集任何个人信息，包括上报的东西里面也没有！&#xa;详情：https://github.com/Meloong-Git/PCL/discussions/7036" />
+                        ToolTip="{StaticResource LangPageSetupSystemSystemTelemetryToolTip}" />
                     <Grid Height="35" Grid.Row="7" Grid.ColumnSpan="5" Margin="0,12,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />

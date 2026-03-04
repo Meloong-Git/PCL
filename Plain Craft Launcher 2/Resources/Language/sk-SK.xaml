@@ -8,6 +8,9 @@
     <s:String x:Key="LangDialogBtnContinue">Pokračovať</s:String>
     <s:String x:Key="LangComma">, </s:String>
     <s:String x:Key="LangColon">: </s:String>
+    <s:String x:Key="LangSeparator">, </s:String>
+    <s:String x:Key="LangConjunctiveCoordinator">a</s:String>
+    <s:String x:Key="LangDisjunctiveCoordinator">alebo</s:String>
     <s:String x:Key="LangSaveAs">Vyberte miesto na uloženie</s:String>
     <s:String x:Key="LangSaveAsFile">文件</s:String>
     <s:String x:Key="LangReset">重置</s:String>
@@ -572,7 +575,7 @@ Táto stránka poskytuje stiahnutie inštalátora NeoForge. Po stiahnutí musít
     <s:String x:Key="LangDownloadModpackTypeTech">Technológia</s:String>
     <s:String x:Key="LangDownloadModpackTypeMagic">Mágia</s:String>
     <s:String x:Key="LangDownloadModpackTypeAdventure">Dobrodružstvo</s:String>
-    <s:String x:Key="LangDownloadModpackTypeCook">Kitchen Sink</s:String>
+    <s:String x:Key="LangDownloadModpackTypeSink">Kitchen Sink</s:String>
     <s:String x:Key="LangDownloadModpackTypeExplore">Explorácia</s:String>
     <s:String x:Key="LangDownloadModpackTypeGame">Mini hry</s:String>
     <s:String x:Key="LangDownloadModpackTypeScienceFiction">Sci-Fi</s:String>
@@ -808,7 +811,6 @@ Originálna chybová správa: </s:String>
     <s:String x:Key="LangPageOtherDialogFeedbackBtn2">Zoznam spätných väzieb</s:String>
     <s:String x:Key="LangPageOtherDialogVoteContent">Chcete otvoriť novú stránku hlasovania o funkcionalitách?</s:String>
     <s:String x:Key="LangPageOtherDialogVoteTitle">Tip</s:String>
-    <s:String x:Key="LangPageOtherDialogVoteBtn1">Otvoriť</s:String>
     <s:String x:Key="LangPageOtherAboutAbout">O aplikácii</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthor">LTCat (龙腾猫跃)</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthorSubtitle">Vývojár Plain Craft Launcher!</s:String>
@@ -961,6 +963,8 @@ Napríklad:
 Je najlepšie umiestniť úvodné a koncové úvodzovky (") okolo operácií, ktoré sa týkajú ciest, aby sa zabránilo zlyhaniam kvôli medzerám v ceste.
 Pri vykonávaní príkazu je priečinok, kde sa nachádza Príkazový riadok, aktuálny priečinok .minecraft.</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsCommandStartWaitForCommand">Počkaj na úspešné dokončenie</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateMod">禁止更新 Mod</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateModToolTip">禁止为此版本更新 Mod，以防止整合包玩家误操作</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibility">Ignorovať varovania o kompatibilite Java</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibilityToolTip">Varovanie: Silne sa odporúča, aby sa varovania deaktivovali individuálne namiesto celkovej deaktivácie!
 Ak je v nastaveniach manuálne vybratá Java, ktorá nie je kompatibilná s aktuálnou verziou, potom sa varovanie o kompatibilite automaticky preskočí a vynúti použitie vybranej Java.</s:String>
@@ -974,6 +978,7 @@ Nepoužívajte to, ak nie sú relevantné súbory modifikované.</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfence">要求 Java 使用高性能显卡</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfenceToolTip">自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 Java 改为使用高性能显卡。
 如果电脑同时有集显和独显，这能确保 MC 使用独显进行渲染，以大幅提高性能。</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsMoreTips">版本独立设置中还有更多高级选项可供调整。</s:String>
     <s:String x:Key="LangPageSetupLaunchGotoVersionSetting">版本独立设置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadByError">V nastaveniach spustenia nastala chyba a boli automaticky resetované.</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadFail">Pri znovunačítaní nastavení spustenia nastala chyba.</s:String>
@@ -1060,6 +1065,11 @@ Kliknutím pravým tlačidlom na priečinok alebo inštanciu otvoríte zodpoveda
     <s:String x:Key="LangPageSetupSystemSystemCacheFolderToolTip">Poloha cache, ako sú súbory na stiahnutie a kože uložené PCL.
 Priestory v cestách sa neodporúčajú.
 Nezadajte žiadnu hodnotu ako predvolenú, vyžaduje restart spúšťača na aplikáciu.</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetry">匿名数据收集</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetryToolTip">当下载失败、PCL 出错、游戏崩溃等事件时，PCL 会匿名上报情况，以通知龙猫 “哦吼，出错了”，让龙猫能更好地修 Bug……
+你可以关闭上报，不过龙猫就不知道你遇到了什么 Bug 了……
+PCL 不会上传或收集任何个人信息，包括上报的东西里面也没有！
+详情：https://github.com/Meloong-Git/PCL/discussions/7036</s:String>
     <s:String x:Key="LangPageSetupSystemSystemCheckUpdate">Skontrolovať aktualizácie</s:String>
     <s:String x:Key="LangPageSetupSystemLang">Jazyk</s:String>
     <s:String x:Key="LangPageSetupSystemLangLaunchLang">Jazyk</s:String>

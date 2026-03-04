@@ -8,6 +8,9 @@
     <s:String x:Key="LangDialogBtnContinue">繼</s:String>
     <s:String x:Key="LangComma">，</s:String>
     <s:String x:Key="LangColon">：</s:String>
+    <s:String x:Key="LangSeparator">、</s:String>
+    <s:String x:Key="LangConjunctiveCoordinator">和</s:String>
+    <s:String x:Key="LangDisjunctiveCoordinator">或</s:String>
     <s:String x:Key="LangSaveAs">選擇保存位置</s:String>
     <s:String x:Key="LangSaveAsFile">文件</s:String>
     <s:String x:Key="LangReset">重置</s:String>
@@ -572,7 +575,7 @@ PCL 薦汝始下載前，於 設置 → 版本隔離 中開版本隔離選！</s
     <s:String x:Key="LangDownloadModpackTypeTech">科技</s:String>
     <s:String x:Key="LangDownloadModpackTypeMagic">魔法</s:String>
     <s:String x:Key="LangDownloadModpackTypeAdventure">冒險</s:String>
-    <s:String x:Key="LangDownloadModpackTypeCook">大雜燴</s:String>
+    <s:String x:Key="LangDownloadModpackTypeSink">大雜燴</s:String>
     <s:String x:Key="LangDownloadModpackTypeExplore">探索</s:String>
     <s:String x:Key="LangDownloadModpackTypeGame">小遊戲</s:String>
     <s:String x:Key="LangDownloadModpackTypeScienceFiction">科幻</s:String>
@@ -810,7 +813,6 @@ PCL 薦汝始下載前，於 設置 → 版本隔離 中開版本隔離選！</s
     <s:String x:Key="LangPageOtherDialogVoteContent">欲启功能举议之頁乎？
 若無法启此頁，請試用加速之器或 VPN。</s:String>
     <s:String x:Key="LangPageOtherDialogVoteTitle">示</s:String>
-    <s:String x:Key="LangPageOtherDialogVoteBtn1">開</s:String>
     <s:String x:Key="LangPageOtherAboutAbout">關於</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthor">龍騰貓躍</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthorSubtitle">Plain Craft Launcher 之作者！</s:String>
@@ -963,6 +965,8 @@ PCL 薦汝始下載前，於 設置 → 版本隔離 中開版本隔離選！</s
 涉及路徑的操作最好都打上雙引號，以避免路徑中的空格導致運行失敗。
 執行命令時，命令行所在的目錄是當前的 .minecraft 文件夾。</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsCommandStartWaitForCommand">等待命令執行完成後再繼續啟動</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateMod">禁止更新 Mod</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateModToolTip">禁止为此版本更新 Mod，以防止整合包玩家误操作</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibility">忽略 Java 兼容性警告</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibilityToolTip">警告：強烈推薦在版本設置中關閉特定版本的警告，而不是在這裡關閉所有版本的警告！
 如果在設置中手動選擇了與當前版本不兼容的 Java，則自動跳過兼容性警告彈窗，強制使用手動選擇的 Java。</s:String>
@@ -976,6 +980,7 @@ PCL 薦汝始下載前，於 設置 → 版本隔離 中開版本隔離選！</s
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfence">要求 Java 使用高性能显卡</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfenceToolTip">自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 Java 改为使用高性能显卡。
 如果电脑同时有集显和独显，这能确保 MC 使用独显进行渲染，以大幅提高性能。</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsMoreTips">版本独立设置中还有更多高级选项可供调整。</s:String>
     <s:String x:Key="LangPageSetupLaunchGotoVersionSetting">版本独立设置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadByError">啟動設置項存在異常，已被自動重置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadFail">重載啟動設置時出錯</s:String>
@@ -1062,6 +1067,11 @@ PCL 薦汝始下載前，於 設置 → 版本隔離 中開版本隔離選！</s
     <s:String x:Key="LangPageSetupSystemSystemCacheFolderToolTip">PCL 的下載、皮膚等緩存文件的存儲位置。
 不推薦路徑中帶有空格。
 留空即為默認值，重啟 PCL 後生效。</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetry">匿名数据收集</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetryToolTip">当下载失败、PCL 出错、游戏崩溃等事件时，PCL 会匿名上报情况，以通知龙猫 “哦吼，出错了”，让龙猫能更好地修 Bug……
+你可以关闭上报，不过龙猫就不知道你遇到了什么 Bug 了……
+PCL 不会上传或收集任何个人信息，包括上报的东西里面也没有！
+详情：https://github.com/Meloong-Git/PCL/discussions/7036</s:String>
     <s:String x:Key="LangPageSetupSystemSystemCheckUpdate">檢查更新</s:String>
     <s:String x:Key="LangPageSetupSystemLang">語言</s:String>
     <s:String x:Key="LangPageSetupSystemLangLaunchLang">啟動器語言</s:String>

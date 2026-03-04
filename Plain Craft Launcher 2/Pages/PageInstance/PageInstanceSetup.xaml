@@ -219,8 +219,8 @@
                     <local:MyCheckBox Grid.Row="5" Grid.Column="1" x:Name="CheckAdvanceRunWait" Tag="VersionAdvanceRunWait" Visibility="Collapsed"
                                       Text="{StaticResource LangPageSetupLaunchLaunchAdvanceOptionsCommandStartWaitForCommand}" Margin="0,5,0,0" />
                     <StackPanel Margin="0,12,0,4" Grid.Row="6" Grid.ColumnSpan="2" HorizontalAlignment="Left">
-                        <local:MyCheckBox Height="28" Text="禁止更新 Mod" x:Name="CheckAdvanceDisableModUpdate" Tag="VersionAdvanceDisableModUpdate"
-                                          ToolTip="禁止为此版本更新 Mod，以防止整合包玩家误操作"
+                        <local:MyCheckBox Height="28" Text="{StaticResource LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateMod}" x:Name="CheckAdvanceDisableModUpdate" Tag="VersionAdvanceDisableModUpdate"
+                                          ToolTip="{StaticResource LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateModToolTip}"
                                           ToolTipService.Placement="Right" />
                         <local:MyCheckBox Height="28" Text="{StaticResource LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibility}" x:Name="CheckAdvanceJava" Tag="VersionAdvanceJava"
                                           ToolTipService.Placement="Right"

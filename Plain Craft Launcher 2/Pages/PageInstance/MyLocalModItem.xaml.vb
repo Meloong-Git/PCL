@@ -335,7 +335,7 @@ Public Class MyLocalModItem
         '更新
         If Entry.CanUpdate Then
             BtnUpdate.Visibility = Visibility.Visible
-            BtnUpdate.ToolTip = $"{GetUpdateCompareDescription()}{vbCrLf}点击以更新，右键查看更新日志。"
+            BtnUpdate.ToolTip = $"{GetUpdateCompareDescription()}{vbCrLf}{GetLang("LangMyLocalModItemToolTipModUpdateUpgradable")}"
         Else
             BtnUpdate.Visibility = Visibility.Collapsed
         End If

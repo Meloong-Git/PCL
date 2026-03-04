@@ -8,6 +8,9 @@
     <s:String x:Key="LangDialogBtnContinue">Continue</s:String>
     <s:String x:Key="LangComma">, </s:String>
     <s:String x:Key="LangColon">: </s:String>
+    <s:String x:Key="LangSeparator">, </s:String>
+    <s:String x:Key="LangConjunctiveCoordinator">and</s:String>
+    <s:String x:Key="LangDisjunctiveCoordinator">or</s:String>
     <s:String x:Key="LangSaveAs">Select Save Location</s:String>
     <s:String x:Key="LangSaveAsFile">File</s:String>
     <s:String x:Key="LangReset">重置</s:String>
@@ -572,7 +575,7 @@ This page offers the NeoForge installer for download. After downloading, you nee
     <s:String x:Key="LangDownloadModpackTypeTech">Technology</s:String>
     <s:String x:Key="LangDownloadModpackTypeMagic">Magic</s:String>
     <s:String x:Key="LangDownloadModpackTypeAdventure">Adventure</s:String>
-    <s:String x:Key="LangDownloadModpackTypeCook">Other</s:String>
+    <s:String x:Key="LangDownloadModpackTypeSink">Other</s:String>
     <s:String x:Key="LangDownloadModpackTypeExplore">Exploration</s:String>
     <s:String x:Key="LangDownloadModpackTypeGame">Mini Games</s:String>
     <s:String x:Key="LangDownloadModpackTypeScienceFiction">Sci-Fi</s:String>
@@ -808,7 +811,6 @@ Original error message: </s:String>
     <s:String x:Key="LangPageOtherDialogFeedbackBtn2">Feedback List</s:String>
     <s:String x:Key="LangPageOtherDialogVoteContent">Do you want to open the new feature voting page?</s:String>
     <s:String x:Key="LangPageOtherDialogVoteTitle">Feature Voting</s:String>
-    <s:String x:Key="LangPageOtherDialogVoteBtn1">Open</s:String>
     <s:String x:Key="LangPageOtherAboutAbout">About</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthor">LTCat (龙腾猫跃)</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthorSubtitle">The developer of Plain Craft Launcher!</s:String>
@@ -961,6 +963,8 @@ For example:
 It is best to put quotation marks (") around operations involving paths to avoid failures due to spaces in the path.
 When executing a command, the directory where the Command Prompt is located is the current .minecraft folder.</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsCommandStartWaitForCommand">Wait for Complete</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateMod">禁止更新 Mod</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateModToolTip">禁止为此版本更新 Mod，以防止整合包玩家误操作</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibility">Ignore Java Compatibility Warnings</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibilityToolTip">Warning: It is highly recommended to disable the warnings individually instead of globally!
 If the target Java is incompatible with the game, compatibility warnings will still be skipped automatically and force to use the target Java.</s:String>
@@ -974,6 +978,7 @@ Do not enable this unless the relevant files are modified.</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfence">要求 Java 使用高性能显卡</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfenceToolTip">自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 Java 改为使用高性能显卡。
 如果电脑同时有集显和独显，这能确保 MC 使用独显进行渲染，以大幅提高性能。</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsMoreTips">版本独立设置中还有更多高级选项可供调整。</s:String>
     <s:String x:Key="LangPageSetupLaunchGotoVersionSetting">版本独立设置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadByError">There is an exception in the launch options and have been automatically reset.</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadFail">An error occurred whilst reloading the launch options.</s:String>
@@ -1060,6 +1065,11 @@ Right-click a folder or instance to open the corresponding folder.</s:String>
     <s:String x:Key="LangPageSetupSystemSystemCacheFolderToolTip">Location of cache for downloaded files, skins stored by PCL, etc.
 Paths with spaces are not recommended.
 Leave blank for the default. A restart is required to apply the change.</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetry">匿名数据收集</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetryToolTip">当下载失败、PCL 出错、游戏崩溃等事件时，PCL 会匿名上报情况，以通知龙猫 “哦吼，出错了”，让龙猫能更好地修 Bug……
+你可以关闭上报，不过龙猫就不知道你遇到了什么 Bug 了……
+PCL 不会上传或收集任何个人信息，包括上报的东西里面也没有！
+详情：https://github.com/Meloong-Git/PCL/discussions/7036</s:String>
     <s:String x:Key="LangPageSetupSystemSystemCheckUpdate">Check for Updates</s:String>
     <s:String x:Key="LangPageSetupSystemLang">Language</s:String>
     <s:String x:Key="LangPageSetupSystemLangLaunchLang">Language</s:String>

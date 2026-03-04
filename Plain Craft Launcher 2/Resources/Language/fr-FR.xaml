@@ -6,8 +6,11 @@
     <s:String x:Key="LangDialogBtnYes">Oui</s:String>
     <s:String x:Key="LangDialogBtnNo">Non</s:String>
     <s:String x:Key="LangDialogBtnContinue">Continuer</s:String>
-    <s:String x:Key="LangComma">,</s:String>
-    <s:String x:Key="LangColon">:</s:String>
+    <s:String x:Key="LangComma">, </s:String>
+    <s:String x:Key="LangColon">: </s:String>
+    <s:String x:Key="LangSeparator">, </s:String>
+    <s:String x:Key="LangConjunctiveCoordinator">et</s:String>
+    <s:String x:Key="LangDisjunctiveCoordinator">ou</s:String>
     <s:String x:Key="LangSaveAs">Sélectionner l'emplacement d'enregistrement</s:String>
     <s:String x:Key="LangSaveAsFile">Fichier</s:String>
     <s:String x:Key="LangReset">重置</s:String>
@@ -569,7 +572,7 @@ Cette page fournit le téléchargement de l'installateur NeoForge. Après le té
     <s:String x:Key="LangDownloadModpackTypeTech">Technologie</s:String>
     <s:String x:Key="LangDownloadModpackTypeMagic">Magie</s:String>
     <s:String x:Key="LangDownloadModpackTypeAdventure">Aventure</s:String>
-    <s:String x:Key="LangDownloadModpackTypeCook">Kitchen Sink</s:String>
+    <s:String x:Key="LangDownloadModpackTypeSink">Kitchen Sink</s:String>
     <s:String x:Key="LangDownloadModpackTypeExplore">Exploration</s:String>
     <s:String x:Key="LangDownloadModpackTypeGame">Mini Jeux</s:String>
     <s:String x:Key="LangDownloadModpackTypeScienceFiction">Science-Fiction</s:String>
@@ -803,7 +806,6 @@ Message d'erreur original : </s:String>
     <s:String x:Key="LangPageOtherDialogFeedbackBtn2">Liste des retours d'information</s:String>
     <s:String x:Key="LangPageOtherDialogVoteContent">Voulez-vous ouvrir la nouvelle page de vote pour les fonctionnalités ?</s:String>
     <s:String x:Key="LangPageOtherDialogVoteTitle">Alerte</s:String>
-    <s:String x:Key="LangPageOtherDialogVoteBtn1">Ouvrir</s:String>
     <s:String x:Key="LangPageOtherAboutAbout">À propos</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthor">LTCat (龙腾猫跃)</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthorSubtitle">Le développeur de Plain Craft Launcher !</s:String>
@@ -956,6 +958,8 @@ Par exemple :
 Il est préférable de mettre des guillemets (") autour des opérations impliquant des chemins pour éviter les échecs dus aux espaces dans le chemin.
 Lors de l'exécution d'une commande, le répertoire où se trouve l'invite de commande est le dossier .minecraft actuel.</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsCommandStartWaitForCommand">Attendre la fin</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateMod">禁止更新 Mod</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateModToolTip">禁止为此版本更新 Mod，以防止整合包玩家误操作</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibility">Ignorer les avertissements de compatibilité Java</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibilityToolTip">Avertissement : Il est fortement recommandé de désactiver les avertissements individuellement plutôt que globalement !
 Si une version de Java incompatible avec la version actuelle est sélectionnée manuellement dans les paramètres, l'avertissement de compatibilité sera automatiquement ignoré et forcera l'utilisation de la Java sélectionnée.</s:String>
@@ -969,6 +973,7 @@ N'ouvrez pas cela à moins que les fichiers concernés ne soient modifiés.</s:S
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfence">要求 Java 使用高性能显卡</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfenceToolTip">自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 Java 改为使用高性能显卡。
 如果电脑同时有集显和独显，这能确保 MC 使用独显进行渲染，以大幅提高性能。</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsMoreTips">版本独立设置中还有更多高级选项可供调整。</s:String>
     <s:String x:Key="LangPageSetupLaunchGotoVersionSetting">版本独立设置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadByError">Il y a une exception dans les options de lancement et elles ont été automatiquement réinitialisées.</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadFail">Une erreur s'est produite lors du rechargement des options de lancement.</s:String>
@@ -1055,6 +1060,11 @@ Cliquez avec le bouton droit sur un dossier ou une instance pour ouvrir le dossi
     <s:String x:Key="LangPageSetupSystemSystemCacheFolderToolTip">Emplacement du cache comme les fichiers téléchargés et les skins stockés par PCL.
 Les espaces dans les chemins ne sont pas recommandés.
 Laissez vide par défaut, un redémarrage du lanceur est nécessaire pour appliquer.</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetry">匿名数据收集</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetryToolTip">当下载失败、PCL 出错、游戏崩溃等事件时，PCL 会匿名上报情况，以通知龙猫 “哦吼，出错了”，让龙猫能更好地修 Bug……
+你可以关闭上报，不过龙猫就不知道你遇到了什么 Bug 了……
+PCL 不会上传或收集任何个人信息，包括上报的东西里面也没有！
+详情：https://github.com/Meloong-Git/PCL/discussions/7036</s:String>
     <s:String x:Key="LangPageSetupSystemSystemCheckUpdate">Vérifier les mises à jour</s:String>
     <s:String x:Key="LangPageSetupSystemLang">Langue</s:String>
     <s:String x:Key="LangPageSetupSystemLangLaunchLang">Langue</s:String>

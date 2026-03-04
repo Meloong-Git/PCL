@@ -11,6 +11,9 @@
     <s:String x:Key="LangDialogBtnContinue">继续</s:String>
     <s:String x:Key="LangComma">，</s:String>
     <s:String x:Key="LangColon">：</s:String>
+    <s:String x:Key="LangSeparator">、</s:String>
+    <s:String x:Key="LangConjunctiveCoordinator">和</s:String>
+    <s:String x:Key="LangDisjunctiveCoordinator">或</s:String>
     <s:String x:Key="LangSaveAs">选择保存位置</s:String>
     <s:String x:Key="LangSaveAsFile">文件</s:String>
     <s:String x:Key="LangReset">重置</s:String>
@@ -579,7 +582,7 @@
     <s:String x:Key="LangDownloadModpackTypeTech">科技</s:String>
     <s:String x:Key="LangDownloadModpackTypeMagic">魔法</s:String>
     <s:String x:Key="LangDownloadModpackTypeAdventure">冒险</s:String>
-    <s:String x:Key="LangDownloadModpackTypeCook">水槽包</s:String>
+    <s:String x:Key="LangDownloadModpackTypeSink">水槽包</s:String>
     <s:String x:Key="LangDownloadModpackTypeExplore">探索</s:String>
     <s:String x:Key="LangDownloadModpackTypeGame">小游戏</s:String>
     <s:String x:Key="LangDownloadModpackTypeScienceFiction">科幻</s:String>
@@ -817,7 +820,6 @@
     <s:String x:Key="LangPageOtherDialogVoteContent">是否要打开新功能投票网页？
 如果无法打开该网页，请使用 VPN 改善网络环境。</s:String>
     <s:String x:Key="LangPageOtherDialogVoteTitle">新功能投票</s:String>
-    <s:String x:Key="LangPageOtherDialogVoteBtn1">打开</s:String>
     <s:String x:Key="LangPageOtherAboutAbout">关于</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthor">龙腾猫跃</s:String>
     <s:String x:Key="LangPageOtherAboutAboutAuthorSubtitle">Plain Craft Launcher 的开发者！</s:String>
@@ -957,6 +959,8 @@
 涉及路径的操作最好都打上双引号，以避免路径中的空格导致运行失败。
 执行命令时，命令行所在的目录是当前的 .minecraft 文件夹。</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsCommandStartWaitForCommand">等待命令执行完成后再继续启动</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateMod">禁止更新 Mod</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsPreventUpdateModToolTip">禁止为此版本更新 Mod，以防止整合包玩家误操作</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibility">忽略 Java 兼容性警告</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsIgnoreJavaCompatibilityToolTip">如果手动选择了与当前版本不兼容的 Java，则自动跳过兼容性警告弹窗，强制使用手动选择的 Java。</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsDisableFileVerification">关闭文件校验</s:String>
@@ -968,6 +972,7 @@
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfence">使用高性能显卡</s:String>
     <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsGPUPerfenceToolTip">自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 PCL 和 Java 改为使用高性能显卡。
 如果同时有集成显卡和独立显卡，这能确保 MC 使用独立显卡进行渲染，以大幅提高帧率。</s:String>
+    <s:String x:Key="LangPageSetupLaunchLaunchAdvanceOptionsMoreTips">版本独立设置中还有更多高级选项可供调整。</s:String>
     <s:String x:Key="LangPageSetupLaunchGotoVersionSetting">版本独立设置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadByError">启动设置项存在异常，已被自动重置</s:String>
     <s:String x:Key="LangPageSetupLaunchReloadFail">重载启动设置时出错</s:String>
@@ -1054,6 +1059,11 @@
     <s:String x:Key="LangPageSetupSystemSystemCacheFolderToolTip">PCL 的下载、皮肤等缓存文件的存储位置。
 不推荐路径中带有空格。
 留空即为默认值，重启 PCL 后生效。</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetry">匿名数据收集</s:String>
+    <s:String x:Key="LangPageSetupSystemSystemTelemetryToolTip">当下载失败、PCL 出错、游戏崩溃等事件时，PCL 会匿名上报情况，以通知龙猫 “哦吼，出错了”，让龙猫能更好地修 Bug……
+你可以关闭上报，不过龙猫就不知道你遇到了什么 Bug 了……
+PCL 不会上传或收集任何个人信息，包括上报的东西里面也没有！
+详情：https://github.com/Meloong-Git/PCL/discussions/7036</s:String>
     <s:String x:Key="LangPageSetupSystemSystemCheckUpdate">检查更新</s:String>
     <s:String x:Key="LangPageSetupSystemLang">语言</s:String>
     <s:String x:Key="LangPageSetupSystemLangLaunchLang">启动器语言</s:String>

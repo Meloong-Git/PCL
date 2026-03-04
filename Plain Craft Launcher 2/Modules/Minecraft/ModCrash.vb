@@ -1040,7 +1040,7 @@ NextStack:
                             Results.Add(GetLang("LangModCrashCrashReasonReasonTargetEntity", Additional.First))
                         End If
                     Else
-                        Results.Add(GetLang("LangModCrashCrashReasonReasonTargetEntities", Additional.Join("、")))
+                        Results.Add(GetLang("LangModCrashCrashReasonReasonTargetEntities", GetLocalizedEnum(Additional, True)))
                     End If
                 Case CrashReason.OptiFine与Forge不兼容
                     Results.Add(GetLang("LangModCrashCrashReasonReasonBE"))

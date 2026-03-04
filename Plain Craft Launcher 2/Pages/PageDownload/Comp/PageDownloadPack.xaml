@@ -14,7 +14,7 @@
         <local:MyComboBoxItem Tag="4472/technology" Content="{StaticResource LangDownloadModpackTypeTech}" />
         <local:MyComboBoxItem Tag="4473/magic" Content="{StaticResource LangDownloadModpackTypeMagic}" />
         <local:MyComboBoxItem Tag="4475/adventure" Content="{StaticResource LangDownloadModpackTypeAdventure}" />
-        <local:MyComboBoxItem Tag="/kitchen-sink" Content="{StaticResource LangDownloadModpackTypeCook}" />
+        <local:MyComboBoxItem Tag="/kitchen-sink" Content="{StaticResource LangDownloadModpackTypeSink}" />
         <local:MyComboBoxItem Tag="4476/" Content="{StaticResource LangDownloadModpackTypeExplore}" />
         <local:MyComboBoxItem Tag="4477/" Content="{StaticResource LangDownloadModpackTypeGame}" />
         <local:MyComboBoxItem Tag="4474/" Content="{StaticResource LangDownloadModpackTypeScienceFiction}" />

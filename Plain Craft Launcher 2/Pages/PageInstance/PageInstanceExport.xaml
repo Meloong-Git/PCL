@@ -301,12 +301,12 @@
                                       Theme="Yellow"
                                 Margin="0,2,0,8"
                                 Visibility="{Binding Checked, ElementName=CheckAdvancedInclude, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                        <local:MyCheckBox Text="打包资源文件，以避免在导入时下载"
+                        <local:MyCheckBox Text="{StaticResource LangPageVersionExportArchiveMode}"
                                 x:Name="CheckAdvancedInclude"
-                                          ToolTip="将 Mod、资源包、光影包的文件直接放入整合包中，这样在导入时就无需联网下载它们。&#xa;建议仅在无法稳定连接 CurseForge 或 Modrinth 时才考虑勾选。"/>
-                        <local:MyCheckBox Text="Modrinth 上传模式"
+                                          ToolTip="{StaticResource LangPageVersionExportArchiveModeDesc}"/>
+                        <local:MyCheckBox Text="{StaticResource LangPageVersionExportModrinthStandard}"
                                 x:Name="CheckAdvancedModrinth"
-                                          ToolTip="如果你想要打包上传到 Modrinth，勾选此项会生成完全符合 Modrinth 要求的整合包文件。&#xa;由于 Modrinth 要求，只能从 CurseForge 下载的资源将无法联网下载，会被直接放入整合包中。&#xa;此外，勾选后也不能在整合包中包含 PCL 启动器文件。"/>
+                                          ToolTip="{StaticResource LangPageVersionExportModrinthStandardDesc}"/>
                         <local:MyHint Theme="Blue"
                                 RelativeSetup="HintExportConfig"
                                 CanClose="True"

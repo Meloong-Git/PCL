@@ -146,8 +146,8 @@
         e.Handled = True
     End Sub
     Public Shared Sub TryVote()
-        If MyMsgBox("是否要打开新功能投票网页？" & vbCrLf & "如果无法打开该网页，请使用 VPN 改善网络环境。",
-                    "新功能投票", "打开", "取消") = 2 Then Return
+        If MyMsgBox(GetLang("LangPageOtherDialogVoteContent"),
+                    GetLang("LangPageOtherDialogVoteTitle"), GetLang("LangSelectOpen"), GetLang("LangDialogBtnCancel")) = 2 Then Return
         OpenWebsite("https://github.com/Meloong-Git/PCL/discussions/categories/%E5%8A%9F%E8%83%BD%E6%8A%95%E7%A5%A8?discussions_q=category%3A%E5%8A%9F%E8%83%BD%E6%8A%95%E7%A5%A8+sort%3Adate_created")
     End Sub
 
