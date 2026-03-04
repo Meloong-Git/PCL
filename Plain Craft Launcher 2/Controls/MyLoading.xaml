@@ -33,5 +33,5 @@
         </Path>
         <Rectangle Width="25" Height="2"  Fill="{Binding Foreground, ElementName=PanBack}" VerticalAlignment="Bottom" HorizontalAlignment="Left" />
     </Grid>
-    <TextBlock x:Name="LabText" Text="Loading" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Foreground="{Binding Foreground, ElementName=PanBack}" FontSize="16" Margin="0,10,0,0" Grid.Row="2"/>
+    <TextBlock x:Name="LabText" Text="{Binding Text,ElementName=PanBack}" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Top" Foreground="{Binding Foreground, ElementName=PanBack}" FontSize="16" Margin="0,10,0,0" Grid.Row="2"/>
 </Grid>

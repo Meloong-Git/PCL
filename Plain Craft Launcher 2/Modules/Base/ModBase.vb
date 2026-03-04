@@ -54,7 +54,7 @@ Public Module ModBase
     ''' <summary>
     ''' 当前程序的语言。
     ''' </summary>
-    Public Lang As String = "zh_CN"
+    Public Lang As String = ReadReg("Lang", GetDefaultLang())
     ''' <summary>
     ''' 设置对象。
     ''' </summary>
@@ -740,7 +740,7 @@ Public Module ModBase
     ''' 不包含路径将会抛出异常。
     ''' </summary>
     Public Function GetPathFromFullPath(FilePath As String) As String
-        If Not (FilePath.Contains("\") OrElse FilePath.Contains("/")) Then Throw New Exception("不包含路径：" & FilePath)
+        If Not (FilePath.Contains("\") OrElse FilePath.Contains("/")) Then Throw New Exception(GetLang("LangModBaseExceptionPathIncorrect", FilePath))
         If FilePath.EndsWithF("\") OrElse FilePath.EndsWithF("/") Then
             '是文件夹路径
             Dim IsRight As Boolean = FilePath.EndsWithF("\")
@@ -749,7 +749,7 @@ Public Module ModBase
         Else
             '是文件路径
             GetPathFromFullPath = Left(FilePath, FilePath.LastIndexOfAny({"\", "/"}) + 1)
-            If GetPathFromFullPath = "" Then Throw New Exception("不包含路径：" & FilePath)
+            If GetPathFromFullPath = "" Then Throw New Exception(GetLang("LangModBaseExceptionPathIncorrect", FilePath))
         End If
     End Function
     ''' <summary>
@@ -757,11 +757,11 @@ Public Module ModBase
     ''' </summary>
     Public Function GetFileNameFromPath(FilePath As String) As String
         FilePath = FilePath.Replace("/", "\")
-        If FilePath.EndsWithF("\") Then Throw New Exception("不包含文件名：" & FilePath)
+        If FilePath.EndsWithF("\") Then Throw New Exception(GetLang("LangModBaseExceptionFileNameIncorrect", FilePath))
         If FilePath.Contains("?") Then FilePath = FilePath.Substring(0, FilePath.IndexOfF("?")) '去掉网络参数后的 ?
         If FilePath.Contains("\") Then FilePath = FilePath.Substring(FilePath.LastIndexOfF("\") + 1)
         Dim length As Integer = FilePath.Length
-        If length = 0 Then Throw New Exception("不包含文件名：" & FilePath)
+        If length = 0 Then Throw New Exception(GetLang("LangModBaseExceptionFileNameIncorrect", FilePath))
         Return FilePath
     End Function
     ''' <summary>
@@ -789,7 +789,7 @@ Public Module ModBase
             '复制文件
             File.Copy(FromPath, ToPath, True)
         Catch ex As Exception
-            Throw New Exception("复制文件出错：" & FromPath & " → " & ToPath, ex)
+            Throw New Exception(GetLang("LangModBaseExceptionCopyFileFail", FromPath, ToPath), ex)
         End Try
     End Sub
     ''' <summary>
@@ -1030,6 +1030,7 @@ Public Module ModBase
     ''' 返回以 \ 结尾的完整路径，如果没有选择则返回空字符串。
     ''' </summary>
     Public Function SelectFolder(Optional Title As String = "选择文件夹") As String
+        If Title = "选择文件夹" Then Title = GetLang("LangModBaseSelectFolder")
         Dim folderDialog As New Ookii.Dialogs.Wpf.VistaFolderBrowserDialog With {.ShowNewFolderButton = True, .RootFolder = Environment.SpecialFolder.Desktop, .Description = Title, .UseDescriptionForTitle = True}
         folderDialog.ShowDialog()
         SelectFolder = If(String.IsNullOrEmpty(folderDialog.SelectedPath), "", folderDialog.SelectedPath & If(folderDialog.SelectedPath.EndsWithF("\"), "", "\"))
@@ -1060,9 +1061,9 @@ Public Module ModBase
     ''' 检查是否拥有某一文件夹的 I/O 权限。如果出错，则抛出异常。
     ''' </summary>
     Public Sub CheckPermissionWithException(Path As String)
-        If String.IsNullOrWhiteSpace(Path) Then Throw New ArgumentNullException("文件夹名不能为空！")
+        If String.IsNullOrWhiteSpace(Path) Then Throw New ArgumentNullException(GetLang("LangModBaseExceptionEmptyFolderName"))
         If Not Path.EndsWithF("\") Then Path += "\"
-        If Not Directory.Exists(Path) Then Throw New DirectoryNotFoundException("文件夹不存在！")
+        If Not Directory.Exists(Path) Then Throw New DirectoryNotFoundException(GetLang("LangModBaseExceptionFolderNotExist"))
         If File.Exists(Path & "CheckPermission") Then File.Delete(Path & "CheckPermission")
         File.Create(Path & "CheckPermission").Dispose()
         File.Delete(Path & "CheckPermission")
@@ -1253,32 +1254,32 @@ Re:
         Public Function Check(LocalPath As String) As String
             Try
                 Dim Info As New FileInfo(LocalPath)
-                If Not Info.Exists Then Return "文件不存在：" & LocalPath
+                If Not Info.Exists Then Return GetLang("LangModBaseFileCheckFileNotExist", LocalPath)
                 Dim FileSize As Long = Info.Length
                 If ActualSize >= 0 AndAlso ActualSize <> FileSize Then
-                    Return $"文件大小应为 {ActualSize} B，实际为 {FileSize} B" &
+                    Return GetLang("LangModBaseFileCheckFileSizeIncorrectA", ActualSize, FileSize) &
                         If(FileSize < 2000, "，内容为：" & ReadFile(LocalPath), "")
                 End If
                 If MinSize >= 0 AndAlso MinSize > FileSize Then
-                    Return $"文件大小应大于 {MinSize} B，实际为 {FileSize} B" &
+                    Return GetLang("LangModBaseFileCheckFileSizeIncorrectB", MinSize, FileSize) &
                         If(FileSize < 2000, "，内容为：" & ReadFile(LocalPath), "")
                 End If
                 If Not String.IsNullOrEmpty(Hash) Then
                     If Hash.Length < 35 Then 'MD5
-                        If Hash.ToLowerInvariant <> GetFileMD5(LocalPath) Then Return "文件 MD5 应为 " & Hash & "，实际为 " & GetFileMD5(LocalPath)
+                        If Hash.ToLowerInvariant <> GetFileMD5(LocalPath) Then Return GetLang("LangModBaseFileCheckFileMD5Incorrect", Hash, GetFileMD5(LocalPath))
                     ElseIf Hash.Length = 64 Then 'SHA256
-                        If Hash.ToLowerInvariant <> GetFileSHA256(LocalPath) Then Return "文件 SHA256 应为 " & Hash & "，实际为 " & GetFileSHA256(LocalPath)
+                        If Hash.ToLowerInvariant <> GetFileSHA256(LocalPath) Then Return GetLang("LangModBaseFileCheckFileSHA256Incorrect", Hash, GetFileSHA256(LocalPath))
                     Else 'SHA1 (40)
-                        If Hash.ToLowerInvariant <> GetFileSHA1(LocalPath) Then Return "文件 SHA1 应为 " & Hash & "，实际为 " & GetFileSHA1(LocalPath)
+                        If Hash.ToLowerInvariant <> GetFileSHA1(LocalPath) Then Return GetLang("LangModBaseFileCheckFileSHA1Incorrect", Hash, GetFileSHA1(LocalPath))
                     End If
                 End If
                 If IsJson Then
                     Dim Content As String = ReadFile(LocalPath)
-                    If Content = "" Then Throw New Exception("读取到的文件为空")
+                    If Content = "" Then Throw New Exception(GetLang("LangModBaseExceptionEmptyFile"))
                     Try
                         GetJson(Content)
                     Catch ex As Exception
-                        Throw New Exception("不是有效的 json 文件", ex)
+                        Throw New Exception(GetLang("LangModBaseExceptionInvalidJson"), ex)
                     End Try
                 End If
                 Return Nothing
@@ -1451,7 +1452,7 @@ RetryDir:
     ''' </summary>
     ''' <param name="ShowAllStacks">是否必须显示所有堆栈。通常用于判定堆栈信息。</param>
     <Extension> Public Function GetDetail(Ex As Exception, Optional ShowAllStacks As Boolean = False) As String
-        If Ex Is Nothing Then Return "无可用错误信息！"
+        If Ex Is Nothing Then Return GetLang("LangModBaseNoExceptionDetail")
 
         '获取最底层的异常
         Dim OuterEx As Exception = Ex
@@ -1472,7 +1473,7 @@ RetryDir:
                     End If
                 Next
             End If
-            If Ex.GetType.FullName <> "System.Exception" Then DescList.Add("   错误类型：" & Ex.GetType.FullName)
+            If Ex.GetType.FullName <> "System.Exception" Then DescList.Add("   " & GetLang("LangModBaseExceptionType") & Ex.GetType.FullName)
             Ex = Ex.InnerException
             IsInner = True
         Loop
@@ -1482,14 +1483,14 @@ RetryDir:
         If UsualReason Is Nothing Then
             Return DescList.Join(vbCrLf)
         Else
-            Return UsualReason & vbCrLf & vbCrLf & "————————————" & vbCrLf & "详细错误信息：" & vbCrLf & DescList.Join(vbCrLf)
+            Return UsualReason & vbCrLf & vbCrLf & "————————————" & vbCrLf & GetLang("LangModBaseExceptionInfoDetail") & vbCrLf & DescList.Join(vbCrLf)
         End If
     End Function
     ''' <summary>
     ''' 提取 Exception 与 Inner Exception 的描述，汇总到一行。
     ''' </summary>
     <Extension> Public Function GetBrief(Ex As Exception) As String
-        If Ex Is Nothing Then Return "无可用错误信息！"
+        If Ex Is Nothing Then Return GetLang("LangModBaseNoExceptionDetail")
 
         '获取最底层的异常
         Dim OuterEx As Exception = Ex
@@ -1518,17 +1519,17 @@ RetryDir:
     End Function
     Private Function AnalyzeUsualReason(InnerEx As Exception, OuterEx As Exception, DescList As List(Of String)) As String
         If TypeOf InnerEx Is TypeLoadException OrElse TypeOf InnerEx Is BadImageFormatException OrElse TypeOf InnerEx Is MissingMethodException OrElse TypeOf InnerEx Is NotImplementedException OrElse TypeOf InnerEx Is TypeInitializationException Then
-            Return "PCL 的运行环境存在问题。请尝试重新安装 .NET Framework 4.6.2 然后再试。若无法安装，请先卸载较新版本的 .NET Framework，然后再尝试安装。"
+            Return GetLang("LangModBaseExceptionBadEnvironment")
         ElseIf TypeOf InnerEx Is UnauthorizedAccessException Then
-            Return "PCL 的权限不足。请尝试右键 PCL 选择以管理员身份运行。"
+            Return GetLang("LangModBaseExceptionUnauthorizedAccessException")
         ElseIf TypeOf InnerEx Is OutOfMemoryException Then
-            Return "你的电脑运行内存不足，导致 PCL 无法继续运行。请在关闭一部分不需要的程序后再试。"
+            Return GetLang("LangModBaseExceptionOutOfMemoryException")
         ElseIf TypeOf InnerEx Is Runtime.InteropServices.COMException Then
-            Return "由于操作系统或显卡存在问题，导致出现错误。请尝试重启 PCL。"
+            Return GetLang("LangModBaseExceptionCOMException")
         ElseIf TypeOf InnerEx Is SocketException AndAlso DescList.Any(Function(l) l.Contains("WSAStartup")) Then
-            Return "请尝试卸载中国移动云盘，然后再试。"
+            Return GetLang("LangModBaseExceptionWSAStartup")
         ElseIf OuterEx.IsNetworkRelated() Then
-            Return "你的网络环境不佳，请稍后再试，或使用 VPN 改善网络环境。"
+            Return GetLang("LangModBaseExceptionBadNetwork")
         Else
             Return Nothing
         End If
@@ -2329,69 +2330,72 @@ NextElement:
     ''' 将时间间隔转换为类似“5 分 10 秒前”的易于阅读的形式。
     ''' </summary>
     Public Function GetTimeSpanString(Span As TimeSpan, IsShortForm As Boolean) As String
-        Dim EndFix = If(Span.TotalMilliseconds > 0, "后", "前")
+        Dim EndFix = If(Span.TotalMilliseconds > 0, GetLang("LangModBaseDateLater"), GetLang("LangModBaseDateAgo"))
         If Span.TotalMilliseconds < 0 Then Span = -Span
-        Dim TotalMonthes = Math.Floor(Span.Days / 30)
+        Dim TotalMonths = Math.Floor(Span.Days / 30)
+        Dim TotalYears = Math.Floor(TotalMonths / 12)
+        Dim RemainMonths = TotalMonths Mod 12
+        Dim RemainDays = Span.Days Mod 30
         If IsShortForm Then
-            If TotalMonthes >= 12 Then
+            If TotalMonths >= 12 Then
                 '1+ 年，“3 年”
-                GetTimeSpanString = Math.Floor(TotalMonthes / 12) & " 年"
-            ElseIf TotalMonthes >= 2 Then
+                GetTimeSpanString = TotalYears & " " & GetLangByNumIsPlural(TotalYears, "LangModBaseDateYear")
+            ElseIf TotalMonths >= 2 Then
                 '2~11 月，“5 个月”
-                GetTimeSpanString = TotalMonthes & " 个月"
+                GetTimeSpanString = TotalMonths & " " & GetLangByNumIsPlural(TotalMonths, "LangModBaseDateMonthA")
             ElseIf Span.TotalDays >= 2 Then
                 '2 天 ~ 2 月，“23 天”
-                GetTimeSpanString = Span.Days & " 天"
+                GetTimeSpanString = Span.Days & " " & GetLangByNumIsPlural(Span.Days, "LangModBaseDateDay")
             ElseIf Span.TotalHours >= 1 Then
                 '1 小时 ~ 2 天，“15 小时”
-                GetTimeSpanString = Span.Hours & " 小时"
+                GetTimeSpanString = Span.Hours & " " & GetLangByNumIsPlural(Span.Hours, "LangModBaseDateHour")
             ElseIf Span.TotalMinutes >= 1 Then
                 '1 分钟 ~ 1 小时，“49 分钟”
-                GetTimeSpanString = Span.Minutes & " 分钟"
+                GetTimeSpanString = Span.Minutes & " " & GetLangByNumIsPlural(Span.Minutes, "LangModBaseDateMinute")
             ElseIf Span.TotalSeconds >= 1 Then
                 '1 秒 ~ 1 分钟，“23 秒”
-                GetTimeSpanString = Span.Seconds & " 秒"
+                GetTimeSpanString = Span.Seconds & " " & GetLangByNumIsPlural(Span.Seconds, "LangModBaseDateSecond")
             Else
                 '不到 1 秒
-                GetTimeSpanString = "1 秒"
+                GetTimeSpanString = "1 " & GetLang("LangModBaseDateSecond")
             End If
         Else
-            If TotalMonthes >= 61 Then
+            If TotalMonths >= 61 Then
                 '5+ 年，“5 年”
-                GetTimeSpanString = Math.Floor(TotalMonthes / 12) & " 年"
-            ElseIf TotalMonthes >= 12 Then
+                GetTimeSpanString = TotalYears & " " & GetLangByNumIsPlural(TotalYears, "LangModBaseDateYear")
+            ElseIf TotalMonths >= 12 Then
                 '12~60 月，“1 年 2 个月”
-                GetTimeSpanString = Math.Floor(TotalMonthes / 12) & " 年" & If((TotalMonthes Mod 12) > 0, " " & (TotalMonthes Mod 12) & " 个月", "")
-            ElseIf TotalMonthes >= 4 Then
+                GetTimeSpanString = TotalYears & " " & GetLangByNumIsPlural(TotalYears, "LangModBaseDateYear") & If(RemainMonths > 0, " " & RemainMonths & " " & GetLangByNumIsPlural(RemainMonths, "LangModBaseDateMonthA"), "")
+            ElseIf TotalMonths >= 4 Then
                 '4~11 月，“5 个月”
-                GetTimeSpanString = TotalMonthes & " 个月"
-            ElseIf TotalMonthes >= 1 Then
+                GetTimeSpanString = TotalMonths & " " & GetLangByNumIsPlural(TotalMonths, "LangModBaseDateMonthA")
+            ElseIf TotalMonths >= 1 Then
                 '1~4 月，“2 个月 13 天”
-                GetTimeSpanString = TotalMonthes & " 月" & If((Span.Days Mod 30) > 0, " " & (Span.Days Mod 30) & " 天", "")
+                GetTimeSpanString = TotalMonths & " " & GetLangByNumIsPlural(TotalMonths, "LangModBaseDateMonthA") & If(RemainDays > 0, " " & RemainDays & " " & GetLangByNumIsPlural(RemainDays, "LangModBaseDateDay"), "")
             ElseIf Span.TotalDays >= 4 Then
                 '4~30 天，“23 天”
-                GetTimeSpanString = Span.Days & " 天"
+                GetTimeSpanString = Span.Days & " " & GetLangByNumIsPlural(Span.Days, "LangModBaseDateDay")
             ElseIf Span.TotalDays >= 1 Then
                 '1~3 天，“2 天 20 小时”
-                GetTimeSpanString = Span.Days & " 天" & If(Span.Hours > 0, " " & Span.Hours & " 小时", "")
+                GetTimeSpanString = Span.Days & " " & GetLangByNumIsPlural(Span.Days, "LangModBaseDateDay") & If(Span.Hours > 0, " " & Span.Hours & " " & GetLangByNumIsPlural(Span.Hours, "LangModBaseDateHour"), "")
             ElseIf Span.TotalHours >= 10 Then
                 '10 小时 ~ 1 天，“15 小时”
-                GetTimeSpanString = Span.Hours & " 小时"
+                GetTimeSpanString = Span.Hours & " " & GetLangByNumIsPlural(Span.Hours, "LangModBaseDateHour")
             ElseIf Span.TotalHours >= 1 Then
                 '1~10 小时，“1 小时 20 分钟”
-                GetTimeSpanString = Span.Hours & " 小时" & If(Span.Minutes > 0, " " & Span.Minutes & " 分钟", "")
+                GetTimeSpanString = Span.Hours & " " & GetLangByNumIsPlural(Span.Hours, "LangModBaseDateHour") & If(Span.Minutes > 0, " " & Span.Minutes & " " & GetLangByNumIsPlural(Span.Minutes, "LangModBaseDateMinute"), "")
             ElseIf Span.TotalMinutes >= 10 Then
                 '10 分钟 ~ 1 小时，“49 分钟”
-                GetTimeSpanString = Span.Minutes & " 分钟"
+                GetTimeSpanString = Span.Minutes & " " & GetLangByNumIsPlural(Span.Minutes, "LangModBaseDateMinute")
             ElseIf Span.TotalMinutes >= 1 Then
                 '1~10 分钟，“9 分 23 秒”
-                GetTimeSpanString = Span.Minutes & " 分" & If(Span.Seconds > 0, " " & Span.Seconds & " 秒", "")
+                GetTimeSpanString = Span.Minutes & " " & GetLangByNumIsPlural(Span.Minutes, "LangModBaseDateMinute") & If(Span.Seconds > 0, " " & Span.Seconds & " " & GetLangByNumIsPlural(Span.Seconds, "LangModBaseDateSecond"), "")
             ElseIf Span.TotalSeconds >= 1 Then
                 '1 秒 ~ 1 分钟，“23 秒”
-                GetTimeSpanString = Span.Seconds & " 秒"
+                GetTimeSpanString = Span.Seconds & " " & GetLangByNumIsPlural(Span.Seconds, "LangModBaseDateSecond")
             Else
                 '不到 1 秒
-                GetTimeSpanString = "1 秒"
+                GetTimeSpanString = "1 " & GetLang("LangModBaseDateSecond")
             End If
         End If
         GetTimeSpanString += EndFix
@@ -2656,8 +2660,7 @@ NextElement:
         Catch ex As Exception
             Log(ex, "无法打开网页（" & Url & "）")
             ClipboardSet(Url, False)
-            MyMsgBox("可能由于浏览器未正确配置，PCL 无法为你打开网页。" & vbCrLf & "网址已经复制到剪贴板，若有需要可以手动粘贴访问。" & vbCrLf &
-                     $"网址：{Url}", "无法打开网页")
+            MyMsgBox(GetLang("LangModBaseDialogWebOpenFailContent"), GetLang("LangModBaseDialogWebOpenFailTitle"))
         End Try
     End Sub
     ''' <summary>
@@ -2701,7 +2704,7 @@ Retry:
                     Log(ex, "可能由于剪贴板被其他程序占用，文本复制失败", LogLevel.Hint)
                 End If
             End Try
-            If ShowSuccessHint Then Hint("已成功复制！", HintType.Green)
+            If ShowSuccessHint Then Hint(GetLang("LangModBaseHintCopySuccess"), HintType.Green)
         End Sub)
     End Sub
     ''' <summary>
@@ -2979,7 +2982,7 @@ Retry:
                 File.Create(Path & "PCL\Log1.txt").Dispose()
             Catch ex As IOException
                 IsInitSuccess = False
-                Hint("可能同时开启了多个 PCL，程序可能会出现未知问题！", HintType.Red)
+                Hint(GetLang("LangModBaseHintMultiplePCL"), HintType.Red)
                 Log(ex, "日志初始化失败（疑似文件占用问题）")
             Catch ex As Exception
                 IsInitSuccess = False
@@ -3029,6 +3032,7 @@ Retry:
         On Error Resume Next
         '放在最后会导致无法显示极端错误下的弹窗（如无法写入日志文件）
         '处理错误会导致再次调用 Log() 导致无限循环
+        If Title = "出现错误" Then Title = GetLang("LangModBaseDialogFeedbackTitle")
 
         '输出日志
         Dim AppendText As String = $"[{GetTimeNow()}] <{If(Thread.CurrentThread.Name = "", "主线程", Thread.CurrentThread.Name)}> {Text}{vbCrLf}" '减轻同步锁占用
@@ -3066,9 +3070,9 @@ Retry:
                 MyMsgBox(Text, Title, IsWarn:=True)
             Case LogLevel.Feedback
                 If CanFeedback(False) Then
-                    If MyMsgBox(Text & vbCrLf & vbCrLf & "是否反馈此问题？如果不反馈，这个问题可能永远无法得到解决！", Title, "反馈", "取消", IsWarn:=True) = 1 Then Feedback(False, True)
+                    If MyMsgBox(Text & vbCrLf & vbCrLf & GetLang("LangModBaseDialogFeedbackContent"), Title, GetLang("LangModBaseDialogFeedbackBtnConfirm"), GetLang("LangDialogBtnCancel"), IsWarn:=True) = 1 Then Feedback(False, True)
                 Else
-                    MyMsgBox(Text & vbCrLf & vbCrLf & "将 PCL 更新至最新版或许可以解决这个问题……", Title, IsWarn:=True)
+                    MyMsgBox(Text & vbCrLf & vbCrLf & GetLang("LangModBaseDialogResolveByUpdate"), Title, IsWarn:=True)
                 End If
             Case LogLevel.Critical
                 If IsCriticalErrorTriggered Then
@@ -3077,7 +3081,7 @@ Retry:
                 End If
                 IsCriticalErrorTriggered = True
                 If CanFeedback(False) Then
-                    If MsgBox(Text & vbCrLf & vbCrLf & "是否反馈此问题？如果不反馈，这个问题可能永远无法得到解决！", MsgBoxStyle.Critical + MsgBoxStyle.YesNo, Title) = MsgBoxResult.Yes Then Feedback(False, True)
+                    If MsgBox(Text & vbCrLf & vbCrLf & GetLang("LangModBaseDialogFeedbackContent"), MsgBoxStyle.Critical + MsgBoxStyle.YesNo, Title) = MsgBoxResult.Yes Then Feedback(False, True)
                 Else
                     MsgBox(Text & vbCrLf & vbCrLf & "将 PCL 更新至最新版或许可以解决这个问题……", MsgBoxStyle.Critical, Title)
                 End If
@@ -3098,6 +3102,8 @@ Retry:
     Public Sub Log(Ex As Exception, Desc As String, Optional Level As LogLevel = LogLevel.Debug, Optional Title As String = "出现错误")
         On Error Resume Next
         If TypeOf Ex Is ThreadInterruptedException Then Return
+
+        If Title = "出现错误" Then Title = GetLang("LangModBaseDialogFeedbackTitle")
 
         '获取错误信息
         Dim ExFull As String = $"{Desc}：{Ex.GetDetail()}"
@@ -3122,27 +3128,27 @@ Retry:
             Case LogLevel.Normal
 #If DEBUG Then
             Case LogLevel.Developer
-                Dim ExLine As String = Desc & "：" & Ex.GetBrief()
+                Dim ExLine As String = Desc & GetLang("LangColon") & Ex.GetBrief()
                 Hint("[开发者模式] " & ExLine, HintType.Blue, False)
             Case LogLevel.Debug
-                Dim ExLine As String = Desc & "：" & Ex.GetBrief()
+                Dim ExLine As String = Desc & GetLang("LangColon") & Ex.GetBrief()
                 Hint("[调试模式] " & ExLine, HintType.Blue, False)
 #Else
             Case LogLevel.Developer
             Case LogLevel.Debug
-                Dim ExLine As String = Desc & "：" & Ex.GetBrief()
+                Dim ExLine As String = Desc & GetLang("LangColon") & Ex.GetBrief()
                 If ModeDebug Then Hint("[调试模式] " & ExLine, HintType.Blue, False)
 #End If
             Case LogLevel.Hint
-                Dim ExLine As String = Desc & "：" & Ex.GetBrief()
+                Dim ExLine As String = Desc & GetLang("LangColon") & Ex.GetBrief()
                 Hint(ExLine, HintType.Red, False)
             Case LogLevel.Msgbox
                 MyMsgBox(ExFull, Title, IsWarn:=True)
             Case LogLevel.Feedback
                 If CanFeedback(False) Then
-                    If MyMsgBox(ExFull & vbCrLf & vbCrLf & "是否反馈此问题？如果不反馈，这个问题可能永远无法得到解决！", Title, "反馈", "取消", IsWarn:=True) = 1 Then Feedback(False, True)
+                    If MyMsgBox(ExFull & vbCrLf & vbCrLf & GetLang("LangModBaseDialogFeedbackContent"), Title, GetLang("LangModBaseDialogFeedbackBtnConfirm"), GetLang("LangDialogBtnCancel"), IsWarn:=True) = 1 Then Feedback(False, True)
                 Else
-                    MyMsgBox(ExFull & vbCrLf & vbCrLf & "将 PCL 更新至最新版或许可以解决这个问题……", Title, IsWarn:=True)
+                    MyMsgBox(ExFull & vbCrLf & vbCrLf & GetLang("LangModBaseDialogResolveByUpdate"), Title, IsWarn:=True)
                 End If
             Case LogLevel.Critical
                 If IsCriticalErrorTriggered Then
@@ -3151,7 +3157,7 @@ Retry:
                 End If
                 IsCriticalErrorTriggered = True
                 If CanFeedback(False) Then
-                    If MsgBox(ExFull & vbCrLf & vbCrLf & "是否反馈此问题？如果不反馈，这个问题可能永远无法得到解决！", MsgBoxStyle.Critical + MsgBoxStyle.YesNo, Title) = MsgBoxResult.Yes Then Feedback(False, True)
+                    If MsgBox(ExFull & vbCrLf & vbCrLf & GetLang("LangModBaseDialogFeedbackContent"), MsgBoxStyle.Critical + MsgBoxStyle.YesNo, Title) = MsgBoxResult.Yes Then Feedback(False, True)
                 Else
                     MsgBox(ExFull & vbCrLf & vbCrLf & "将 PCL 更新至最新版或许可以解决这个问题……", MsgBoxStyle.Critical, Title)
                 End If
@@ -3170,15 +3176,16 @@ Retry:
     Public Sub Feedback(Optional ShowMsgbox As Boolean = True, Optional ForceOpenLog As Boolean = False)
         On Error Resume Next
         FeedbackInfo()
-        If ForceOpenLog OrElse (ShowMsgbox AndAlso MyMsgBox("若你在汇报一个 Bug，请点击 打开文件夹 按钮，并上传 Log(1~5).txt 中包含错误信息的文件。" & vbCrLf & "游戏崩溃一般与启动器无关，请不要因为游戏崩溃而提交反馈。", "反馈提交提醒", "打开文件夹", "不需要") = 1) Then
+        If ForceOpenLog OrElse (ShowMsgbox AndAlso MyMsgBox(GetLang("LangModBaseDialogUploadLogContent"), GetLang("LangModBaseDialogUploadLogTitle"), GetLang("LangModBaseDialogUploadLogBtnOpenFolder"), GetLang("LangModBaseDialogUploadLogBtnNoNeed")) = 1) Then
             OpenExplorer(Path & "PCL\Log1.txt")
         End If
         OpenWebsite("https://github.com/Meloong-Git/PCL/issues/")
     End Sub
     Public Function CanFeedback(ShowHint As Boolean) As Boolean
         If False.Equals(PageSetupSystem.IsLauncherNewest) Then
+            If ShowHint Then MyMsgBox(GetLang("LangModBaseDialogUpdateBeforeFeedbackContent"), GetLang("LangModBaseDialogUpdateBeforeFeedbackTitle"))
             If ShowHint Then
-                If MyMsgBox($"你的 PCL 不是最新版，因此无法提交反馈。{vbCrLf}请在更新后，确认该问题在最新版中依然存在，然后再提交反馈。", "无法提交反馈", "更新", "取消") = 1 Then
+                If MyMsgBox(GetLang("LangModBaseDialogUpdateBeforeFeedbackContent"), GetLang("LangModBaseDialogUpdateBeforeFeedbackTitle"), GetLang("LangModBaseDialogUpdateBeforeFeedbackBtnUpdate"), GetLang("LangDialogBtnCancel")) = 1 Then
                     UpdateCheckByButton()
                 End If
             End If

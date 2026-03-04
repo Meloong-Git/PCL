@@ -222,6 +222,7 @@
         ''' </summary>
         Public ReadOnly Property TranslatedName As String
             Get
+                If Not (Lang.Equals("zh-CN") OrElse Lang.Equals("zh-MEME")) Then Return RawName '其它语言暂时没有翻译数据，使用原文本
                 Return If(DatabaseEntry Is Nothing OrElse DatabaseEntry.ChineseName = "", RawName, DatabaseEntry.ChineseName)
             End Get
         End Property
@@ -316,76 +317,76 @@
                         Select(Of Integer)(Function(t) t("id")).Distinct.OrderByDescending(Function(c) c)
                         Select Case Category
                             'Mod
-                            Case 406 : Tags.Add("世界元素")
-                            Case 407 : Tags.Add("生物群系")
-                            Case 410 : Tags.Add("维度")
-                            Case 408 : Tags.Add("矿物/资源")
-                            Case 409 : Tags.Add("天然结构")
-                            Case 412 : Tags.Add("科技")
-                            Case 415 : Tags.Add("管道/物流")
-                            Case 4843 : Tags.Add("自动化")
-                            Case 417 : Tags.Add("能源")
-                            Case 4558 : Tags.Add("红石")
-                            Case 436 : Tags.Add("食物/烹饪")
-                            Case 416 : Tags.Add("农业")
-                            Case 414 : Tags.Add("运输")
-                            Case 420 : Tags.Add("仓储")
-                            Case 419 : Tags.Add("魔法")
-                            Case 422 : Tags.Add("冒险")
-                            Case 424 : Tags.Add("装饰")
-                            Case 411 : Tags.Add("生物")
-                            Case 434 : Tags.Add("装备")
-                            Case 6814 : Tags.Add("性能优化")
-                            Case 9026 : Tags.Add("创造模式")
-                            Case 423 : Tags.Add("信息显示")
-                            Case 435 : Tags.Add("服务器")
-                            Case 5191 : Tags.Add("改良")
-                            Case 421 : Tags.Add("支持库")
+                            Case 406 : Tags.Add(GetLang("LangDownloadModTypeWorldElement"))
+                            Case 407 : Tags.Add(GetLang("LangDownloadModTypeBiome"))
+                            Case 410 : Tags.Add(GetLang("LangDownloadModTypeDimension"))
+                            Case 408 : Tags.Add(GetLang("LangDownloadModTypeMineral"))
+                            Case 409 : Tags.Add(GetLang("LangDownloadModTypeStructure"))
+                            Case 412 : Tags.Add(GetLang("LangDownloadModTypeTech"))
+                            Case 415 : Tags.Add(GetLang("LangDownloadModTypePipe"))
+                            Case 4843 : Tags.Add(GetLang("LangDownloadModTypeAuto"))
+                            Case 417 : Tags.Add(GetLang("LangDownloadModTypeEnergy"))
+                            Case 4558 : Tags.Add(GetLang("LangDownloadModTypeRedstone"))
+                            Case 436 : Tags.Add(GetLang("LangDownloadModTypeFood"))
+                            Case 416 : Tags.Add(GetLang("LangDownloadModTypeAgriculture"))
+                            Case 414 : Tags.Add(GetLang("LangDownloadModTypeTransportation"))
+                            Case 420 : Tags.Add(GetLang("LangDownloadModTypeStorage"))
+                            Case 419 : Tags.Add(GetLang("LangDownloadModTypeMagic"))
+                            Case 422 : Tags.Add(GetLang("LangDownloadModTypeAdventure"))
+                            Case 424 : Tags.Add(GetLang("LangDownloadModTypeDecoration"))
+                            Case 411 : Tags.Add(GetLang("LangDownloadModTypeMobs"))
+                            Case 434 : Tags.Add(GetLang("LangDownloadModTypeEquipment"))
+                            Case 6814 : Tags.Add(GetLang("LangDownloadModTypeOptimization"))
+                            Case 9026 : Tags.Add(GetLang("LangDownloadModTypeCreativeMode"))
+                            Case 423 : Tags.Add(GetLang("LangDownloadModTypeDisplay"))
+                            Case 435 : Tags.Add(GetLang("LangDownloadModTypeServer"))
+                            Case 5191 : Tags.Add(GetLang("LangDownloadModTypeUtility"))
+                            Case 421 : Tags.Add(GetLang("LangDownloadModTypeLib"))
                             '整合包
-                            Case 4484 : Tags.Add("多人")
-                            Case 4479 : Tags.Add("硬核")
-                            Case 4483 : Tags.Add("战斗")
-                            Case 4478 : Tags.Add("任务")
-                            Case 4472 : Tags.Add("科技")
-                            Case 4473 : Tags.Add("魔法")
-                            Case 4475 : Tags.Add("冒险")
-                            Case 4476 : Tags.Add("探索")
-                            Case 4477 : Tags.Add("小游戏")
-                            Case 4474 : Tags.Add("科幻")
-                            Case 4736 : Tags.Add("空岛")
-                            Case 5128 : Tags.Add("原版改良")
-                            Case 4487 : Tags.Add("FTB")
-                            Case 4480 : Tags.Add("基于地图")
-                            Case 4481 : Tags.Add("轻量")
-                            Case 4482 : Tags.Add("大型")
+                            Case 4484 : Tags.Add(GetLang("LangDownloadModpackTypeMulti"))
+                            Case 4479 : Tags.Add(GetLang("LangDownloadModpackTypeChallenging"))
+                            Case 4483 : Tags.Add(GetLang("LangDownloadModpackTypeCombat"))
+                            Case 4478 : Tags.Add(GetLang("LangDownloadModpackTypeQuests"))
+                            Case 4472 : Tags.Add(GetLang("LangDownloadModpackTypeTech"))
+                            Case 4473 : Tags.Add(GetLang("LangDownloadModpackTypeMagic"))
+                            Case 4475 : Tags.Add(GetLang("LangDownloadModpackTypeAdventure"))
+                            Case 4476 : Tags.Add(GetLang("LangDownloadModpackTypeExplore"))
+                            Case 4477 : Tags.Add(GetLang("LangDownloadModpackTypeGame"))
+                            Case 4474 : Tags.Add(GetLang("LangDownloadModpackTypeScienceFiction"))
+                            Case 4736 : Tags.Add(GetLang("LangDownloadModpackTypeSkyblock"))
+                            Case 5128 : Tags.Add(GetLang("LangDownloadModpackTypeImprove"))
+                            Case 4487 : Tags.Add(GetLang("LangDownloadModpackTypeFTB"))
+                            Case 4480 : Tags.Add(GetLang("LangDownloadModpackTypeMapBased"))
+                            Case 4481 : Tags.Add(GetLang("LangDownloadModpackTypeLightWeight"))
+                            Case 4482 : Tags.Add(GetLang("LangDownloadModpackTypeHeavyWeight"))
                             '资源包
-                            Case 403 : Tags.Add("原版风")
-                            Case 400 : Tags.Add("写实风")
-                            Case 401 : Tags.Add("现代风")
-                            Case 402 : Tags.Add("中世纪")
-                            Case 399 : Tags.Add("蒸汽朋克")
-                            Case 5244 : Tags.Add("含字体")
-                            Case 404 : Tags.Add("动态效果")
-                            Case 4465 : Tags.Add("兼容 Mod")
+                            Case 403 : Tags.Add(GetLang("LangDownloadResourcepackTypeVanillaLike"))
+                            Case 400 : Tags.Add(GetLang("LangDownloadResourcepackTypeRealistic"))
+                            Case 401 : Tags.Add(GetLang("LangDownloadResourcepackTypeModern"))
+                            Case 402 : Tags.Add(GetLang("LangDownloadResourcepackTypeMedieval"))
+                            Case 399 : Tags.Add(GetLang("LangDownloadResourcepackTypeSteampunk"))
+                            Case 5244 : Tags.Add(GetLang("LangDownloadResourcepackTypeFonts"))
+                            Case 404 : Tags.Add(GetLang("LangDownloadResourcepackTypeDynamic"))
+                            Case 4465 : Tags.Add(GetLang("LangDownloadResourcepackTypeModed"))
                             Case 393 : Tags.Add("16x")
                             Case 394 : Tags.Add("32x")
                             Case 395 : Tags.Add("64x")
                             Case 396 : Tags.Add("128x")
                             Case 397 : Tags.Add("256x")
-                            Case 398 : Tags.Add("超高清")
+                            Case 398 : Tags.Add(GetLang("LangDownloadResourcepackTypeHigherThan512x"))
                             Case 5193 : Tags.Add("数据包") '有这个 Tag 的项会从资源包请求中被移除
                             '光影包
-                            Case 6553 : Tags.Add("写实风")
-                            Case 6554 : Tags.Add("幻想风")
-                            Case 6555 : Tags.Add("原版风")
+                            Case 6553 : Tags.Add(GetLang("LangDownloadShaderTypeRealistic"))
+                            Case 6554 : Tags.Add(GetLang("LangDownloadShaderTypeFantasy"))
+                            Case 6555 : Tags.Add(GetLang("LangDownloadShaderTypeVanillaLike"))
                             '数据包
-                            Case 6948 : Tags.Add("冒险")
-                            Case 6949 : Tags.Add("幻想")
-                            Case 6950 : Tags.Add("支持库")
-                            Case 6952 : Tags.Add("魔法")
-                            Case 6946 : Tags.Add("Mod 相关")
-                            Case 6951 : Tags.Add("科技")
-                            Case 6953 : Tags.Add("实用")
+                            Case 6948 : Tags.Add(GetLang("LangDownloadDatapackTypeAdventure"))
+                            Case 6949 : Tags.Add(GetLang("LangDownloadDatapackTypeFantasy"))
+                            Case 6950 : Tags.Add(GetLang("LangDownloadDatapackTypeLibrary"))
+                            Case 6952 : Tags.Add(GetLang("LangDownloadDatapackTypeMagic"))
+                            Case 6946 : Tags.Add(GetLang("LangDownloadDatapackTypeMod"))
+                            Case 6951 : Tags.Add(GetLang("LangDownloadDatapackTypeTechnology"))
+                            Case 6953 : Tags.Add(GetLang("LangDownloadDatapackTypeUtility"))
                         End Select
                     Next
 #End Region
@@ -434,74 +435,74 @@
                             Case "neoforge" : ModLoaders.Add(CompModLoaderType.NeoForge)
                             Case "datapack" : Type = CompType.DataPack '若包含数据包版本，则优先标为 DataPack
                             '共用
-                            Case "technology" : Tags.Add("科技")
-                            Case "magic" : Tags.Add("魔法")
-                            Case "adventure" : Tags.Add("冒险")
-                            Case "utility" : Tags.Add("实用")
-                            Case "optimization" : Tags.Add("性能优化")
-                            Case "vanilla-like" : Tags.Add("原版风")
-                            Case "realistic" : Tags.Add("写实风")
+                            Case "technology" : Tags.Add(GetLang("LangDownloadModTypeTech"))
+                            Case "magic" : Tags.Add(GetLang("LangDownloadModTypeMagic"))
+                            Case "adventure" : Tags.Add(GetLang("LangDownloadModTypeAdventure"))
+                            Case "utility" : Tags.Add(GetLang("LangDownloadModTypeUtility"))
+                            Case "optimization" : Tags.Add(GetLang("LangDownloadModTypeOptimization"))
+                            Case "vanilla-like" : Tags.Add(GetLang("LangDownloadResourcepackTypeVanillaLike"))
+                            Case "realistic" : Tags.Add(GetLang("LangDownloadResourcepackTypeRealistic"))
                             'Mod/数据包
-                            Case "worldgen" : Tags.Add("世界元素")
-                            Case "food" : Tags.Add("食物/烹饪")
-                            Case "game-mechanics" : Tags.Add("游戏机制")
-                            Case "transportation" : Tags.Add("运输")
-                            Case "storage" : Tags.Add("仓储")
-                            Case "decoration" : If Type <> CompType.ResourcePack Then Tags.Add("装饰")
-                            Case "mobs" : If Type <> CompType.ResourcePack Then Tags.Add("生物")
-                            Case "equipment" : If Type <> CompType.ResourcePack Then Tags.Add("装备")
-                            Case "social" : Tags.Add("服务器")
-                            Case "library" : Tags.Add("支持库")
+                            Case "worldgen" : Tags.Add(GetLang("LangDownloadModTypeWorldElement"))
+                            Case "food" : Tags.Add(GetLang("LangDownloadModTypeFood"))
+                            Case "game-mechanics" : Tags.Add(GetLang("LangDownloadModTypeGameMechanics"))
+                            Case "transportation" : Tags.Add(GetLang("LangDownloadModTypeTransportation"))
+                            Case "storage" : Tags.Add(GetLang("LangDownloadModTypeStorage"))
+                            Case "decoration" : If Type <> CompType.ResourcePack Then Tags.Add(GetLang("LangDownloadModTypeDecoration"))
+                            Case "mobs" : If Type <> CompType.ResourcePack Then Tags.Add(GetLang("LangDownloadModTypeMobs"))
+                            Case "equipment" : If Type <> CompType.ResourcePack Then Tags.Add(GetLang("LangDownloadModTypeEquipment"))
+                            Case "social" : Tags.Add(GetLang("LangDownloadModTypeServer"))
+                            Case "library" : Tags.Add(GetLang("LangDownloadModTypeLib"))
                             '整合包
-                            Case "multiplayer" : Tags.Add("多人")
-                            Case "challenging" : Tags.Add("硬核")
-                            Case "combat" : Tags.Add("战斗")
-                            Case "quests" : Tags.Add("任务")
-                            Case "kitchen-sink" : Tags.Add("水槽包")
-                            Case "lightweight" : Tags.Add("轻量")
+                            Case "multiplayer" : Tags.Add(GetLang("LangDownloadModpackTypeMulti"))
+                            Case "challenging" : Tags.Add(GetLang("LangDownloadModpackTypeChallenging"))
+                            Case "combat" : Tags.Add(GetLang("LangDownloadModpackTypeCombat"))
+                            Case "quests" : Tags.Add(GetLang("LangDownloadModpackTypeQuests"))
+                            Case "kitchen-sink" : Tags.Add(GetLang("LangDownloadModpackTypeSink"))
+                            Case "lightweight" : Tags.Add(GetLang("LangDownloadModpackTypeLightWeight"))
                             '资源包
-                            Case "simplistic" : Tags.Add("简洁")
-                            Case "combat" : Tags.Add("战斗")
-                            Case "tweaks" : Tags.Add("改良")
+                            Case "simplistic" : Tags.Add(GetLang("LangDownloadResourcepackTypeSimplistic"))
+                            Case "combat" : Tags.Add(GetLang("LangDownloadResourcepackTypeCombat"))
+                            Case "tweaks" : Tags.Add(GetLang("LangDownloadResourcepackTypeTweaks"))
 
-                            Case "8x-" : Tags.Add("极简")
+                            Case "8x-" : Tags.Add(GetLang("LangDownloadResourcepackTypeLowerThan8x"))
                             Case "16x" : Tags.Add("16x")
                             Case "32x" : Tags.Add("32x")
                             Case "48x" : Tags.Add("48x")
                             Case "64x" : Tags.Add("64x")
                             Case "128x" : Tags.Add("128x")
                             Case "256x" : Tags.Add("256x")
-                            Case "512x+" : Tags.Add("超高清")
+                            Case "512x+" : Tags.Add(GetLang("LangDownloadResourcepackTypeHigherThan512x"))
 
-                            Case "audio" : Tags.Add("含声音")
-                            Case "fonts" : Tags.Add("含字体")
-                            Case "models" : Tags.Add("含模型")
-                            Case "gui" : Tags.Add("含 UI")
-                            Case "locale" : Tags.Add("含语言")
-                            Case "core-shaders" : Tags.Add("核心着色器")
-                            Case "modded" : Tags.Add("兼容 Mod")
+                            Case "audio" : Tags.Add(GetLang("LangDownloadResourcepackTypeAudio"))
+                            Case "fonts" : Tags.Add(GetLang("LangDownloadResourcepackTypeFonts"))
+                            Case "models" : Tags.Add(GetLang("LangDownloadResourcepackTypeModels"))
+                            Case "gui" : Tags.Add(GetLang("LangDownloadResourcepackTypeGUI"))
+                            Case "locale" : Tags.Add(GetLang("LangDownloadResourcepackTypeLocale"))
+                            Case "core-shaders" : Tags.Add(GetLang("LangDownloadResourcepackTypeCoreShader"))
+                            Case "modded" : Tags.Add(GetLang("LangDownloadResourcepackTypeModed"))
                             '光影包
-                            Case "fantasy" : Tags.Add("幻想风")
-                            Case "semi-realistic" : Tags.Add("半写实风")
-                            Case "cartoon" : Tags.Add("卡通风")
+                            Case "fantasy" : Tags.Add(GetLang("LangDownloadShaderTypeFantasy"))
+                            Case "semi-realistic" : Tags.Add(GetLang("LangDownloadShaderTypeSemiRealistic"))
+                            Case "cartoon" : Tags.Add(GetLang("LangDownloadShaderTypeCartoon"))
                             '暂时不添加性能负荷 Tag
-                            'Case "potato" : Tags.Add("极低")
-                            'Case "low" : Tags.Add("低")
-                            'Case "medium" : Tags.Add("中")
-                            'Case "high" : Tags.Add("高")
-                            Case "colored-lighting" : Tags.Add("彩色光照")
-                            Case "path-tracing" : Tags.Add("路径追踪")
-                            Case "pbr" : Tags.Add("PBR")
-                            Case "reflections" : Tags.Add("反射")
+                            'Case "potato" : Tags.Add(GetLang("LangDownloadShaderTypePotato"))
+                            'Case "low" : Tags.Add(GetLang("LangDownloadShaderTypeLow"))
+                            'Case "medium" : Tags.Add(GetLang("LangDownloadShaderTypeMedium"))
+                            'Case "high" : Tags.Add(GetLang("LangDownloadShaderTypeHigh"))
+                            Case "colored-lighting" : Tags.Add(GetLang("LangDownloadShaderTypeColoredLighting"))
+                            Case "path-tracing" : Tags.Add(GetLang("LangDownloadShaderTypePathTracing"))
+                            Case "pbr" : Tags.Add(GetLang("LangDownloadShaderTypePBR"))
+                            Case "reflections" : Tags.Add(GetLang("LangDownloadShaderTypeReflections"))
 
                             Case "iris" : Tags.Add("Iris")
                             Case "optifine" : Tags.Add("OptiFine")
-                            Case "vanilla" : Tags.Add("原版可用")
+                            Case "vanilla" : Tags.Add(GetLang("LangDownloadShaderTypeVanilla"))
                         End Select
                     Next
 #End Region
                 End If
-                If Not Tags.Any() Then Tags.Add("其他")
+                If Not Tags.Any() Then Tags.Add(GetLang("LangDownloadModpackTypeOther"))
                 Tags.Sort()
                 ModLoaders.Sort()
             End If
@@ -537,7 +538,7 @@
             '获取版本描述
             Dim GameVersionDescription As String
             If Drops Is Nothing OrElse Not Drops.Any() Then
-                GameVersionDescription = "仅快照版本" '#5412
+                GameVersionDescription = GetLang("LangModCompVersionSnapshotOnly")
             Else
                 Dim Segments As New List(Of String)
                 Dim IsOld As Boolean = False
@@ -564,7 +565,7 @@
                     ElseIf AllDrops IsNot Nothing AndAlso StartDrop >= AllDrops.First Then
                         If EndDrop < 100 Then
                             Segments.Clear()
-                            Segments.Add("全版本")
+                            Segments.Add(GetLang("LangModCompVersionAll"))
                             Exit For
                         Else
                             Segments.Add(EndName & "+")
@@ -587,14 +588,14 @@
             Select Case ModLoadersForDesc.Count
                 Case 0
                     If ModLoaders.Count = 1 Then
-                        ModLoaderDescriptionFull = "仅 " & ModLoaders.Single.ToString
+                        ModLoaderDescriptionFull = GetLang("LangModCompVersionOnly", ModLoaders.Single.ToString)
                         ModLoaderDescriptionPart = ModLoaders.Single.ToString
                     Else
-                        ModLoaderDescriptionFull = "未知"
+                        ModLoaderDescriptionFull = GetLang("LangModCompVersionUnknown")
                         ModLoaderDescriptionPart = ""
                     End If
                 Case 1
-                    ModLoaderDescriptionFull = "仅 " & ModLoadersForDesc.Single.ToString
+                    ModLoaderDescriptionFull = GetLang("LangModCompVersionOnly", ModLoadersForDesc.Single.ToString)
                     ModLoaderDescriptionPart = ModLoadersForDesc.Single.ToString
                 Case Else
                     Dim NewestDrop As Integer = If(Drops.Any, Drops.First, 9999)
@@ -602,7 +603,7 @@
                        (NewestDrop < 140 OrElse ModLoaders.Contains(CompModLoaderType.Fabric)) AndAlso
                        (NewestDrop < 200 OrElse ModLoaders.Contains(CompModLoaderType.NeoForge)) AndAlso
                        (NewestDrop < 140 OrElse ModLoaders.Contains(CompModLoaderType.Quilt) OrElse Setup.Get("ToolDownloadIgnoreQuilt")) Then
-                        ModLoaderDescriptionFull = "任意"
+                        ModLoaderDescriptionFull = GetLang("LangModCompVersionAny")
                         ModLoaderDescriptionPart = ""
                     Else
                         ModLoaderDescriptionFull = ModLoadersForDesc.Join(" / ")
@@ -650,9 +651,7 @@
                     NewItem.ColumnTime2.Width = New GridLength(0)
                     NewItem.ColumnTime3.Width = New GridLength(0)
                 End If
-                NewItem.LabDownload.Text =
-                    If(DownloadCount > 100000000, Math.Round(DownloadCount / 100000000, 2) & " 亿",
-                        If(DownloadCount > 100000, Math.Floor(DownloadCount / 10000) & " 万", DownloadCount))
+                NewItem.LabDownload.Text = GetLocationNum(DownloadCount)
                 Return NewItem
             End Function) With {.Height = 64}
         End Function
@@ -730,7 +729,7 @@
                     '将 “Forge” 等提示改为 “Forge 版”
                     If IsModLoaderDescription AndAlso Not Ex.Contains("版") AndAlso
                         Ex.ToLower.Replace("forge", "").Replace("fabric", "").Replace("quilt", "").Length <= 3 Then
-                        Ex = Ex.Replace("Edition", "").Replace("edition", "").Trim.Capitalize & " 版"
+                        Ex = GetLang("LangModCompEdition", Ex.Replace("Edition", "").Replace("edition", "").Trim.Capitalize)
                     End If
                     '将 “forge” 等词语的首字母大写
                     Ex = Ex.Replace("forge", "Forge").Replace("neo", "Neo").Replace("fabric", "Fabric").Replace("quilt", "Quilt")
@@ -967,7 +966,7 @@ NoSubtitle:
             Return
         ElseIf Not Request.CanContinue Then
             If Not Request.Storage.Results.Any() Then
-                Throw New Exception("没有符合条件的结果")
+                Throw New Exception(GetLang("LangModCompExceptionNoResult"))
             Else
                 Log($"[Comp] 已有 {Request.Storage.Results.Count} 个结果，少于所需的 {Request.TargetResultCount} 个结果，但无法继续获取，结束处理")
                 Return
@@ -1158,21 +1157,21 @@ Retry:
                     Throw [Error]
                 Else
                     If IsChineseSearch AndAlso Not (Request.Type = CompType.Mod OrElse Request.Type = CompType.DataPack) Then
-                        Throw New Exception("没有搜索结果，请尝试使用英文搜索")
+                        Throw New Exception(GetLang("LangModCompSearchInEnglish"))
                     ElseIf Request.Source = CompSourceType.CurseForge AndAlso Request.Tag.StartsWithF("/") Then
-                        Throw New Exception("CurseForge 不兼容所选的类型")
+                        Throw New Exception(GetLang("LangModCompIncompatibleOptionCurseForge"))
                     ElseIf Request.Source = CompSourceType.Modrinth AndAlso Request.Tag.EndsWithF("/") Then
-                        Throw New Exception("Modrinth 不兼容所选的类型")
+                        Throw New Exception(GetLang("LangModCompIncompatibleOptionModrinth"))
                     Else
-                        Throw New Exception("没有搜索结果")
+                        Throw New Exception(GetLang("LangModCompSearchNoResult"))
                     End If
                 End If
             ElseIf [Error] IsNot Nothing Then
                 '有结果但是有错误
                 If CurseForgeFailed Then
-                    Storage.ErrorMessage = $"无法连接到 CurseForge，所以目前仅显示了来自 Modrinth 的内容，搜索结果可能不全。{vbCrLf}请稍后再试，或使用 VPN 改善网络环境。"
+                    Storage.ErrorMessage = GetLang("LangDownloadModpackConnectCurseForge")
                 Else
-                    Storage.ErrorMessage = $"无法连接到 Modrinth，所以目前仅显示了来自 CurseForge 的内容，搜索结果可能不全。{vbCrLf}请稍后再试，或使用 VPN 改善网络环境。"
+                    Storage.ErrorMessage = GetLang("LangDownloadModpackConnectModrinthFail")
                 End If
             End If
 
@@ -1324,11 +1323,11 @@ Retry:
             Get
                 Select Case Status
                     Case CompFileStatus.Release
-                        Return "正式版"
+                        Return GetLang("LangModCompModStatusDescRelease")
                     Case CompFileStatus.Beta
-                        Return If(ModeDebug, "Beta 版", "测试版")
+                        Return If(ModeDebug, "Beta", GetLang("LangModCompModStatusDescBeta"))
                     Case Else
-                        Return If(ModeDebug, "Alpha 版", "早期测试版")
+                        Return If(ModeDebug, "Alpha", GetLang("LangModCompModStatusDescAlpha"))
                 End Select
             End Get
         End Property
@@ -1430,14 +1429,14 @@ Retry:
                     End If
                     'GameVersions
                     Dim RawVersions As List(Of String) = Data("gameVersions").Select(Function(t) t.ToString.Trim.ToLower).ToList
-                    GameVersions = RawVersions.Where(Function(v) McVersion.IsFormatFit(v)).Select(Function(v) v.Replace("-snapshot", " 预览版")).ToList
+                    GameVersions = RawVersions.Where(Function(v) McVersion.IsFormatFit(v)).Select(Function(v) v.Replace("-snapshot", " " & GetLang("LangModCompVersionSnapshot"))).ToList
                     If GameVersions.Count > 1 Then
                         GameVersions = GameVersions.SortByComparison(AddressOf CompareVersionGE).ToList
                         If Type = CompType.ModPack Then GameVersions = New List(Of String) From {GameVersions(0)} '整合包理应只 “支持” 一个版本
                     ElseIf GameVersions.Count = 1 Then
                         GameVersions = GameVersions.ToList
                     Else
-                        GameVersions = New List(Of String) From {"未知版本"}
+                        GameVersions = New List(Of String) From {GetLang("LangModCompVersionUnknownVersion")}
                     End If
                     'ModLoaders
                     ModLoaders = New List(Of CompModLoaderType)
@@ -1492,7 +1491,7 @@ Retry:
                     'GameVersions
                     Dim RawVersions As List(Of String) = Data("game_versions").Select(Function(t) t.ToString.Trim.ToLower).ToList
                     GameVersions = RawVersions.Where(Function(v) v.Contains(".")).
-                                               Select(Function(v) If(v.Contains("-"), v.BeforeFirst("-") & " 预览版", If(v.StartsWithF("b1."), "远古版本", v))).ToList
+                                               Select(Function(v) If(v.Contains("-"), v.BeforeFirst("-") & " " & GetLang("LangModCompVersionSnapshot"), If(v.StartsWithF("b1."), GetLang("LangDownloadAncientVersion"), v))).ToList
                     If GameVersions.Count > 1 Then
                         GameVersions = GameVersions.SortByComparison(AddressOf CompareVersionGE).ToList
                         If Type = CompType.ModPack Then GameVersions = New List(Of String) From {GameVersions(0)} '整合包理应只 “支持” 一个版本
@@ -1501,7 +1500,7 @@ Retry:
                     ElseIf RawVersions.Any(Function(v) RegexCheck(v, "[0-9]{2}w[0-9]{2}[a-z]")) Then
                         GameVersions = RawVersions.Where(Function(v) RegexCheck(v, "[0-9]{2}w[0-9]{2}[a-z]")).ToList
                     Else
-                        GameVersions = New List(Of String) From {"未知版本"}
+                        GameVersions = New List(Of String) From {GetLang("LangModCompVersionUnknownVersion")}
                     End If
 #End Region
                 End If
@@ -1554,22 +1553,22 @@ Retry:
                 Dim Title As String = If(BadDisplayName, FileName, DisplayName)
                 Dim Info As New List(Of String)
                 If Title <> FileName.BeforeLast(".") Then Info.Add(FileName.BeforeLast("."))
-                If Dependencies.Any Then Info.Add(Dependencies.Count & " 项前置")
+                If Dependencies.Any Then Info.Add(GetLangByNumIsPlural(Dependencies.Count, "LangModCompModDependentCount", GetLocationNum(Dependencies.Count)))
                 If GameVersions.All(
                 Function(VerName)
                     Return Not VerName.Contains(".") OrElse {"w", "snapshot", "rc", "pre", "experimental", "-"}.Any(Function(s) VerName.ContainsF(s, True))
-                End Function) Then Info.Add($"游戏版本 {Join(GameVersions, "、")}")
+                End Function) Then Info.Add($"{GetLang("LangModCompModGameVersion")} {Join(GameVersions, "、")}")
                 If DownloadCount > 0 Then 'CurseForge 的下载次数经常错误地返回 0
-                    Info.Add("下载 " & If(DownloadCount > 100000, Math.Round(DownloadCount / 10000) & " 万次", DownloadCount & " 次"))
+                    Info.Add(GetLangByNumIsPlural(DownloadCount, "LangModCompModDownload", GetLocationNum(DownloadCount)))
                 End If
-                Info.Add("更新于 " & GetTimeSpanString(ReleaseDate - Date.Now, False))
+                Info.Add(GetLang("LangModCompModUpdateTime", GetTimeSpanString(ReleaseDate - Date.Now, False)))
                 If Status <> CompFileStatus.Release Then Info.Add(StatusDescription)
 
                 '建立控件
                 Dim NewItem As New MyListItem With {
                     .Title = Title,
                     .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Me,
-                    .Info = Info.Join("，")
+                    .Info = Info.Join(GetLang("LangComma"))
                 }
                 Select Case Status
                     Case CompFileStatus.Release
@@ -1583,7 +1582,7 @@ Retry:
 
                 '建立另存为按钮
                 If OnSaveClick IsNot Nothing Then
-                    Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = "另存为"}
+                    Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = GetLang("LangModCompModSaveAs")}
                     ToolTipService.SetPlacement(BtnSave, Primitives.PlacementMode.Center)
                     ToolTipService.SetVerticalOffset(BtnSave, 30)
                     ToolTipService.SetHorizontalOffset(BtnSave, 2)
@@ -1699,14 +1698,14 @@ Retry:
             Return CompProjectCache.ContainsKey(dep)
         End Function).ToList
         '添加开头间隔
-        Stack.Children.Add(New TextBlock With {.Text = "前置资源", .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 2, 0, 5)})
+        Stack.Children.Add(New TextBlock With {.Text = GetLang("LangModCompModDependent"), .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 2, 0, 5)})
         '添加前置列表
         For Each Dep In Deps
             Dim Item = CompProjectCache(Dep).ToCompItem(False, False)
             Stack.Children.Add(Item)
         Next
         '添加结尾间隔
-        Stack.Children.Add(New TextBlock With {.Text = "版本列表", .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 12, 0, 5)})
+        Stack.Children.Add(New TextBlock With {.Text = GetLang("LangModCompModAlternateVersion"), .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 12, 0, 5)})
     End Sub
 
 #End Region

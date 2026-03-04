@@ -12,9 +12,9 @@
             Dim NewText As String
             Select Case ThemeDontClick
                 Case 1
-                    NewText = "眼瞎白"
+                    NewText = GetLang("LangThemeRealWhite")
                 Case 2
-                    NewText = "真·滑稽彩"
+                    NewText = GetLang("LangThemeRealFunny")
                 Case Else
                     NewText = "？？？"
             End Select
@@ -40,10 +40,10 @@
 #End If
 
         '设置解锁
-        If Not RadioLauncherTheme8.IsEnabled Then LabLauncherTheme8Copy.ToolTip = "累积赞助达到 ¥23.33 后，在爱发电私信发送【解锁码】以解锁。" & vbCrLf & "右键打开赞助页面，如果觉得 PCL 做得还不错就支持一下吧 =w=！"
-        RadioLauncherTheme8.ToolTip = "累积赞助达到 ¥23.33 后，在爱发电私信发送【解锁码】以解锁"
-        If Not RadioLauncherTheme9.IsEnabled Then LabLauncherTheme9Copy.ToolTip = "· 反馈一个 Bug，在标记为 [完成] 后回复识别码要求解锁（右键打开反馈页面）" & vbCrLf & "· 提交一个 Pull Request 或主页预设，在标记为 [完成] 后回复识别码要求解锁"
-        RadioLauncherTheme9.ToolTip = "· 反馈一个 Bug，在标记为 [完成] 后回复识别码要求解锁" & vbCrLf & "· 提交一个 Pull Request 或主页预设，在标记为 [完成] 后回复识别码要求解锁"
+        If Not RadioLauncherTheme8.IsEnabled Then LabLauncherTheme8Copy.ToolTip = GetLang("LangThemeUnlockCopyTip8")
+        RadioLauncherTheme8.ToolTip = GetLang("LangThemeUnlockTip8")
+        If Not RadioLauncherTheme9.IsEnabled Then LabLauncherTheme9Copy.ToolTip = GetLang("LangThemeUnlockCopyTip9")
+        RadioLauncherTheme9.ToolTip = GetLang("LangThemeUnlockTip9")
         '极客蓝的处理在 ThemeCheck 中
 
     End Sub
@@ -111,10 +111,10 @@
             CheckHiddenOtherTest.Checked = Setup.Get("UiHiddenOtherTest")
 
         Catch ex As NullReferenceException
-            Log(ex, "个性化设置项存在异常，已被自动重置", LogLevel.Msgbox)
+            Log(ex, GetLang("LangHintThemeSetIncorrect"), LogLevel.Msgbox)
             Reset()
         Catch ex As Exception
-            Log(ex, "重载个性化设置时出错", LogLevel.Feedback)
+            Log(ex, GetLang("LangHintThemeSetLoadFail"), LogLevel.Feedback)
         End Try
     End Sub
 
@@ -162,9 +162,9 @@
             Setup.Reset("UiHiddenOtherTest")
 
             Log("[Setup] 已初始化个性化设置！")
-            Hint("已初始化个性化设置", HintType.Green, False)
+            Hint(GetLang("LangHintThemeSetInit"), HintType.Green, False)
         Catch ex As Exception
-            Log(ex, "初始化个性化设置失败", LogLevel.Msgbox)
+            Log(ex, GetLang("LangHintThemeSetInitFail"), LogLevel.Msgbox)
         End Try
 
         Reload()
@@ -201,21 +201,21 @@
             PanBackgroundBlur.Visibility = Visibility.Visible
             PanBackgroundSuit.Visibility = Visibility.Visible
             BtnBackgroundClear.Visibility = Visibility.Visible
-            CardBackground.Title = "背景图片（" & Count & " 张）"
+            CardBackground.Title = GetLang("LangBackgroundPicCount", Count)
         Else
             PanBackgroundOpacity.Visibility = Visibility.Collapsed
             PanBackgroundBlur.Visibility = Visibility.Collapsed
             PanBackgroundSuit.Visibility = Visibility.Collapsed
             BtnBackgroundClear.Visibility = Visibility.Collapsed
-            CardBackground.Title = "背景图片"
+            CardBackground.Title = GetLang("LangBackgroundPic")
         End If
         CardBackground.TriggerForceResize()
     End Sub
     Private Sub BtnBackgroundClear_Click(sender As Object, e As EventArgs) Handles BtnBackgroundClear.Click
-        If MyMsgBox("即将删除背景图片文件夹中的所有文件。" & vbCrLf & "此操作不可撤销，是否确定？", "警告",, "取消", IsWarn:=True) = 1 Then
+        If MyMsgBox(GetLang("LangDialogDeleteAllBackgroundPicContent"), GetLang("LangDialogTitleWarning"),, GetLang("LangDialogBtnCancel"), IsWarn:=True) = 1 Then
             DeleteDirectory(Path & "PCL\Pictures")
             BackgroundRefresh(False, True)
-            Hint("背景图片已清空！", HintType.Green)
+            Hint(GetLang("LangHintBackgroundPicDeleted"), HintType.Green)
         End If
     End Sub
     ''' <summary>
@@ -238,10 +238,10 @@
             If Not Pic.Any() Then
                 If Refresh Then
                     If FrmMain.ImgBack.Visibility = Visibility.Collapsed Then
-                        If IsHint Then Hint("未检测到可用背景图片！", HintType.Red)
+                        If IsHint Then Hint(GetLang("LangHintBackgroundPicNotFound"), HintType.Red)
                     Else
                         FrmMain.ImgBack.Visibility = Visibility.Collapsed
-                        If IsHint Then Hint("背景图片已清除！", HintType.Green)
+                        If IsHint Then Hint(GetLang("LangHintBackgroundPicDeleted"), HintType.Green)
                     End If
                 End If
                 If Not IsNothing(FrmSetupUI) Then FrmSetupUI.BackgroundRefreshUI(False, 0)
@@ -253,14 +253,12 @@
                         FrmMain.ImgBack.Background = New MyBitmap(Address)
                         Setup.Load("UiBackgroundSuit", True)
                         FrmMain.ImgBack.Visibility = Visibility.Visible
-                        If IsHint Then Hint("背景图片已刷新：" & GetFileNameFromPath(Address), HintType.Green, False)
+                        If IsHint Then Hint(GetLang("LangHintBackgroundPicRefreshed") & GetFileNameFromPath(Address), HintType.Green, False)
                     Catch ex As Exception
                         If ex.Message.Contains("参数无效") Then
-                            Log("刷新背景图片失败，该图片文件可能并非标准格式。" & vbCrLf &
-                                "你可以尝试使用画图打开该文件并重新保存，这会让图片变为标准格式。" & vbCrLf &
-                                "文件：" & Address, LogLevel.Msgbox)
+                            Log(GetLang("LangDialogBackgroundPicRefreshFailA") & Address, LogLevel.Msgbox)
                         Else
-                            Log(ex, "刷新背景图片失败（" & Address & "）", LogLevel.Msgbox)
+                            Log(ex, GetLang("LangDialogBackgroundPicRefreshFailB", Address), LogLevel.Msgbox)
                         End If
                     End Try
                 End If
@@ -268,7 +266,7 @@
             End If
 
         Catch ex As Exception
-            Log(ex, "刷新背景图片时出现未知错误", LogLevel.Feedback)
+            Log(ex, GetLang("LangDialogBackgroundPicRefreshFailUnknown"), LogLevel.Feedback)
         End Try
     End Sub
 
@@ -285,10 +283,9 @@
             FrmMain.ImageTitleLogo.Source = Path & "PCL\Logo.png"
         Catch ex As Exception
             If ex.Message.Contains("参数无效") Then
-                Log("改变标题栏图片失败，该图片文件可能并非标准格式。" & vbCrLf &
-                    "你可以尝试使用画图打开该文件并重新保存，这会让图片变为标准格式。", LogLevel.Msgbox)
+                Log(GetLang("LangDialogTitlePicChangeFailA"), LogLevel.Msgbox)
             Else
-                Log(ex, "设置标题栏图片失败", LogLevel.Msgbox)
+                Log(ex, GetLang("LangDialogTitlePicChangeFailB"), LogLevel.Msgbox)
             End If
             FrmMain.ImageTitleLogo.Source = Nothing
         End Try
@@ -303,17 +300,16 @@ Refresh:
                 FrmMain.ImageTitleLogo.Source = Path & "PCL\Logo.png"
             Catch ex As Exception
                 If ex.Message.Contains("参数无效") Then
-                    Log("调整标题栏图片失败，该图片文件可能并非标准格式。" & vbCrLf &
-                    "你可以尝试使用画图打开该文件并重新保存，这会让图片变为标准格式。", LogLevel.Msgbox)
+                    Log(GetLang("LangDialogTitlePicChangeFailC"), LogLevel.Msgbox)
                 Else
-                    Log(ex, "调整标题栏图片失败", LogLevel.Msgbox)
+                    Log(ex, GetLang("LangDialogTitlePicChangeFailD"), LogLevel.Msgbox)
                 End If
                 FrmMain.ImageTitleLogo.Source = Nothing
                 e.Handled = True
                 Try
                     File.Delete(Path & "PCL\Logo.png")
                 Catch exx As Exception
-                    Log(exx, "清理错误的标题栏图片失败", LogLevel.Msgbox)
+                    Log(exx, GetLang("LangDialogTitlePicChangeFailE"), LogLevel.Msgbox)
                 End Try
             End Try
             Return
@@ -330,7 +326,7 @@ Refresh:
                 CopyFile(FileName, Path & "PCL\Logo.png")
                 GoTo Refresh
             Catch ex As Exception
-                Log(ex, "复制标题栏图片失败", LogLevel.Msgbox)
+                Log(ex, GetLang("LangDialogTitlePicChangeFailF"), LogLevel.Msgbox)
             End Try
         End If
     End Sub
@@ -338,9 +334,9 @@ Refresh:
         Try
             File.Delete(Path & "PCL\Logo.png")
             RadioLogoType1.SetChecked(True, True)
-            Hint("标题栏图片已清空！", HintType.Green)
+            Hint(GetLang("LangHintTitlePicEmptied"), HintType.Green)
         Catch ex As Exception
-            Log(ex, "清空标题栏图片失败", LogLevel.Msgbox)
+            Log(ex, GetLang("LangDialogTitlePicEmptyFail"), LogLevel.Msgbox)
         End Try
     End Sub
 
@@ -357,22 +353,20 @@ Refresh:
             PanMusicVolume.Visibility = Visibility.Visible
             PanMusicDetail.Visibility = Visibility.Visible
             BtnMusicClear.Visibility = Visibility.Visible
-            CardMusic.Title = "背景音乐（" &
-                EnumerateFiles(Path & "PCL\Musics\").Count(Function(f) Not {".ini", ".jpg", ".txt", ".cfg", ".lrc", ".db", ".png"}.Contains(f.Extension.ToLower)) &
-                " 首）"
+            CardMusic.Title = GetLang("LangBackgroundMusicCount", EnumerateFiles(Path & "PCL\Musics\").Count(Function(f) Not {".ini", ".jpg", ".txt", ".cfg", ".lrc", ".db", ".png"}.Contains(f.Extension.ToLower)))
         Else
             PanMusicVolume.Visibility = Visibility.Collapsed
             PanMusicDetail.Visibility = Visibility.Collapsed
             BtnMusicClear.Visibility = Visibility.Collapsed
-            CardMusic.Title = "背景音乐"
+            CardMusic.Title = GetLang("LangBackgroundMusic")
         End If
         CardMusic.TriggerForceResize()
     End Sub
     Private Sub BtnMusicClear_Click(sender As Object, e As EventArgs) Handles BtnMusicClear.Click
-        If MyMsgBox("即将删除背景音乐文件夹中的所有文件。" & vbCrLf & "此操作不可撤销，是否确定？", "警告",, "取消", IsWarn:=True) = 1 Then
+        If MyMsgBox(GetLang("LangDialogBackgroundMusicDeleteContent"), GetLang("LangDialogTitleWarning"),, GetLang("LangDialogBtnCancel"), IsWarn:=True) = 1 Then
             RunInThread(
             Sub()
-                Hint("正在删除背景音乐……")
+                Hint(GetLang("LangHintBackgroundMusicDeleting"))
                 '停止播放音乐
                 MusicNAudio = Nothing
                 MusicWaitingList = New List(Of String)
@@ -381,15 +375,15 @@ Refresh:
                 '删除文件
                 Try
                     DeleteDirectory(Path & "PCL\Musics")
-                    Hint("背景音乐已删除！", HintType.Green)
+                    Hint(GetLang("LangHintBackgroundMusicDeleted"), HintType.Green)
                 Catch ex As Exception
-                    Log(ex, "删除背景音乐失败", LogLevel.Msgbox)
+                    Log(ex, GetLang("LangHintBackgroundMusicDeleteFail"), LogLevel.Msgbox)
                 End Try
                 Try
                     Directory.CreateDirectory(Path & "PCL\Musics")
                     RunInUi(Sub() MusicRefreshPlay(False))
                 Catch ex As Exception
-                    Log(ex, "重建背景音乐文件夹失败", LogLevel.Msgbox)
+                    Log(ex, GetLang("LangHintBackgroundMusicCreateFolderFail"), LogLevel.Msgbox)
                 End Try
             End Sub)
         End If
@@ -407,26 +401,21 @@ Refresh:
     Private Sub BtnCustomFile_Click(sender As Object, e As EventArgs) Handles BtnCustomFile.Click
         Try
             If File.Exists(Path & "PCL\Custom.xaml") Then
-                If MyMsgBox("当前已存在布局文件，继续生成教学文件将会覆盖现有布局文件！", "覆盖确认", "继续", "取消", IsWarn:=True) = 2 Then Return
+                If MyMsgBox(GetLang("LangDialogCustomPageOverwriteConfirmationContent"), GetLang("LangDialogCustomHomePageReplaceTitle"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel"), IsWarn:=True) = 2 Then Return
             End If
             WriteFile(Path & "PCL\Custom.xaml", GetResources("Custom"))
-            Hint("教学文件已生成！", HintType.Green)
+            Hint(GetLang("LangHintCustomPageOverwriteSuccess"), HintType.Green)
             OpenExplorer(Path & "PCL\Custom.xaml")
         Catch ex As Exception
-            Log(ex, "生成教学文件失败", LogLevel.Feedback)
+            Log(ex, GetLang("LangDialogCustomPageOverwriteFail"), LogLevel.Feedback)
         End Try
     End Sub
     Private Sub BtnCustomRefresh_Click() Handles BtnCustomRefresh.Click
         FrmLaunchRight.ForceRefresh()
-        Hint("已刷新主页！", HintType.Green)
+        Hint(GetLang("LangHintCustomPageRefreshed"), HintType.Green)
     End Sub
     Private Sub BtnCustomTutorial_Click(sender As Object, e As EventArgs) Handles BtnCustomTutorial.Click
-        MyMsgBox("1. 点击 生成教学文件 按钮，这会在 PCL 文件夹下生成 Custom.xaml 布局文件。" & vbCrLf &
-                 "2. 使用记事本等工具打开这个文件并进行修改，修改完记得保存。" & vbCrLf &
-                 "3. 点击 刷新主页 按钮，查看主页现在长啥样了。" & vbCrLf &
-                 vbCrLf &
-                 "你可以在生成教学文件后直接刷新主页，对照着进行修改，更有助于理解。" & vbCrLf &
-                 "直接将主页文件拖进 PCL 窗口也可以快捷加载。", "主页自定义教程")
+        MyMsgBox(GetLang("LangDialogCustomPageTeachContent"), GetLang("LangDialogCustomPageTeachTitle"))
     End Sub
 
     '主题
@@ -438,21 +427,17 @@ Refresh:
             AaOpacity(RadioLauncherTheme5, -1, 1000 * AniSpeed)
         }, "ThemeUnlock")
         If RadioLauncherTheme5Gray.Opacity < 0.08 Then
-            ThemeUnlock(5, UnlockHint:="隐藏主题 玄素黑 已解锁！")
+            ThemeUnlock(5, UnlockHint:=GetLang("LangThemeBackUnlock"))
             AniStop("ThemeUnlock")
             RadioLauncherTheme5.Checked = True
         End If
     End Sub
     Private Sub LabLauncherTheme11Click_MouseLeftButtonUp() Handles LabLauncherTheme11Click.MouseLeftButtonUp, RadioLauncherTheme11.MouseRightButtonUp
         If LabLauncherTheme11Click.Visibility = Visibility.Collapsed OrElse If(LabLauncherTheme11Click.ToolTip, "").ToString.Contains("点击") Then
-            If MyMsgBox(
-                "1. 不爬取或攻击相关服务或网站，不盗取相关账号，没有谜题可以或需要以此来解决。" & vbCrLf &
-                "2. 不得篡改或损毁相关公开信息，请尽量让它们保持原状。" & vbCrLf &
-                "3. 在你感到迷茫的时候，看看回声洞可能会给你带来惊喜。" & vbCrLf & vbCrLf &
-                "若违规，可能会被从任意相关群中踢出！",
-                "解密游戏的基本规则", "我知道了", "恕我拒绝") = 1 Then
-                MyMsgBox("你需要用自己的智慧来找到下一步的线索……" & vbCrLf &
-                         "初始线索：gnp.dorC61\60\20\0202\moc.x1xa.2s\\:sp" & "T".ToLower & "th", "解密游戏") '防止触发病毒检测规则
+            If MyMsgBox(GetLang("LangDialogThemeUnlockGameContent"),
+                GetLang("LangDialogThemeUnlockGameTitle"), GetLang("LangDialogThemeUnlockGameAccept"), GetLang("LangDialogThemeUnlockGameDeny")) = 1 Then
+                MyMsgBox(GetLang("LangDialogThemeUnlockGameFirstClueContent") &
+                         "gnp.dorC61\60\20\0202\moc.x1xa.2s\\:sp" & "T".ToLower & "th", GetLang("LangDialogThemeUnlockGameFirstClueTitle")) '防止触发病毒检测规则
             End If
         End If
     End Sub
@@ -564,23 +549,23 @@ Refresh:
             End If
             If OtherAvaliableCount = 1 AndAlso Not HiddenForceShow Then
                 If Not Setup.Get("UiHiddenOtherHelp") Then
-                    FrmMain.BtnTitleSelect4.Text = "帮助"
+                    FrmMain.BtnTitleSelect4.Text = GetLang("LangOtherHelp")
                 ElseIf Not Setup.Get("UiHiddenOtherAbout") Then
-                    FrmMain.BtnTitleSelect4.Text = "关于"
+                    FrmMain.BtnTitleSelect4.Text = GetLang("LangOtherAbout")
                 Else
-                    FrmMain.BtnTitleSelect4.Text = "百宝箱"
+                    FrmMain.BtnTitleSelect4.Text = GetLang("LangOtherTool")
                 End If
             Else
-                FrmMain.BtnTitleSelect4.Text = "更多"
+                FrmMain.BtnTitleSelect4.Text = GetLang("LangOtherMore")
             End If
             '各个页面的入口
             If FrmMain.PageCurrent = FormMain.PageType.InstanceSelect Then FrmSelectRight.BtnEmptyDownload_Loaded()
             If FrmMain.PageCurrent = FormMain.PageType.Launch Then FrmLaunchLeft.RefreshButtonsUI()
             If FrmMain.PageCurrent = FormMain.PageType.InstanceSetup AndAlso FrmInstanceModDisabled IsNot Nothing Then FrmInstanceModDisabled.BtnDownload_Loaded()
             '备注
-            If FrmSetupUI IsNot Nothing Then FrmSetupUI.CardSwitch.Title = If(HiddenForceShow, "功能隐藏（已暂时关闭，按 F12 以重新启用）", "功能隐藏")
+            If FrmSetupUI IsNot Nothing Then FrmSetupUI.CardSwitch.Title = If(HiddenForceShow, GetLang("LangHiddenModeTitleA"), GetLang("LangHiddenModeTitleB"))
         Catch ex As Exception
-            Log(ex, "刷新功能隐藏项目失败", LogLevel.Feedback)
+            Log(ex, GetLang("LangHiddenModeFail"), LogLevel.Feedback)
         End Try
     End Sub
 
@@ -663,7 +648,7 @@ Refresh:
 
     '警告提示
     Private Sub HiddenHint(sender As Object, user As Boolean) Handles CheckHiddenFunctionHidden.Change, CheckHiddenPageSetup.Change, CheckHiddenSetupUI.Change
-        If AniControlEnabled = 0 AndAlso sender.Checked Then Hint("按 F12 即可暂时关闭功能隐藏设置。千万别忘了，要不然设置就改不回来了……")
+        If AniControlEnabled = 0 AndAlso sender.Checked Then Hint(GetLang("LangHintHiddenModeTip"))
     End Sub
 
 #End Region
@@ -700,7 +685,7 @@ Refresh:
             End If
         End Function
         SliderBackgroundOpacity.GetHintText = Function(v) Math.Round(v * 0.1) & "%"
-        SliderBackgroundBlur.GetHintText = Function(v) v & " 像素"
+        SliderBackgroundBlur.GetHintText = Function(v) v & " " & GetLang("LangSetupUIBackgroundPicPixel")
     End Sub
 
 End Class

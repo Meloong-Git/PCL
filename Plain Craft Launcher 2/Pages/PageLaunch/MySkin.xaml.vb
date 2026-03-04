@@ -11,7 +11,7 @@
         End Get
         Set(value As String)
             _Address = value
-            ToolTip = If(_Address = "", "加载中", "点击更换皮肤（右键查看更多选项）")
+            ToolTip = If(_Address = "", GetLang("LangMySkinLoading"), GetLang("LangMySkinClickToChange"))
         End Set
     End Property
     Public Loader As LoaderTask(Of EqualableList(Of String), String)
@@ -47,12 +47,12 @@
     Public Shared Sub Save(Loader As LoaderTask(Of EqualableList(Of String), String))
         Dim Address = Loader.Output
         If Not Loader.State = LoadState.Finished Then
-            Hint("皮肤正在获取中，请稍候！", HintType.Red)
+            Hint(GetLang("LangMySkinHintLoading"), HintType.Red)
             If Not Loader.State = LoadState.Loading Then Loader.Start()
             Return
         End If
         Try
-            Dim FileAddress As String = SelectSaveFile("选取保存皮肤的位置", GetFileNameFromPath(Address), "皮肤图片文件(*.png)|*.png")
+            Dim FileAddress As String = SelectSaveFile(GetLang("LangMySkinDialogChoseSavePath"), GetFileNameFromPath(Address), "皮肤图片文件(*.png)|*.png")
             If FileAddress.Contains("\") Then
                 File.Delete(FileAddress)
                 If Address.StartsWith(PathImage) Then
@@ -61,10 +61,10 @@
                 Else
                     CopyFile(Address, FileAddress)
                 End If
-                Hint("皮肤保存成功！", HintType.Green)
+                Hint(GetLang("LangMySkinHintSaveSuccess"), HintType.Green)
             End If
         Catch ex As Exception
-            Log(ex, "保存皮肤失败", LogLevel.Hint)
+            Log(ex, GetLang("LangMySkinHintSaveFail"), LogLevel.Hint)
         End Try
     End Sub
     Private Sub BtnSkinSave_Checked(sender As MyMenuItem, e As RoutedEventArgs) Handles BtnSkinSave.Checked
@@ -85,7 +85,7 @@
             Try
                 Image = New MyBitmap(Address)
             Catch ex As Exception '#2272
-                Log(ex, $"皮肤文件已损坏：{Address}", LogLevel.Hint)
+                Log(ex, GetLang("LangMySkinHintSkinFileCorruption") & Address, LogLevel.Hint)
                 File.Delete(Address)
                 Return
             End Try
@@ -143,12 +143,12 @@
         Next
         If FrmLaunchLeft IsNot Nothing AndAlso HasLoaderRunning Then
             '由于 Abort 不是实时的，暂时不会释放文件，会导致删除报错，故只能取消执行
-            Hint("有正在获取中的皮肤，请稍后再试！", HintType.Blue)
+            Hint(GetLang("LangMySkinHintExistSkinFileGetTask"), HintType.Blue)
         Else
             RunInThread(
             Sub()
                 Try
-                    Hint("正在刷新头像……")
+                    Hint(GetLang("LangMySkinHintRefreshing"))
                     '清空缓存
                     Log("[Skin] 正在清空皮肤缓存")
                     If Directory.Exists(PathTemp & "Cache\Skin") Then DeleteDirectory(PathTemp & "Cache\Skin")
@@ -161,9 +161,9 @@
                     For Each SkinLoader In If(sender IsNot Nothing, {sender}, {PageLaunchLeft.SkinLegacy, PageLaunchLeft.SkinMs})
                         SkinLoader.WaitForExit(IsForceRestart:=True)
                     Next
-                    Hint("已刷新头像！", HintType.Green)
+                    Hint(GetLang("LangMySkinHintRefreshed"), HintType.Green)
                 Catch ex As Exception
-                    Log(ex, "刷新皮肤缓存失败", LogLevel.Msgbox)
+                    Log(ex, GetLang("LangMySkinHintRefreshFail"), LogLevel.Msgbox)
                 End Try
             End Sub)
         End If
@@ -184,7 +184,7 @@
                     SkinLoader.WaitForExit(IsForceRestart:=True)
                 Next
                 '完成提示
-                Hint("更改皮肤成功！", HintType.Green)
+                Hint(GetLang("LangMySkinHintChangeSuccess"), HintType.Green)
             Catch ex As Exception
                 Log(ex, "更改正版皮肤后刷新皮肤失败", LogLevel.Feedback)
             End Try
@@ -208,14 +208,14 @@
     Public Sub BtnSkinCape_Click() Handles BtnSkinCape.Click
         '检查条件，获取新披风
         If IsChanging Then
-            Hint("正在更改披风中，请稍候！")
+            Hint(GetLang("LangMySkinHintChanging"))
             Return
         End If
         If McLoginMsLoader.State = LoadState.Failed Then
-            Hint("登录失败，无法更改披风！", HintType.Red)
+            Hint(GetLang("LangMySkinHintChangFailByLoginFail"), HintType.Red)
             Return
         End If
-        Hint("正在获取披风列表，请稍候……")
+        Hint(GetLang("LangMySkinHintGettingCape"))
         IsChanging = True
         '开始实际获取
         RunInNewThread(
@@ -225,7 +225,7 @@ Retry:
                 '获取登录信息
                 If McLoginMsLoader.State <> LoadState.Finished Then McLoginMsLoader.WaitForExit(PageLoginMsSkin.GetLoginData())
                 If McLoginMsLoader.State <> LoadState.Finished Then
-                    Hint("登录失败，无法更改披风！", HintType.Red)
+                    Hint(GetLang("LangMySkinHintChangFailByLoginFail"), HintType.Red)
                     Return
                 End If
                 Dim AccessToken As String = McLoginMsLoader.Output.AccessToken
@@ -237,23 +237,23 @@ Retry:
                 Sub()
                     Try
                         Dim CapeNames As New Dictionary(Of String, String) From {
-                            {"Migrator", "迁移者披风"}, {"MapMaker", "Realms 地图制作者披风"}, {"Moderator", "Mojira 管理员披风"},
-                            {"Translator-Chinese", "Crowdin 中文翻译者披风"}, {"Translator", "Crowdin 翻译者披风"}, {"Cobalt", "Cobalt 披风"},
-                            {"Vanilla", "原版披风"}, {"Minecon2011", "Minecon 2011 参与者披风"}, {"Minecon2012", "Minecon 2012 参与者披风"},
-                            {"Minecon2013", "Minecon 2013 参与者披风"}, {"Minecon2015", "Minecon 2015 参与者披风"}, {"Minecon2016", "Minecon 2016 参与者披风"},
-                            {"Cherry Blossom", "樱花披风"}, {"15th Anniversary", "15 周年纪念披风"}, {"Purple Heart", "紫色心形披风"},
-                            {"Follower's", "追随者披风"}, {"MCC 15th Year", "MCC 15 周年披风"}, {"Minecraft Experience", "村民救援披风"},
-                            {"Mojang Office", "Mojang 办公室披风"}, {"Home", "家园披风"}, {"Menace", "入侵披风"}, {"Yearn", "渴望披风"},
-                            {"Common", "普通披风"}, {"Pan", "薄煎饼披风"}, {"Founder's", "创始人披风"}, {"Copper", "铜披风"}, {"Zombie Horse", "僵尸马披风"}
+                            {"Migrator", GetLang("LangMySkinCapeNameMigrator")}, {"MapMaker", GetLang("LangMySkinCapeNameMapMaker")}, {"Moderator", GetLang("LangMySkinCapeNameModerator")},
+                            {"Translator-Chinese", GetLang("LangMySkinCapeNameTranslator-Chinese")}, {"Translator", GetLang("LangMySkinCapeNameTranslator")}, {"Cobalt", GetLang("LangMySkinCapeNameCobalt")},
+                            {"Vanilla", GetLang("LangMySkinCapeNameVanilla")}, {"Minecon2011", GetLang("LangMySkinCapeNameMinecon2011")}, {"Minecon2012", GetLang("LangMySkinCapeNameMinecon2012")},
+                            {"Minecon2013", GetLang("LangMySkinCapeNameMinecon2013")}, {"Minecon2015", GetLang("LangMySkinCapeNameMinecon2015")}, {"Minecon2016", GetLang("LangMySkinCapeNameMinecon2016")},
+                            {"Cherry Blossom", GetLang("LangMySkinCapeNameCherryBlossom")}, {"15th Anniversary", GetLang("LangMySkinCapeName15th-Anniversary")}, {"Purple Heart", GetLang("LangMySkinCapeNamePurpleHeart")},
+                            {"Follower's", GetLang("LangMySkinCapeNameFollower's")}, {"MCC 15th Year", GetLang("LangMySkinCapeNameMCC15thYear")}, {"Minecraft Experience", GetLang("LangMySkinCapeNameMinecraftExperience")},
+                            {"Mojang Office", GetLang("LangMySkinCapeNameMojangOffice")}, {"Home", GetLang("LangMySkinCapeNameHome")}, {"Menace", GetLang("LangMySkinCapeNameMenace")}, {"Yearn", GetLang("LangMySkinCapeNameYearn")},
+                            {"Common", GetLang("LangMySkinCapeNameCommon")}, {"Pan", GetLang("LangMySkinCapeNamePan")}, {"Founder's", GetLang("LangMySkinCapeNameFounders")}, {"Copper", GetLang("LangMySkinCapeNameCopper")}, {"Zombie Horse", GetLang("LangMySkinCapeNameZombieHorse")}
                         }
                         Dim SelectionControl As New List(Of IMyRadio) From {
-                            New MyRadioBox With {.Text = "无披风", .Checked = Not SkinData("capes").Any(Function(c) c("state")?.ToString = "ACTIVE")}}
+                            New MyRadioBox With {.Text = GetLang("LangMySkinCapeNameNone"), .Checked = Not SkinData("capes").Any(Function(c) c("state")?.ToString = "ACTIVE")}}
                         For Each Cape In SkinData("capes")
                             Dim CapeName As String = Cape("alias").ToString
                             If CapeNames.ContainsKey(CapeName) Then CapeName = CapeNames(CapeName)
                             SelectionControl.Add(New MyRadioBox With {.Text = CapeName, .Checked = Cape("state")?.ToString = "ACTIVE"})
                         Next
-                        SelectedIndex = MyMsgBoxSelect(SelectionControl, "选择披风", "确定", "取消")
+                        SelectedIndex = MyMsgBoxSelect(SelectionControl, GetLang("LangMySkinDialogChooseCape"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel"))
                     Catch ex As Exception
                         Log(ex, "获取玩家皮肤列表失败", LogLevel.Feedback)
                     End Try
@@ -266,10 +266,10 @@ Retry:
                     ContentType:="application/json",
                     Headers:={{"Authorization", "Bearer " & AccessToken}})
                 If Result.Contains("""errorMessage""") Then
-                    Hint("更改披风失败：" & GetJson(Result)("errorMessage").ToString, HintType.Red)
+                    Hint(GetLang("LangMySkinHintChangeCapeFail") & ":" & GetJson(Result)("errorMessage").ToString, HintType.Red)
                     Return
                 Else
-                    Hint("更改披风成功！", HintType.Green)
+                    Hint(GetLang("LangMySkinHintChangeCapeSuccess"), HintType.Green)
                     '更新当前选择的披风
                     For Each Cape In SkinData("capes")
                         Cape("state") = "INACTIVE"
@@ -278,7 +278,7 @@ Retry:
                     McLoginMsLoader.Output.ProfileJson = SkinData.ToString()
                 End If
             Catch ex As Exception
-                Log(ex, "更改披风失败", LogLevel.Hint)
+                Log(ex, GetLang("LangMySkinHintChangeCapeFail"), LogLevel.Hint)
             Finally
                 IsChanging = False
             End Try

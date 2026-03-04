@@ -18,10 +18,31 @@ Public Class Application
 
     '开始
     Private Sub Application_Startup(sender As Object, e As StartupEventArgs) Handles Me.Startup
+        '刷新语言
         Try
-            '动态 DLL 调用（必须尽量在前面，否则模块加载 CacheCow 等 DLL 就可能导致崩溃）
-            AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf AssemblyResolve
-            '开始
+            Application.Current.Resources.MergedDictionaries(1) = New ResourceDictionary With {.Source = New Uri("pack://application:,,,/Resources/Language/" & Lang & ".xaml", UriKind.RelativeOrAbsolute)}
+        Catch ex As Exception
+            MsgBox("无法找到语言资源：" & Lang & vbCrLf & "Language resource cannot be found:" & Lang, MsgBoxStyle.Critical)
+            Lang = GetDefaultLang()
+            WriteReg("Lang", Lang)
+        End Try
+
+        '依照选择语言切换字体
+        Dim LaunchFont As FontFamily
+        Select Case Lang
+            Case "zh-TW", "zh-HK", "lzh", "zh-MARS"
+                LaunchFont = New FontFamily(New Uri("pack://application:,,,/"), "./Resources/#PCL English, Segoe UI, Microsoft JhengHei UI")
+            Case "ja-JP"
+                LaunchFont = New FontFamily(New Uri("pack://application:,,,/"), "./Resources/#PCL English, Segoe UI, Yu Gothic UI, Microsoft YaHei UI")
+            Case "ko-KR"
+                LaunchFont = New FontFamily(New Uri("pack://application:,,,/"), "./Resources/#PCL English, Segoe UI, Malgun Gothic, Microsoft YaHei UI")
+            Case "en-US", "en-GB", "zh-CN", "zh-MEME"
+                LaunchFont = New FontFamily(New Uri("pack://application:,,,/"), "./Resources/#PCL English, Segoe UI, Microsoft YaHei UI")
+            Case Else '非英语的其他西欧语言统一使用 Segoe UI
+                LaunchFont = New FontFamily(New Uri("pack://application:,,,/"), "Segoe UI, ./Resources/#PCL English, Microsoft YaHei UI")
+        End Select
+        SwitchApplicationFont(LaunchFont)
+        Try
             SecretOnApplicationStart()
             '检查参数调用
             If e.Args.Length > 0 Then
@@ -43,7 +64,7 @@ Public Class Application
                     Try
                         PageOtherTest.MemoryOptimizeInternal(False)
                     Catch ex As Exception
-                        MsgBox(ex.Message, MsgBoxStyle.Critical, "内存优化失败")
+                        MsgBox(ex.Message, MsgBoxStyle.Critical, GetLang("LangApplicationDialogContentMemReduceFail"))
                         Environment.Exit(-1)
                     End Try
                     If My.Computer.Info.AvailablePhysicalMemory < Ram Then '避免 ULong 相减出现负数
@@ -67,12 +88,12 @@ Public Class Application
             Directory.CreateDirectory(Path & "PCL\Musics")
             Try
                 Directory.CreateDirectory(PathTemp)
-                If Not CheckPermission(PathTemp) Then Throw New Exception("PCL 没有对 " & PathTemp & " 的访问权限")
+                If Not CheckPermission(PathTemp) Then Throw New Exception(GetLang("LangApplicationExceptionNoAccessPermission", PathTemp))
             Catch ex As Exception
                 If PathTemp = IO.Path.GetTempPath() & "PCL\" Then
-                    MyMsgBox("PCL 无法访问缓存文件夹，可能导致程序出错或无法正常使用！" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDetail(), "缓存文件夹不可用")
+                    MyMsgBox(GetLang("LangApplicationDialogContentCacheFolderUnavailable", ex.GetDetail()), GetLang("LangApplicationDialogTitleCacheFolderUnavailable"))
                 Else
-                    MyMsgBox("手动设置的缓存文件夹不可用，PCL 将使用默认缓存文件夹。" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDetail(), "缓存文件夹不可用")
+                    MyMsgBox(GetLang("LangApplicationDialogContentCustomCacheFolderUnavailable", ex.GetDetail()), GetLang("LangApplicationDialogTitleCacheFolderUnavailable"))
                     Setup.Set("SystemSystemCache", "")
                     PathTemp = IO.Path.GetTempPath() & "PCL\"
                 End If
@@ -130,13 +151,15 @@ WaitRetry:
             Log($"[Start] 程序路径：{PathWithName}")
             Log($"[Start] 系统编码：{Encoding.Default.HeaderName} ({Encoding.Default.CodePage}, GBK={IsGBKEncoding})")
             Log($"[Start] 管理员权限：{IsAdmin()}")
+            Log("[Location] 启动器语言：" & Lang)
+            Log("[Location] 当前系统环境是否为中国大陆：" & IsLocationZH())
             '检测异常环境
             If Path.Contains(IO.Path.GetTempPath()) OrElse Path.Contains("AppData\Local\Temp\") Then
-                MyMsgBox("请将 PCL 从压缩包中解压后再使用！" & vbCrLf & "如果不会解压，可以在网上寻找教程。", "尚未解压", "我知道了", IsWarn:=True)
+                MyMsgBox(GetLang("LangApplicationDialogContentUnzipLauncher"), GetLang("LangApplicationDialogTitleUnzipLauncher"), GetLang("LangDialogThemeUnlockGameAccept"), IsWarn:=True)
                 FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
             If Is32BitSystem Then
-                MyMsgBox("PCL 和新版 Minecraft 均不再支持 32 位系统，部分功能将无法使用。" & vbCrLf & "非常建议重装为 64 位系统后再进行游戏！", "环境警告", "我知道了", IsWarn:=True)
+                MyMsgBox(GetLang("LangApplicationDialogContent32BitWarn"), GetLang("LangApplicationDialogTitleUnzipLauncher"), GetLang("LangDialogThemeUnlockGameAccept"), IsWarn:=True)
             End If
             '设置初始化
             Setup.Load("SystemDebugMode")
@@ -144,6 +167,7 @@ WaitRetry:
             Setup.Load("ToolDownloadThread")
             Setup.Load("ToolDownloadCert")
             Setup.Load("ToolDownloadSpeed")
+            SetUnmanagedDll()
             '计时
             Log("[Start] 第一阶段加载用时：" & GetTimeMs() - ApplicationStartTick & " ms")
             ApplicationStartTick = GetTimeMs()
@@ -158,7 +182,7 @@ WaitRetry:
                 FilePath = PathWithName
             Catch
             End Try
-            MsgBox(ex.GetDetail(True) & vbCrLf & "PCL 所在路径：" & If(String.IsNullOrEmpty(FilePath), "获取失败", FilePath), MsgBoxStyle.Critical, "PCL 初始化错误")
+            MsgBox(ex.GetDetail(True) & vbCrLf & "PCL 所在路径：" & If(String.IsNullOrEmpty(FilePath), "获取失败", FilePath), MsgBoxStyle.Critical, GetLang("LangApplicationDialogTitleInitError"))
             FormMain.EndProgramForce(ProcessReturnValues.Exception)
         End Try
     End Sub
@@ -188,41 +212,22 @@ WaitRetry:
         If Detail.Contains("System.Windows.Threading.Dispatcher.Invoke") OrElse Detail.Contains("MS.Internal.AppModel.ITaskbarList.HrInit") OrElse Detail.Contains("未能加载文件或程序集") OrElse
            Detail.Contains(".NET Framework") Then ' “自动错误判断” 的结果分析
             OpenWebsite("https://dotnet.microsoft.com/zh-cn/download/dotnet-framework/thank-you/net462-offline-installer")
-            Log(e.Exception, "你的 .NET Framework 版本过低或损坏，请下载并重新安装 .NET Framework 4.6.2！" & vbCrLf & "若无法安装，可在卸载高版本的 .NET Framework 后再试。", LogLevel.Critical, "运行环境错误")
+            Log(e.Exception, GetLang("LangApplicationDialogContentNETWarn"), LogLevel.Critical, GetLang("LangApplicationDialogTitleNETWarn"))
         Else
-            Log(e.Exception, "程序出现未知错误", LogLevel.Critical, "锟斤拷烫烫烫")
+            Log(e.Exception, GetLang("LangApplicationDialogContentUnknownError"), LogLevel.Critical, GetLang("LangApplicationDialogTitleUnknownError"))
         End If
     End Sub
 
     '动态 DLL 调用
     Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
-    Public Shared Function AssemblyResolve(sender As Object, Args As ResolveEventArgs) As Assembly
-        '缓存
-        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "System.Net.Http.Formatting", "System.ValueTuple"}
-        Static Locks As New Dictionary(Of String, Object)(StringComparer.Ordinal)
-        Static LoadedAssembly As New Dictionary(Of String, Assembly)(StringComparer.Ordinal)
-        '查找对应的 DLL
-        Dim Prefix As String = Prefixes.FirstOrDefault(Function(p) Args.Name.StartsWithF(p))
-        If Prefix Is Nothing Then Return Nothing
-        '加载 DLL
-        If Not Locks.ContainsKey(Prefix) Then Locks(Prefix) = New Object()
-        SyncLock Locks(Prefix)
-            If Not LoadedAssembly.ContainsKey(Prefix) Then
-                Log($"[Start] 加载 DLL：{Prefix}")
-                LoadedAssembly(Prefix) = Assembly.Load(GetResources(Prefix))
-                'WebP 特判
-                If Prefix = "Imazen.WebP" Then
-                    SetDllDirectory(PathPure.TrimEnd("\"c))
-                    Try
-                        WriteFile(PathPure & "libwebp.dll", GetResources("libwebp64"))
-                    Catch ex As Exception
-                        Log(ex, "写入 libwebp.dll 失败") '防止同时加载多个图片时，同时写入文件导致文件占用，进而导致崩溃
-                    End Try
-                End If
-            End If
-            Return LoadedAssembly(Prefix)
-        End SyncLock
-    End Function
+    Private Shared Sub SetUnmanagedDll()
+        SetDllDirectory(PathPure.TrimEnd("\"c))
+        Try
+            WriteFile(PathPure & "libwebp.dll", GetResources("libwebp64"))
+        Catch ex As Exception
+            Log(ex, "写入 libwebp.dll 失败") '防止同时加载多个图片时，同时写入文件导致文件占用，进而导致崩溃
+        End Try
+    End Sub
 
     '切换窗口
 

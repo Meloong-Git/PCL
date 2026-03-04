@@ -71,7 +71,7 @@
         Public Overrides Function ToString() As String
             Dim VersionString = Version.ToString
             If VersionString.StartsWithF("1.") Then VersionString = Mid(VersionString, 3)
-            Return If(IsJre, "JRE ", "JDK ") & MajorVersion & " (" & VersionString & ")" & If(Is64Bit, "", "，32 位") & If(IsUserImport, "，手动导入", "") & "：" & PathFolder
+            Return If(IsJre, "JRE ", "JDK ") & MajorVersion & " (" & VersionString & ")" & If(Is64Bit, "", GetLang("LangComma") & GetLang("LangModJava32Bit")) & If(IsUserImport, GetLang("LangComma") & GetLang("LangModJavaManuallyImport"), "") & GetLang("LangColon") & PathFolder
         End Function
 
         '构造
@@ -94,14 +94,14 @@
             Dim Output As String = Nothing
             Try
                 '确定文件存在
-                If Not File.Exists(PathJava) Then Throw New FileNotFoundException("未找到 java.exe 文件", PathJava)
-                If File.Exists(PathFolder & "pdf-bookmark") Then Throw New Exception("不兼容 PDF Bookmark 的 Java") '#5326
+                If Not File.Exists(PathJava) Then Throw New FileNotFoundException(GetLang("LangModJavaExceptionFileNotFound"), PathJava)
+                If File.Exists(PathFolder & "pdf-bookmark") Then Throw New Exception(GetLang("LangModJavaExceptionUnsupportedPDFBookmarkJava")) '#5326
                 IsJre = Not File.Exists(PathFolder & "javac.exe")
                 '运行 -version
                 Output = StartProcessAndGetOutput(PathJava, "-version", 15000).ToLower
-                If Output = "" Then Throw New ApplicationException("尝试运行该 Java 失败")
+                If Output = "" Then Throw New ApplicationException(GetLang("LangModJavaExceptionTryRunFail"))
                 If ModeDebug Then Log("[Java] Java 检查输出：" & PathJava & vbCrLf & Output)
-                If Output.Contains("/lib/ext exists") Then Throw New ApplicationException("无法运行该 Java，请在删除 Java 文件夹中的 /lib/ext 文件夹后再试")
+                If Output.Contains("/lib/ext exists") Then Throw New ApplicationException(GetLang("LangModJavaExceptionRunFail"))
                 If Output.Contains("a fatal error") Then Throw New ApplicationException("无法运行该 Java，该 Java 或系统存在问题")
                 '获取详细信息
                 Dim VersionString = If(RegexSeek(Output, "(?<=version "")[^""]+"), If(RegexSeek(Output, "(?<=openjdk )[0-9]+"), "")).Replace("_", ".").Split("-").First
@@ -113,25 +113,25 @@
                         VersionString = "1." & VersionString
                     End If
                 Loop
-                If VersionString = "" Then Throw New ApplicationException($"未找到该 Java 的版本号{If(Output.Length < 500, $"{vbCrLf}输出为：{vbCrLf}{Output}", "")}")
+                If VersionString = "" Then Throw New ApplicationException($"{GetLang("LangModJavaExceptionVersionNotFound")}{If(Output.Length < 500, $"{vbCrLf}输出为：{vbCrLf}{Output}", "")}")
                 Version = New Version(VersionString)
                 If Version.Minor = 0 Then
                     Log("[Java] 疑似 X.0.X.X 格式版本号：" & Version.ToString)
                     Version = New Version(1, Version.Major, Version.Build, Version.Revision)
                 End If
                 Is64Bit = Output.Contains("64-bit")
-                If Version.Minor <= 4 OrElse Version.Minor >= 100 Then Throw New ApplicationException("分析详细信息失败，获取的版本为 " & Version.ToString)
+                If Version.Minor <= 4 OrElse Version.Minor >= 100 Then Throw New ApplicationException(GetLang("LangModJavaExceptionGetDetailInfoFail", Version.ToString()))
                 '#3649：在 64 位系统上禁用 32 位 Java
-                If Not Is64Bit AndAlso Not Is32BitSystem Then Throw New Exception("该 Java 为 32 位版本，请安装 64 位的 Java")
+                If Not Is64Bit AndAlso Not Is32BitSystem Then Throw New Exception(GetLang("LangModJavaExceptionNeed64Bit"))
                 '#2249：JRE 17 似乎会导致 Forge 安装失败，干脆禁用更多版本的 JRE
-                If IsJre AndAlso MajorVersion >= 16 Then Throw New Exception("由于高版本 JRE 对游戏的兼容性很差，因此不再允许使用。你可以使用对应版本的 JDK，而非 JRE！")
+                If IsJre AndAlso MajorVersion >= 16 Then Throw New Exception(GetLang("LangModJavaExceptionNeedJDK"))
             Catch ex As ApplicationException
                 Throw ex
             Catch ex As ThreadInterruptedException
                 Throw ex
             Catch ex As Exception
                 Log("[Java] 检查失败的 Java 输出：" & If(PathJava, "Nothing") & vbCrLf & If(Output, "无程序输出"))
-                Throw New Exception("检查 Java 失败（" & If(PathJava, "Nothing") & "）", ex)
+                Throw New Exception(GetLang("LangModJavaExceptionCheckFail", If(PathJava, "Nothing")), ex)
             End Try
             IsChecked = True
         End Sub
@@ -277,7 +277,7 @@ RetryGet:
                 Case LoadState.Failed
                     Throw JavaSearchLoader.Error
                 Case LoadState.Aborted
-                    Throw New ThreadInterruptedException("Java 搜索加载器已中断")
+                    Throw New ThreadInterruptedException(GetLang("LangModJavaExceptionSearchAbort"))
             End Select
 
             '生成完整的 Java 列表
@@ -320,15 +320,15 @@ RetryGet:
             Dim ShowRevision As Boolean = False
             If (MinVersion Is Nothing OrElse MinVersion.Minor = 0) AndAlso (MaxVersion IsNot Nothing AndAlso MaxVersion.Minor < 999) Then
                 ShowRevision = MaxVersion.MinorRevision < 999
-                Requirement = "最高兼容到 Java " & MaxVersion.Minor & If(ShowRevision, "." & MaxVersion.MajorRevision & "." & MaxVersion.MinorRevision, "")
+                Requirement = GetLang("LangModJavaMaxRequireVersion", MaxVersion.Minor & If(ShowRevision, "." & MaxVersion.MajorRevision & "." & MaxVersion.MinorRevision, ""))
             ElseIf (MinVersion IsNot Nothing AndAlso MinVersion.Minor > 0) AndAlso (MaxVersion Is Nothing OrElse MaxVersion.Minor >= 999) Then
                 ShowRevision = MinVersion.MinorRevision > 0 OrElse MinVersion.MajorRevision > 0
-                Requirement = "至少需要 Java " & MinVersion.Minor & If(ShowRevision, "." & MinVersion.MajorRevision & "." & MinVersion.MinorRevision, "")
+                Requirement = GetLang("LangModJavaMinRequireVersion", MinVersion.Minor & If(ShowRevision, "." & MinVersion.MajorRevision & "." & MinVersion.MinorRevision, ""))
             ElseIf (MinVersion IsNot Nothing AndAlso MinVersion.Minor > 0) AndAlso (MaxVersion IsNot Nothing AndAlso MaxVersion.Minor < 999) Then
                 ShowRevision = MinVersion.MinorRevision > 0 OrElse MinVersion.MajorRevision > 0 OrElse MaxVersion.MinorRevision < 999
                 Dim Left As String = MinVersion.Minor & If(ShowRevision, "." & MinVersion.MajorRevision & "." & MinVersion.MinorRevision, "")
                 Dim Right As String = MaxVersion.Minor & If(ShowRevision, "." & MaxVersion.MajorRevision & "." & MaxVersion.MinorRevision, "")
-                Requirement = "需要 Java " & If(Left = Right, Left, Left & " ~ " & Right)
+                Requirement = GetLang("LangModJavaRequireVersion", If(Left = Right, Left, Left & " ~ " & Right))
             End If
             Dim JavaCurrent As String = UserJava.MajorVersion & If(ShowRevision, "." & UserJava.Version.MajorRevision & "." & UserJava.Version.MinorRevision, "")
             If GameInstance IsNot Nothing AndAlso Setup.Get("VersionAdvanceJava", GameInstance) Then
@@ -336,12 +336,8 @@ RetryGet:
                 Log("[Java] 设置中指定了使用 Java " & JavaCurrent & "，但当前版本" & Requirement & "，这可能会导致游戏崩溃！", LogLevel.Debug)
                 AllowedJavaList = New List(Of JavaEntry) From {UserJava}
             Else
-                Select Case MyMsgBox("你在设置中手动指定了使用 Java " & JavaCurrent & "，但当前" & Requirement & "。" & vbCrLf &
-                            "如果强制使用该 Java，可能导致游戏崩溃。" & vbCrLf &
-                            "你也可以将 游戏 Java 设置修改为 自动选择合适的 Java。" & vbCrLf &
-                            vbCrLf &
-                            " - 指定的 Java：" & UserJava.ToString,
-                            "Java 兼容性警告", "让 PCL 自动选择", "强制使用该 Java", "取消")
+                Select Case MyMsgBox(GetLang("LangModJavaDialogContentCompatibilityWarning", JavaCurrent, Requirement, UserJava.ToString()),
+                            GetLang("LangModJavaDialogTitleCompatibilityWarning"), GetLang("LangModJavaDialogBtn1CompatibilityWarning"), GetLang("LangModJavaDialogBtn2CompatibilityWarning"), GetLang("LangDialogBtnCancel"))
                     Case 1 '让 PCL 自动选择
                     Case 2 '强制使用指定的 Java
                         Log("[Java] 已强制使用用户指定的不兼容 Java")
@@ -479,20 +475,20 @@ NoUserJava:
     ''' <summary>
     ''' 模糊搜索并获取所有可用的 Java，并在结束后更新设置页面显示。输出将直接写入 JavaList。
     ''' </summary>
-    Public JavaSearchLoader As New LoaderTask(Of Integer, Integer)("查找 Java", AddressOf JavaSearchLoaderSub) With {.ProgressWeight = 2}
+    Public JavaSearchLoader As New LoaderTask(Of Integer, Integer)(GetLang("LangModJavaTaskSearchJava"), AddressOf JavaSearchLoaderSub) With {.ProgressWeight = 2}
     Private Sub JavaSearchLoaderSub(Loader As LoaderTask(Of Integer, Integer))
         If FrmSetupLaunch IsNot Nothing Then
             RunInUiWait(
             Sub()
                 FrmSetupLaunch.ComboArgumentJava.Items.Clear()
-                FrmSetupLaunch.ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = "加载中……", .IsSelected = True})
+                FrmSetupLaunch.ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = GetLang("LangPageSetupLaunchLaunchJavaLoading"), .IsSelected = True})
             End Sub)
         End If
         If FrmInstanceSetup IsNot Nothing Then
             RunInUiWait(
             Sub()
                 FrmInstanceSetup.ComboArgumentJava.Items.Clear()
-                FrmInstanceSetup.ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = "加载中……", .IsSelected = True})
+                FrmInstanceSetup.ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = GetLang("LangPageSetupLaunchLaunchJavaLoading"), .IsSelected = True})
             End Sub)
         End If
 
@@ -699,9 +695,9 @@ Wait:
     ''' 获取下载 Java 的加载器。需要开启 IsForceRestart 以正常刷新 Java 列表。
     ''' </summary>
     Public Function GetJavaDownloadLoader() As LoaderCombo(Of String)
-        Dim JavaDownloadLoader As New LoaderDownload("下载 Java 文件", New List(Of NetFile)) With {.ProgressWeight = 10}
-        Dim Loader = New LoaderCombo(Of String)($"下载 Java", {
-            New LoaderTask(Of String, List(Of NetFile))("获取 Java 下载信息", AddressOf JavaFileList) With {.ProgressWeight = 2},
+        Dim JavaDownloadLoader As New LoaderDownload(GetLang("LangModJavaTaskDownloadJavaFile"), New List(Of NetFile)) With {.ProgressWeight = 10}
+        Dim Loader = New LoaderCombo(Of String)(GetLang("LangModJavaTaskDownloadJava"), {
+            New LoaderTask(Of String, List(Of NetFile))(GetLang("LangModJavaTaskGetJavaDownloadInfo"), AddressOf JavaFileList) With {.ProgressWeight = 2},
             JavaDownloadLoader,
             JavaSearchLoader
         })
