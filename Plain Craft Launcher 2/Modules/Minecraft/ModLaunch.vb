@@ -573,7 +573,7 @@ Relogin:
         If Data.IsAborted Then Throw New ThreadInterruptedException
         Dim MinecraftAPI As String() = MsLoginStep4(Tokens) '更改了第4步验证的返回格式，第一项为Minecraft Access Token，第二项为Token有效期
         Dim AccessToken As String = MinecraftAPI(0) 'Access Token 
-        McLoginMsRefreshTime = GetTimeMs() + MinecraftAPI(1) 'Token 到期时间
+        McLoginMsRefreshTime = GetTimeMs() + (MinecraftAPI(1) * 1000) 'Token 到期时间，并转换为毫秒
         Data.Progress = 0.7
         If Data.IsAborted Then Throw New ThreadInterruptedException
         MsLoginStep5(AccessToken)
@@ -1027,7 +1027,7 @@ Retry:
 
         Return {
                    GetJson(Result)("access_token").ToString,
-                   GetJson(Result)("expires_in").ToString
+                   GetJson(Result)("expires_in").ToString '以秒为单位
         }
     End Function
     '微软登录步骤 5：验证微软账号是否持有 MC，这也会刷新 XGP
