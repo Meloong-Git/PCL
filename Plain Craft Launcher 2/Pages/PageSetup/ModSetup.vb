@@ -52,6 +52,7 @@
         {"CacheMsName", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
         {"CacheMsV2Migrated", New SetupEntry(False, Source:=SetupSource.Registry)},
         {"CacheMsV2OAuthRefresh", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
+        {"CacheMsV2OAuthExpires", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
         {"CacheMsV2Access", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
         {"CacheMsV2ProfileJson", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},
         {"CacheMsV2Uuid", New SetupEntry("", Source:=SetupSource.Registry, Encoded:=True)},

@@ -535,16 +535,15 @@ NextInner:
     Public McLoginAuthLoader As New LoaderTask(Of McLoginServer, McLoginResult)("Loader Login Auth", AddressOf McLoginServerStart) With {.ReloadTimeout = 1000 * 60 * 10}
 
     '主加载函数，返回所有需要的登录信息
-    Private McLoginMsRefreshTime As Long = 0 'Minecraft Access Token到期时间
+    Private McLoginMsRefreshTime As Long = Val(Setup.Get("CacheMsV2OAuthExpires")) 'Minecraft Access Token到期时间
     Private Sub McLoginMsStart(Data As LoaderTask(Of McLoginMs, McLoginResult))
         Dim Input As McLoginMs = Data.Input
         Dim LogUsername As String = Input.UserName
         McLaunchLog("登录方式：正版（" & If(LogUsername = "", "尚未登录", LogUsername) & "）")
         Data.Progress = 0.05
         '检查是否已经登录完成
-        If Not Data.IsForceRestarting AndAlso '不要求强行重启
-           Input.AccessToken <> "" AndAlso '已经登录过了
-           (McLoginMsRefreshTime > 0 AndAlso GetTimeMs() < McLoginMsRefreshTime) Then '在有效期过期前
+        If Not Data.IsForceRestarting AndAlso '不要求强行重启 | 'Input.AccessToken <> "" AndAlso '已经登录过了，但因为其影响了Token刷新时间的判定 在Token有效时重启PCL仍然会重新登录，所以注释掉了
+           (McLoginMsRefreshTime > 0 AndAlso GetUnixTimestamp() < McLoginMsRefreshTime) Then '在有效期过期前
             Data.Output = New McLoginResult With
                 {.AccessToken = Input.AccessToken, .Name = Input.UserName, .Uuid = Input.Uuid, .Type = "Microsoft", .ClientToken = Input.Uuid, .ProfileJson = Input.ProfileJson}
             GoTo SkipLogin
@@ -573,7 +572,7 @@ Relogin:
         If Data.IsAborted Then Throw New ThreadInterruptedException
         Dim MinecraftAPI As String() = MsLoginStep4(Tokens) '更改了第4步验证的返回格式，第一项为Minecraft Access Token，第二项为Token有效期
         Dim AccessToken As String = MinecraftAPI(0) 'Access Token 
-        McLoginMsRefreshTime = GetTimeMs() + (MinecraftAPI(1) * 1000) 'Token 到期时间，并转换为毫秒
+        McLoginMsRefreshTime = GetUnixTimestamp() + MinecraftAPI(1) 'Token 到期时间，以秒为单位
         Data.Progress = 0.7
         If Data.IsAborted Then Throw New ThreadInterruptedException
         MsLoginStep5(AccessToken)
@@ -587,13 +586,14 @@ Relogin:
         Setup.Set("CacheMsV2Uuid", Result(0))
         Setup.Set("CacheMsV2Name", Result(1))
         Setup.Set("CacheMsV2ProfileJson", Result(2))
+        Setup.Set("CacheMsV2OAuthExpires", McLoginMsRefreshTime)
         Dim MsJson As JObject = GetJson(Setup.Get("LoginMsJson"))
         MsJson.Remove(Input.UserName) '如果更改了玩家名……
         MsJson(Result(1)) = OAuthRefreshToken
         Setup.Set("LoginMsJson", MsJson.ToString(Newtonsoft.Json.Formatting.None))
         Data.Output = New McLoginResult With {.AccessToken = AccessToken, .Name = Result(1), .Uuid = Result(0), .Type = "Microsoft", .ClientToken = Result(0), .ProfileJson = Result(2)}
         '结束
-        McLoginMsRefreshTime = GetTimeMs()
+        'McLoginMsRefreshTime = GetTimeMs() '不知道为什么会有一个这个东西
         McLaunchLog("微软登录完成")
 SkipLogin:
         Setup.Set("HintBuy", True) '关闭正版购买提示
