@@ -850,22 +850,22 @@ Install:
             '构造请求
             Dim QueryList As New List(Of SearchEntry(Of McMod))
             For Each Entry As McMod In McModLoader.Output
-                Dim SearchSource As New List(Of KeyValuePair(Of String, Double))
-                SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.DisplayName, 1))
-                SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.FileName, 1))
+                Dim SearchSources As New List(Of SearchSource)
+                SearchSources.Add(New SearchSource(Entry.DisplayName, 1))
+                SearchSources.Add(New SearchSource(Entry.FileName, 1))
                 If Entry.Version IsNot Nothing Then
-                    SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.Version, 0.2))
+                    SearchSources.Add(New SearchSource(Entry.Version, 0.2))
                 End If
                 If Entry.Description IsNot Nothing AndAlso Entry.Description <> "" Then
-                    SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.Description, 0.4))
+                    SearchSources.Add(New SearchSource(Entry.Description, 0.4))
                 End If
                 If Entry.Comp IsNot Nothing Then
-                    If Entry.Comp.RawName <> Entry.DisplayName Then SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.Comp.RawName, 1))
-                    If Entry.Comp.TranslatedName <> Entry.Comp.RawName Then SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.Comp.TranslatedName, 1))
-                    If Entry.Comp.Description <> Entry.Description Then SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.Comp.Description, 0.4))
-                    SearchSource.Add(New KeyValuePair(Of String, Double)(String.Join("", Entry.Comp.Tags), 0.2))
+                    If Entry.Comp.RawName <> Entry.DisplayName Then SearchSources.Add(New SearchSource(Entry.Comp.RawName, 1))
+                    If Entry.Comp.TranslatedName <> Entry.Comp.RawName Then SearchSources.Add(New SearchSource(Entry.Comp.TranslatedName, 1))
+                    If Entry.Comp.Description <> Entry.Description Then SearchSources.Add(New SearchSource(Entry.Comp.Description, 0.4))
+                    SearchSources.Add(New SearchSource(String.Join("", Entry.Comp.Tags), 0.2))
                 End If
-                QueryList.Add(New SearchEntry(Of McMod) With {.Item = Entry, .SearchSource = SearchSource})
+                QueryList.Add(New SearchEntry(Of McMod) With {.Item = Entry, .SearchSource = SearchSources})
             Next
             '进行搜索
             SearchResult = Search(QueryList, SearchBox.Text, MaxBlurCount:=6, MinBlurSimilarity:=0.35).Select(Function(r) r.Item).ToList

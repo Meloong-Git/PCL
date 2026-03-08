@@ -95,6 +95,7 @@
             Try
                 '确定文件存在
                 If Not File.Exists(PathJava) Then Throw New FileNotFoundException("未找到 java.exe 文件", PathJava)
+                If PathJava.ContainsF("finalshell", True) Then Throw New Exception("不兼容 FinalShell 的 Java") '#8080
                 If File.Exists(PathFolder & "pdf-bookmark") Then Throw New Exception("不兼容 PDF Bookmark 的 Java") '#5326
                 IsJre = Not File.Exists(PathFolder & "javac.exe")
                 '运行 -version

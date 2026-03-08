@@ -1426,7 +1426,7 @@ OnLoaded:
             '确认最新版本，若为快照则加入常用列表
             Dim LargestInstance As McInstance = InstanceList.
                 Where(Function(v) v.State = McInstanceState.Original OrElse v.State = McInstanceState.Snapshot).
-                MaxOf(Function(v) v.ReleaseTime)
+                MaxBy(Function(v) v.ReleaseTime)
             If LargestInstance IsNot Nothing AndAlso LargestInstance.State = McInstanceState.Snapshot Then
                 InstanceUseful.Add(LargestInstance)
                 InstanceList.Remove(LargestInstance)

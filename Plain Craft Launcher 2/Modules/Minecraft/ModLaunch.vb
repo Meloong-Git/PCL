@@ -1314,40 +1314,6 @@ Retry:
 
     Private McLaunchArgument As String
 
-    ''' <summary>
-    ''' 释放 Java Wrapper 并返回完整文件路径。
-    ''' </summary>
-    Public Function ExtractJavaWrapper() As String
-        Dim WrapperPath As String = PathPure & "JavaWrapper.jar"
-        Log("[Java] 选定的 Java Wrapper 路径：" & WrapperPath)
-        SyncLock ExtractJavaWrapperLock '避免 OptiFine 和 Forge 安装时同时释放 Java Wrapper 导致冲突
-            Try
-                WriteFile(WrapperPath, GetResources("JavaWrapper"))
-            Catch ex As Exception
-                If File.Exists(WrapperPath) Then
-                    '因为未知原因 Java Wrapper 可能变为只读文件（#4243）
-                    Log(ex, "Java Wrapper 文件释放失败，但文件已存在，将在删除后尝试重新生成", LogLevel.Developer)
-                    Try
-                        File.Delete(WrapperPath)
-                        WriteFile(WrapperPath, GetResources("JavaWrapper"))
-                    Catch ex2 As Exception
-                        Log(ex2, "Java Wrapper 文件重新释放失败，将尝试更换文件名重新生成", LogLevel.Developer)
-                        WrapperPath = PathPure & "JavaWrapper2.jar"
-                        Try
-                            WriteFile(WrapperPath, GetResources("JavaWrapper"))
-                        Catch ex3 As Exception
-                            Throw New FileNotFoundException("释放 Java Wrapper 最终尝试失败", ex3)
-                        End Try
-                    End Try
-                Else
-                    Throw New FileNotFoundException("释放 Java Wrapper 失败", ex)
-                End If
-            End Try
-        End SyncLock
-        Return WrapperPath
-    End Function
-    Private ExtractJavaWrapperLock As New Object
-
     '主方法，合并 Jvm、Game、Replace 三部分的参数数据
     Private Sub McLaunchArgumentMain(Loader As LoaderTask(Of String, List(Of McLibToken)))
         McLaunchLog("开始获取 Minecraft 启动参数")
@@ -1393,6 +1359,8 @@ Retry:
         '自定义
         Dim ArgumentGame As String = Setup.Get("VersionAdvanceGame", Instance:=McInstanceSelected)
         Arguments += " " & ArgumentReplace(If(ArgumentGame = "", Setup.Get("LaunchAdvanceGame"), ArgumentGame))
+        'GC
+        Arguments = ProcessGCArguments(Arguments, McLaunchJavaSelected, McInstanceSelected)
         '进行参数替换
         Dim ReplaceArguments = McLaunchArgumentsReplace(McInstanceSelected, Loader)
         If String.IsNullOrWhiteSpace(ReplaceArguments("${version_type}")) Then
@@ -1752,6 +1720,72 @@ NextInstance:
         GameArguments.Add("${classpath}", Join(CpStrings.Select(Function(c) ShortenPath(c)), ";"))
 
         Return GameArguments
+    End Function
+
+    '工具方法
+
+    ''' <summary>
+    ''' 释放 Java Wrapper 并返回完整文件路径。
+    ''' </summary>
+    Public Function ExtractJavaWrapper() As String
+        Dim WrapperPath As String = PathPure & "JavaWrapper.jar"
+        Log("[Java] 选定的 Java Wrapper 路径：" & WrapperPath)
+        Static Lock As New Object
+        SyncLock Lock '避免 OptiFine 和 Forge 安装时同时释放 Java Wrapper 导致冲突
+            Try
+                WriteFile(WrapperPath, GetResources("JavaWrapper"))
+            Catch ex As Exception
+                If File.Exists(WrapperPath) Then
+                    '因为未知原因 Java Wrapper 可能变为只读文件（#4243）
+                    Log(ex, "Java Wrapper 文件释放失败，但文件已存在，将在删除后尝试重新生成", LogLevel.Developer)
+                    Try
+                        File.Delete(WrapperPath)
+                        WriteFile(WrapperPath, GetResources("JavaWrapper"))
+                    Catch ex2 As Exception
+                        Log(ex2, "Java Wrapper 文件重新释放失败，将尝试更换文件名重新生成", LogLevel.Developer)
+                        WrapperPath = PathPure & "JavaWrapper2.jar"
+                        Try
+                            WriteFile(WrapperPath, GetResources("JavaWrapper"))
+                        Catch ex3 As Exception
+                            Throw New FileNotFoundException("释放 Java Wrapper 最终尝试失败", ex3)
+                        End Try
+                    End Try
+                Else
+                    Throw New FileNotFoundException("释放 Java Wrapper 失败", ex)
+                End If
+            End Try
+        End SyncLock
+        Return WrapperPath
+    End Function
+    ''' <summary>
+    ''' 根据设置的 GC 方式返回对应的 JVM 参数。
+    ''' </summary>
+    Private Function ProcessGCArguments(Arguments As String, SelectedJava As JavaEntry, Optional TargetInstance As McInstance = Nothing) As String
+        '0：在 Java 21+ 使用分代 ZGC，20~15 使用非分代的 ZGC，14- 使用 G1GC
+        '1：在 Java 21+ 使用分代 ZGC，20- 使用 G1GC
+        '2：仅 G1GC
+        '3：不指定
+        Dim SetupType As Integer = Setup.Get("LaunchAdvanceGC")
+        If TargetInstance IsNot Nothing AndAlso Setup.Get("VersionAdvanceGC", TargetInstance) > 0 Then SetupType = Setup.Get("VersionAdvanceGC", TargetInstance) - 1 '去掉默认
+        If SetupType = 3 Then Return Arguments.Trim '不指定时直接返回
+        Dim UseG1GC As Boolean =
+             (SetupType = 0 AndAlso SelectedJava.MajorVersion < 15) OrElse
+             (SetupType = 1 AndAlso SelectedJava.MajorVersion < 21) OrElse
+             SetupType = 2
+        McLaunchLog($"GC 设置：{SetupType}，选取 {If(UseG1GC, "G1GC", "ZGC")}，Java 版本：{SelectedJava.MajorVersion}")
+        '移除
+        Arguments = RegexReplace(Arguments,
+            "( )*-XX:[+-]?(Use\w+GC|ZGenerational|UseCompactObjectHeaders|G1\w+Percent|G1\w+Size|MaxGCPauseMillis)(=[^\s]+)?", "").Trim
+        '添加
+        If UseG1GC Then
+            Arguments = Arguments.Replace("-XX:+UnlockExperimentalVMOptions", "")
+            Arguments = "-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M " + Arguments
+        Else
+            Arguments = "-XX:+UseZGC " + Arguments
+            If SelectedJava.MajorVersion = 21 OrElse SelectedJava.MajorVersion = 22 Then Arguments = "-XX:+ZGenerational " + Arguments 'Java 23 起默认启用分代 ZGC，不需要再添加参数
+            If SelectedJava.MajorVersion >= 25 Then Arguments = "-XX:+UseCompactObjectHeaders " + Arguments
+        End If
+        Return Arguments.Trim
     End Function
 
 #End Region

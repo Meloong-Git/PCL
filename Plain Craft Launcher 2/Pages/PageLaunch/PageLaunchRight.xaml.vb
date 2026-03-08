@@ -88,7 +88,7 @@ Public Class PageLaunchRight
                         Url = "https://pcl-bmcl.milu.ink/"
                     Case 7
                         Log("[Page] 主页预设：主页市场")
-                        Url = "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/JingHai-Lingyun/Custom.xaml"
+                        Url = "https://pclhomeplazaoss.lingyunawa.top:26994/p/Homepages/Homepage.Market/Custom.xaml"
                     Case 8
                         Log("[Page] 主页预设：更新日志")
                         Url = "https://pclhomeplazaoss.lingyunawa.top:26994/d/Homepages/Joker2184/UpdateHomepage.xaml"

@@ -14,13 +14,13 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.12.2" '不含分支前缀的显示用版本名
-    Public Const VersionStandardCode As String = "2.12.2." & VersionBranchCode '标准格式的四段式版本号
+    Public Const VersionBaseName As String = "2.12.3" '不含分支前缀的显示用版本名
+    Public Const VersionStandardCode As String = "2.12.3." & VersionBranchCode '标准格式的四段式版本号
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If BETA Then
-    Public Const VersionCode As Integer = 379 'Release
+    Public Const VersionCode As Integer = 381 'Release
 #Else
-    Public Const VersionCode As Integer = 380 'Snapshot
+    Public Const VersionCode As Integer = 382 'Snapshot
 #End If
     '自动生成的版本信息
     Public Const VersionDisplayName As String = VersionBranchName & " " & VersionBaseName
@@ -1071,10 +1071,9 @@ Public Module ModBase
     ''' 获取文件 MD5，若失败则返回空字符串。
     ''' </summary>
     Public Function GetFileMD5(FilePath As String) As String
-        Dim Retry As Boolean = False
+        Dim Retried As Boolean = False
 Re:
         Try
-            '获取 MD5
             Using File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
                 Using h = MD5Cng.Create()
                     Dim Retval As Byte() = h.ComputeHash(File)
@@ -1082,16 +1081,15 @@ Re:
                     For i = 0 To Retval.Length - 1
                         Result.Append(Retval(i).ToString("x2"))
                     Next
-
                     Return Result.ToString
                 End Using
             End Using
         Catch ex As Exception
-            If Retry OrElse TypeOf ex Is FileNotFoundException Then
+            If Retried OrElse TypeOf ex Is FileNotFoundException Then
                 Log(ex, "获取文件 MD5 失败：" & FilePath)
                 Return ""
             Else
-                Retry = True
+                Retried = True
                 Log(ex, "获取文件 MD5 可重试失败：" & FilePath, LogLevel.Normal)
                 Thread.Sleep(RandomInteger(200, 500))
                 GoTo Re
@@ -1102,29 +1100,25 @@ Re:
     ''' 获取文件 SHA512，若失败则返回空字符串。
     ''' </summary>
     Public Function GetFileSHA512(FilePath As String) As String
-        Dim Retry As Boolean = False
+        Dim Retried As Boolean = False
 Re:
         Try
-            ''检测该文件是否在下载中，若在下载则放弃检测
-            'If IgnoreOnDownloading AndAlso NetManage.Files.ContainsKey(FilePath) AndAlso NetManage.Files(FilePath).State <= NetState.Merge Then Return ""
-            '获取 SHA512
-            Using file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+            Using File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
                 Using h = SHA512Cng.Create()
-                    Dim retval As Byte() = h.ComputeHash(file)
+                    Dim retval As Byte() = h.ComputeHash(File)
                     Dim Result As New StringBuilder(retval.Length * 2)
                     For i As Integer = 0 To retval.Length - 1
                         Result.Append(retval(i).ToString("x2"))
                     Next
-
                     Return Result.ToString
                 End Using
             End Using
         Catch ex As Exception
-            If Retry OrElse TypeOf ex Is FileNotFoundException Then
+            If Retried OrElse TypeOf ex Is FileNotFoundException Then
                 Log(ex, "获取文件 SHA512 失败：" & FilePath)
                 Return ""
             Else
-                Retry = True
+                Retried = True
                 Log(ex, "获取文件 SHA512 可重试失败：" & FilePath, LogLevel.Normal)
                 Thread.Sleep(RandomInteger(200, 500))
                 GoTo Re
@@ -1138,17 +1132,13 @@ Re:
         Dim Retry As Boolean = False
 Re:
         Try
-            ''检测该文件是否在下载中，若在下载则放弃检测
-            'If IgnoreOnDownloading AndAlso NetManage.Files.ContainsKey(FilePath) AndAlso NetManage.Files(FilePath).State <= NetState.Merge Then Return ""
-            '获取 SHA256
-            Using file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+            Using File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
                 Using h = SHA256Cng.Create()
-                    Dim retval As Byte() = h.ComputeHash(file)
+                    Dim retval As Byte() = h.ComputeHash(File)
                     Dim Result As New StringBuilder(retval.Length * 2)
                     For i As Integer = 0 To retval.Length - 1
                         Result.Append(retval(i).ToString("x2"))
                     Next
-
                     Return Result.ToString()
                 End Using
             End Using
@@ -1171,15 +1161,13 @@ Re:
         Dim Retry As Boolean = False
 Re:
         Try
-            '获取 SHA1
-            Using file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+            Using File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
                 Using h = SHA1Cng.Create()
-                    Dim retval As Byte() = h.ComputeHash(file)
+                    Dim retval As Byte() = h.ComputeHash(File)
                     Dim Result As New StringBuilder(retval.Length * 2)
                     For i As Integer = 0 To retval.Length - 1
                         Result.Append(retval(i).ToString("x2"))
                     Next
-
                     Return Result.ToString
                 End Using
             End Using
@@ -1327,7 +1315,7 @@ Re:
             End Using
         End Sub
         Try
-            TryExtractZip(Encoding.UTF8)
+            TryExtractZip(New UTF8Encoding(False, True))
         Catch ex As Exception
             Log(ex, $"首次解压尝试失败，将更换编码并重试（{CompressFilePath} → {DestDirectory}）")
             Try
@@ -1896,50 +1884,53 @@ RetryDir:
     ''' <param name="Source">被搜索的长内容。</param>
     ''' <param name="Query">用户输入的搜索文本。</param>
     Private Function SearchSimilarity(Source As String, Query As String) As Double
+        If String.IsNullOrEmpty(Source) OrElse String.IsNullOrEmpty(Query) Then Return 0
         Dim qp As Integer = 0, lenSum As Double = 0
-        Source = Source.ToLower.Replace(" ", "")
-        Query = Query.ToLower.Replace(" ", "")
-        Dim sourceLength As Integer = Source.Length, queryLength As Integer = Query.Length '用于计算最后因数的长度缓存
+        Dim str As New StringBuilder(Source.Length)
+        str.Append(Source.ToLower().Replace(" ", ""))
+        Query = Query.ToLower().Replace(" ", "")
+        Dim sourceLength As Integer = str.Length, queryLength As Integer = Query.Length '用于计算最后因数的长度缓存
+        If queryLength = 0 Then Return 0
         Do While qp < queryLength
             '对 qp 作为开始位置计算
             Dim sp As Integer = 0, lenMax As Integer = 0, spMax As Integer = 0
-            '查找以 qp 为头的最大子串
-            Do While sp < Source.Length
-                '对每个 sp 作为开始位置计算最大子串
+            Dim currentSourceLength As Integer = str.Length
+            Do While sp < currentSourceLength
                 Dim len As Integer = 0
-                Do While (qp + len) < queryLength AndAlso (sp + len) < Source.Length AndAlso Source(sp + len) = Query(qp + len)
+                While (qp + len) < queryLength AndAlso (sp + len) < currentSourceLength AndAlso str(sp + len) = Query(qp + len)
                     len += 1
-                Loop
+                End While
                 '存储 len
                 If len > lenMax Then
                     lenMax = len
                     spMax = sp
                 End If
                 '根据结果增加 sp
-                sp += Math.Max(1, len)
+                sp += If(len > 0, len, 1)
             Loop
             If lenMax > 0 Then
-                Source = Source.Substring(0, spMax) & If(Source.Count > spMax + lenMax, Source.Substring(spMax + lenMax), String.Empty) '将源中的对应字段替换空
+                str.Remove(spMax, lenMax) '将源中的对应字段移除
                 '存储 lenSum
                 Dim IncWeight = (Math.Pow(1.4, 3 + lenMax) - 3.6) '根据长度加成
                 IncWeight *= 1 + 0.3 * Math.Max(0, 3 - Math.Abs(qp - spMax)) '根据位置加成
                 lenSum += IncWeight
             End If
-            '根据结果增加 qp
-            qp += Math.Max(1, lenMax)
+            qp += If(lenMax > 0, lenMax, 1)
         Loop
         '计算结果：重复字段量 × 源长度影响比例
-        Return (lenSum / queryLength) * (3 / Math.Pow(sourceLength + 15, 0.5)) * If(queryLength <= 2, 3 - queryLength, 1)
+        Return (lenSum / queryLength) * (3 / Math.Sqrt(sourceLength + 15)) * If(queryLength <= 2, 3 - queryLength, 1)
     End Function
     ''' <summary>
     ''' 获取多段文本加权后的相似度。
     ''' </summary>
-    Private Function SearchSimilarityWeighted(Source As List(Of KeyValuePair(Of String, Double)), Query As String) As Double
+    Private Function SearchSimilarityWeighted(Source As List(Of SearchSource), Query As String) As Double
         Dim TotalWeight As Double = 0
         Dim Sum As Double = 0
         For Each Pair In Source
-            Sum += SearchSimilarity(Pair.Key, Query) * Pair.Value
-            TotalWeight += Pair.Value
+            If Pair.Aliases.Any Then
+                Sum += Pair.Aliases.Max(Function(a) SearchSimilarity(a, Query)) * Pair.Weight
+            End If
+            TotalWeight += Pair.Weight
         Next
         Return Sum / TotalWeight
     End Function
@@ -1952,9 +1943,10 @@ RetryDir:
         ''' </summary>
         Public Item As T
         ''' <summary>
-        ''' 该项目用于搜索的源。
+        ''' 该项目用于搜索的文本源。
+        ''' 在搜索时，会对每个文本源单独加权，但单个文本源内的多个别名只取最高的一个的相似度。
         ''' </summary>
-        Public SearchSource As List(Of KeyValuePair(Of String, Double))
+        Public SearchSource As List(Of SearchSource)
         ''' <summary>
         ''' 相似度。
         ''' </summary>
@@ -1963,9 +1955,28 @@ RetryDir:
         ''' 是否完全匹配。
         ''' </summary>
         Public AbsoluteRight As Boolean
+        Public Overrides Function ToString() As String
+            Return Math.Round(Similarity, 3) & " - " & Item.ToString()
+        End Function
+    End Class
+    ''' <summary>
+    ''' 单个用于搜索的文本源。
+    ''' </summary>
+    Public Class SearchSource
+        Public Aliases As String()
+        Public Weight As Double
+        Public Sub New(Aliases As String(), Optional Weight As Double = 1)
+            Me.Aliases = Aliases
+            Me.Weight = Weight
+        End Sub
+        Public Sub New(Text As String, Optional Weight As Double = 1)
+            Me.Aliases = {Text}
+            Me.Weight = Weight
+        End Sub
     End Class
     ''' <summary>
     ''' 进行多段文本加权搜索，获取相似度较高的数项结果。
+    ''' 在搜索时，会对每个文本源单独加权，但单个文本源内的多个别名只取最高的一个的相似度。
     ''' </summary>
     ''' <param name="MaxBlurCount">返回的最大模糊结果数。</param>
     ''' <param name="MinBlurSimilarity">返回结果要求的最低相似度。</param>
@@ -1974,15 +1985,19 @@ RetryDir:
         Dim ResultList As New List(Of SearchEntry(Of T))
         If Not Entries.Any() Then Return ResultList
         '进行搜索，获取相似信息
+        Dim QueryParts = Query.Split({" "c}, StringSplitOptions.RemoveEmptyEntries)
+        Dim Candidates As New List(Of SearchEntry(Of T))
         For Each Entry In Entries
             Entry.Similarity = SearchSimilarityWeighted(Entry.SearchSource, Query)
             Entry.AbsoluteRight =
-                Query.Split(" ").All( '对于按空格分割的每一段
+                QueryParts.All( '对于按空格分割的每一段
                 Function(QueryPart) Entry.SearchSource.Any( '若与任意一个搜索源完全匹配，则标记为完全匹配项
-                Function(Source) Source.Key.Replace(" ", "").ContainsF(QueryPart, True)))
+                Function(Source) Source.Aliases.Any(
+                Function([Alias]) [Alias].Replace(" ", "").ContainsF(QueryPart, True))))
+            If Entry.AbsoluteRight OrElse Entry.Similarity >= MinBlurSimilarity Then Candidates.Add(Entry)
         Next
         '按照相似度进行排序
-        Entries = Entries.SortByComparison(
+        Candidates = Candidates.SortByComparison(
         Function(Left, Right) As Boolean
             If Left.AbsoluteRight Xor Right.AbsoluteRight Then
                 Return Left.AbsoluteRight
@@ -1992,11 +2007,11 @@ RetryDir:
         End Function)
         '返回结果
         Dim BlurCount As Integer = 0
-        For Each Entry In Entries
+        For Each Entry In Candidates
             If Entry.AbsoluteRight Then
                 ResultList.Add(Entry) '完全匹配，直接加入
             Else
-                If Entry.Similarity < MinBlurSimilarity OrElse BlurCount = MaxBlurCount Then Exit For '模糊结果边界条件
+                If BlurCount = MaxBlurCount Then Exit For
                 ResultList.Add(Entry)
                 BlurCount += 1 '模糊结果计数
             End If
@@ -2175,7 +2190,7 @@ RetryDir:
     ''' </summary>
     <Extension> Public Function GetResultWithTimeout(Of T)(TargetTask As Task(Of T), TokenSource As CancellationTokenSource, TimeoutMs As Integer) As T
         Dim DelayTask = Task.Delay(TimeoutMs)
-        If Task.WhenAny(TargetTask, DelayTask).GetAwaiter().GetResult() Is DelayTask Then
+        If Task.WhenAny(TargetTask, DelayTask).ConfigureAwait(False).GetAwaiter().GetResult() Is DelayTask Then
             TokenSource.Cancel()
             Throw New TimeoutException($"任务超时（{TimeoutMs} ms）")
         End If
@@ -2186,7 +2201,7 @@ RetryDir:
     ''' </summary>
     <Extension> Public Sub GetResultWithTimeout(TargetTask As Task, TokenSource As CancellationTokenSource, TimeoutMs As Integer)
         Dim DelayTask = Task.Delay(TimeoutMs)
-        If Task.WhenAny(TargetTask, DelayTask).GetAwaiter().GetResult() Is DelayTask Then
+        If Task.WhenAny(TargetTask, DelayTask).ConfigureAwait(False).GetAwaiter().GetResult() Is DelayTask Then
             TokenSource.Cancel()
             Throw New TimeoutException($"任务超时（{TimeoutMs} ms）")
         End If
@@ -2537,7 +2552,7 @@ NextElement:
     ''' 选择最大值对应的对象。
     ''' 若没有元素则返回 Nothing。
     ''' </summary>
-    <Extension> Public Function MaxOf(Of T, C As IComparable(Of C))(Source As IEnumerable(Of T), Selector As Func(Of T, C)) As T
+    <Extension> Public Function MaxBy(Of T, C As IComparable(Of C))(Source As IEnumerable(Of T), Selector As Func(Of T, C)) As T
         Using Enumerator = Source.GetEnumerator()
             If Not Enumerator.MoveNext() Then Return Nothing
             Dim MaxItem As T = Enumerator.Current
@@ -2555,7 +2570,7 @@ NextElement:
     ''' 选择最小值对应的对象。
     ''' 若没有元素则返回 Nothing。
     ''' </summary>
-    <Extension> Public Function MinOf(Of T, C As IComparable(Of C))(List As IEnumerable(Of T), Selector As Func(Of T, C)) As T
+    <Extension> Public Function MinBy(Of T, C As IComparable(Of C))(List As IEnumerable(Of T), Selector As Func(Of T, C)) As T
         Using Enumerator = List.GetEnumerator()
             If Not Enumerator.MoveNext() Then Return Nothing
             Dim MinItem As T = Enumerator.Current

@@ -359,8 +359,38 @@ GroupDone:
                         If Not Instance.IsLoaded Then Instance.Load()
                         '只对 Mod 和数据包进行版本检测
                         If File.Type = CompType.Mod OrElse File.Type = CompType.DataPack Then
-                            If File.GameVersions.Any(Function(v) v.Contains(".")) AndAlso
-                               Not File.GameVersions.Any(Function(v) v.Contains(".") AndAlso v = Instance.Version.VanillaName) Then Return False
+                            If Not File.GameVersions.Any( '判断是否有任何一个版本匹配
+                            Function(FileVersion)
+                                Dim FileIsSnapshot As Boolean = FileVersion.Contains("预览版") OrElse Not FileVersion.Contains(".")
+                                Dim InstanceIsSnapshot As Boolean = Instance.Version.VanillaName.Contains("snapshot") OrElse Not Instance.Version.VanillaName.Contains(".")
+                                If FileIsSnapshot <> InstanceIsSnapshot Then
+                                    '只有一种是预览版
+                                    Return False
+                                ElseIf Not FileIsSnapshot AndAlso Not InstanceIsSnapshot Then
+                                    '都不是预览版
+                                    Return FileVersion = Instance.Version.VanillaName
+                                Else
+                                    '都是预览版
+                                    Dim FileIsNewFormat As Boolean = FileVersion.Contains(".") AndAlso Val(FileVersion.BeforeFirst(".")) > 1
+                                    Dim InstanceIsNewFormat As Boolean = Instance.Version.Drop > 250
+                                    If FileIsNewFormat <> InstanceIsNewFormat Then
+                                        '只有一种是新格式快照
+                                        Return False
+                                    ElseIf FileIsNewFormat AndAlso InstanceIsNewFormat Then
+                                        '都是新格式快照
+                                        Return FileVersion.BeforeFirst(" ") = Instance.Version.VanillaName.BeforeFirst("-")
+                                    Else
+                                        '都是旧格式快照
+                                        If FileVersion.Contains("w") AndAlso Instance.Version.VanillaName.Contains("w") Then
+                                            '都是 w 快照
+                                            Return FileVersion = Instance.Version.VanillaName
+                                        Else
+                                            '不全是 w 快照
+                                            Return True '只能假定相同，无法判断
+                                        End If
+                                    End If
+                                End If
+                            End Function) Then Return False
                         End If
                         '加载器
                         If Not AllowedLoaders.Any() Then Return True '无要求

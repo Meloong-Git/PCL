@@ -54,6 +54,7 @@
             TextAdvanceJvm.Text = Setup.Get("LaunchAdvanceJvm")
             TextAdvanceGame.Text = Setup.Get("LaunchAdvanceGame")
             TextAdvanceRun.Text = Setup.Get("LaunchAdvanceRun")
+            ComboAdvanceGC.SelectedIndex = Setup.Get("LaunchAdvanceGC")
             CheckAdvanceRunWait.Checked = Setup.Get("LaunchAdvanceRunWait")
             CheckAdvanceDisableJLW.Checked = Setup.Get("LaunchAdvanceDisableJLW")
             CheckAdvanceGraphicCard.Checked = Setup.Get("LaunchAdvanceGraphicCard")
@@ -85,6 +86,7 @@
             Setup.Reset("LaunchAdvanceJvm")
             Setup.Reset("LaunchAdvanceGame")
             Setup.Reset("LaunchAdvanceRun")
+            Setup.Reset("LaunchAdvanceGC")
             Setup.Reset("LaunchAdvanceRunWait")
             Setup.Reset("LaunchAdvanceDisableJLW")
             Setup.Reset("LaunchAdvanceGraphicCard")
@@ -111,7 +113,7 @@
     Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderRamCustom.Change
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value)
     End Sub
-    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboArgumentIndieV2.SelectionChanged, ComboArgumentVisibie.SelectionChanged, ComboArgumentWindowType.SelectionChanged, ComboArgumentPriority.SelectionChanged
+    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboArgumentIndieV2.SelectionChanged, ComboArgumentVisibie.SelectionChanged, ComboArgumentWindowType.SelectionChanged, ComboArgumentPriority.SelectionChanged, ComboAdvanceGC.SelectionChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex)
     End Sub
     Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckAdvanceRunWait.Change, CheckArgumentRam.Change, CheckAdvanceDisableJLW.Change, CheckAdvanceGraphicCard.Change

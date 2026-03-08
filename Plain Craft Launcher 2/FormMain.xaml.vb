@@ -11,6 +11,11 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
 #If BETA Then
+        If LastVersion < 381 Then 'Release 2.12.2
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法搜索 CurseForge 上的社区资源"))
+            FeatureCount += 3
+            BugCount += 13
+        End If
         If LastVersion < 379 Then 'Release 2.12.1
             If LastVersion >= 376 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：暂时隐藏联机入口……不过只是暂时关闭，它还会回来的！"))
@@ -128,8 +133,15 @@ Public Class FormMain
         '3：BUG+ IMP* FEAT-
         '2：BUG* IMP-
         '1：BUG-
+        If LastVersion < 382 Then 'Snapshot 2.12.3
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：部分关键词搜不到资源，特别是中文 Mod 搜索经常没有结果"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：下载可能完全卡住，或是下载进度反复回退"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "新增：内存管理设置，可以选择 G1GC、ZGC 或分代 ZGC"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：来自 Modrinth 的文件下载速度"))
+            FeatureCount += 15
+            BugCount += 16
+        End If
         If LastVersion < 380 Then 'Snapshot 2.12.2
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法搜索 CurseForge 上的社区资源"))
             FeatureCount += 3
             BugCount += 13
         End If
@@ -606,6 +618,12 @@ Public Class FormMain
             Setup.Set("ToolDownloadTranslateV2", Setup.Get("ToolDownloadTranslate") + 1)
             Log("[Start] 已从老版本迁移 Mod 命名设置")
         End If
+        '重置 JVM 参数设置
+        If LastVersionCode <= 381 AndAlso Not Setup.IsUnset("LaunchAdvanceJvm") AndAlso
+           Setup.Get("LaunchAdvanceJvm").ToString.Replace("-XX:+UseG1GC ", "").Replace("-XX:-UseAdaptiveSizePolicy ", "").Trim = Setup.GetDefault("LaunchAdvanceJvm") Then
+            Setup.Reset("LaunchAdvanceJvm")
+            Log("[Start] 已重置 JVM 参数设置")
+        End If
         '输出更新日志
         If LastVersionCode <= 0 Then Return
         If LowerVersionCode >= VersionCode Then Return
@@ -819,12 +837,12 @@ Public Class FormMain
             Log(ex, "切回窗口时出错", LogLevel.Feedback)
         End Try
         '读取剪贴板，自动加入联机房间
+        Return 'UNDONE: 联机复活赛
         If PageLinkMain.LinkState <> PageLinkMain.LinkStates.Waiting Then Return '已启动联机
         If PageCurrent = PageType.Link Then Return '已在联机界面
         Dim Code = ClipboardGetText() : If Code Is Nothing Then Return '剪贴板无文本
-        If Setup.Get("LinkLastAutoJoinInviteCode") = Code Then Return                                                                                                                                                                                                                                                                                                                                                                                                                  
-        ' If PageLinkMain.ValidateCodeFormat(Code) IsNot Nothing Then Return '不是邀请码
-        Return     '联机关闭 直接return                                                                                                                                                                                                                                                                                                                                                                                                                        
+        If Setup.Get("LinkLastAutoJoinInviteCode") = Code Then Return
+        If PageLinkMain.ValidateCodeFormat(Code) IsNot Nothing Then Return '不是邀请码
         Setup.Set("LinkLastAutoJoinInviteCode", Code)
         RunInThread(
         Sub()

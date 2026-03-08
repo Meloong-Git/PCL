@@ -51,6 +51,7 @@
             '高级设置
             TextAdvanceJvm.Text = Setup.Get("VersionAdvanceJvm", Instance:=PageInstanceLeft.Instance)
             TextAdvanceGame.Text = Setup.Get("VersionAdvanceGame", Instance:=PageInstanceLeft.Instance)
+            ComboAdvanceGC.SelectedIndex = Setup.Get("VersionAdvanceGC", Instance:=PageInstanceLeft.Instance)
             TextAdvanceRun.Text = Setup.Get("VersionAdvanceRun", Instance:=PageInstanceLeft.Instance)
             CheckAdvanceRunWait.Checked = Setup.Get("VersionAdvanceRunWait", Instance:=PageInstanceLeft.Instance)
             If Setup.Get("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance) = 2 Then
@@ -86,6 +87,7 @@
             Setup.Reset("VersionRamOptimize", Instance:=PageInstanceLeft.Instance)
             Setup.Reset("VersionAdvanceJvm", Instance:=PageInstanceLeft.Instance)
             Setup.Reset("VersionAdvanceGame", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceGC", Instance:=PageInstanceLeft.Instance)
             Setup.Reset("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance)
             Setup.Reset("VersionAdvanceAssetsV2", Instance:=PageInstanceLeft.Instance)
             Setup.Reset("VersionAdvanceJava", Instance:=PageInstanceLeft.Instance)
@@ -93,7 +95,6 @@
             Setup.Reset("VersionAdvanceRunWait", Instance:=PageInstanceLeft.Instance)
             Setup.Reset("VersionAdvanceDisableJLW", Instance:=PageInstanceLeft.Instance)
             Setup.Reset("VersionAdvanceDisableModUpdate", Instance:=PageInstanceLeft.Instance)
-
             Setup.Reset("VersionArgumentJavaSelect", Instance:=PageInstanceLeft.Instance)
             JavaSearchLoader.Start(IsForceRestart:=True)
 
@@ -121,7 +122,7 @@
     Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderRamCustom.Change
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value, Instance:=PageInstanceLeft.Instance)
     End Sub
-    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboRamOptimize.SelectionChanged
+    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboRamOptimize.SelectionChanged, ComboAdvanceGC.SelectionChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex, Instance:=PageInstanceLeft.Instance)
     End Sub
     Private Shared Sub CheckBoxLikeComboChange(sender As MyComboBox, e As Object) Handles ComboArgumentIndieV2.SelectionChanged

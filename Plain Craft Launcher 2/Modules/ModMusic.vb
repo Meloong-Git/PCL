@@ -283,9 +283,9 @@
             Try
                 Reader = New NAudio.Wave.AudioFileReader(MusicCurrent)
             Catch ex As Exception
-                Log(ex,"[Music] 使用 AudioFileReader 加载音频文件失败，将换用 Media Foundation 加载音频文件。")
+                Log(ex, "使用 AudioFileReader 加载音频文件失败，换用 MediaFoundationReader 重试", LogLevel.Developer)
+                Reader = New NAudio.Wave.MediaFoundationReader(MusicCurrent)
             End Try
-            Reader = New NAudio.Wave.MediaFoundationReader(MusicCurrent)
             CurrentWave.Init(Reader)
             CurrentWave.Play()
             '第一次打开的暂停
@@ -316,9 +316,7 @@
                 Hint("由于音频设备变更，音乐播放功能在重启 PCL 后才能恢复！", HintType.Red)
                 Thread.Sleep(1000000000)
             End If
-            If ex.Message.Contains("Got a frame at sample rate") OrElse ex.Message.Contains("does not support changes to") Then
-                Hint("播放音乐失败（" & GetFileNameFromPath(MusicCurrent) & "）：PCL 不支持播放音频属性在中途发生变化的音乐", HintType.Red)
-            ElseIf Not (MusicCurrent.EndsWithF(".wav", True) OrElse MusicCurrent.EndsWithF(".mp3", True) OrElse MusicCurrent.EndsWithF(".flac", True)) OrElse
+            If Not (MusicCurrent.EndsWithF(".wav", True) OrElse MusicCurrent.EndsWithF(".mp3", True) OrElse MusicCurrent.EndsWithF(".flac", True)) OrElse
                 ex.Message.Contains("0xC00D36C4") Then '#5096：不支持给定的 URL 的字节流类型。 (异常来自 HRESULT:0xC00D36C4)
                 Hint("播放音乐失败（" & GetFileNameFromPath(MusicCurrent) & "）：PCL 可能不支持此音乐格式，请将格式转换为 .wav、.mp3 或 .flac 后再试", HintType.Red)
             Else

@@ -101,12 +101,13 @@
         {"LaunchArgumentWindowHeight", New SetupEntry(480)},
         {"LaunchArgumentWindowType", New SetupEntry(1)},
         {"LaunchArgumentRam", New SetupEntry(False, Source:=SetupSource.Registry)},
-        {"LaunchAdvanceJvm", New SetupEntry("-XX:+UseG1GC -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -Djdk.lang.Process.allowAmbiguousCommands=true -Dfml.ignoreInvalidMinecraftCertificates=True -Dfml.ignorePatchDiscrepancies=True -Dlog4j2.formatMsgNoLookups=true")},
+        {"LaunchAdvanceJvm", New SetupEntry("-XX:-OmitStackTraceInFastThrow -Djdk.lang.Process.allowAmbiguousCommands=true -Dfml.ignoreInvalidMinecraftCertificates=True -Dfml.ignorePatchDiscrepancies=True -Dlog4j2.formatMsgNoLookups=true")},
         {"LaunchAdvanceGame", New SetupEntry("")},
         {"LaunchAdvanceRun", New SetupEntry("")},
         {"LaunchAdvanceRunWait", New SetupEntry(True)},
         {"LaunchAdvanceDisableJLW", New SetupEntry(False)},
         {"LaunchAdvanceGraphicCard", New SetupEntry(True, Source:=SetupSource.Registry)},
+        {"LaunchAdvanceGC", New SetupEntry(1)},
         {"LaunchRamType", New SetupEntry(0)},
         {"LaunchRamCustom", New SetupEntry(15)},
         {"LinkLastAutoJoinInviteCode", New SetupEntry("", Source:=SetupSource.Registry)},
@@ -180,6 +181,7 @@
         {"VersionAdvanceRunWait", New SetupEntry(True, Source:=SetupSource.Instance)},
         {"VersionAdvanceDisableJLW", New SetupEntry(False, Source:=SetupSource.Instance)},
         {"VersionAdvanceDisableModUpdate", New SetupEntry(False, Source:=SetupSource.Instance)},
+        {"VersionAdvanceGC", New SetupEntry(0, Source:=SetupSource.Instance)},
         {"VersionRamType", New SetupEntry(2, Source:=SetupSource.Instance)},
         {"VersionRamCustom", New SetupEntry(15, Source:=SetupSource.Instance)},
         {"VersionRamOptimize", New SetupEntry(0, Source:=SetupSource.Instance)},
@@ -529,72 +531,57 @@
         FrmMain.ImgBack.Margin = New Thickness(-(Value + 1) / 1.8)
     End Sub
     Public Sub UiBackgroundSuit(Value As Integer)
-        If IsNothing(FrmMain.ImgBack.Background) Then Return
-        Dim Width As Double = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Width
-        Dim Height As Double = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Height
+        If FrmMain.ImgBack.Background Is Nothing Then Return
+        Dim Brush As ImageBrush = CType(FrmMain.ImgBack.Background, ImageBrush)
         If Value = 0 Then
             '智能：当图片较小时平铺，较大时适应
-            If Width < FrmMain.PanMain.ActualWidth / 2 AndAlso Height < FrmMain.PanMain.ActualHeight / 2 Then
+            If Brush.ImageSource.Width < FrmMain.PanMain.ActualWidth / 2 AndAlso Brush.ImageSource.Height < FrmMain.PanMain.ActualHeight / 2 Then
                 Value = 4 '平铺
             Else
                 Value = 2 '适应
             End If
         End If
-        CType(FrmMain.ImgBack.Background, ImageBrush).TileMode = TileMode.None
-        CType(FrmMain.ImgBack.Background, ImageBrush).Viewport = New Rect(0, 0, 1, 1)
-        CType(FrmMain.ImgBack.Background, ImageBrush).ViewportUnits = BrushMappingMode.RelativeToBoundingBox
+        Brush.Stretch = Stretch.UniformToFill
+        Brush.TileMode = TileMode.None
+        Brush.Viewport = New Rect(0, 0, 1, 1)
+        Brush.ViewportUnits = BrushMappingMode.RelativeToBoundingBox
         Select Case Value
-            Case 1 '居中
-                FrmMain.ImgBack.HorizontalAlignment = HorizontalAlignment.Center
-                FrmMain.ImgBack.VerticalAlignment = VerticalAlignment.Center
-                CType(FrmMain.ImgBack.Background, ImageBrush).Stretch = Stretch.None
-                FrmMain.ImgBack.Width = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Width
-                FrmMain.ImgBack.Height = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Height
             Case 2 '适应
-                FrmMain.ImgBack.HorizontalAlignment = HorizontalAlignment.Stretch
-                FrmMain.ImgBack.VerticalAlignment = VerticalAlignment.Stretch
-                CType(FrmMain.ImgBack.Background, ImageBrush).Stretch = Stretch.UniformToFill
-                FrmMain.ImgBack.Width = Double.NaN
-                FrmMain.ImgBack.Height = Double.NaN
             Case 3 '拉伸
-                FrmMain.ImgBack.HorizontalAlignment = HorizontalAlignment.Stretch
-                FrmMain.ImgBack.VerticalAlignment = VerticalAlignment.Stretch
-                CType(FrmMain.ImgBack.Background, ImageBrush).Stretch = Stretch.Fill
-                FrmMain.ImgBack.Width = Double.NaN
-                FrmMain.ImgBack.Height = Double.NaN
+                Brush.Stretch = Stretch.Fill
             Case 4 '平铺
-                FrmMain.ImgBack.HorizontalAlignment = HorizontalAlignment.Stretch
-                FrmMain.ImgBack.VerticalAlignment = VerticalAlignment.Stretch
-                CType(FrmMain.ImgBack.Background, ImageBrush).Stretch = Stretch.None
-                CType(FrmMain.ImgBack.Background, ImageBrush).TileMode = TileMode.Tile
-                CType(FrmMain.ImgBack.Background, ImageBrush).Viewport = New Rect(0, 0, CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Width, CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Height)
-                CType(FrmMain.ImgBack.Background, ImageBrush).ViewportUnits = BrushMappingMode.Absolute
-                FrmMain.ImgBack.Width = Double.NaN
-                FrmMain.ImgBack.Height = Double.NaN
+                Brush.Stretch = Stretch.None
+                Brush.TileMode = TileMode.Tile
+                Brush.Viewport = New Rect(0, 0, Brush.ImageSource.Width, Brush.ImageSource.Height)
+                Brush.ViewportUnits = BrushMappingMode.Absolute
+
+            Case 1 '中
+                Brush.AlignmentX = AlignmentX.Center
+                Brush.AlignmentY = AlignmentY.Center
             Case 5 '左上
-                FrmMain.ImgBack.HorizontalAlignment = HorizontalAlignment.Left
-                FrmMain.ImgBack.VerticalAlignment = VerticalAlignment.Top
-                CType(FrmMain.ImgBack.Background, ImageBrush).Stretch = Stretch.None
-                FrmMain.ImgBack.Width = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Width
-                FrmMain.ImgBack.Height = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Height
+                Brush.AlignmentX = AlignmentX.Left
+                Brush.AlignmentY = AlignmentY.Top
             Case 6 '右上
-                FrmMain.ImgBack.HorizontalAlignment = HorizontalAlignment.Right
-                FrmMain.ImgBack.VerticalAlignment = VerticalAlignment.Top
-                CType(FrmMain.ImgBack.Background, ImageBrush).Stretch = Stretch.None
-                FrmMain.ImgBack.Width = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Width
-                FrmMain.ImgBack.Height = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Height
+                Brush.AlignmentX = AlignmentX.Right
+                Brush.AlignmentY = AlignmentY.Top
             Case 7 '左下
-                FrmMain.ImgBack.HorizontalAlignment = HorizontalAlignment.Left
-                FrmMain.ImgBack.VerticalAlignment = VerticalAlignment.Bottom
-                CType(FrmMain.ImgBack.Background, ImageBrush).Stretch = Stretch.None
-                FrmMain.ImgBack.Width = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Width
-                FrmMain.ImgBack.Height = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Height
+                Brush.AlignmentX = AlignmentX.Left
+                Brush.AlignmentY = AlignmentY.Bottom
             Case 8 '右下
-                FrmMain.ImgBack.HorizontalAlignment = HorizontalAlignment.Right
-                FrmMain.ImgBack.VerticalAlignment = VerticalAlignment.Bottom
-                CType(FrmMain.ImgBack.Background, ImageBrush).Stretch = Stretch.None
-                FrmMain.ImgBack.Width = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Width
-                FrmMain.ImgBack.Height = CType(FrmMain.ImgBack.Background, ImageBrush).ImageSource.Height
+                Brush.AlignmentX = AlignmentX.Right
+                Brush.AlignmentY = AlignmentY.Bottom
+            Case 9 '左
+                Brush.AlignmentX = AlignmentX.Left
+                Brush.AlignmentY = AlignmentY.Center
+            Case 10 '右
+                Brush.AlignmentX = AlignmentX.Right
+                Brush.AlignmentY = AlignmentY.Center
+            Case 11 '上
+                Brush.AlignmentX = AlignmentX.Center
+                Brush.AlignmentY = AlignmentY.Top
+            Case 12 '下
+                Brush.AlignmentX = AlignmentX.Center
+                Brush.AlignmentY = AlignmentY.Bottom
         End Select
     End Sub
 

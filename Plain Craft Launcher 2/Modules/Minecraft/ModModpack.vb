@@ -636,9 +636,8 @@ Retry:
         Dim Request As New McInstallRequest With {.NewInstanceName = InstanceName, .VersionFolder = $"{McFolderSelected}versions\{InstanceName}\"}
         For Each Component As JObject In PackJson("components")
             If Not Component.ContainsKey("uid") Then Continue For
-            Select Case Component("uid").ToString
-                Case "org.lwjgl"
-                    Log("[ModPack] 已跳过 LWJGL 项")
+            Dim UID As String = Component("uid").ToString
+            Select Case UID
                 Case "net.minecraft"
                     Request.MinecraftName = Component("version")
                 Case "net.minecraftforge"
@@ -647,9 +646,13 @@ Retry:
                     Request.NeoForgeVersion = Component("version")
                 Case "net.fabricmc.fabric-loader"
                     Request.FabricVersion = Component("version")
-                Case Else
                     'Case "org.quiltmc.quilt-loader" 'eg. 1.0.0
-                    NotifyIncompatibleLoader(Component("uid"))
+                Case Else
+                    If UID.StartsWithF("org.lwjgl") Then '#8210
+                        Log("[ModPack] 已跳过 LWJGL 项：" & UID)
+                    Else
+                        NotifyIncompatibleLoader(UID)
+                    End If
             End Select
         Next
         '构造加载器

@@ -94,10 +94,14 @@
                             <local:MyComboBoxItem Content="适应" ToolTip="拉伸图片并保持长宽比不变，直至填满整个窗口" />
                             <local:MyComboBoxItem Content="拉伸" ToolTip="拉伸图片使其恰好填满整个窗口，很可能会导致长宽比的改变" />
                             <local:MyComboBoxItem Content="平铺" />
-                            <local:MyComboBoxItem Content="居于左上" />
-                            <local:MyComboBoxItem Content="居于右上" />
-                            <local:MyComboBoxItem Content="居于左下" />
-                            <local:MyComboBoxItem Content="居于右下" />
+                            <local:MyComboBoxItem Content="左上" />
+                            <local:MyComboBoxItem Content="右上" />
+                            <local:MyComboBoxItem Content="左下" />
+                            <local:MyComboBoxItem Content="右下" />
+                            <local:MyComboBoxItem Content="左" />
+                            <local:MyComboBoxItem Content="右" />
+                            <local:MyComboBoxItem Content="上" />
+                            <local:MyComboBoxItem Content="下" />
                         </local:MyComboBox>
                     </Grid>
                     <Grid x:Name="PanBackgroundOpacity" Height="22" Margin="0,0,0,7" Visibility="Collapsed">

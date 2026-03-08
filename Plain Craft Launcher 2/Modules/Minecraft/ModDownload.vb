@@ -1176,17 +1176,17 @@
                     Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
                     Urls.Add(New KeyValuePair(Of String, Integer)(Url, 30))
                 Case 1
-                    Urls.Add(New KeyValuePair(Of String, Integer)(Url, 10)) '至少 10s，要不然有时候远端服务器来不及完成
+                    Urls.Add(New KeyValuePair(Of String, Integer)(Url, If(Url.Contains("modrinth"), 20, 10))) '至少 20s，要不然 Modrinth 返回不过来
                     Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
                     Urls.Add(New KeyValuePair(Of String, Integer)(Url, 30))
                     Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 30))
                 Case Else
-                    Urls.Add(New KeyValuePair(Of String, Integer)(Url, 10))
+                    Urls.Add(New KeyValuePair(Of String, Integer)(Url, If(Url.Contains("modrinth"), 20, 10)))
                     Urls.Add(New KeyValuePair(Of String, Integer)(Url, 30))
                     Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 30))
             End Select
         Else
-            Urls.Add(New KeyValuePair(Of String, Integer)(Url, 10))
+            Urls.Add(New KeyValuePair(Of String, Integer)(Url, If(Url.Contains("modrinth"), 20, 10)))
             Urls.Add(New KeyValuePair(Of String, Integer)(Url, 30))
         End If
         Dim Exs As String = ""
