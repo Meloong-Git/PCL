@@ -69,6 +69,17 @@ Friend Module ModSecret
         DataList.Add("-Xmn" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024 * 0.15) & "m")
         DataList.Add("-Xmx" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024) & "m")
         If Not DataList.Any(Function(d) d.Contains("-Dlog4j2.formatMsgNoLookups=true")) Then DataList.Add("-Dlog4j2.formatMsgNoLookups=true")
+        
+        '为 Java 7 及更早版本自动添加永久代内存参数
+        If McLaunchJavaSelected.MajorVersion <= 7 Then
+            If Not DataList.Any(Function(d) d.Contains("-XX:PermSize=") OrElse d.Contains("-XX:MaxPermSize=")) Then
+                DataList.Add("-XX:PermSize=256m")
+                DataList.Add("-XX:MaxPermSize=512m")
+                McLaunchLog("检测到 Java " & McLaunchJavaSelected.MajorVersion & "，已自动添加永久代内存参数")
+            Else
+                McLaunchLog("检测到 Java " & McLaunchJavaSelected.MajorVersion & "，用户已自定义永久代参数，跳过自动添加")
+            End If
+        End If
     End Sub
 
 #End Region
