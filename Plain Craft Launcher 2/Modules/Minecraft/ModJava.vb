@@ -521,6 +521,8 @@ NoUserJava:
             Next
             '查找 .jdks 文件夹中的 Java
             JavaSearchFolder(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\.jdks\", JavaPreList, False, True)
+            '查找 SDKMAN 安装目录中的 Java
+            JavaSearchFolder(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\.sdkman\candidates\java\", JavaPreList, False, True)
             '查找 APPDATA 文件夹中的 Java
             JavaSearchFolder(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\", JavaPreList, False)
             JavaSearchFolder(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) & "\", JavaPreList, False)
