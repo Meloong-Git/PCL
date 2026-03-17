@@ -7,6 +7,30 @@ Public Module ModNet
 #Region "网络请求"
 
     ''' <summary>
+    ''' 确定是否使用代理。
+    ''' </summary>
+    ''' <returns>返回 WebProxy 或者 Nothing</returns>
+    Public Function GetProxy() As WebProxy
+        Dim ProxyServer As String = Setup.Get("ToolDownloadProxy")
+        If Not String.IsNullOrWhiteSpace(ProxyServer) Then
+            Log("[Net] 当前代理状态：自定义")
+            Dim ProxyUri As New Uri(ProxyServer)
+            If Not ProxyUri.Scheme.StartsWithF("http") Then Return Nothing '只允许 http/https 协议
+            Try
+                If ProxyUri.IsLoopback OrElse
+                   ProxyUri.Host.StartsWithF("192.168.") OrElse
+                   ProxyUri.Host.StartsWithF("10.") OrElse
+                   ProxyUri.Host.StartsWithF("fe80") OrElse
+                   (ProxyUri.Host.Split(".")(1) > 16 AndAlso ProxyUri.Host.Split(".")(1) < 31 AndAlso ProxyUri.Host.StartsWithF("172.")) Then Log($"[Net] 使用 {ProxyUri} 作为网络代理")
+                '视作非本地地址
+            Catch
+            End Try
+            Return New WebProxy(ProxyServer, True)
+        End If
+        Log("[Net] 当前代理状态：跟随系统代理设置")
+        Return Nothing
+    End Function
+    ''' <summary>
     ''' 发送一次网络请求并获取返回内容。
     ''' </summary>
     Public Function NetRequestByClient(Url As String, Optional Method As HttpMethod = Nothing,
@@ -256,6 +280,7 @@ RequestFinished:
                 '延迟初始化，以避免在程序启动前加载 CacheCow 导致 DLL 加载失败
                 If RequestClient Is Nothing Then
                     RequestClient = CacheCow.Client.ClientExtensions.CreateClient(New CacheCow.Client.FileCacheStore.FileStore(PathTemp & "Cache/Http/"), New HttpClientHandler With {
+                        .Proxy = GetProxy(),
                         .AutomaticDecompression = DecompressionMethods.Deflate Or DecompressionMethods.GZip,
                         .UseCookies = False '不设为 False 就不能从 Header 手动传入 Cookies
                     })
@@ -393,6 +418,7 @@ RequestFinished:
 #Region "多线程下载引擎"
 
     Private ThreadClient As New HttpClient(New HttpClientHandler With {
+        .Proxy = GetProxy(),
         .AutomaticDecompression = DecompressionMethods.Deflate Or DecompressionMethods.GZip
     })
 

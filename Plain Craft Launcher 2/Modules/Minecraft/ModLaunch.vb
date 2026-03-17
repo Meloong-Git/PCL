@@ -1439,6 +1439,13 @@ Retry:
             End Try
         End If
 
+        '设置代理
+        If Setup.Get("VersionAdvanceUseProxy", McInstanceSelected) AndAlso Not String.IsNullOrWhiteSpace(Setup.Get("ToolDownloadProxy")) Then
+            Dim ProxyAddress As New Uri(Setup.Get("ToolDownloadProxy"))
+            DataList.Add($"-D{If(ProxyAddress.Scheme.StartsWithF("https"), "https", "http")}.proxyHost={ProxyAddress.Host}")
+            DataList.Add($"-D{If(ProxyAddress.Scheme.StartsWithF("https"), "https", "http")}.proxyPort={ProxyAddress.Port}")
+        End If
+
         '添加 Java Wrapper 作为主 Jar
         If Not Setup.Get("LaunchAdvanceDisableJLW") AndAlso Not Setup.Get("VersionAdvanceDisableJLW", McInstanceSelected) Then
             If McLaunchJavaSelected.MajorVersion >= 9 Then DataList.Add("--add-exports cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED")
@@ -1508,6 +1515,13 @@ NextInstance:
             Catch ex As Exception
                 Throw New Exception("无法连接到第三方登录服务器（" & If(Server, Nothing) & "）", ex)
             End Try
+        End If
+
+        '设置代理
+        If Setup.Get("VersionAdvanceUseProxy", McInstanceSelected) AndAlso Not String.IsNullOrWhiteSpace(Setup.Get("ToolDownloadProxy")) Then
+            Dim ProxyAddress As New Uri(Setup.Get("ToolDownloadProxy"))
+            DataList.Add($"-D{If(ProxyAddress.Scheme.StartsWithF("https"), "https", "http")}.proxyHost={ProxyAddress.Host}")
+            DataList.Add($"-D{If(ProxyAddress.Scheme.StartsWithF("https"), "https", "http")}.proxyPort={ProxyAddress.Port}")
         End If
 
         '添加 Java Wrapper 作为主 Jar

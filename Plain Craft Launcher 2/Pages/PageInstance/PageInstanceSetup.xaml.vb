@@ -63,6 +63,7 @@
             CheckAdvanceJava.Checked = Setup.Get("VersionAdvanceJava", Instance:=PageInstanceLeft.Instance)
             CheckAdvanceDisableJLW.Checked = Setup.Get("VersionAdvanceDisableJLW", Instance:=PageInstanceLeft.Instance)
             CheckAdvanceDisableModUpdate.Checked = Setup.Get("VersionAdvanceDisableModUpdate", Instance:=PageInstanceLeft.Instance)
+            CheckAdvanceUseProxy.Checked = Setup.Get("VersionAdvanceUseProxy", Instance:=PageInstanceLeft.Instance)
 
         Catch ex As Exception
             Log(ex, "重载版本独立设置时出错", LogLevel.Feedback)
@@ -95,6 +96,7 @@
             Setup.Reset("VersionAdvanceRunWait", Instance:=PageInstanceLeft.Instance)
             Setup.Reset("VersionAdvanceDisableJLW", Instance:=PageInstanceLeft.Instance)
             Setup.Reset("VersionAdvanceDisableModUpdate", Instance:=PageInstanceLeft.Instance)
+            Setup.Reset("VersionAdvanceUseProxy", Instance:=PageInstanceLeft.Instance)
             Setup.Reset("VersionArgumentJavaSelect", Instance:=PageInstanceLeft.Instance)
             JavaSearchLoader.Start(IsForceRestart:=True)
 
@@ -128,7 +130,7 @@
     Private Shared Sub CheckBoxLikeComboChange(sender As MyComboBox, e As Object) Handles ComboArgumentIndieV2.SelectionChanged
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex = 0, Instance:=PageInstanceLeft.Instance)
     End Sub
-    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckAdvanceRunWait.Change, CheckAdvanceAssetsV2.Change, CheckAdvanceJava.Change, CheckAdvanceDisableJLW.Change, CheckAdvanceDisableModUpdate.Change
+    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckAdvanceRunWait.Change, CheckAdvanceAssetsV2.Change, CheckAdvanceJava.Change, CheckAdvanceDisableJLW.Change, CheckAdvanceDisableModUpdate.Change, CheckAdvanceUseProxy.Change
         If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Checked, Instance:=PageInstanceLeft.Instance)
     End Sub
 

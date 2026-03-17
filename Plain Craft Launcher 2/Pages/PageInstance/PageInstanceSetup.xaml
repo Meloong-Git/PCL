@@ -245,6 +245,9 @@
                         <local:MyCheckBox Height="28" Text="禁用 Java Launch Wrapper" x:Name="CheckAdvanceDisableJLW" Tag="VersionAdvanceDisableJLW"
                                           ToolTipService.Placement="Right"
                                           ToolTip="PCL 会使用 Java Launch Wrapper 来修复老版本 Java 在中文路径下无法启动的问题。&#xa;如果这被反作弊拦截，或遇到其他问题，也可以将其关闭。" />
+                        <local:MyCheckBox Height="28" Text="使用代理" x:Name="CheckAdvanceUseProxy" Tag="VersionAdvanceUseProxy"
+                                          ToolTipService.Placement="Right"
+                                          ToolTip="PCL 会使用 设置 → 其他 → 下载 → HTTP 代理 中填写的代理来启动游戏。" />
                     </StackPanel>
                 </Grid>
             </local:MyCard>
