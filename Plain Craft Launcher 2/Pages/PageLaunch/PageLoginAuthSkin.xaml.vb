@@ -45,6 +45,10 @@
     End Sub
 
     Private Sub BtnEdit_Click(sender As Object, e As EventArgs) Handles BtnEdit.Click
+        If Setup.Get("CacheAuthDisallowChangePlayer") Then
+            MyMsgBox("当前档案不允许更换角色，请先退出当前档案，然后再更改角色。", "更换角色失败")
+            Exit Sub
+        End If
         If McLoginLoader.State = LoadState.Loading Then
             Log("[Launch] 要求更换角色，但登录加载器繁忙", LogLevel.Debug)
             If CType(McLoginLoader.Input, McLoginServer).ForceReselectProfile Then
@@ -70,6 +74,7 @@
         End Sub)
     End Sub
     Public Shared Sub ExitLogin() Handles BtnExit.Click
+        Setup.Reset("CacheAuthDisallowChangePlayer")
         Setup.Set("CacheAuthAccess", "")
         Setup.Set("CacheAuthUuid", "")
         Setup.Set("CacheAuthName", "")
