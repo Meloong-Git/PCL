@@ -1513,8 +1513,6 @@ RetryDir:
             Return "你的电脑运行内存不足，导致 PCL 无法继续运行。请在关闭一部分不需要的程序后再试。"
         ElseIf TypeOf InnerEx Is Runtime.InteropServices.COMException Then
             Return "由于操作系统或显卡存在问题，导致出现错误。请尝试重启 PCL。"
-        ElseIf TypeOf InnerEx Is SocketException AndAlso DescList.Any(Function(l) l.Contains("WSAStartup")) Then
-            Return "请尝试卸载中国移动云盘，然后再试。"
         ElseIf OuterEx.IsNetworkRelated() Then
             Return "你的网络环境不佳，请稍后再试，或使用 VPN 改善网络环境。"
         Else
