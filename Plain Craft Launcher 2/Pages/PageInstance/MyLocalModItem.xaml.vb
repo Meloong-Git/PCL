@@ -313,8 +313,8 @@ Public Class MyLocalModItem
             Shortened = True
         Next
         If Shortened AndAlso CurrentSegs.Any() AndAlso NewestSegs.Any() Then
-            CurrentName = Join(CurrentSegs, "-")
-            NewestName = Join(NewestSegs, "-")
+            CurrentName = CurrentSegs.Join("-")
+            NewestName = NewestSegs.Join("-")
             Entry._Version = CurrentName '使用网络信息作为显示的版本号
         End If
         Return $"当前版本：{CurrentName}（{GetTimeSpanString(Entry.CompFile.ReleaseDate - Date.Now, False)}）{vbCrLf}最新版本：{NewestName}（{GetTimeSpanString(Entry.UpdateFile.ReleaseDate - Date.Now, False)}）"
@@ -323,7 +323,7 @@ Public Class MyLocalModItem
     '懒加载
     Public Sub New()
         InitializeComponent()
-        OnFirstEnterScrollViewerViewport(AddressOf FirstEnterScrollViewerViewport)
+        LazyLoadBehavior.OnFirstEnterScrollViewerViewport(Me, AddressOf FirstEnterScrollViewerViewport)
     End Sub
     Private HasEnteredViewport As Boolean = False
     Private Sub FirstEnterScrollViewerViewport()
@@ -347,7 +347,7 @@ Public Class MyLocalModItem
             DescFileName = GetFileNameFromPath(Entry.Path)
         End If
         Dim NewDescription As String
-        If Setup.Get("ToolModLocalNameStyle") = 1 Then
+        If Settings.Get("ToolModLocalNameStyle") = 1 Then
             '标题显示文件名，详情显示译名
             '标题
             Title = DescFileName
@@ -357,7 +357,7 @@ Public Class MyLocalModItem
                 NewDescription = Entry.DisplayName
             Else
                 Dim Titles = Entry.Comp.GetControlTitle(False)
-                NewDescription = Titles.Key & Titles.Value
+                NewDescription = Titles.Title & Titles.SubTitle
             End If
             NewDescription = NewDescription.Replace("  |  ", " / ")
             If Entry.Version IsNot Nothing Then NewDescription &= $" ({Entry.Version})"
@@ -369,8 +369,8 @@ Public Class MyLocalModItem
                 SubTitle = If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
             Else
                 Dim Titles = Entry.Comp.GetControlTitle(False)
-                Title = Titles.Key
-                SubTitle = Titles.Value & If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
+                Title = Titles.Title
+                SubTitle = Titles.SubTitle & If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
             End If
             '描述
             NewDescription = DescFileName

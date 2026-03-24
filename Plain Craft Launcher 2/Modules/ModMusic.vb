@@ -24,13 +24,13 @@
                 Directory.CreateDirectory(Path & "PCL\Musics\")
                 For Each File In EnumerateFiles(Path & "PCL\Musics\")
                     '文件夹可能会被加入 .ini 文件夹配置文件、一些乱七八糟的 .jpg 文件啥的
-                    Dim Ext As String = File.Extension.ToLower
+                    Dim Ext As String = File.Extension.Lower
                     If {".ini", ".jpg", ".txt", ".cfg", ".lrc", ".db", ".png"}.Contains(Ext) Then Continue For
                     MusicAllList.Add(File.FullName)
                 Next
             End If
             '打乱顺序播放
-            MusicWaitingList = If(Setup.Get("UiMusicRandom"), New List(Of String)(MusicAllList).Shuffle().ToList, New List(Of String)(MusicAllList))
+            MusicWaitingList = If(Settings.Get("UiMusicRandom"), New List(Of String)(MusicAllList).Shuffle().ToList, New List(Of String)(MusicAllList))
             If PreventFirst IsNot Nothing AndAlso MusicWaitingList.FirstOrDefault = PreventFirst Then
                 '若需要避免成为第一项的为第一项，则将它放在最后
                 MusicWaitingList.RemoveAt(0)
@@ -129,7 +129,7 @@
     ''' 播放下一曲，并显示提示文本。
     ''' </summary>
     Public Sub MusicControlNext()
-        If MusicAllList.Count = 1 Then
+        If MusicAllList.IsSingle Then
             MusicStartPlay(MusicCurrent)
             Hint("重新播放：" & GetFileNameFromPath(MusicCurrent), HintType.Green)
         Else
@@ -289,14 +289,14 @@
             CurrentWave.Init(Reader)
             CurrentWave.Play()
             '第一次打开的暂停
-            If IsFirstLoad AndAlso Not Setup.Get("UiMusicAuto") Then CurrentWave.Pause()
+            If IsFirstLoad AndAlso Not Settings.Get("UiMusicAuto") Then CurrentWave.Pause()
             MusicRefreshUI()
             '停止条件：播放完毕或变化
             Dim PreviousVolume = 0
             While CurrentWave.Equals(MusicNAudio) AndAlso Not CurrentWave.PlaybackState = NAudio.Wave.PlaybackState.Stopped
-                If Setup.Get("UiMusicVolume") <> PreviousVolume Then
+                If Settings.Get("UiMusicVolume") <> PreviousVolume Then
                     '更新音量
-                    PreviousVolume = Setup.Get("UiMusicVolume")
+                    PreviousVolume = Settings.Get("UiMusicVolume")
                     CurrentWave.Volume = PreviousVolume / 1000
                 End If
                 '更新进度条

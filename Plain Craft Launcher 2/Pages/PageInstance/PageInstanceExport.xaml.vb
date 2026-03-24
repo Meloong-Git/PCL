@@ -305,9 +305,9 @@ Public Class PageInstanceExport
     '保存配置文件
     Private Sub ExportConfig() Handles BtnAdvancedExport.Click
         Try
-            Dim ConfigPath As String = SelectSaveFile("选择文件位置", "export_config.txt", "整合包导出配置(*.txt)|*.txt", Setup.Get("CacheExportConfig"))
+            Dim ConfigPath As String = SelectSaveFile("选择文件位置", "export_config.txt", "整合包导出配置(*.txt)|*.txt", Settings.Get("CacheExportConfig"))
             If String.IsNullOrEmpty(ConfigPath) Then Return
-            Setup.Set("CacheExportConfig", ConfigPath)
+            Settings.Set("CacheExportConfig", ConfigPath)
             Dim ConfigLines As New List(Of String)
             'ini 段
             ConfigLines.Add("Name:" & TextExportName.Text)
@@ -351,9 +351,9 @@ Public Class PageInstanceExport
     '读取配置文件
     Private Sub ImportConfig() Handles BtnAdvancedImport.Click
         Try
-            Dim ConfigPath As String = SelectFile("整合包导出配置(*.txt)|*.txt", "选择配置文件", Setup.Get("CacheExportConfig"))
+            Dim ConfigPath As String = SelectFile("整合包导出配置(*.txt)|*.txt", "选择配置文件", Settings.Get("CacheExportConfig"))
             If String.IsNullOrEmpty(ConfigPath) Then Return
-            Setup.Set("CacheExportConfig", ConfigPath)
+            Settings.Set("CacheExportConfig", ConfigPath)
             Dim Segments As String() = ReadFile(ConfigPath).Split(Sperator)
             'ini 段
             Dim Ini As New Dictionary(Of String, String)
@@ -485,7 +485,7 @@ Public Class PageInstanceExport
                     '检查规则
                     Dim ShouldKeep As Boolean = False
                     For Each Rule In AllRules
-                        Dim Revert = Rule.StartsWith("!")
+                        Dim Revert = Rule.StartsWithF("!")
                         If RelativePath Like Rule.TrimStart("!") Then ShouldKeep = Not Revert
                     Next
                     If Not ShouldKeep Then Continue For
@@ -493,7 +493,7 @@ Public Class PageInstanceExport
                     CopyFile(Entry.FullName, TargetPath)
                     '若为压缩包，考虑联网获取路径
                     If CheckHostedAssets AndAlso
-                       {".zip", ".rar", ".jar", ".disabled", ".old"}.Contains(Entry.Extension.ToLower) AndAlso
+                       {".zip", ".rar", ".jar", ".disabled", ".old"}.Contains(Entry.Extension.Lower) AndAlso
                        {"mods", "packs", "openloader", "resource"}.Any(Function(s) RelativePath.Contains(s)) Then
                         Dim ModFile As New McMod(TargetPath)
                         Dim Unused = ModFile.ModrinthHash '提前计算 Hash
@@ -617,7 +617,7 @@ Public Class PageInstanceExport
 
             '等待线程结束
             Do Until EndedThreadCount = 2
-                If Loader.IsAborted Then Return
+                If Loader.IsInterrupted Then Return
                 Thread.Sleep(10)
             Loop
 

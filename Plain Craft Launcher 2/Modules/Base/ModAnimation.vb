@@ -8,7 +8,12 @@ Public Module ModAnimation
     ''' <summary>
     ''' 动画速度。最大为 200。
     ''' </summary>
-    Public AniSpeed As Double = 1
+    Public ReadOnly Property AniSpeed As Double
+        Get
+            Dim Setting = PCL.Settings.Get("SystemDebugAnim")
+            Return If(Setting >= 30, 200, MathClamp(Setting * 0.1 + 0.1, 0.1, 3))
+        End Get
+    End Property
     ''' <summary>
     ''' 动画组列表。
     ''' </summary>

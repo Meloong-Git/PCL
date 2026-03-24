@@ -1,64 +1,31 @@
 ﻿Public Class PageSetupLaunch
 
-    Private IsLoad As Boolean = False
-
     Private Sub PageSetupLaunch_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-
         '重复加载部分
         PanBack.ScrollToHome()
         RefreshRam(False)
-        If McInstanceSelected Is Nothing Then
-            BtnSwitch.Visibility = Visibility.Collapsed
-        Else
-            BtnSwitch.Visibility = Visibility.Visible
-        End If
+        BtnSwitch.Visibility = If(McInstanceSelected Is Nothing, Visibility.Collapsed, Visibility.Visible)
 
         '非重复加载部分
-        If IsLoad Then Return
-        IsLoad = True
+        Static Reloaded As Boolean = False
+        If Reloaded Then Return
+        Reloaded = True
 
         AniControlEnabled += 1
-        Reload()
+        Refresh()
         AniControlEnabled -= 1
 
         '内存自动刷新
         Dim timer As New Threading.DispatcherTimer With {.Interval = New TimeSpan(0, 0, 0, 1)}
         AddHandler timer.Tick, AddressOf RefreshRam
         timer.Start()
-
     End Sub
-    Public Sub Reload()
+    Public Sub Refresh()
         Try
-
-            '离线皮肤
-            CType(FindName("RadioSkinType" & Setup.Load("LaunchSkinType")), MyRadioBox).Checked = True
-            TextSkinID.Text = Setup.Get("LaunchSkinID")
-
-            '启动参数
-            TextArgumentTitle.Text = Setup.Get("LaunchArgumentTitle")
-            TextArgumentInfo.Text = Setup.Get("LaunchArgumentInfo")
-            ComboArgumentIndieV2.SelectedIndex = Setup.Get("LaunchArgumentIndieV2")
-            ComboArgumentVisibie.SelectedIndex = Setup.Get("LaunchArgumentVisible")
-            ComboArgumentPriority.SelectedIndex = Setup.Get("LaunchArgumentPriority")
-            ComboArgumentWindowType.SelectedIndex = Setup.Get("LaunchArgumentWindowType")
-            TextArgumentWindowWidth.Text = Setup.Get("LaunchArgumentWindowWidth")
-            TextArgumentWindowHeight.Text = Setup.Get("LaunchArgumentWindowHeight")
-            CheckArgumentRam.Checked = Setup.Get("LaunchArgumentRam")
-            RefreshJavaComboBox()
-
-            '游戏内存
-            CType(FindName("RadioRamType" & Setup.Load("LaunchRamType")), MyRadioBox).Checked = True
-            SliderRamCustom.Value = Setup.Get("LaunchRamCustom")
-
-            '高级设置
-            TextAdvanceJvm.Text = Setup.Get("LaunchAdvanceJvm")
-            TextAdvanceGame.Text = Setup.Get("LaunchAdvanceGame")
-            TextAdvanceRun.Text = Setup.Get("LaunchAdvanceRun")
-            ComboAdvanceGC.SelectedIndex = Setup.Get("LaunchAdvanceGC")
-            CheckAdvanceRunWait.Checked = Setup.Get("LaunchAdvanceRunWait")
-            CheckAdvanceDisableJLW.Checked = Setup.Get("LaunchAdvanceDisableJLW")
-            CheckAdvanceGraphicCard.Checked = Setup.Get("LaunchAdvanceGraphicCard")
-
+            SettingService.RefreshSettings(Me)
+            UpdateSkinType()
+            UpdateRamType()
+            UpdateJavaComboBox()
         Catch ex As NullReferenceException
             Log(ex, "启动设置项存在异常，已被自动重置", LogLevel.Msgbox)
             Reset()
@@ -66,58 +33,18 @@
             Log(ex, "重载启动设置时出错", LogLevel.Feedback)
         End Try
     End Sub
-
-    '初始化
     Public Sub Reset()
         Try
-            Setup.Reset("LaunchArgumentTitle")
-            Setup.Reset("LaunchArgumentInfo")
-            Setup.Set("LaunchArgumentIndieV2", Setup.GetDefault("LaunchArgumentIndieV2"))
-            Setup.Reset("LaunchArgumentVisible")
-            Setup.Reset("LaunchArgumentWindowType")
-            Setup.Reset("LaunchArgumentWindowWidth")
-            Setup.Reset("LaunchArgumentWindowHeight")
-            Setup.Reset("LaunchArgumentPriority")
-            Setup.Reset("LaunchArgumentRam")
-            Setup.Reset("LaunchRamType")
-            Setup.Reset("LaunchRamCustom")
-            Setup.Reset("LaunchSkinType")
-            Setup.Reset("LaunchSkinID")
-            Setup.Reset("LaunchAdvanceJvm")
-            Setup.Reset("LaunchAdvanceGame")
-            Setup.Reset("LaunchAdvanceRun")
-            Setup.Reset("LaunchAdvanceGC")
-            Setup.Reset("LaunchAdvanceRunWait")
-            Setup.Reset("LaunchAdvanceDisableJLW")
-            Setup.Reset("LaunchAdvanceGraphicCard")
-            Setup.Reset("LaunchArgumentJavaAll")
-            Setup.Reset("LaunchArgumentJavaSelect")
+            SettingService.ResetSettings(Me)
+            Settings.Set("LaunchArgumentIndieV2", Settings.GetDefault("LaunchArgumentIndieV2"))
+            Settings.Reset("LaunchArgumentJavaAll")
+            Settings.Reset("LaunchArgumentJavaSelect")
             JavaSearchLoader.Start(IsForceRestart:=True)
-
-            Log("[Setup] 已初始化启动设置")
-            Hint("已初始化启动设置！", HintType.Green, False)
+            Hint("已初始化启动设置！", HintType.Green)
         Catch ex As Exception
             Log(ex, "初始化启动设置失败", LogLevel.Msgbox)
         End Try
-
-        Reload()
-    End Sub
-
-    '将控件改变路由到设置改变
-    Private Shared Sub RadioBoxChange(sender As MyRadioBox, e As Object) Handles RadioSkinType0.Check, RadioSkinType1.Check, RadioSkinType2.Check, RadioSkinType3.Check, RadioSkinType4.Check, RadioRamType0.Check, RadioRamType1.Check
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag.ToString.Split("/")(0), Val(sender.Tag.ToString.Split("/")(1)))
-    End Sub
-    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextSkinID.ValidatedTextChanged, TextArgumentWindowHeight.ValidatedTextChanged, TextArgumentWindowWidth.ValidatedTextChanged, TextArgumentInfo.ValidatedTextChanged, TextAdvanceGame.ValidatedTextChanged, TextAdvanceJvm.ValidatedTextChanged, TextArgumentTitle.ValidatedTextChanged, TextAdvanceRun.ValidatedTextChanged
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Text)
-    End Sub
-    Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderRamCustom.Change
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value)
-    End Sub
-    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboArgumentIndieV2.SelectionChanged, ComboArgumentVisibie.SelectionChanged, ComboArgumentWindowType.SelectionChanged, ComboArgumentPriority.SelectionChanged, ComboAdvanceGC.SelectionChanged
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex)
-    End Sub
-    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckAdvanceRunWait.Change, CheckArgumentRam.Change, CheckAdvanceDisableJLW.Change, CheckAdvanceGraphicCard.Change
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Checked)
+        Refresh()
     End Sub
 
 #Region "离线皮肤"
@@ -158,7 +85,7 @@
                 NewBitmap.Save(PathAppdata & "CustomSkin.png")
             End If
             '更新设置
-            Setup.Set("LaunchSkinSlim", SkinInfo.IsSlim)
+            Settings.Set("LaunchSkinSlim", SkinInfo.IsSlim)
             ChangeSkin = True
         Catch ex As Exception
             Log(ex, "改变离线皮肤失败", LogLevel.Msgbox)
@@ -184,13 +111,31 @@
         MySkin.RefreshCache(Nothing)
     End Sub
 
+    Public Shared Sub UpdateSkinType()
+        PageLaunchLeft.SkinLegacy.Start()
+        '设置 UI 改变
+        If FrmSetupLaunch Is Nothing Then Return
+        Select Case Settings.Get("LaunchSkinType")
+            Case 0, 1, 2 '默认
+                FrmSetupLaunch.PanSkinID.Visibility = Visibility.Collapsed
+                FrmSetupLaunch.PanSkinChange.Visibility = Visibility.Collapsed
+            Case 3 '正版
+                FrmSetupLaunch.PanSkinID.Visibility = Visibility.Visible
+                FrmSetupLaunch.PanSkinChange.Visibility = Visibility.Collapsed
+            Case 4 '自定义
+                FrmSetupLaunch.PanSkinID.Visibility = Visibility.Collapsed
+                FrmSetupLaunch.PanSkinChange.Visibility = Visibility.Visible
+        End Select
+        FrmSetupLaunch.CardSkin.TriggerForceResize()
+    End Sub
+
 #End Region
 
 #Region "游戏内存"
 
-    Public Sub RamType(Type As Integer)
-        If SliderRamCustom Is Nothing Then Return
-        SliderRamCustom.IsEnabled = (Type = 1)
+    Public Shared Sub UpdateRamType()
+        If FrmSetupLaunch?.SliderRamCustom Is Nothing Then Return
+        FrmSetupLaunch.SliderRamCustom.IsEnabled = Settings.Get("LaunchRamType") = 1
     End Sub
 
     ''' <summary>
@@ -333,7 +278,7 @@
         '------------------------------------------
 
         Dim RamGive As Double
-        If Setup.Get("LaunchRamType") = 0 Then
+        If Settings.Get("LaunchRamType") = 0 Then
             '自动配置
             Dim RamAvailable As Double = Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024 * 10) / 10
             '确定需求的内存值
@@ -345,7 +290,7 @@
             If Instance IsNot Nothing AndAlso Instance.Modable Then
                 '可安装 Mod 的版本
                 Dim ModDir As New DirectoryInfo(Instance.PathIndie & "mods\")
-                Dim ModCount As Integer = If(ModDir.Exists, ModDir.GetFiles.Length, 0)
+                Dim ModCount As Integer = If(ModDir.Exists, ModDir.GetFiles.Count(Function(f) {".jar", ".zip", ".litemod"}.Contains(f.Extension.Lower)), 0)
                 RamMininum = 0.5 + ModCount / 150
                 RamTarget1 = 1.5 + ModCount / 90
                 RamTarget2 = 2.7 + ModCount / 50
@@ -389,7 +334,7 @@ PreFin:
             RamGive = Math.Round(Math.Max(RamGive, RamMininum), 1)
         Else
             '手动配置
-            Dim Value As Integer = Setup.Get("LaunchRamCustom")
+            Dim Value As Integer = Settings.Get("LaunchRamCustom")
             If Value <= 12 Then
                 RamGive = Value * 0.1 + 0.3
             ElseIf Value <= 25 Then
@@ -410,14 +355,14 @@ PreFin:
 #Region "Java 选择"
 
     '刷新 Java 下拉框显示
-    Public Sub RefreshJavaComboBox()
+    Public Sub UpdateJavaComboBox()
         If ComboArgumentJava Is Nothing Then Return
         '初始化列表
         ComboArgumentJava.Items.Clear()
         ComboArgumentJava.Items.Add(New MyComboBoxItem With {.Content = "自动选择合适的 Java", .Tag = "自动选择"})
         '更新列表
         Dim SelectedItem As MyComboBoxItem = Nothing
-        Dim SelectedBySetup As String = Setup.Get("LaunchArgumentJavaSelect")
+        Dim SelectedBySetup As String = Settings.Get("LaunchArgumentJavaSelect")
         Try
             For Each Java In JavaList.Clone().OrderByDescending(Function(v) v.MajorVersion)
                 Dim ListItem = New MyComboBoxItem With {.Content = Java.ToString, .ToolTip = Java.PathFolder, .Tag = Java}
@@ -428,7 +373,7 @@ PreFin:
                 If JavaEntry.FromJson(GetJson(SelectedBySetup)).PathFolder = Java.PathFolder Then SelectedItem = ListItem
             Next
         Catch ex As Exception
-            Setup.Set("LaunchArgumentJavaSelect", "")
+            Settings.Set("LaunchArgumentJavaSelect", "")
             Log(ex, "更新设置 Java 下拉框失败", LogLevel.Feedback)
         End Try
         '更新选择项
@@ -457,11 +402,11 @@ PreFin:
         Dim SelectedJava = ComboArgumentJava.SelectedItem.Tag
         If "自动选择".Equals(SelectedJava) Then
             '选择 “自动”
-            Setup.Set("LaunchArgumentJavaSelect", "")
+            Settings.Set("LaunchArgumentJavaSelect", "")
             Log("[Java] 修改 Java 选择设置：自动选择")
         Else
             '选择指定项
-            Setup.Set("LaunchArgumentJavaSelect", CType(SelectedJava.ToJson(), JObject).ToString(Newtonsoft.Json.Formatting.None))
+            Settings.Set("LaunchArgumentJavaSelect", CType(SelectedJava.ToJson(), JObject).ToString(Newtonsoft.Json.Formatting.None))
             Log("[Java] 修改 Java 选择设置：" & SelectedJava.ToString)
         End If
         RefreshRam(True)
@@ -483,12 +428,12 @@ PreFin:
             NewEntry.Check()
             '加入列表
             Dim JavaNewList As New JArray From {NewEntry.ToJson}
-            For Each JsonEntry In GetJson(Setup.Get("LaunchArgumentJavaAll"))
+            For Each JsonEntry In GetJson(Settings.Get("LaunchArgumentJavaAll"))
                 Dim Entry = JavaEntry.FromJson(JsonEntry)
                 If Entry.PathFolder = NewEntry.PathFolder Then Continue For
                 JavaNewList.Add(JsonEntry)
             Next
-            Setup.Set("LaunchArgumentJavaAll", JavaNewList.ToString(Newtonsoft.Json.Formatting.None))
+            Settings.Set("LaunchArgumentJavaAll", JavaNewList.ToString(Newtonsoft.Json.Formatting.None))
             '重新加载列表
             JavaSearchLoader.Start(IsForceRestart:=True)
             Hint("已将该 Java 加入 Java 列表！", HintType.Green)
@@ -520,16 +465,10 @@ PreFin:
 #Region "其他选项"
 
     Private Sub WindowTypeUIRefresh() Handles ComboArgumentWindowType.SelectionChanged
-        If ComboArgumentWindowType Is Nothing Then Return
-        If ComboArgumentWindowType.SelectedIndex = 3 AndAlso LabArgumentWindowMiddle IsNot Nothing AndAlso LabArgumentWindowMiddle.Visibility = Visibility.Collapsed Then
-            LabArgumentWindowMiddle.Visibility = Visibility.Visible
-            TextArgumentWindowHeight.Visibility = Visibility.Visible
-            TextArgumentWindowWidth.Visibility = Visibility.Visible
-        ElseIf ComboArgumentWindowType.SelectedIndex <> 3 AndAlso LabArgumentWindowMiddle IsNot Nothing AndAlso LabArgumentWindowMiddle.Visibility = Visibility.Visible Then
-            LabArgumentWindowMiddle.Visibility = Visibility.Collapsed
-            TextArgumentWindowHeight.Visibility = Visibility.Collapsed
-            TextArgumentWindowWidth.Visibility = Visibility.Collapsed
-        End If
+        Dim IsVisibie = (ComboArgumentWindowType.SelectedIndex = 3).ToVisibility
+        TextArgumentWindowHeight.Visibility = IsVisibie
+        LabArgumentWindowMiddle.Visibility = IsVisibie
+        TextArgumentWindowWidth.Visibility = IsVisibie
     End Sub
 
     '可见性选择直接关闭的警告
@@ -571,11 +510,20 @@ PreFin:
 
     'JVM 参数重设
     Private Sub TextAdvanceJvm_TextChanged() Handles TextAdvanceJvm.ValidatedTextChanged
-        BtnAdvanceJvmReset.Visibility = If(TextAdvanceJvm.Text = Setup.GetDefault("LaunchAdvanceJvm"), Visibility.Hidden, Visibility.Visible)
+        BtnAdvanceJvmReset.Visibility = If(TextAdvanceJvm.Text = Settings.GetDefault("LaunchAdvanceJvm"), Visibility.Hidden, Visibility.Visible)
     End Sub
     Private Sub BtnAdvanceJvmReset_Click(sender As Object, e As EventArgs) Handles BtnAdvanceJvmReset.Click
-        Setup.Reset("LaunchAdvanceJvm")
-        Reload()
+        Settings.Reset("LaunchAdvanceJvm")
+        Refresh()
+    End Sub
+
+    '去除参数中的回车
+    Private Sub ReplaceEnter(sender As MyTextBox, e As TextChangedEventArgs) Handles TextAdvanceJvm.TextChanged, TextAdvanceGame.TextChanged
+        Dim NewText = sender.Text.Replace(vbCrLf, vbCr).Replace(vbLf, vbCr).Replace(vbCr, " ")
+        If NewText = sender.Text Then Return
+        Dim CaretIndex = sender.CaretIndex
+        sender.Text = NewText
+        sender.CaretIndex = Math.Max(0, CaretIndex - 1)
     End Sub
 
 #End Region
@@ -587,12 +535,4 @@ PreFin:
         FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.InstanceSetup)
     End Sub
 
-    '去除参数中的回车
-    Private Sub ReplaceEnter(sender As MyTextBox, e As TextChangedEventArgs) Handles TextAdvanceJvm.TextChanged, TextAdvanceGame.TextChanged
-        Dim NewText = sender.Text.Replace(vbCrLf, vbCr).Replace(vbLf, vbCr).Replace(vbCr, " ")
-        If NewText = sender.Text Then Return
-        Dim CaretIndex = sender.CaretIndex
-        sender.Text = NewText
-        sender.CaretIndex = Math.Max(0, CaretIndex - 1)
-    End Sub
 End Class

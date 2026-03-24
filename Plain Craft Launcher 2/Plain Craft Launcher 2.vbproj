@@ -383,7 +383,7 @@
     <Compile Include="Pages\PageSetup\PageSetupLeft.xaml.vb">
       <DependentUpon>PageSetupLeft.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageSetup\ModSetup.vb" />
+    <Compile Include="Pages\PageSetup\Settings.vb" />
     <Compile Include="Pages\PageSetup\PageSetupLaunch.xaml.vb">
       <DependentUpon>PageSetupLaunch.xaml</DependentUpon>
     </Compile>
@@ -396,6 +396,7 @@
     <Compile Include="Pages\PageSetup\PageSetupUI.xaml.vb">
       <DependentUpon>PageSetupUI.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PageSetup\SettingService.vb" />
     <Compile Include="Pages\PageSpeedLeft.xaml.vb">
       <DependentUpon>PageSpeedLeft.xaml</DependentUpon>
     </Compile>

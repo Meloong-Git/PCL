@@ -99,10 +99,10 @@ Public Class MyHint
     End Property
     Public Property RelativeSetup As String = ""
     Private Sub MyHint_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-        If CanClose AndAlso Setup.Get(RelativeSetup) Then Visibility = Visibility.Collapsed
+        If CanClose AndAlso Settings.Get(RelativeSetup) Then Visibility = Visibility.Collapsed
     End Sub
     Private Sub BtnClose_Click(sender As Object, e As EventArgs) Handles BtnClose.Click
-        Setup.SetSafe(RelativeSetup, True)
+        Settings.SetSafe(RelativeSetup, True)
         AniDispose(Me, False)
     End Sub
 

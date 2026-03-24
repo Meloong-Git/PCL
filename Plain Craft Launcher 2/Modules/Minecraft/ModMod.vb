@@ -1,7 +1,7 @@
 ﻿Imports System.IO.Compression
 
 Public Module ModMod
-    Private Const LocalModCacheVersion As Integer = 11
+    Private Const LocalModCacheVersion As Integer = 12
 
     Public Class McMod
 
@@ -79,7 +79,7 @@ Public Module ModMod
             End Get
             Set(value As String)
                 If _Name Is Nothing AndAlso value IsNot Nothing AndAlso Not value.Contains("modname") AndAlso
-                   value.ToLower <> "name" AndAlso value.Count > 1 AndAlso Val(value).ToString <> value Then
+                   value.Lower <> "name" AndAlso value.Count > 1 AndAlso Val(value).ToString <> value Then
                     _Name = value
                 End If
             End Set
@@ -98,7 +98,7 @@ Public Module ModMod
                 If _Description Is Nothing AndAlso value IsNot Nothing AndAlso value.Count > 2 Then
                     _Description = value.ToString.Trim(vbLf)
                     '优化显示：若以 [a-zA-Z0-9] 结尾，加上小数点句号
-                    If _Description.ToLower.LastIndexOfAny("qwertyuiopasdfghjklzxcvbnm0123456789") = _Description.Count - 1 Then _Description += "."
+                    If _Description.Lower.LastIndexOfAny("qwertyuiopasdfghjklzxcvbnm0123456789") = _Description.Count - 1 Then _Description += "."
                 End If
             End Set
         End Property
@@ -252,10 +252,10 @@ GotFabric:
                                     End If
                                 Loop
                             End If
-                            Value = Join(ValueLines, vbLf).Trim(vbLf).Replace(vbLf, vbCrLf)
-                        ElseIf RawValue.ToLower = "true" OrElse RawValue.ToLower = "false" Then
+                            Value = ValueLines.Join(vbLf).Trim(vbLf).Replace(vbLf, vbCrLf)
+                        ElseIf RawValue.Lower = "true" OrElse RawValue.Lower = "false" Then
                             '布尔型
-                            Value = (RawValue.ToLower = "true")
+                            Value = (RawValue.Lower = "true")
                         ElseIf Val(RawValue).ToString = RawValue Then
                             '数字型
                             Value = Val(RawValue)
@@ -424,7 +424,7 @@ Finished:
         ''' </summary>
         Public ReadOnly Property CanUpdate As Boolean
             Get
-                Return Not Setup.Get("UiHiddenFunctionModUpdate") AndAlso Not Setup.Get("VersionAdvanceDisableModUpdate", Instance:=PageInstanceLeft.Instance) AndAlso UpdateFile IsNot Nothing
+                Return Not Settings.Get("UiHiddenFunctionModUpdate") AndAlso Not Settings.Get("VersionAdvanceDisableModUpdate", Instance:=PageInstanceLeft.Instance) AndAlso UpdateFile IsNot Nothing
             End Get
         End Property
 
@@ -526,7 +526,7 @@ Finished:
         ''' 是否可能为前置 Mod。目前非常不准确。
         ''' </summary>
         Public Function IsPresetMod() As Boolean
-            Return DisplayName IsNot Nothing AndAlso (DisplayName.ToLower.Contains("core") OrElse DisplayName.ToLower.Contains("lib"))
+            Return DisplayName IsNot Nothing AndAlso (DisplayName.Lower.Contains("core") OrElse DisplayName.Lower.Contains("lib"))
         End Function
 
         ''' <summary>
@@ -534,7 +534,7 @@ Finished:
         ''' </summary>
         Public Shared Function IsModFile(Path As String)
             If Path Is Nothing OrElse Not Path.Contains(".") Then Return False
-            Path = Path.ToLower
+            Path = Path.Lower
             If Path.EndsWithF(".jar", True) OrElse Path.EndsWithF(".zip", True) OrElse Path.EndsWithF(".litemod", True) OrElse
                Path.EndsWithF(".jar.disabled", True) OrElse Path.EndsWithF(".zip.disabled", True) OrElse Path.EndsWithF(".litemod.disabled", True) OrElse
                Path.EndsWithF(".jar.old", True) OrElse Path.EndsWithF(".zip.old", True) OrElse Path.EndsWithF(".litemod.old", True) Then Return True
@@ -555,7 +555,7 @@ Finished:
                 Try
                     RunInUiWait(Sub() If FrmInstanceMod IsNot Nothing Then FrmInstanceMod.Load.Text = "正在更新 Mod")
                     Do Until Not PageInstanceMod.UpdatingInstanceModFolders.Contains(Loader.Input)
-                        If Loader.IsAborted Then Return
+                        If Loader.IsInterrupted Then Return
                         Thread.Sleep(100)
                     Loop
                 Finally
@@ -567,9 +567,9 @@ Finished:
             '获取 Mod 文件夹下的可用文件列表
             Dim ModFileList As New List(Of FileInfo)
             If Directory.Exists(Loader.Input) Then
-                Dim RawName As String = Loader.Input.ToLower
+                Dim RawName As String = Loader.Input.Lower
                 For Each File As FileInfo In EnumerateFiles(Loader.Input)
-                    If File.DirectoryName.ToLower & "\" <> RawName Then
+                    If File.DirectoryName.Lower & "\" <> RawName Then
                         '仅当 Forge 1.13- 且文件夹名与版本号相同时，才加载该子文件夹下的 Mod
                         If Not (PageInstanceLeft.Instance IsNot Nothing AndAlso PageInstanceLeft.Instance.Version.HasForge AndAlso
                                 PageInstanceLeft.Instance.Version.Vanilla.Major < 13 AndAlso
@@ -602,7 +602,7 @@ Finished:
             '加载 Mod 列表
             Dim ModList As New List(Of McMod)
             For Each ModFile As FileInfo In ModFileList
-                If Loader.IsAborted Then Return
+                If Loader.IsInterrupted Then Return
                 Dim ModEntry As New McMod(ModFile.FullName)
                 Dim DumpMod As McMod = ModList.FirstOrDefault(Function(m) m.RawFileName = ModEntry.RawFileName) '存在两个文件，名称相同，但一个启用一个禁用
                 If DumpMod IsNot Nothing Then
@@ -622,7 +622,7 @@ Finished:
             ModList = ModList.OrderBy(Function(m) m.FileName).ToList
 
             '回设
-            If Loader.IsAborted Then Return
+            If Loader.IsInterrupted Then Return
             Loader.Output = ModList
 
             '开始联网加载
@@ -641,7 +641,7 @@ Finished:
         Dim Cache As JObject = Loader.Input.Value
         '读取 Comp 缓存，获取需要更新的 Mod 列表
         For Each ModEntry As McMod In Loader.Input.Key
-            If Loader.IsAborted Then Return
+            If Loader.IsInterrupted Then Return
             Dim CacheKey = ModEntry.ModrinthHash & PageInstanceLeft.Instance.Version.VanillaName & GetTargetModLoaders().Join("")
             If Cache.ContainsKey(CacheKey) Then
                 ModEntry.FromJson(Cache(CacheKey))
@@ -691,7 +691,7 @@ Finished:
                         Entry.CompFile.Version = File.Version '使用来自 Modrinth 的版本号
                     End If
                 Next
-                If Loader.IsAbortedWithThread(CurrentTaskThread) Then Return
+                If Loader.IsInterruptedWithThread(CurrentTaskThread) Then Return
                 Log($"[Mod] 需要从 Modrinth 获取 {ModrinthMapping.Count} 个本地 Mod 的工程信息")
                 '步骤 3：获取工程信息
                 If Not ModrinthMapping.Any() Then Return
@@ -707,7 +707,7 @@ Finished:
                 '步骤 4：获取更新信息
                 Dim ModrinthUpdate As JObject = DlModRequest("https://api.modrinth.com/v2/version_files/update", HttpMethod.Post,
                     $"{{""hashes"": [""{ModrinthMapping.SelectMany(Function(l) l.Value.Select(Function(m) m.ModrinthHash)).Join(""",""")}""], ""algorithm"": ""sha1"", 
-                    ""loaders"": [""{ModLoaders.Join(""",""").ToLower}""],""game_versions"": [""{VanillaVersion}""]}}", "application/json")
+                    ""loaders"": [""{ModLoaders.Join(""",""").Lower}""],""game_versions"": [""{VanillaVersion}""]}}", "application/json")
                 For Each Entry In Mods
                     If Not ModrinthUpdate.ContainsKey(Entry.ModrinthHash) OrElse Entry.CompFile Is Nothing Then Continue For
                     Dim UpdateFile As New CompFile(ModrinthUpdate(Entry.ModrinthHash), CompType.Mod)
@@ -740,7 +740,7 @@ Finished:
                 Dim CurseForgeHashes As New List(Of UInteger)
                 For Each Entry In Mods
                     CurseForgeHashes.Add(Entry.CurseForgeHash)
-                    If Loader.IsAbortedWithThread(CurrentTaskThread) Then Return
+                    If Loader.IsInterruptedWithThread(CurrentTaskThread) Then Return
                 Next
                 Dim CurseForgeRaw As JContainer = DlModRequest("https://api.curseforge.com/v1/fingerprints/432", HttpMethod.Post,
                     $"{{""fingerprints"": [{CurseForgeHashes.Join(",")}]}}", "application/json")("data")("exactMatches")
@@ -761,7 +761,7 @@ Finished:
                         If Entry.CompFile Is Nothing OrElse Entry.CompFile.ReleaseDate < File.ReleaseDate Then Entry.CompFile = File
                     Next
                 Next
-                If Loader.IsAbortedWithThread(CurrentTaskThread) Then Return
+                If Loader.IsInterruptedWithThread(CurrentTaskThread) Then Return
                 Log($"[Mod] 需要从 CurseForge 获取 {CurseForgeMapping.Count} 个本地 Mod 的工程信息")
                 '步骤 3：获取工程信息
                 If Not CurseForgeMapping.Any() Then Return
@@ -781,7 +781,7 @@ Finished:
                         Entry.Comp = Project
                     Next
                     '查找或许版本更新的文件列表
-                    If ModLoaders.Count = 1 Then
+                    If ModLoaders.IsSingle Then
                         Dim NewestVersion As String = Nothing
                         Dim NewestFileIds As New List(Of Integer)
                         For Each IndexEntry In ProjectJson("latestFilesIndexes")
@@ -844,7 +844,7 @@ Finished:
         '等待线程结束
         Do Until EndedThreadCount = 2
             Thread.Sleep(10)
-            If Loader.IsAborted Then Return
+            If Loader.IsInterrupted Then Return
         Loop
         '保存缓存
         Mods = Mods.Where(Function(m) m.Comp IsNot Nothing).ToList()
@@ -856,7 +856,7 @@ Finished:
         Next
         WriteFile(PathTemp & "Cache\LocalMod.json", Cache.ToString(If(ModeDebug, Newtonsoft.Json.Formatting.Indented, Newtonsoft.Json.Formatting.None)))
         '刷新边栏
-        If Loader.IsAborted Then Return
+        If Loader.IsInterrupted Then Return
         If FrmInstanceMod?.Filter = PageInstanceMod.FilterType.CanUpdate Then
             RunInUi(Sub() FrmInstanceMod?.RefreshUI()) '同步 “可更新” 列表 (#4677)
         Else

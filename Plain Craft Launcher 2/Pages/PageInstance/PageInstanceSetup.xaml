@@ -48,7 +48,7 @@
                             </local:MyTextBox.ValidateRules>
                         </local:MyTextBox>
                         <TextBlock VerticalAlignment="Center" Grid.Row="6" HorizontalAlignment="Left" Text="游戏 Java" Margin="0,0,25,0" />
-                        <local:MyComboBox x:Name="ComboArgumentJava" Grid.ColumnSpan="2" Grid.Row="6" Grid.Column="1" MaxDropDownHeight="240"
+                        <local:MyComboBox x:Name="ComboArgumentJava" Grid.ColumnSpan="2" Grid.Row="6" Grid.Column="1"
                                           ToolTip="若将 Java 放在游戏文件夹或 PCL 文件夹，在进行自动选择时 PCL 会尽量优先选择它">
                             <ComboBoxItem Content="加载中……" IsSelected="True" />
                             <!--<local:MyComboBoxItem Content="Java 8 (1.8.0_171)，64 位：C:\Program Files (x86)\Common Files\Oracle\Java\javapath\javaw.exe" ToolTipService.Placement="Right" ToolTipService.HorizontalOffset="5" IsSelected="True" ToolTip="C:\Program Files (x86)\Common Files\Oracle\Java\javapath\javaw.exe" />-->
@@ -216,16 +216,18 @@
                     <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="游戏参数" Margin="0,0,25,0" />
                     <local:MyTextBox x:Name="TextAdvanceGame" Grid.Row="2" Grid.ColumnSpan="2" Tag="VersionAdvanceGame" Grid.Column="1" ToolTip="文本框中的内容将会被直接拼合在启动参数的末尾。&#xa;例如，输入 --demo 则会以试玩模式启动游戏。&#xa;&#xa;支持 Minecraft 版本 JSON 中的字符串替换标记，例如 ${library_directory}。&#xa;也支持使用 PCL 的替换标记，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。&#xa;&#xa;若留空，则跟随全局设置的值。" HintText="跟随全局设置" />
                     <TextBlock VerticalAlignment="Center" Grid.Row="4" HorizontalAlignment="Left" Text="内存管理" Margin="0,0,25,0" />
-                    <local:MyComboBox x:Name="ComboAdvanceGC" Grid.Row="4" Grid.ColumnSpan="2" Tag="VersionAdvanceGC" Grid.Column="1">
-                        <local:MyComboBoxItem Content="跟随全局设置" IsSelected="True" />
-                        <local:MyComboBoxItem Content="尽量使用 ZGC（激进）"
-                                              ToolTipService.BetweenShowDelay="0" ToolTip="在 Java 21+ 使用分代 ZGC，20~15 使用非分代的 ZGC，14- 使用 G1GC。&#xa;在 Java 25+ 额外添加 -XX:+UseCompactObjectHeaders。&#xa;&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
-                        <local:MyComboBoxItem Content="尽量使用分代 ZGC（平衡）"
-                                              ToolTipService.BetweenShowDelay="0" ToolTip="在 Java 21+ 使用分代 ZGC，20- 使用 G1GC。&#xa;在 Java 25+ 额外添加 -XX:+UseCompactObjectHeaders。&#xa;&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
-                        <local:MyComboBoxItem Content="仅 G1GC"
-                                              ToolTipService.BetweenShowDelay="0" ToolTip="固定使用以下参数：&#xa;-XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=20 -XX:G1ReservePercent=20 -XX:MaxGCPauseMillis=50 -XX:G1HeapRegionSize=32M&#xa;&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
-                        <local:MyComboBoxItem Content="不指定（可自定义）"
-                                              ToolTipService.BetweenShowDelay="0" ToolTip="不自动添加 GC 参数。&#xa;&#xa;仅当选择此项时，你可以在 “Java 虚拟机参数” 设置中手动添加 GC 参数。" />
+                    <local:MyComboBox local:SettingService.Key="VersionAdvanceGC" Grid.Row="4" Grid.ColumnSpan="2" Grid.Column="1">
+                        <local:MyComboBoxItem Content="跟随全局设置" />
+                        <local:MyComboBoxItem Content="尽量使用 ZGC"
+                          ToolTipService.BetweenShowDelay="0" ToolTip="在 Java 21+ 使用分代 ZGC，20~15 使用非分代的 ZGC，14- 使用 G1GC。&#xa;ZGC 的内存占用比 G1GC 更高，不过在回收内存时不会导致卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
+                        <local:MyComboBoxItem Content="尽量使用分代 ZGC"
+                          ToolTipService.BetweenShowDelay="0" ToolTip="在 Java 21+ 使用分代 ZGC，20- 使用 G1GC。&#xa;ZGC 的内存占用比 G1GC 更高，不过在回收内存时不会导致卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
+                        <local:MyComboBoxItem Content="标准 G1GC"
+                          ToolTipService.BetweenShowDelay="0" ToolTip="总是使用 G1GC，附带 Mojang 官方的优化参数。&#xa;G1GC 的内存占用比 ZGC 更低，但在回收内存时会导致突然的卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
+                        <local:MyComboBoxItem Content="调优 G1GC" local:SettingService.Value="5"
+                          ToolTipService.BetweenShowDelay="0" ToolTip="总是使用 G1GC，附带 PCL 调优过的优化参数。&#xa;G1GC 的内存占用比 ZGC 更低，但在回收内存时会导致突然的卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
+                        <local:MyComboBoxItem Content="不指定（可自定义）" local:SettingService.Value="4"
+                          ToolTipService.BetweenShowDelay="0" ToolTip="不自动添加 GC 参数。&#xa;仅当选择此项时，你可以在 “Java 虚拟机参数” 设置中手动添加 GC 参数。" />
                     </local:MyComboBox>
                     <TextBlock Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Left" Text="启动前执行命令" Margin="0,0,25,3" />
                     <local:MyTextBox x:Name="TextAdvanceRun" Grid.Row="6" Grid.ColumnSpan="2" Tag="VersionAdvanceRun" Grid.Column="1" HintText="" Margin="0,0,0,3"

@@ -129,7 +129,7 @@
         RaiseEvent PageEnter()
         Select Case PageState
             Case PageStates.Empty
-                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Aborted Then
+                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Interrupted Then
                     '如果加载器在进入页面时不启动（例如联机），那么在此时就会有 State = Waiting
                     PageState = PageStates.ContentEnter
                     TriggerEnterAnimation(PanAlways, If(PanContent, Child))
@@ -142,7 +142,7 @@
                 End If
             Case PageStates.ContentExit
                 '和上面的一样，但是不管 PanAlways
-                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Aborted Then
+                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Interrupted Then
                     PageState = PageStates.ContentEnter
                     TriggerEnterAnimation(If(PanContent, Child))
                 ElseIf PageLoader.State = LoadState.Loading Then
@@ -318,9 +318,9 @@
                     Case PageStates.LoaderExit
                         PageState = PageStates.ContentExit
                 End Select
-            Case LoadState.Finished, LoadState.Aborted, LoadState.Waiting
+            Case LoadState.Finished, LoadState.Interrupted, LoadState.Waiting
                 If Not (OldState = LoadState.Failed OrElse OldState = LoadState.Loading) Then Return
-                If ModeDebug Then Log("[UI] 已触发 PageLoaderState (Stop/Abort)")
+                If ModeDebug Then Log("[UI] 已触发 PageLoaderState (Stop/Interrupt)")
                 '运行结束
                 '需要从 LoaderWait 切换到 ContentEnter，或从 LoaderStay 切换到 LoaderExit
                 Select Case PageState

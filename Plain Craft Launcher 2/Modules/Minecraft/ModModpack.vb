@@ -200,7 +200,7 @@ Retry:
         Dim NeoForgeVersion As String = Nothing
         Dim FabricVersion As String = Nothing
         For Each Entry In If(Json("minecraft")("modLoaders"), {})
-            Dim Id As String = If(Entry("id"), "").ToString.ToLower
+            Dim Id As String = If(Entry("id"), "").ToString.Lower
             If Id.StartsWithF("forge-") Then
                 'Forge 指定
                 If Id.Contains("recommended") Then Throw New Exception("该整合包版本过老，已不支持进行安装！")
@@ -250,7 +250,7 @@ Retry:
             '获取 Mod 下载信息
             ModDownloadLoaders.Add(New LoaderTask(Of Integer, JArray)("获取 Mod 下载信息",
             Sub(Task As LoaderTask(Of Integer, JArray))
-                Task.Output = DlModRequest("https://api.curseforge.com/v1/mods/files", HttpMethod.Post, "{""fileIds"": [" & Join(ModList, ",") & "]}", "application/json")("data")
+                Task.Output = DlModRequest("https://api.curseforge.com/v1/mods/files", HttpMethod.Post, "{""fileIds"": [" & ModList.Join(",") & "]}", "application/json")("data")
                 '如果文件已被删除，则 API 会跳过那一项
                 If ModList.Count > Task.Output.Count Then Throw New Exception("整合包中的部分 Mod 版本已被 Mod 作者删除，所以没法继续安装了，请向整合包作者反馈该问题")
             End Sub) With {.ProgressWeight = ModList.Count / 10}) '每 10 Mod 需要 1s
@@ -369,7 +369,7 @@ Retry:
         Dim NeoForgeVersion As String = Nothing
         Dim FabricVersion As String = Nothing
         For Each Entry As JProperty In If(Json("dependencies"), {})
-            Select Case Entry.Name.ToLower
+            Select Case Entry.Name.Lower
                 Case "minecraft"
                     MinecraftVersion = Entry.Value.ToString
                 Case "forge" 'eg. 14.23.5.2859 / 1.19-41.1.0
@@ -584,7 +584,7 @@ Retry:
                         If Not Line.Contains("=") Then Continue For
                         Lines.Add(Line.BeforeFirst("=") & ":" & Line.AfterFirst("="))
                     Next
-                    WriteFile(MMCSetupFile, Join(Lines, vbCrLf))
+                    WriteFile(MMCSetupFile, Lines.Join(vbCrLf))
                     '读取文件
                     If ReadIni(MMCSetupFile, "OverrideCommands", False) Then
                         Dim PreLaunchCommand As String = ReadIni(MMCSetupFile, "PreLaunchCommand")
@@ -621,7 +621,7 @@ Retry:
                             WriteIni(SetupFile, "VersionAdvanceJvm", JvmArgs)
                             Log("[ModPack] 迁移 MultiMC 版本独立设置：JVM 参数（覆盖）：" & JvmArgs)
                         Else
-                            JvmArgs += " " & Setup.Get("LaunchAdvanceJvm")
+                            JvmArgs += " " & Settings.Get("LaunchAdvanceJvm")
                             WriteIni(SetupFile, "VersionAdvanceJvm", JvmArgs)
                             Log("[ModPack] 迁移 MultiMC 版本独立设置：JVM 参数（追加）：" & JvmArgs)
                         End If

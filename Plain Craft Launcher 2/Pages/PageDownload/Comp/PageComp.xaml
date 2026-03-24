@@ -32,7 +32,7 @@
                         <local:MyComboBoxItem Content="Modrinth" Tag="2" />
                     </local:MyComboBox>
                     <TextBlock VerticalAlignment="Center" Grid.Row="2" HorizontalAlignment="Left" Text="版本" Margin="0,0,18,0" />
-                    <local:MyComboBox x:Name="TextSearchVersion" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" IsEditable="True" MaxDropDownHeight="320">
+                    <local:MyComboBox x:Name="TextSearchVersion" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" IsEditable="True">
                         <local:MyComboBoxItem Content="全部 (也可自行输入)" IsSelected="True" />
                         <local:MyComboBoxItem Content="1.21.11" />
                         <local:MyComboBoxItem Content="1.21.1" />
@@ -45,7 +45,7 @@
                         <local:MyComboBoxItem Content="1.8.9" />
                         <local:MyComboBoxItem Content="1.7.10" />
                     </local:MyComboBox>
-                    <local:MyComboBox x:Name="ComboSearchLoader" Visibility="Collapsed" Grid.Row="2" Grid.Column="2" MaxDropDownHeight="320" Margin="10,0,0,0">
+                    <local:MyComboBox x:Name="ComboSearchLoader" Visibility="Collapsed" Grid.Row="2" Grid.Column="2" Margin="10,0,0,0">
                         <local:MyComboBoxItem Content="任意 Mod 加载器" IsSelected="True" Tag="0" />
                         <local:MyComboBoxItem Content="Forge" Tag="1" />
                         <local:MyComboBoxItem Content="NeoForge" Tag="6" />
@@ -53,7 +53,7 @@
                         <local:MyComboBoxItem Content="Quilt" Tag="5" />
                     </local:MyComboBox>
                     <TextBlock VerticalAlignment="Center" Grid.Column="4" Grid.Row="2" HorizontalAlignment="Left" Text="类型" Margin="0,0,18,0" />
-                    <local:MyComboBox x:Name="ComboSearchTag" Grid.Column="5" Grid.Row="2" MaxDropDownHeight="320" />
+                    <local:MyComboBox x:Name="ComboSearchTag" Grid.Column="5" Grid.Row="2" />
                 </Grid>
                 <Grid Margin="0,4,0,6" Height="35">
                     <Grid.ColumnDefinitions>
@@ -87,7 +87,7 @@
             </local:MyCard>
         </StackPanel>
         <local:MyCard HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" x:Name="PanLoad" UseAnimation="False" Margin="40,50">
-            <local:MyLoading Text="正在获取XXX列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <local:MyLoading Text="正在获取XXX列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" ShowProgress="True" />
         </local:MyCard>
     </StackPanel>
 </local:MyScrollViewer>

@@ -1,5 +1,6 @@
 ﻿Public Class MyTextBox
     Inherits TextBox
+    Implements ISettingControl
 
     '自定义属性
 
@@ -44,7 +45,13 @@
 
     Public Uuid As Integer = GetUuid()
     Public Shared Event ValidateChanged(sender As Object, e As EventArgs)
-    Public ChangedEventList As New List(Of RoutedEventHandler)
+    Private _ChangedEventList As List(Of RoutedEventHandler)
+    Public ReadOnly Property ChangedEventList As List(Of RoutedEventHandler)
+        Get
+            If _ChangedEventList Is Nothing Then _ChangedEventList = New List(Of RoutedEventHandler)
+            Return _ChangedEventList
+        End Get
+    End Property
     Public Custom Event ValidatedTextChanged As RoutedEventHandler
         AddHandler(value As RoutedEventHandler)
             ChangedEventList.Add(value)
@@ -295,4 +302,21 @@
     Private Sub MyTextBox_KeyUp(sender As Object, e As KeyEventArgs) Handles Me.KeyUp
         If e.Key = Key.Enter Then RaiseCustomEvent()
     End Sub
+
+#Region "设置"
+
+    Private Sub RefreshSetting(NewValue As String) Implements ISettingControl.RefreshSetting
+        Text = NewValue
+    End Sub
+
+    Private Function GetCurrentSetting() As String Implements ISettingControl.GetCurrentSetting
+        Return Text
+    End Function
+
+    Private Sub SaveSetting() Handles Me.ValidatedTextChanged
+        SettingService.SaveSetting(Me)
+    End Sub
+
+#End Region
+
 End Class

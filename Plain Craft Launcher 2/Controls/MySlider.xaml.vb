@@ -1,4 +1,5 @@
 ﻿Public Class MySlider
+    Implements ISettingControl
 
     '基础
 
@@ -187,5 +188,21 @@
             AniStart(AaCode(Sub() Popup.IsOpen = False, 700 * AniSpeed), "MySlider KeyPopup " & Uuid)
         End If
     End Sub
+
+#Region "设置"
+
+    Private Sub RefreshSetting(NewValue As String) Implements ISettingControl.RefreshSetting
+        Value = Val(NewValue)
+    End Sub
+
+    Private Function GetCurrentSetting() As String Implements ISettingControl.GetCurrentSetting
+        Return Value
+    End Function
+
+    Private Sub SaveSetting() Handles Me.Change
+        SettingService.SaveSetting(Me)
+    End Sub
+
+#End Region
 
 End Class

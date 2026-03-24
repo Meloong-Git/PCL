@@ -2,15 +2,6 @@
 
 Public Module ModDownloadLib
 
-    ''' <summary>
-    ''' 如果 OptiFine 与 Forge 同时开始安装，就会导致 Forge 安装失败。
-    ''' </summary>
-    Private InstallSyncLock As New Object
-    ''' <summary>
-    ''' 如果 OptiFine 与 Forge 同时复制原版 Jar，就会导致复制文件时冲突。
-    ''' </summary>
-    Private VanillaSyncLock As New Object
-
 #Region "Minecraft 下载"
 
     ''' <summary>
@@ -239,7 +230,7 @@ Public Module ModDownloadLib
                     Task.Output = New List(Of NetFile)
                     Hint($"Mojang 没有给 Minecraft {Id} 提供官方服务端下载，没法下，撤退！", HintType.Red)
                     Thread.Sleep(2000) '等玩家把上一个提示看完
-                    Task.Abort()
+                    Task.Interrupt()
                     Return
                 End If
                 Dim JarUrl As String = Instance.JsonObject("downloads")("server")("url")
@@ -327,7 +318,7 @@ pause"
     ''' <param name="InstanceJson">在 version_manifest.json 中的对应项。</param>
     Public Sub McUpdateLogShow(InstanceJson As JToken)
         Dim WikiName As String
-        Dim Id As String = InstanceJson("id").ToString.ToLower
+        Dim Id As String = InstanceJson("id").ToString.Lower
         If Id = "3d shareware v1.34" Then
             WikiName = "3D_Shareware_v1.34"
         ElseIf Id = "2.0" Then
@@ -420,21 +411,21 @@ pause"
                 Dim JavaLoader = GetJavaDownloadLoader()
                 Try
                     JavaLoader.Start(17, IsForceRestart:=True)
-                    Do While JavaLoader.State = LoadState.Loading AndAlso Not Task.IsAborted
+                    Do While JavaLoader.State = LoadState.Loading AndAlso Not Task.IsInterrupted
                         Thread.Sleep(10)
                     Loop
                 Finally
-                    JavaLoader.Abort() '确保取消时中止 Java 下载
+                    JavaLoader.Interrupt() '确保取消时中止 Java 下载
                 End Try
                 '检查下载结果
                 Java = JavaSelect("已取消安装。", New Version(1, 8, 0, 0))
-                If Task.IsAborted Then Return
+                If Task.IsInterrupted Then Return
                 If Java Is Nothing Then Throw New Exception("由于未找到 Java，已取消安装。")
             End If
         End SyncLock
         '添加 Java Wrapper 作为主 Jar
         Dim Arguments As String
-        If UseJavaWrapper AndAlso Not Setup.Get("LaunchAdvanceDisableJLW") Then
+        If UseJavaWrapper AndAlso Not Settings.Get("LaunchAdvanceDisableJLW") Then
             Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.TrimEnd("\")}"" -Duser.home=""{BaseMcFolderHome.TrimEnd("\")}"" -cp ""{Target}"" -jar ""{ExtractJavaWrapper()}"" optifine.Installer"
         Else
             Arguments = $"-Duser.home=""{BaseMcFolderHome.TrimEnd("\")}"" -cp ""{Target}"" optifine.Installer"
@@ -478,7 +469,7 @@ pause"
                             Log(ex, "读取 OptiFine 安装器信息失败")
                         End Try
                         Try
-                            If Task.State = LoadState.Aborted AndAlso Not process.HasExited Then
+                            If Task.State = LoadState.Interrupted AndAlso Not process.HasExited Then
                                 Log("[Installer] 由于任务取消，已中止 OptiFine 安装")
                                 process.Kill()
                             End If
@@ -502,7 +493,7 @@ pause"
                             Log(ex, "读取 OptiFine 安装器错误信息失败")
                         End Try
                         Try
-                            If Task.State = LoadState.Aborted AndAlso Not process.HasExited Then
+                            If Task.State = LoadState.Interrupted AndAlso Not process.HasExited Then
                                 Log("[Installer] 由于任务取消，已中止 OptiFine 安装")
                                 process.Kill()
                             End If
@@ -584,11 +575,11 @@ pause"
                ClientDownloadLoader.GetLoaderList.Where(Function(l) l.Name = McDownloadClientLibName OrElse l.Name = McDownloadClientJsonName).
                Where(Function(l) l.State <> LoadState.Finished).ToList
             If TargetLoaders.Any Then Log("[Download] OptiFine 安装正在等待原版文件下载完成")
-            Do While TargetLoaders.Any AndAlso Not Task.IsAborted
+            Do While TargetLoaders.Any AndAlso Not Task.IsInterrupted
                 TargetLoaders = TargetLoaders.Where(Function(l) l.State <> LoadState.Finished).ToList
                 Thread.Sleep(50)
             Loop
-            If Task.IsAborted Then Return
+            If Task.IsInterrupted Then Return
             '拷贝原版文件
             If Not IsCustomFolder Then Return
             SyncLock VanillaSyncLock
@@ -1095,21 +1086,21 @@ Retry:
                 Dim JavaLoader = GetJavaDownloadLoader()
                 Try
                     JavaLoader.Start(17, IsForceRestart:=True)
-                    Do While JavaLoader.State = LoadState.Loading AndAlso Not Task.IsAborted
+                    Do While JavaLoader.State = LoadState.Loading AndAlso Not Task.IsInterrupted
                         Thread.Sleep(10)
                     Loop
                 Finally
-                    JavaLoader.Abort() '确保取消时中止 Java 下载
+                    JavaLoader.Interrupt() '确保取消时中止 Java 下载
                 End Try
                 '检查下载结果
                 Java = JavaSelect("已取消安装。", New Version(1, 8, 0, 60))
-                If Task.IsAborted Then Return
+                If Task.IsInterrupted Then Return
                 If Java Is Nothing Then Throw New Exception("由于未找到 Java，已取消安装。")
             End If
         End SyncLock
         '添加 Java Wrapper 作为主 Jar
         Dim Arguments As String
-        If UseJavaWrapper AndAlso Not Setup.Get("LaunchAdvanceDisableJLW") Then
+        If UseJavaWrapper AndAlso Not Settings.Get("LaunchAdvanceDisableJLW") Then
             Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.TrimEnd("\")}"" -cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" -jar ""{ExtractJavaWrapper()}"" com.bangbang93.ForgeInstaller ""{McFolder}"
         Else
             Arguments = $"-cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" com.bangbang93.ForgeInstaller ""{McFolder}"
@@ -1146,7 +1137,7 @@ Retry:
                             Log(ex, $"读取 {LoaderName} 安装器信息失败")
                         End Try
                         Try
-                            If Task.State = LoadState.Aborted AndAlso Not process.HasExited Then
+                            If Task.State = LoadState.Interrupted AndAlso Not process.HasExited Then
                                 Log($"[Installer] 由于任务取消，已中止 {LoaderName} 安装")
                                 process.Kill()
                             End If
@@ -1169,7 +1160,7 @@ Retry:
                             Log(ex, $"读取 {LoaderName} 安装器错误信息失败")
                         End Try
                         Try
-                            If Task.State = LoadState.Aborted AndAlso Not process.HasExited Then
+                            If Task.State = LoadState.Interrupted AndAlso Not process.HasExited Then
                                 Log($"[Installer] 由于任务取消，已中止 {LoaderName} 安装")
                                 process.Kill()
                             End If
@@ -1190,7 +1181,7 @@ Retry:
                     process.Dispose()
                     '检查是否安装成功：最后 5 行中是否有 true（true 可能在倒数数行，见 #832）
                     If LastResults.Reverse().Take(5).Any(Function(l) l = "true") Then Return
-                    Log(Join(LastResults, vbCrLf))
+                    Log(LastResults.Join(vbCrLf))
                     Dim LastLines As String = ""
                     For i As Integer = Math.Max(0, LastResults.Count - 5) To LastResults.Count - 1 '最后 5 行
                         LastLines &= vbCrLf & LastResults(i)
@@ -1353,8 +1344,8 @@ Retry:
                     Task.Progress = 0.8
                     '去除其中的原始 Forgelike 项
                     For i = 0 To Libs.Count - 1
-                        If Libs(i).LocalPath.EndsWithF($"{LoaderName.ToLower}-{Inherit}-{LoaderVersion}.jar") OrElse
-                           Libs(i).LocalPath.EndsWithF($"{LoaderName.ToLower}-{Inherit}-{LoaderVersion}-client.jar") Then
+                        If Libs(i).LocalPath.EndsWithF($"{LoaderName.Lower}-{Inherit}-{LoaderVersion}.jar") OrElse
+                           Libs(i).LocalPath.EndsWithF($"{LoaderName.Lower}-{Inherit}-{LoaderVersion}-client.jar") Then
                             Log($"[Download] 已从待下载 {LoaderName} 支持库中移除：" & Libs(i).LocalPath, LogLevel.Debug)
                             Libs.RemoveAt(i)
                             Exit For
@@ -1390,11 +1381,11 @@ Retry:
                     ClientDownloadLoader.GetLoaderList.Where(Function(l) l.Name = McDownloadClientLibName OrElse l.Name = McDownloadClientJsonName).
                     Where(Function(l) l.State <> LoadState.Finished).ToList()
                 If TargetLoaders.Any Then Log($"[Download] {LoaderName} 安装正在等待原版文件下载完成")
-                Do While TargetLoaders.Any AndAlso Not Task.IsAborted
+                Do While TargetLoaders.Any AndAlso Not Task.IsInterrupted
                     TargetLoaders = TargetLoaders.Where(Function(l) l.State <> LoadState.Finished).ToList
                     Thread.Sleep(50)
                 Loop
-                If Task.IsAborted Then Return
+                If Task.IsInterrupted Then Return
                 '拷贝原版文件
                 If Not IsCustomFolder Then Return
                 SyncLock VanillaSyncLock
@@ -1541,7 +1532,7 @@ Retry:
 
     Public Sub ForgeDownloadListItemPreload(Stack As StackPanel, Entries As List(Of DlForgeVersionEntry), OnClick As MyListItem.ClickEventHandler, IsSaveOnly As Boolean)
         '如果只有一个版本，则不特别列出
-        If Entries.Count = 1 Then Return
+        If Entries.IsSingle Then Return
         '获取推荐版本与最新版本
         Dim FreshVersion As DlForgeVersionEntry = Nothing
         If Entries.Any Then
@@ -1662,7 +1653,7 @@ Retry:
                 Next
                 If RecommendedList.Count < 5 Then Throw New Exception("获取的推荐版本数过少（" & Result & "）")
                 '保存
-                Dim CacheJson As String = "{" & Join(RecommendedList, ",") & "}"
+                Dim CacheJson As String = "{" & RecommendedList.Join(",") & "}"
                 WriteFile(PathTemp & "Cache\ForgeRecommendedList.json", CacheJson)
                 Log("[Download] 刷新 Forge 推荐版本缓存成功")
             Catch ex As Exception
@@ -1698,7 +1689,7 @@ Retry:
 
     Public Sub NeoForgeDownloadListItemPreload(Stack As StackPanel, Entries As List(Of DlNeoForgeListEntry), OnClick As MyListItem.ClickEventHandler, IsSaveOnly As Boolean)
         '如果只有一个版本，则不特别列出
-        If Entries.Count = 1 Then Return
+        If Entries.IsSingle Then Return
         '获取最新稳定版和测试版
         Dim FreshStableVersion As DlNeoForgeListEntry = Nothing
         Dim FreshBetaVersion As DlNeoForgeListEntry = Nothing
@@ -1901,7 +1892,7 @@ Retry:
         Return New MyVirtualizingElement(Of MyListItem)(
         Function()
             Dim NewItem As New MyListItem With {
-               .Title = Entry.DisplayName.ToLower.Replace("optifabric-", "").Replace(".jar", "").Trim.TrimStart("v"), .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
+               .Title = Entry.DisplayName.Lower.Replace("optifabric-", "").Replace(".jar", "").Trim.TrimStart("v"), .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
                .Info = Entry.StatusDescription & "，发布于 " & Entry.ReleaseDate.ToString("yyyy'/'MM'/'dd HH':'mm"),
                .Logo = PathImage & "Blocks/OptiFabric.png"
             }
@@ -1999,7 +1990,7 @@ Retry:
                 Hint(Loader.Name & "成功！", HintType.Green)
             Case LoadState.Failed
                 Hint(Loader.Name & "失败：" & Loader.Error.GetBrief(), HintType.Red)
-            Case LoadState.Aborted
+            Case LoadState.Interrupted
                 Hint(Loader.Name & "已取消！", HintType.Blue)
         End Select
     End Sub
@@ -2013,7 +2004,7 @@ Retry:
                 Hint(Loader.Name & "成功！", HintType.Green)
             Case LoadState.Failed
                 Hint(Loader.Name & "失败：" & Loader.Error.GetBrief(), HintType.Red)
-            Case LoadState.Aborted
+            Case LoadState.Interrupted
                 Hint(Loader.Name & "已取消！", HintType.Blue)
             Case LoadState.Loading
                 Return '不重新加载版本列表
@@ -2024,7 +2015,7 @@ Retry:
     Public Sub McInstallFailedClearFolder(Loader)
         Try
             Thread.Sleep(1000) '防止存在尚未完全释放的文件，导致清理失败（例如整合包安装）
-            If Loader.State = LoadState.Failed OrElse Loader.State = LoadState.Aborted Then
+            If Loader.State = LoadState.Failed OrElse Loader.State = LoadState.Interrupted Then
                 '删除版本文件夹
                 If Directory.Exists(Loader.Input & "saves\") OrElse Directory.Exists(Loader.Input & "versions\") Then
                     Log("[Download] 由于版本已被独立启动，不清理版本文件夹：" & Loader.Input, LogLevel.Developer)
@@ -2317,7 +2308,7 @@ Retry:
                 SplitArguments.Add(RawArguments(i))
             End If
         Next
-        Dim RealArguments As String = Join(SplitArguments.Distinct.ToList, " ")
+        Dim RealArguments As String = SplitArguments.Distinct.Join(" ")
         '合并
         '相关讨论见 #2801
         OutputJson = MinecraftJson
@@ -2371,5 +2362,48 @@ Retry:
     End Sub
 
 #End Region
+
+    ''' <summary>
+    ''' 如果 OptiFine 与 Forge 同时开始安装，就会导致 Forge 安装失败。
+    ''' </summary>
+    Private InstallSyncLock As New Object
+    ''' <summary>
+    ''' 如果 OptiFine 与 Forge 同时复制原版 JAR，就会导致复制文件时冲突。
+    ''' </summary>
+    Private VanillaSyncLock As New Object
+
+    ''' <summary>
+    ''' 释放 Java Wrapper 并返回完整文件路径。
+    ''' </summary>
+    Public Function ExtractJavaWrapper() As String
+        Dim WrapperPath As String = PathPure & "JavaWrapper.jar"
+        Log("[Java] 选定的 Java Wrapper 路径：" & WrapperPath)
+        Static Lock As New Object
+        SyncLock Lock '避免 OptiFine 和 Forge 安装时同时释放 Java Wrapper 导致冲突
+            Try
+                WriteFile(WrapperPath, GetResources("JavaWrapper"))
+            Catch ex As Exception
+                If File.Exists(WrapperPath) Then
+                    '因为未知原因 Java Wrapper 可能变为只读文件（#4243）
+                    Log(ex, "Java Wrapper 文件释放失败，但文件已存在，将在删除后尝试重新生成", LogLevel.Developer)
+                    Try
+                        File.Delete(WrapperPath)
+                        WriteFile(WrapperPath, GetResources("JavaWrapper"))
+                    Catch ex2 As Exception
+                        Log(ex2, "Java Wrapper 文件重新释放失败，将尝试更换文件名重新生成", LogLevel.Developer)
+                        WrapperPath = PathPure & "JavaWrapper2.jar"
+                        Try
+                            WriteFile(WrapperPath, GetResources("JavaWrapper"))
+                        Catch ex3 As Exception
+                            Throw New FileNotFoundException("释放 Java Wrapper 最终尝试失败", ex3)
+                        End Try
+                    End Try
+                Else
+                    Throw New FileNotFoundException("释放 Java Wrapper 失败", ex)
+                End If
+            End Try
+        End SyncLock
+        Return WrapperPath
+    End Function
 
 End Module

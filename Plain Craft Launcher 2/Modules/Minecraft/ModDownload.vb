@@ -97,7 +97,7 @@
                     Dim BackAssetsFile As NetFile = DlClientAssetIndexGet(Instance)
                     If BackAssetsFile Is Nothing Then
                         Log("[Download] 未找到版本 " & Instance.Name & " 的合适的资源索引下载地址，游戏 assets 可能缺失", LogLevel.Debug)
-                        Task.Abort()
+                        Task.Interrupt()
                         Throw New ThreadInterruptedException
                     End If
                     RealAddress = BackAssetsFile.LocalPath
@@ -107,7 +107,7 @@
                     '检查是否需要更新：每天只更新一次
                     If File.Exists(RealAddress) AndAlso Math.Abs((File.GetLastWriteTime(RealAddress).Date - Now.Date).TotalDays) < 1 Then
                         Log("[Download] 无需更新资源文件索引，取消")
-                        Task.Abort()
+                        Task.Interrupt()
                     End If
                 End Sub))
                 LoadersAssetsUpdate.Add(New LoaderDownload("后台下载资源文件索引", New List(Of NetFile)))
@@ -158,14 +158,14 @@
     Public Property AllDrops As List(Of Integer)
         Get
             If _AllDrops Is Nothing Then
-                _AllDrops = Setup.Get("CacheDrops").ToString.
+                _AllDrops = Settings.Get("CacheDrops").ToString.
                     Split(",".ToCharArray, StringSplitOptions.RemoveEmptyEntries).Select(Function(d) CInt(Val(d))).ToList()
             End If
             Return If(_AllDrops.Any, _AllDrops, Nothing) '不要将 _AllDrops 再设为 Nothing，以防止反复获取设置尝试初始化
         End Get
         Set(value As List(Of Integer))
             _AllDrops = value
-            Setup.Set("CacheDrops", value.Join(","))
+            Settings.Set("CacheDrops", value.Join(","c))
         End Set
     End Property
     Private _AllDrops As List(Of Integer) = Nothing
@@ -191,7 +191,7 @@
     ''' </summary>
     Public DlClientListLoader As New LoaderTask(Of String, DlClientListResult)("DlClientList Main", AddressOf DlClientListMain)
     Private Sub DlClientListMain(Loader As LoaderTask(Of String, DlClientListResult))
-        Select Case Setup.Get("ToolDownloadVersion")
+        Select Case Settings.Get("ToolDownloadVersion")
             Case 0
                 DlSourceLoader(Loader, New List(Of KeyValuePair(Of LoaderTask(Of String, DlClientListResult), Integer)) From {
                     New KeyValuePair(Of LoaderTask(Of String, DlClientListResult), Integer)(DlClientListBmclapiLoader, 30),
@@ -242,20 +242,20 @@
             Dim Version As String
             '快照版
             Version = Json("latest")("snapshot")
-            If Setup.Get("ToolUpdateSnapshot") AndAlso Not Setup.Get("ToolUpdateSnapshotLast") = "" AndAlso
-               Setup.Get("ToolUpdateSnapshotLast") <> Version AndAlso Not IsHinted Then
+            If Settings.Get("ToolUpdateSnapshot") AndAlso Not Settings.Get("ToolUpdateSnapshotLast") = "" AndAlso
+               Settings.Get("ToolUpdateSnapshotLast") <> Version AndAlso Not IsHinted Then
                 IsHinted = True
                 McDownloadClientUpdateHint(Version, Json)
             End If
-            Setup.Set("ToolUpdateSnapshotLast", If(Version, "Nothing"))
+            Settings.Set("ToolUpdateSnapshotLast", If(Version, "Nothing"))
             '正式版
             Version = Json("latest")("release")
-            If Setup.Get("ToolUpdateRelease") AndAlso Not Setup.Get("ToolUpdateReleaseLast") = "" AndAlso
-               Setup.Get("ToolUpdateReleaseLast") <> Version AndAlso Not IsHinted Then
+            If Settings.Get("ToolUpdateRelease") AndAlso Not Settings.Get("ToolUpdateReleaseLast") = "" AndAlso
+               Settings.Get("ToolUpdateReleaseLast") <> Version AndAlso Not IsHinted Then
                 IsHinted = True
                 McDownloadClientUpdateHint(Version, Json)
             End If
-            Setup.Set("ToolUpdateReleaseLast", Version)
+            Settings.Set("ToolUpdateReleaseLast", Version)
         Catch ex As Exception
             Throw New Exception("Minecraft 官方源版本列表解析失败", ex)
         End Try
@@ -304,7 +304,7 @@
                     DlClientListLoader.WaitForExit(Id, IsForceRestart:=True)
                 Case LoadState.Loading
                     DlClientListLoader.WaitForExit(Id)
-                Case LoadState.Failed, LoadState.Aborted, LoadState.Waiting
+                Case LoadState.Failed, LoadState.Interrupted, LoadState.Waiting
                     DlClientListLoader.WaitForExit(Id, IsForceRestart:=True)
             End Select
             '重新查找版本
@@ -383,7 +383,7 @@
     ''' </summary>
     Public DlOptiFineListLoader As New LoaderTask(Of Integer, DlOptiFineListResult)("DlOptiFineList Main", AddressOf DlOptiFineListMain)
     Private Sub DlOptiFineListMain(Loader As LoaderTask(Of Integer, DlOptiFineListResult))
-        Select Case Setup.Get("ToolDownloadVersion")
+        Select Case Settings.Get("ToolDownloadVersion")
             Case 0
                 DlSourceLoader(Loader, New List(Of KeyValuePair(Of LoaderTask(Of Integer, DlOptiFineListResult), Integer)) From {
                     New KeyValuePair(Of LoaderTask(Of Integer, DlOptiFineListResult), Integer)(DlOptiFineListBmclapiLoader, 30),
@@ -423,7 +423,7 @@
                 Name(i) = Name(i).Replace("_", " ")
                 Dim Entry As New DlOptiFineListEntry With {
                     .DisplayName = Name(i).Replace("HD U ", "").Replace(".0 ", " "),
-                    .ReleaseTime = Join({ReleaseTime(i).Split(".")(2), ReleaseTime(i).Split(".")(1), ReleaseTime(i).Split(".")(0)}, "/"),
+                    .ReleaseTime = {ReleaseTime(i).Split(".")(2), ReleaseTime(i).Split(".")(1), ReleaseTime(i).Split(".")(0)}.Join("/"c),
                     .IsPreview = Name(i).ContainsF("pre", True),
                     .Inherit = Name(i).ToString.Split(" ")(0),
                     .FileName = If(Name(i).ContainsF("pre", True), "preview_", "") & "OptiFine_" & Name(i).Replace(" ", "_") & ".jar",
@@ -489,7 +489,7 @@
     ''' </summary>
     Public DlForgeListLoader As New LoaderTask(Of Integer, DlForgeListResult)("DlForgeList Main", AddressOf DlForgeListMain)
     Private Sub DlForgeListMain(Loader As LoaderTask(Of Integer, DlForgeListResult))
-        Select Case Setup.Get("ToolDownloadVersion")
+        Select Case Settings.Get("ToolDownloadVersion")
             Case 0
                 DlSourceLoader(Loader, New List(Of KeyValuePair(Of LoaderTask(Of Integer, DlForgeListResult), Integer)) From {
                     New KeyValuePair(Of LoaderTask(Of Integer, DlForgeListResult), Integer)(DlForgeListBmclapiLoader, 30),
@@ -638,7 +638,7 @@
     Public Sub DlForgeVersionMain(Loader As LoaderTask(Of String, List(Of DlForgeVersionEntry)))
         Dim DlForgeVersionOfficialLoader As New LoaderTask(Of String, List(Of DlForgeVersionEntry))("DlForgeVersion Official", AddressOf DlForgeVersionOfficialMain)
         Dim DlForgeVersionBmclapiLoader As New LoaderTask(Of String, List(Of DlForgeVersionEntry))("DlForgeVersion Bmclapi", AddressOf DlForgeVersionBmclapiMain)
-        Select Case Setup.Get("ToolDownloadVersion")
+        Select Case Settings.Get("ToolDownloadVersion")
             Case 0
                 DlSourceLoader(Loader, New List(Of KeyValuePair(Of LoaderTask(Of String, List(Of DlForgeVersionEntry)), Integer)) From {
                     New KeyValuePair(Of LoaderTask(Of String, List(Of DlForgeVersionEntry)), Integer)(DlForgeVersionBmclapiLoader, 30),
@@ -849,7 +849,7 @@
                 VersionName = ApiName.Replace("1.20.1-", "")
                 Version = New Version("19." & VersionName)
                 Inherit = "1.20.1"
-            ElseIf ApiName.StartsWith("0.") Then '0.25w14craftmine.3-beta
+            ElseIf ApiName.StartsWithF("0.") Then '0.25w14craftmine.3-beta
                 VersionName = ApiName
                 Dim Segments = ApiName.BeforeFirst("-").Split("."c)
                 Version = New Version(0, 0, Segments.Last)
@@ -872,7 +872,7 @@
     ''' </summary>
     Public DlNeoForgeListLoader As New LoaderTask(Of Integer, DlNeoForgeListResult)("DlNeoForgeList Main", AddressOf DlNeoForgeListMain)
     Private Sub DlNeoForgeListMain(Loader As LoaderTask(Of Integer, DlNeoForgeListResult))
-        Select Case Setup.Get("ToolDownloadVersion")
+        Select Case Settings.Get("ToolDownloadVersion")
             Case 0
                 DlSourceLoader(Loader, New List(Of KeyValuePair(Of LoaderTask(Of Integer, DlNeoForgeListResult), Integer)) From {
                     New KeyValuePair(Of LoaderTask(Of Integer, DlNeoForgeListResult), Integer)(DlNeoForgeListBmclapiLoader, 30),
@@ -997,7 +997,7 @@
     ''' </summary>
     Public DlLiteLoaderListLoader As New LoaderTask(Of Integer, DlLiteLoaderListResult)("DlLiteLoaderList Main", AddressOf DlLiteLoaderListMain)
     Private Sub DlLiteLoaderListMain(Loader As LoaderTask(Of Integer, DlLiteLoaderListResult))
-        Select Case Setup.Get("ToolDownloadVersion")
+        Select Case Settings.Get("ToolDownloadVersion")
             Case 0
                 DlSourceLoader(Loader, New List(Of KeyValuePair(Of LoaderTask(Of Integer, DlLiteLoaderListResult), Integer)) From {
                     New KeyValuePair(Of LoaderTask(Of Integer, DlLiteLoaderListResult), Integer)(DlLiteLoaderListBmclapiLoader, 30),
@@ -1031,7 +1031,7 @@
                 Versions.Add(New DlLiteLoaderListEntry With {
                              .Inherit = Pair.Key,
                              .IsLegacy = Pair.Key.Split(".")(1) < 8,
-                             .IsPreview = RealEntry("stream").ToString.ToLower = "snapshot",
+                             .IsPreview = RealEntry("stream").ToString.Lower = "snapshot",
                              .FileName = "liteloader-installer-" & Pair.Key & If(Pair.Key = "1.8" OrElse Pair.Key = "1.9", ".0", "") & "-00-SNAPSHOT.jar",
                              .MD5 = RealEntry("md5"),
                              .ReleaseTime = GetLocalTime(GetDate(RealEntry("timestamp"))).ToString("yyyy'/'MM'/'dd HH':'mm"),
@@ -1059,7 +1059,7 @@
                 Versions.Add(New DlLiteLoaderListEntry With {
                              .Inherit = Pair.Key,
                              .IsLegacy = Pair.Key.Split(".")(1) < 8,
-                             .IsPreview = RealEntry("stream").ToString.ToLower = "snapshot",
+                             .IsPreview = RealEntry("stream").ToString.Lower = "snapshot",
                              .FileName = "liteloader-installer-" & Pair.Key & If(Pair.Key = "1.8" OrElse Pair.Key = "1.9", ".0", "") & "-00-SNAPSHOT.jar",
                              .MD5 = RealEntry("md5"),
                              .ReleaseTime = GetLocalTime(GetDate(RealEntry("timestamp"))).ToString("yyyy'/'MM'/'dd HH':'mm"),
@@ -1096,7 +1096,7 @@
     ''' </summary>
     Public DlFabricListLoader As New LoaderTask(Of Integer, DlFabricListResult)("DlFabricList Main", AddressOf DlFabricListMain)
     Private Sub DlFabricListMain(Loader As LoaderTask(Of Integer, DlFabricListResult))
-        Select Case Setup.Get("ToolDownloadVersion")
+        Select Case Settings.Get("ToolDownloadVersion")
             Case 0
                 DlSourceLoader(Loader, New List(Of KeyValuePair(Of LoaderTask(Of Integer, DlFabricListResult), Integer)) From {
                     New KeyValuePair(Of LoaderTask(Of Integer, DlFabricListResult), Integer)(DlFabricListBmclapiLoader, 30),
@@ -1170,7 +1170,7 @@
         Dim Urls As New List(Of KeyValuePair(Of String, Integer))
         Dim McimUrl As String = DlSourceModGet(Url)
         If McimUrl <> Url Then
-            Select Case Setup.Get("ToolDownloadMod")
+            Select Case Settings.Get("ToolDownloadMod")
                 Case 0
                     Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
                     Urls.Add(New KeyValuePair(Of String, Integer)(McimUrl, 10))
@@ -1210,7 +1210,7 @@
     ''' </summary>
     Public ReadOnly Property DlSourcePreferMojang As Boolean
         Get
-            Return Setup.Get("ToolDownloadSource") = 2 OrElse (Setup.Get("ToolDownloadSource") = 1 AndAlso DlPreferMojang)
+            Return Settings.Get("ToolDownloadSource") = 2 OrElse (Settings.Get("ToolDownloadSource") = 1 AndAlso DlPreferMojang)
         End Get
     End Property
     ''' <summary>
@@ -1224,7 +1224,7 @@
     ''' </summary>
     Public ReadOnly Property DlVersionListPreferMojang As Boolean
         Get
-            Return Setup.Get("ToolDownloadVersion") = 2 OrElse (Setup.Get("ToolDownloadVersion") = 1 AndAlso DlPreferMojang)
+            Return Settings.Get("ToolDownloadVersion") = 2 OrElse (Settings.Get("ToolDownloadVersion") = 1 AndAlso DlPreferMojang)
         End Get
     End Property
     ''' <summary>
@@ -1323,7 +1323,7 @@
                 If SubLoader.Key.State = LoadState.Finished Then
                     '检查加载器成功
                     MainLoader.Output = SubLoader.Key.Output
-                    DlSourceLoaderAbort(LoaderList)
+                    DlSourceLoaderInterrupt(LoaderList)
                     Return
                 ElseIf BeforeLoadersAllFailed Then
                     '此前的加载器全部失败，直接启动后续加载器
@@ -1355,7 +1355,7 @@
                         End If
                     Next
                     If ErrorInfo Is Nothing Then ErrorInfo = New TimeoutException("下载源连接超时")
-                    DlSourceLoaderAbort(LoaderList)
+                    DlSourceLoaderInterrupt(LoaderList)
                     Throw ErrorInfo
                 End If
                 Exit For
@@ -1364,15 +1364,15 @@
             Thread.Sleep(10)
             WaitCycle += 1
             '检查父加载器中断
-            If MainLoader.IsAborted Then
-                DlSourceLoaderAbort(LoaderList)
+            If MainLoader.IsInterrupted Then
+                DlSourceLoaderInterrupt(LoaderList)
                 Return
             End If
         Loop
     End Sub
-    Private Sub DlSourceLoaderAbort(Of InputType, OutputType)(LoaderList As List(Of KeyValuePair(Of LoaderTask(Of InputType, OutputType), Integer)))
+    Private Sub DlSourceLoaderInterrupt(Of InputType, OutputType)(LoaderList As List(Of KeyValuePair(Of LoaderTask(Of InputType, OutputType), Integer)))
         For Each Loader In LoaderList
-            If Loader.Key.State = LoadState.Loading Then Loader.Key.Abort()
+            If Loader.Key.State = LoadState.Loading Then Loader.Key.Interrupt()
         Next
     End Sub
 

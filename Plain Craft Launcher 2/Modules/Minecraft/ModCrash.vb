@@ -79,7 +79,7 @@
             End Try
         Next
         If LatestLog IsNot Nothing AndAlso LatestLog.Any Then
-            Dim RawOutput As String = Join(LatestLog, vbCrLf)
+            Dim RawOutput As String = LatestLog.Join(vbCrLf)
             Log("[Crash] 以下为游戏输出的最后一段内容：" & vbCrLf & RawOutput)
             WriteFile(TempFolder & "RawOutput.log", RawOutput)
             AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(TempFolder & "RawOutput.log", LatestLog.ToArray))
@@ -113,7 +113,7 @@ Extracted:
         For Each TargetFile As FileInfo In New DirectoryInfo(TempFolder & "Temp\").EnumerateFiles.ToList()
             Try
                 If Not TargetFile.Exists OrElse TargetFile.Length = 0 Then Continue For
-                Dim Ext As String = TargetFile.Extension.ToLower
+                Dim Ext As String = TargetFile.Extension.Lower
                 If Ext = ".log" OrElse Ext = ".txt" Then
                     AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(TargetFile.FullName, ReadFile(TargetFile.FullName).Split(vbCrLf.ToCharArray)))
                 Else
@@ -147,7 +147,7 @@ Extracted:
         DirectFile = Nothing
         Dim AllFiles As New List(Of KeyValuePair(Of AnalyzeFileType, KeyValuePair(Of String, String())))
         For Each LogFile In AnalyzeRawFiles
-            Dim MatchName As String = GetFileNameFromPath(LogFile.Key).ToLower
+            Dim MatchName As String = GetFileNameFromPath(LogFile.Key).Lower
             Dim TargetType As AnalyzeFileType
             If MatchName.StartsWithF("hs_err") Then
                 TargetType = AnalyzeFileType.HsErr
@@ -229,7 +229,7 @@ Extracted:
                         '创建文件名词典
                         Dim FileNameDict As New Dictionary(Of String, KeyValuePair(Of String, String()))
                         For Each SelectedFile In SelectedFiles
-                            FileNameDict(GetFileNameFromPath(SelectedFile.Key).ToLower) = SelectedFile
+                            FileNameDict(GetFileNameFromPath(SelectedFile.Key).Lower) = SelectedFile
                             OutputFiles.Add(SelectedFile.Key)
                             Log("[Crash] 输出报告：" & SelectedFile.Key & "，作为 Minecraft 或启动器日志")
                         Next
@@ -307,7 +307,7 @@ Extracted:
     ''' 输出字符串的前后某些行，并统一行尾为 vbLf (正则 \n)、删除空行和重复行。
     ''' </summary>
     Private Function GetHeadTailLines(Raw As String(), HeadLines As Integer, TailLines As Integer) As String
-        If Raw.Length <= HeadLines + TailLines Then Return Join(Raw.Distinct, vbLf)
+        If Raw.Length <= HeadLines + TailLines Then Return Raw.Distinct.Join(vbLf)
         Dim Lines As New List(Of String)
         Dim RealHeadLines As Integer = 0, ViewedLines As Integer
         For ViewedLines = 0 To Raw.Length - 1
@@ -448,7 +448,7 @@ Done:
         Else
             Log("[Crash] 步骤 3：分析崩溃原因完成，找到 " & CrashReasons.Count & " 条可能的原因")
             For Each Reason In CrashReasons
-                Log("[Crash]  - " & GetStringFromEnum(Reason.Key) & If(Reason.Value.Any, "（" & Join(Reason.Value, "；") & "）", ""))
+                Log("[Crash]  - " & GetStringFromEnum(Reason.Key) & If(Reason.Value.Any, "（" & Reason.Value.Join("；"c) & "）", ""))
             Next
         End If
     End Sub
@@ -464,7 +464,7 @@ Done:
         Else
             CrashReasons.Add(Reason, New List(Of String)(If(Additional, {})))
         End If
-        Log("[Crash] 可能的崩溃原因：" & GetStringFromEnum(Reason) & If(Additional IsNot Nothing AndAlso Additional.Any, "（" & Join(Additional, "；") & "）", ""))
+        Log("[Crash] 可能的崩溃原因：" & GetStringFromEnum(Reason) & If(Additional IsNot Nothing AndAlso Additional.Any, "（" & Additional.Join("；"c) & "）", ""))
     End Sub
     Private Sub AppendReason(Reason As CrashReason, Additional As String)
         AppendReason(Reason, If(String.IsNullOrEmpty(Additional), Nothing, New List(Of String) From {Additional}))
@@ -623,9 +623,9 @@ Done:
             Dim IsMixin As Boolean = MixinAnalyze(LogMc)
             '常规信息
             If LogMc.Contains("An exception was thrown, the game will display an error screen and halt.") Then AppendReason(CrashReason.Forge报错, RegexSeek(LogMc, "(?<=the game will display an error screen and halt.[\n\r]+[^\n]+?Exception: )[\s\S]+?(?=\n\tat)")?.Trim(vbCrLf))
-            If LogMc.Contains("A potential solution has been determined:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, Join(RegexSearch(If(RegexSeek(LogMc, "(?<=A potential solution has been determined:\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+"), vbLf))
-            If LogMc.Contains("A potential solution has been determined, this may resolve your problem:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, Join(RegexSearch(If(RegexSeek(LogMc, "(?<=A potential solution has been determined, this may resolve your problem:\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+"), vbLf))
-            If LogMc.Contains("确定了一种可能的解决方法，这样做可能会解决你的问题：") Then AppendReason(CrashReason.Fabric报错并给出解决方案, Join(RegexSearch(If(RegexSeek(LogMc, "(?<=确定了一种可能的解决方法，这样做可能会解决你的问题：\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+"), vbLf))
+            If LogMc.Contains("A potential solution has been determined:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, RegexSearch(If(RegexSeek(LogMc, "(?<=A potential solution has been determined:\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+").Join(vbLf))
+            If LogMc.Contains("A potential solution has been determined, this may resolve your problem:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, RegexSearch(If(RegexSeek(LogMc, "(?<=A potential solution has been determined, this may resolve your problem:\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+").Join(vbLf))
+            If LogMc.Contains("确定了一种可能的解决方法，这样做可能会解决你的问题：") Then AppendReason(CrashReason.Fabric报错并给出解决方案, RegexSearch(If(RegexSeek(LogMc, "(?<=确定了一种可能的解决方法，这样做可能会解决你的问题：\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+").Join(vbLf))
             If Not IsMixin AndAlso LogMc.Contains("due to errors, provided by ") Then '在 #3104 的情况下，这一句导致 OptiFabric 的 Mixin 失败错判为 Fabric Loader 加载失败
                 AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(If(RegexSeek(LogMc, "(?<=due to errors, provided by ')[^']+"), "").TrimEnd((vbCrLf & " ").ToCharArray)))
             End If
@@ -714,18 +714,18 @@ NextStack:
                 If {"com", "org", "net", "asm", "fml", "mod", "jar", "sun", "lib", "map", "gui", "dev", "nio", "api", "dsi", "top", "mcp",
                     "core", "init", "mods", "main", "file", "game", "load", "read", "done", "util", "tile", "item", "base", "fake", "oshi", "impl", "data", "pool", "task",
                     "forge", "setup", "block", "model", "mixin", "event", "unimi", "netty", "world", "lwjgl", "fakes",
-                    "gitlab", "common", "server", "config", "mixins", "compat", "loader", "launch", "script", "entity", "assist", "client", "plugin", "modapi", "mojang", "shader", "events", "github", "recipe", "render", "packet", "events",
+                    "fabric", "gitlab", "common", "server", "config", "mixins", "compat", "loader", "launch", "script", "entity", "assist", "client", "plugin", "modapi", "mojang", "shader", "events", "github", "recipe", "render", "packet", "events",
                     "preinit", "preload", "machine", "reflect", "channel", "general", "handler", "content", "systems", "modules", "service", "scripts", "network",
                     "fastutil", "optifine", "internal", "platform", "override", "fabricmc", "neoforge", "external",
                     "injection", "listeners", "scheduler", "minecraft", "universal", "multipart", "neoforged", "microsoft",
                     "transformer", "transformers", "minecraftforge", "blockentity", "spongepowered", "electronwill", "concurrent"
-                   }.Contains(Word.ToLower) Then Continue For
+                   }.Contains(Word.Lower) Then Continue For
                 PossibleWords.Add(Word.Trim)
             Next
         Next
         PossibleWords = PossibleWords.Distinct.ToList
         Log("[Crash] 从堆栈信息中找到 " & PossibleWords.Count & " 个可能的 Mod ID 关键词")
-        If PossibleWords.Any Then Log("[Crash]  - " & Join(PossibleWords, ", "))
+        If PossibleWords.Any Then Log("[Crash]  - " & PossibleWords.Join(", "))
         If PossibleWords.Count > 10 Then
             Log("[Crash] 关键词过多，考虑匹配出错，不纳入考虑")
             Return New List(Of String)
@@ -773,8 +773,8 @@ NextStack:
             Dim HintLines As New List(Of String)
             For Each KeyWord As String In Keywords
                 For Each ModString As String In ModNameLines
-                    Dim RealModString As String = ModString.ToLower.Replace("_", "")
-                    If Not RealModString.Contains(KeyWord.ToLower.Replace("_", "")) Then Continue For
+                    Dim RealModString As String = ModString.Lower.Replace("_", "")
+                    If Not RealModString.Contains(KeyWord.Lower.Replace("_", "")) Then Continue For
                     If RealModString.Contains("minecraft.jar") OrElse RealModString.Contains(" forge-") OrElse RealModString.Contains(" mixin-") Then Continue For
                     HintLines.Add(ModString.Trim(vbCrLf.ToCharArray))
                     Exit For
@@ -874,7 +874,7 @@ NextStack:
                     StartProcess(DirectFile.Value.Key)
                 Else
                     Dim FilePath As String = PathTemp & "Crash.txt"
-                    WriteFile(FilePath, Join(DirectFile.Value.Value, vbCrLf))
+                    WriteFile(FilePath, DirectFile.Value.Value.Join(vbCrLf))
                     StartProcess(FilePath)
                 End If
             End Sub))
@@ -974,35 +974,35 @@ NextStack:
                     End If
                 Case CrashReason.Mod缺少前置或MC版本错误
                     If Additional.Any Then
-                        Results.Add("由于未安装正确的前置 Mod，导致游戏退出。\n缺失的依赖项：\n - " & Join(Additional, "\n - ") & "\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。")
+                        Results.Add("由于未安装正确的前置 Mod，导致游戏退出。\n缺失的依赖项：\n - " & Additional.Join("\n - ") & "\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。")
                     Else
                         Results.Add("由于未安装正确的前置 Mod，导致游戏退出。\n请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\h")
                     End If
                 Case CrashReason.堆栈分析发现关键字
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         Results.Add("你的游戏遇到了一些问题，PCL 为此找到了一个可疑的关键词：" & Additional.First & "。\n\n如果你知道某个关键词对应的 Mod，那么有可能就是它引起的错误，你也可以查看错误报告获取详情。\h")
                     Else
-                        Results.Add("你的游戏遇到了一些问题，PCL 为此找到了以下可疑的关键词：\n - " & Join(Additional, ", ") & "\n\n如果你知道某个关键词对应的 Mod，那么有可能就是它引起的错误，你也可以查看错误报告获取详情。\h")
+                        Results.Add("你的游戏遇到了一些问题，PCL 为此找到了以下可疑的关键词：\n - " & Additional.Join(", ") & "\n\n如果你知道某个关键词对应的 Mod，那么有可能就是它引起的错误，你也可以查看错误报告获取详情。\h")
                     End If
                 Case CrashReason.堆栈分析发现Mod名称, CrashReason.怀疑Mod导致游戏崩溃
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         Results.Add("PCL 怀疑名为 " & Additional.First & " 的 Mod 导致了游戏出错，但不能完全确定。\n你可以尝试禁用此 Mod，然后观察游戏是否还会崩溃。\n\e\h")
                     Else
-                        Results.Add("PCL 怀疑以下 Mod 导致了游戏出错，但不能完全确定：\n - " & Join(Additional, "\n - ") & "\n\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\e\h")
+                        Results.Add("PCL 怀疑以下 Mod 导致了游戏出错，但不能完全确定：\n - " & Additional.Join("\n - ") & "\n\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\e\h")
                     End If
                 Case CrashReason.确定Mod导致游戏崩溃
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         Results.Add("名为 " & Additional.First & " 的 Mod 导致了游戏出错。\n你可以尝试禁用此 Mod，然后观察游戏是否还会崩溃。\n\e\h")
                     Else
-                        Results.Add("以下 Mod 导致了游戏出错：\n - " & Join(Additional, "\n - ") & "\n\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\e\h")
+                        Results.Add("以下 Mod 导致了游戏出错：\n - " & Additional.Join("\n - ") & "\n\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\e\h")
                     End If
                 Case CrashReason.ModMixin失败
                     If Additional.Count = 0 Then
                         Results.Add("部分 Mod 注入失败，导致游戏出错。\n这一般代表着部分 Mod 与其他 Mod 或当前环境不兼容，或是它存在 Bug。\n你可以尝试逐步禁用 Mod，然后观察游戏是否还会崩溃，以此定位导致崩溃的 Mod。\n\e\h")
-                    ElseIf Additional.Count = 1 Then
+                    ElseIf Additional.IsSingle Then
                         Results.Add("名为 " & Additional.First & " 的 Mod 注入失败，导致游戏出错。\n这一般代表着它与其他 Mod 或当前环境不兼容，或是它存在 Bug。\n你可以尝试禁用此 Mod，然后观察游戏是否还会崩溃。\n\e\h")
                     Else
-                        Results.Add("以下 Mod 导致了游戏出错：\n - " & Join(Additional, "\n - ") & "\n这一般代表着它们与其他 Mod 或当前环境不兼容，或是它存在 Bug。\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\e\h")
+                        Results.Add("以下 Mod 导致了游戏出错：\n - " & Additional.Join("\n - ") & "\n这一般代表着它们与其他 Mod 或当前环境不兼容，或是它存在 Bug。\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\e\h")
                     End If
                 Case CrashReason.Mod配置文件导致游戏崩溃
                     If Additional(1) Is Nothing Then
@@ -1011,25 +1011,25 @@ NextStack:
                         Results.Add("名为 " & Additional.First & " 的 Mod 导致了游戏出错：\n其配置文件 " & Additional(1) & " 存在异常，无法读取。")
                     End If
                 Case CrashReason.Mod初始化失败
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         Results.Add("名为 " & Additional.First & " 的 Mod 初始化失败，导致游戏无法继续加载。\n你可以尝试禁用此 Mod，然后观察游戏是否还会崩溃。\n\e\h")
                     Else
-                        Results.Add("以下 Mod 初始化失败，导致游戏出错：\n - " & Join(Additional, "\n - ") & "\n\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\e\h")
+                        Results.Add("以下 Mod 初始化失败，导致游戏出错：\n - " & Additional.Join("\n - ") & "\n\n你可以尝试依次禁用上述 Mod，然后观察游戏是否还会崩溃。\n\e\h")
                     End If
                 Case CrashReason.特定方块导致崩溃
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         Results.Add("游戏似乎因为方块 " & Additional.First & " 出现了问题。\n\n你可以创建一个新世界，并观察游戏的运行情况：\n - 若正常运行，则是该方块导致出错，你或许需要使用一些方式删除此方块。\n - 若仍然出错，问题就可能来自其他原因……\h")
                     Else
                         Results.Add("游戏似乎因为世界中的某些方块出现了问题。\n\n你可以创建一个新世界，并观察游戏的运行情况：\n - 若正常运行，则是某些方块导致出错，你或许需要删除该世界。\n - 若仍然出错，问题就可能来自其他原因……\h")
                     End If
                 Case CrashReason.Mod重复安装
                     If Additional.Count >= 2 Then
-                        Results.Add("你重复安装了多个相同的 Mod：\n - " & Join(Additional, "\n - ") & "\n\n每个 Mod 只能出现一次，请删除重复的 Mod，然后再启动游戏。")
+                        Results.Add("你重复安装了多个相同的 Mod：\n - " & Additional.Join("\n - ") & "\n\n每个 Mod 只能出现一次，请删除重复的 Mod，然后再启动游戏。")
                     Else
                         Results.Add("你可能重复安装了多个相同的 Mod，导致游戏出错。\n\n每个 Mod 只能出现一次，请删除重复的 Mod，然后再启动游戏。\e\h")
                     End If
                 Case CrashReason.特定实体导致崩溃
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         If Additional.First.Contains("minecraft:player") Then
                             If Additional.First.Contains(" ") Then
                                 Results.Add($"游戏因为位于 {Additional.First.AfterFirst(" ")} 的玩家实体导致了崩溃。\h")
@@ -1040,7 +1040,7 @@ NextStack:
                             Results.Add($"游戏因为实体 {Additional.First} 导致了崩溃。\h")
                         End If
                     Else
-                        Results.Add($"游戏因为下列实体导致了崩溃：{Additional.Join("、")}\h")
+                        Results.Add($"游戏因为下列实体导致了崩溃：{Additional.Join("、"c)}\h")
                     End If
                 Case CrashReason.OptiFine与Forge不兼容
                     Results.Add("由于 OptiFine 与当前版本的 Forge 不兼容，导致了游戏崩溃。\n\n请前往 OptiFine 官网（https://optifine.net/downloads）查看 OptiFine 所兼容的 Forge 版本，并严格按照对应版本重新安装游戏。")
@@ -1077,31 +1077,31 @@ NextStack:
                 Case CrashReason.Forge安装不完整
                     Results.Add("由于安装的 Forge 文件丢失，导致游戏无法正常运行。\n请重新安装一次相同版本的 Forge，然后再启动游戏。\n在打包游戏时删除 libraries 文件夹可能导致此错误。\h")
                 Case CrashReason.Fabric报错
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         Results.Add("Fabric 提供了以下错误信息：\n" & Additional.First & "\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。")
                     Else
                         Results.Add("Fabric 可能已经提供了错误信息，请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\h")
                     End If
                 Case CrashReason.Mod互不兼容
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         Results.Add("你所安装的 Mod 不兼容：\n" & Additional.First & "\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。")
                     Else
                         Results.Add("你所安装的 Mod 不兼容，Mod 加载器可能已经提供了错误信息，请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\h")
                     End If
                 Case CrashReason.Mod加载器报错
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         Results.Add("Mod 加载器提供了以下错误信息：\n" & Additional.First & "\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。")
                     Else
                         Results.Add("Mod 加载器可能已经提供了错误信息，请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\h")
                     End If
                 Case CrashReason.Fabric报错并给出解决方案
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         Results.Add("Fabric 提供了以下解决方案：\n" & Additional.First & "\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。")
                     Else
                         Results.Add("Fabric 可能已经提供了解决方案，请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\h")
                     End If
                 Case CrashReason.Forge报错
-                    If Additional.Count = 1 Then
+                    If Additional.IsSingle Then
                         Results.Add("Forge 提供了以下错误信息：\n" & Additional.First & "\n\n请根据上述信息进行对应处理，如果看不懂英文可以使用翻译软件。")
                     Else
                         Results.Add("Forge 可能已经提供了错误信息，请根据错误报告中的日志信息进行对应处理，如果看不懂英文可以使用翻译软件。\h")
@@ -1113,7 +1113,7 @@ NextStack:
             End Select
         Next
 
-        Return Join(Results, "\n\n此外，").
+        Return Results.Join("\n\n此外，").
                     Replace("\n", vbCrLf).
                     Replace("\h", "").
                     Replace("\e", If(IsHandAnalyze, "", vbCrLf & "你可以查看错误报告了解错误具体是如何发生的。")).

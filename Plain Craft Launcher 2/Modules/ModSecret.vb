@@ -62,26 +62,6 @@ Friend Module ModSecret
         Return "0000-0000-0000-0000"
     End Function
 
-    Friend Sub SecretLaunchJvmArgs(ByRef DataList As List(Of String))
-        Dim DataJvmCustom As String = Setup.Get("VersionAdvanceJvm", Instance:=McInstanceSelected)
-        DataList.Insert(0, ArgumentReplace(If(DataJvmCustom = "", Setup.Get("LaunchAdvanceJvm"), DataJvmCustom))) '可变 JVM 参数
-        McLaunchLog("当前剩余内存：" & Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024 * 10) / 10 & "G")
-        DataList.Add("-Xmn" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024 * 0.15) & "m")
-        DataList.Add("-Xmx" & Math.Floor(PageInstanceSetup.GetRam(McInstanceSelected) * 1024) & "m")
-        If Not DataList.Any(Function(d) d.Contains("-Dlog4j2.formatMsgNoLookups=true")) Then DataList.Add("-Dlog4j2.formatMsgNoLookups=true")
-        
-        '为 Java 7 及更早版本自动添加永久代内存参数
-        If McLaunchJavaSelected.MajorVersion <= 7 Then
-            If Not DataList.Any(Function(d) d.Contains("-XX:PermSize=") OrElse d.Contains("-XX:MaxPermSize=")) Then
-                DataList.Add("-XX:PermSize=256m")
-                DataList.Add("-XX:MaxPermSize=512m")
-                McLaunchLog("检测到 Java " & McLaunchJavaSelected.MajorVersion & "，已自动添加永久代内存参数")
-            Else
-                McLaunchLog("检测到 Java " & McLaunchJavaSelected.MajorVersion & "，用户已自定义永久代参数，跳过自动添加")
-            End If
-        End If
-    End Sub
-
 #End Region
 
 #Region "网络鉴权"
@@ -240,7 +220,7 @@ Friend Module ModSecret
             FrmMain.PanTitle.Background = Brush
             FrmMain.PanTitle.Background.Freeze()
             '主页面背景
-            If Setup.Get("UiBackgroundColorful") Then
+            If Settings.Get("UiBackgroundColorful") Then
                 Brush = New LinearGradientBrush With {.EndPoint = New Point(0.1, 1), .StartPoint = New Point(0.9, 0)}
                 Brush.GradientStops.Add(New GradientStop With {.Offset = -0.1, .Color = New MyColor().FromHSL2(ColorHue - 15, ColorSat * 0.8, 91)})
                 Brush.GradientStops.Add(New GradientStop With {.Offset = 0.4, .Color = New MyColor().FromHSL2(ColorHue, ColorSat * 0.8, 91)})

@@ -12,7 +12,7 @@
     ''' 刷新页面显示的所有信息。
     ''' </summary>
     Public Sub Reload(KeepInput As Boolean)
-        TextName.Text = Setup.Get("CacheMsV2Name")
+        TextName.Text = Settings.Get("CacheMsV2Name")
         '皮肤在 Loaded 加载
     End Sub
     ''' <summary>
@@ -20,9 +20,9 @@
     ''' </summary>
     Public Shared Function GetLoginData() As McLoginMs
         If McLoginMsLoader.State = LoadState.Finished Then
-            Return New McLoginMs With {.OAuthRefreshToken = Setup.Get("CacheMsV2OAuthRefresh"), .UserName = Setup.Get("CacheMsV2Name"), .AccessToken = Setup.Get("CacheMsV2Access"), .Uuid = Setup.Get("CacheMsV2Uuid"), .ProfileJson = Setup.Get("CacheMsV2ProfileJson")}
+            Return New McLoginMs With {.OAuthRefreshToken = Settings.Get("CacheMsV2OAuthRefresh"), .UserName = Settings.Get("CacheMsV2Name"), .AccessToken = Settings.Get("CacheMsV2Access"), .Uuid = Settings.Get("CacheMsV2Uuid"), .ProfileJson = Settings.Get("CacheMsV2ProfileJson")}
         Else
-            Return New McLoginMs With {.OAuthRefreshToken = Setup.Get("CacheMsV2OAuthRefresh"), .UserName = Setup.Get("CacheMsV2Name")}
+            Return New McLoginMs With {.OAuthRefreshToken = Settings.Get("CacheMsV2OAuthRefresh"), .UserName = Settings.Get("CacheMsV2Name")}
         End If
     End Function
 
@@ -50,12 +50,12 @@
 
     '退出登录
     Private Sub BtnExit_Click() Handles BtnExit.Click
-        Setup.Set("CacheMsV2OAuthRefresh", "")
-        Setup.Set("CacheMsV2Access", "")
-        Setup.Set("CacheMsV2ProfileJson", "")
-        Setup.Set("CacheMsV2Uuid", "")
-        Setup.Set("CacheMsV2Name", "")
-        McLoginMsLoader.Abort()
+        Settings.Set("CacheMsV2OAuthRefresh", "")
+        Settings.Set("CacheMsV2Access", "")
+        Settings.Set("CacheMsV2ProfileJson", "")
+        Settings.Set("CacheMsV2Uuid", "")
+        Settings.Set("CacheMsV2Name", "")
+        McLoginMsLoader.Interrupt()
         FrmLaunchLeft.RefreshPage(False, True)
     End Sub
 
@@ -93,8 +93,8 @@ Retry:
                     Thread.Sleep(10)
                 Loop
                 If McLoginMsLoader.State = LoadState.Failed Then Throw New Exception("登录失败", McLoginMsLoader.Error)
-                Dim AccessToken As String = Setup.Get("CacheMsV2Access")
-                Dim Uuid As String = Setup.Get("CacheMsV2Uuid")
+                Dim AccessToken As String = Settings.Get("CacheMsV2Access")
+                Dim Uuid As String = Settings.Get("CacheMsV2Uuid")
                 Dim Result As String = NetRequestByClientRetry("https://api.minecraftservices.com/minecraft/profile/skins", HttpMethod.Post,
                     Content:=New Net.Http.MultipartFormDataContent From {
                         {New Net.Http.StringContent(If(SkinInfo.IsSlim, "slim", "classic")), "variant"},

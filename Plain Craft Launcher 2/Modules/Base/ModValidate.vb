@@ -208,12 +208,33 @@ Public Class ValidateExceptSame
         If Str Is Nothing Then Return ErrorMessage.Replace("%", "null")
         For Each Ch As String In Excepts
             If IgnoreCase Then
-                If Str.ToLower = Ch.ToLower Then Return ErrorMessage.Replace("%", Ch)
+                If Str.Lower = Ch.Lower Then Return ErrorMessage.Replace("%", Ch)
             Else
                 If Str.Equals(Ch) Then Return ErrorMessage.Replace("%", Ch) '使用 = 不确定是否会忽略大小写
             End If
         Next
         Return ""
+    End Function
+
+End Class
+
+''' <summary>
+''' 必须为特定字符串。
+''' </summary>
+Public Class ValidateSame
+    Inherits Validate
+    Public Property Required As String
+    Public Property ErrorMessage As String
+    Public Property IgnoreCase As Boolean = False
+    Public Sub New()
+    End Sub
+    Public Sub New(Required As String, Optional ErrorMessage As String = "输入内容有误", Optional IgnoreCase As Boolean = False)
+        Me.Required = Required
+        Me.ErrorMessage = ErrorMessage
+        Me.IgnoreCase = IgnoreCase
+    End Sub
+    Public Overrides Function Validate(Str As String) As String
+        Return If(String.Compare(Str, Required, IgnoreCase) = 0, "", ErrorMessage)
     End Function
 
 End Class
@@ -355,7 +376,7 @@ Public Class ValidateFolderPath
         '检查开头
         If Str.StartsWithF("\\Mac\") Then GoTo Fin
         For Each Drive As DriveInfo In My.Computer.FileSystem.Drives
-            If Str.ToUpper = Drive.Name Then Return ""
+            If Str.Upper = Drive.Name Then Return ""
             If Str.StartsWithF(Drive.Name, True) Then GoTo Fin
         Next
         Return "文件夹路径头存在错误！"

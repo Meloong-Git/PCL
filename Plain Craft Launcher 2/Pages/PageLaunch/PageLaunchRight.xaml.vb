@@ -42,17 +42,17 @@ Public Class PageLaunchRight
     End Sub
     Private Sub RefreshReal()
         Dim Content As String = Nothing, Url As String = Nothing
-        Select Case Setup.Get("UiCustomType")
+        Select Case Settings.Get("UiCustomType")
             Case 1
                 '加载本地文件
                 Log("[Page] 主页自定义数据来源：本地文件")
                 Content = ReadFile(Path & "PCL\Custom.xaml") 'ReadFile 会进行存在检测
             Case 2
                 '联网下载
-                Url = Setup.Get("UiCustomNet")
+                Url = Settings.Get("UiCustomNet")
             Case 3
                 '预设
-                Select Case Setup.Get("UiCustomPreset")
+                Select Case Settings.Get("UiCustomPreset")
                     Case 0
                         Log("[Page] 主页预设：你知道吗")
                         Content = "
@@ -117,7 +117,7 @@ Public Class PageLaunchRight
         End Select
         '联网下载
         If Not String.IsNullOrWhiteSpace(Url) Then
-            If Url = Setup.Get("CacheSavedPageUrl") AndAlso File.Exists(PathTemp & "Cache\Custom.xaml") Then
+            If Url = Settings.Get("CacheSavedPageUrl") AndAlso File.Exists(PathTemp & "Cache\Custom.xaml") Then
                 '缓存可用
                 Log("[Page] 主页自定义数据来源：联网缓存文件")
                 Content = ReadFile(PathTemp & "Cache\Custom.xaml")
@@ -128,7 +128,7 @@ Public Class PageLaunchRight
                 Log("[Page] 主页自定义数据来源：联网全新下载")
                 Hint("正在加载主页……")
                 RunInUiWait(Sub() LoadContent(Nothing)) '在加载结束前清空页面
-                Setup.Set("CacheSavedPageVersion", "")
+                Settings.Set("CacheSavedPageVersion", "")
                 OnlineLoader.Start(New Tuple(Of String, Boolean)(Url, True)) '下载完成后将会再次触发更新
                 Return
             End If
@@ -152,7 +152,7 @@ Public Class PageLaunchRight
                 VersionAddress = Address.Replace(".xaml", ".xaml.ini")
             Else
                 VersionAddress = Address.BeforeFirst("?")
-                If Not VersionAddress.EndsWith("/") Then VersionAddress += "/"
+                If Not VersionAddress.EndsWithF("/") Then VersionAddress += "/"
                 VersionAddress += "version"
                 If Address.Contains("?") Then VersionAddress += "?" & Address.AfterFirst("?")
             End If
@@ -161,7 +161,7 @@ Public Class PageLaunchRight
             Try
                 Version = NetRequestByClientRetry(VersionAddress)
                 If Version.Length > 1000 Then Throw New Exception($"获取的主页版本过长（{Version.Length} 字符）")
-                Dim CurrentVersion As String = Setup.Get("CacheSavedPageVersion")
+                Dim CurrentVersion As String = Settings.Get("CacheSavedPageVersion")
                 If Version <> "" AndAlso CurrentVersion <> "" AndAlso Version = CurrentVersion Then
                     Log($"[Page] 当前缓存的主页已为最新，当前版本：{Version}，检查源：{VersionAddress}")
                     Return
@@ -174,8 +174,8 @@ Public Class PageLaunchRight
             '实际下载
             Dim FileContent As String = NetRequestByClientRetry(Address)
             Log($"[Page] 已联网下载主页，内容长度：{FileContent.Length}，来源：{Address}")
-            Setup.Set("CacheSavedPageUrl", Address)
-            Setup.Set("CacheSavedPageVersion", Version)
+            Settings.Set("CacheSavedPageUrl", Address)
+            Settings.Set("CacheSavedPageVersion", Version)
             WriteFile(PathTemp & "Cache\Custom.xaml", FileContent)
             '若内容变更则要求刷新
             If LoadedContentHash <> FileContent.GetHashCode() AndAlso ShouldRefresh Then Refresh()
@@ -206,8 +206,8 @@ Public Class PageLaunchRight
     Private Sub ClearCache()
         LoadedContentHash = -1
         OnlineLoader.Input = New Tuple(Of String, Boolean)("", True)
-        Setup.Set("CacheSavedPageUrl", "")
-        Setup.Set("CacheSavedPageVersion", "")
+        Settings.Set("CacheSavedPageUrl", "")
+        Settings.Set("CacheSavedPageVersion", "")
         Log("[Page] 已清空主页缓存")
     End Sub
 
@@ -251,7 +251,7 @@ Public Class PageLaunchRight
     ''' 加载主页失败时调用。
     ''' </summary>
     Private Sub OnLoadContentFailed(ex As Exception)
-        If ModeDebug OrElse Setup.Get("UiCustomType") = 1 Then
+        If ModeDebug OrElse Settings.Get("UiCustomType") = 1 Then
             Log(ex, "加载主页失败")
             If MyMsgBox(If(TypeOf ex Is UnauthorizedAccessException, ex.Message, $"主页内容编写有误，请根据下列错误信息进行检查：{vbCrLf}{ex.GetBrief}"),
                         "加载主页失败", "重试", "取消") = 1 Then ForceRefresh()

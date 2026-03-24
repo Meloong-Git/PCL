@@ -8,7 +8,7 @@
         Sub(Task)
             LoadTargetFromAdditional()
             Dim Result = CompFilesGet(Project.Id, Project.FromCurseForge)
-            If Task.IsAborted Then Return
+            If Task.IsInterrupted Then Return
             Task.Output = Result
         End Sub)
 
@@ -171,7 +171,7 @@ GroupDone:
                     Version.Type = CompType.Mod AndAlso '是 Mod
                     McVersion.IsFormatFit(VerName) Then '不是 “快照版本” 之类的
                     For Each Loader In Version.ModLoaders
-                        If Loader = CompModLoaderType.Quilt AndAlso Setup.Get("ToolDownloadIgnoreQuilt") Then Continue For
+                        If Loader = CompModLoaderType.Quilt AndAlso Settings.Get("ToolDownloadIgnoreQuilt") Then Continue For
                         If SupportedLoaders.Contains(Loader) Then Loaders.Add(Loader.ToString & " ")
                     Next
                 End If
@@ -303,7 +303,7 @@ GroupDone:
                 Select Case MyLoader.State
                     Case LoadState.Failed
                         Hint(MyLoader.Name & "失败：" & MyLoader.Error.GetBrief(), HintType.Red)
-                    Case LoadState.Aborted
+                    Case LoadState.Interrupted
                         Hint(MyLoader.Name & "已取消！", HintType.Blue)
                     Case LoadState.Loading
                         Return '不重新加载版本列表
@@ -442,7 +442,7 @@ GroupDone:
                 Else
                     Dim ChineseName As String = Project.TranslatedName.BeforeFirst(" (").BeforeFirst(" - ").
                         Replace("\", "＼").Replace("/", "／").Replace("|", "｜").Replace(":", "：").Replace("<", "＜").Replace(">", "＞").Replace("*", "＊").Replace("?", "？").Replace("""", "").Replace("： ", "：")
-                    Select Case Setup.Get("ToolDownloadTranslateV2")
+                    Select Case Settings.Get("ToolDownloadTranslateV2")
                         Case 0
                             FileName = $"【{ChineseName}】{File.FileName}"
                         Case 1
@@ -463,8 +463,8 @@ GroupDone:
                     Target = SelectSaveFile("选择保存位置", FileName,
                         Desc & "文件|" &
                         If(File.Type = CompType.Mod,
-                            If(File.FileName.EndsWith(".litemod"), "*.litemod", "*.jar"),
-                            If(File.FileName.EndsWith(".mrpack"), "*.mrpack", "*.zip")), DefaultFolder)
+                            If(File.FileName.EndsWithF(".litemod"), "*.litemod", "*.jar"),
+                            If(File.FileName.EndsWithF(".mrpack"), "*.mrpack", "*.zip")), DefaultFolder)
                     If Not Target.Contains("\") Then Return
                     '构造步骤加载器
                     Dim LoaderName As String = Desc & "下载：" & IO.Path.GetFileNameWithoutExtension(Target) & " "
