@@ -126,7 +126,7 @@
                 JsonObject = PageInstanceLeft.Instance.JsonObject
             End Try
             '重命名主文件夹
-            Directory.Move(OldPath, TempName)
+            Directory.Move(OldPath, TempPath)
             Directory.Move(TempPath, NewName)
             '清理 ini 缓存
             IniClearCache(PageInstanceLeft.Instance.PathIndie & "options.txt")
