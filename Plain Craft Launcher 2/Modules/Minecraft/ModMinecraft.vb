@@ -9,7 +9,7 @@ Public Module ModMinecraft
     ''' </summary>
     Public Property McFolderSelected As String
         Get
-            If _McFolderSelected Is Nothing Then McFolderSelected = Settings.Get("LaunchFolderSelect") '仅在首次读取时触发
+            If _McFolderSelected Is Nothing Then _McFolderSelected = Settings.Get("LaunchFolderSelect") '仅在首次读取时触发
             Return _McFolderSelected
         End Get
         Set(Value As String)
