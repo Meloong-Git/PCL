@@ -85,51 +85,56 @@
         Hint("正在更改皮肤……")
         IsChanging = True
         '开始实际获取
-        RunInNewThread(
-        Sub()
-            Try
+        RunInNewThread(Sub() EditSkin(SkinInfo), "Ms Skin Upload")
+    End Sub
+    Private Sub EditSkin(SkinInfo As McSkinInfo)
 Retry:
-                Do While McLoginMsLoader.State = LoadState.Loading '等待登录结束
-                    Thread.Sleep(10)
-                Loop
-                If McLoginMsLoader.State = LoadState.Failed Then Throw New Exception("登录失败", McLoginMsLoader.Error)
-                Dim AccessToken As String = Settings.Get("CacheMsV2Access")
-                Dim Uuid As String = Settings.Get("CacheMsV2Uuid")
-                Dim Result As String = NetRequestByClientRetry("https://api.minecraftservices.com/minecraft/profile/skins", HttpMethod.Post,
-                    Content:=New Net.Http.MultipartFormDataContent From {
-                        {New Net.Http.StringContent(If(SkinInfo.IsSlim, "slim", "classic")), "variant"},
-                        {New Net.Http.ByteArrayContent(ReadFileBytes(SkinInfo.LocalFile)), "file", GetFileNameFromPath(SkinInfo.LocalFile)}
-                    },
-                    Headers:={{"Authorization", "Bearer " & AccessToken}, {"Accept", "*/*"}, {"User-Agent", "MojangSharp/0.1"}})
-                If Result.Contains("request requires user authentication") Then
-                    Hint("正在登录，将在登录完成后继续更改皮肤……")
-                    McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
-                    GoTo Retry
-                ElseIf Result.Contains("""error""") Then
-                    Hint("更改皮肤失败：" & GetJson(Result)("error").ToString, HintType.Red)
+        Try
+            Do While McLoginMsLoader.State = LoadState.Loading '等待登录结束
+                Thread.Sleep(10)
+            Loop
+            If McLoginMsLoader.State = LoadState.Failed Then Throw New Exception("登录失败", McLoginMsLoader.Error)
+            Dim AccessToken As String = Settings.Get("CacheMsV2Access")
+            Dim Uuid As String = Settings.Get("CacheMsV2Uuid")
+            Dim Result As String = NetRequestByClientRetry("https://api.minecraftservices.com/minecraft/profile/skins", HttpMethod.Post,
+                Content:=New Net.Http.MultipartFormDataContent From {
+                    {New Net.Http.StringContent(If(SkinInfo.IsSlim, "slim", "classic")), "variant"},
+                    {New Net.Http.ByteArrayContent(ReadFileBytes(SkinInfo.LocalFile)), "file", GetFileNameFromPath(SkinInfo.LocalFile)}
+                },
+                Headers:={{"Authorization", "Bearer " & AccessToken}, {"Accept", "*/*"}, {"User-Agent", "MojangSharp/0.1"}})
+            If Result.Contains("request requires user authentication") Then
+                Hint("正在重新登录，将在登录后自动更改皮肤……")
+                McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
+                GoTo Retry
+            ElseIf Result.Contains("""error""") Then
+                Hint("更改皮肤失败：" & GetJson(Result)("error").ToString, HintType.Red)
+                Return
+            End If
+            '获取新皮肤地址
+            Log("[Skin] 皮肤修改返回值：" & vbCrLf & Result)
+            Dim ResultJson As JObject = GetJson(Result)
+            If ResultJson.ContainsKey("errorMessage") Then Throw New Exception(ResultJson("errorMessage").ToString) '#5309
+            For Each Skin As JObject In ResultJson("skins")
+                If Skin("state").ToString = "ACTIVE" Then
+                    MySkin.ReloadCache(Skin("url"))
                     Return
                 End If
-                '获取新皮肤地址
-                Log("[Skin] 皮肤修改返回值：" & vbCrLf & Result)
-                Dim ResultJson As JObject = GetJson(Result)
-                If ResultJson.ContainsKey("errorMessage") Then Throw New Exception(ResultJson("errorMessage").ToString) '#5309
-                For Each Skin As JObject In ResultJson("skins")
-                    If Skin("state").ToString = "ACTIVE" Then
-                        MySkin.ReloadCache(Skin("url"))
-                        Return
-                    End If
-                Next
-                Throw New Exception("未知错误（" & Result & "）")
-            Catch ex As Exception
-                If TypeOf ex Is OperationCanceledException OrElse TypeOf ex Is TimeoutException Then
-                    Hint("更改皮肤失败：连接皮肤服务器超时，请稍后再试，或使用 VPN 改善网络环境", HintType.Red)
-                Else
-                    Log(ex, "更改皮肤失败", LogLevel.Hint)
-                End If
-            Finally
-                IsChanging = False
-            End Try
-        End Sub, "Ms Skin Upload")
+            Next
+            Throw New Exception("未知错误（" & Result & "）")
+        Catch ex As Exception
+            If TypeOf ex Is OperationCanceledException OrElse TypeOf ex Is TimeoutException Then
+                Hint("更改皮肤失败：连接皮肤服务器超时，请稍后再试，或使用 VPN 改善网络环境", HintType.Red)
+            ElseIf TypeOf ex Is ResponsedWebException AndAlso CType(ex, ResponsedWebException).StatusCode = HttpStatusCode.Unauthorized Then
+                Log(ex, "更改皮肤时遭遇 401 错误", LogLevel.Developer)
+                Hint("正在重新登录，将在登录后自动更改皮肤……")
+                McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
+                GoTo Retry
+            Else
+                Log(ex, "更改皮肤失败", LogLevel.Hint)
+            End If
+        Finally
+            IsChanging = False
+        End Try
     End Sub
 
     '保存皮肤

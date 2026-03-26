@@ -182,10 +182,19 @@ RequestFinished:
             Throw New Exception($"预处理下载文件路径失败（{LocalPath}）", ex)
         End Try
         '下载
+        Dim RetryCount As Integer = 0
+Retry:
         Try
             File.WriteAllBytes(LocalPath, SendRequest(Url, HttpMethod.Get, SimulateBrowserHeaders:=SimulateBrowserHeaders))
+        Catch ex As ThreadInterruptedException
+            File.Delete(LocalPath)
+            Throw
         Catch ex As Exception
             File.Delete(LocalPath)
+            If RetryCount < 2 Then
+                RetryCount += 1
+                GoTo Retry
+            End If
             Throw New WebException($"通过网络请求直接下载小文件失败（{LocalPath}）", ex)
         End Try
     End Sub
@@ -284,6 +293,9 @@ RequestFinished:
             Throw
         Catch ex As ResponsedWebException
             Throw
+        Catch ex As FileNotFoundException
+            '由于 CacheCow 读取缓存失败，然后系统调用不存在的 System.Net.Http.Formatting.resources 抛出（#8150）
+            Throw New Exception($"网络请求时读取缓存失败", ex)
         Catch ex As Exception
             RecordIPReliability(HostIp, -1)
             If TypeOf ex Is OperationCanceledException OrElse TypeOf ex Is TimeoutException Then 'CancellationToken 超时
@@ -416,7 +428,7 @@ RequestFinished:
     Public ReadOnly Property NetTaskSpeedLimitHigh As Long
         Get
             If _NetTaskSpeedLimitHigh Is Nothing Then
-                Dim Setting = PCL.Settings.Get("ToolDownloadSpeed")
+                Dim Setting As Integer = Settings.Get("ToolDownloadSpeed")
                 If Setting <= 14 Then
                     _NetTaskSpeedLimitHigh = (Setting + 1) * 0.1 * 1024 * 1024L
                 ElseIf Setting <= 31 Then
@@ -1959,13 +1971,9 @@ Retry:
     ''' 是否有正在进行中、需要在下载管理页面显示的下载任务？
     ''' </summary>
     Public Function HasDownloadingTask(Optional IgnoreCustomDownload As Boolean = False) As Boolean
-        For Each Task In LoaderTaskbar.ToList()
-            If (Task.Show AndAlso Task.State = LoadState.Loading) AndAlso
-               (Not IgnoreCustomDownload OrElse Not Task.Name.ToString.Contains("自定义下载")) Then
-                Return True
-            End If
-        Next
-        Return False
+        Return LoaderTaskbar.Any(
+        Function(Task) Task.Show AndAlso Task.State = LoadState.Loading AndAlso
+                       (Not IgnoreCustomDownload OrElse Not Task.Name.ToString.Contains("自定义下载")))
     End Function
 
 #End Region

@@ -211,7 +211,6 @@
         ''' 该设置的值的实际类型。
         ''' </summary>
         Public Type As Type
-
         Public Sub New(Key As String, Value As Object, Optional Source As Sources = Sources.Normal, Optional Encrypted As Boolean = False, Optional OnChanged As Action(Of Object) = Nothing)
             Try
                 Me.Key = Key
@@ -223,6 +222,30 @@
             Catch ex As Exception
                 Log(ex, "初始化设置项失败", LogLevel.Feedback) '#5095 的 fallback
             End Try
+        End Sub
+
+        ''' <summary>
+        ''' 立即将当前的 Value 写入对应的注册表或文件。
+        ''' </summary>
+        Public Sub Save(Optional Instance As McInstance = Nothing)
+            Dim Value As String = Me.Value
+            If Encrypted Then
+                Try
+                    If Value Is Nothing Then Value = ""
+                    Value = SecretEncrypt(Value, "PCL" & Identify)
+                Catch ex As Exception
+                    Log(ex, "加密设置失败：" & Key, LogLevel.Developer)
+                End Try
+            End If
+            Select Case Source
+                Case Sources.Normal
+                    WriteIni("Setup", Key, Value)
+                Case Sources.Registry
+                    WriteReg(Key, Value)
+                Case Sources.Instance
+                    If Instance Is Nothing Then Throw New Exception($"保存版本独立设置 {Key} 时未提供目标版本")
+                    WriteIni(Instance.PathVersion & "PCL\Setup.ini", Key, Value)
+            End Select
         End Sub
     End Class
 
@@ -239,25 +262,9 @@
             If Entry.Value = Value Then Return
             '设置新值
             Entry.Value = Value
-            If Entry.Encrypted Then
-                Try
-                    If Value Is Nothing Then Value = ""
-                    Value = SecretEncrypt(Value, "PCL" & Identify)
-                Catch ex As Exception
-                    Log(ex, "加密设置失败：" & Key, LogLevel.Developer)
-                End Try
-            End If
-            Select Case Entry.Source
-                Case Sources.Normal
-                    WriteIni("Setup", Key, Value)
-                Case Sources.Registry
-                    WriteReg(Key, Value)
-                Case Sources.Instance
-                    If Instance Is Nothing Then Throw New Exception($"更改版本设置 {Key} 时未提供目标版本")
-                    WriteIni(Instance.PathVersion & "PCL\Setup.ini", Key, Value)
-            End Select
-            '触发改变事件（必须在写入之后，以保证 VersionServerLogin 之类的在事件中读取到的是最新的值）
-            If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Value)
+            Entry.Save(Instance)
+            '触发改变事件（必须在保存之后，以保证 VersionServerLogin 之类的在事件中读取到的是最新的值）
+            If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Entry.Value)
         Catch ex As Exception
             Log(ex, "设置设置项时出错（" & Key & ", " & Value & "）", LogLevel.Feedback)
         End Try
@@ -315,7 +322,8 @@
                     Catch ex As Exception
                         Log(ex, "解密设置失败：" & Key, LogLevel.Developer)
                         GotValue = Entry.DefaultValue
-                        [Set](Key, Entry.DefaultValue)
+                        Entry.Value = Entry.DefaultValue
+                        Entry.Save(Instance)
                     End Try
                 End If
             End If

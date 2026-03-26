@@ -14,13 +14,13 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.12.4" '不含分支前缀的显示用版本名
-    Public Const VersionStandardCode As String = "2.12.4." & VersionBranchCode '标准格式的四段式版本号
+    Public Const VersionBaseName As String = "2.12.5" '不含分支前缀的显示用版本名
+    Public Const VersionStandardCode As String = "2.12.5." & VersionBranchCode '标准格式的四段式版本号
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If BETA Then
     Public Const VersionCode As Integer = 383 'Release
 #Else
-    Public Const VersionCode As Integer = 384 'Snapshot
+    Public Const VersionCode As Integer = 385 'Snapshot
 #End If
     '自动生成的版本信息
     Public Const VersionDisplayName As String = VersionBranchName & " " & VersionBaseName
@@ -1336,11 +1336,12 @@ Re:
         Dim Files As String()
         Try
             Files = Directory.GetFiles(Path)
-        Catch ex As DirectoryNotFoundException '#4549
-            If Not Directory.Exists(Path) Then Return 0 '可能已被其他线程删除
-            Log(ex, $"疑似为孤立符号链接，尝试直接删除（{Path}）", LogLevel.Developer)
-            Directory.Delete(Path)
-            Return 0
+        Catch ex As DirectoryNotFoundException '#4549，也可能已被其他线程删除
+            If Directory.Exists(Path) Then
+                Log(ex, $"疑似为孤立符号链接，尝试直接删除（{Path}）", LogLevel.Developer)
+                Directory.Delete(Path)
+            End If
+            Return DeletedCount
         End Try
         For Each FilePath As String In Files
             Dim RetriedFile As Boolean = False
@@ -1348,6 +1349,8 @@ RetryFile:
             Try
                 File.Delete(FilePath)
                 DeletedCount += 1
+            Catch ex As DirectoryNotFoundException
+                Return DeletedCount
             Catch ex As Exception
                 If Not RetriedFile Then
                     RetriedFile = True

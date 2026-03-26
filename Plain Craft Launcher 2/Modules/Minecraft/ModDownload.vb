@@ -858,10 +858,11 @@
                 VersionName = ApiName
                 Version = New Version(ApiName.BeforeFirst("-"))
                 If Version.Major >= 24 Then
-                    Inherit = Version.Major & "." & Version.Minor
+                    Inherit = $"{Version.Major}.{Version.Minor}.{Version.Build}"
                 Else
-                    Inherit = "1." & Version.Major & If(Version.Minor > 0, "." & Version.Minor, "")
+                    Inherit = $"1.{Version.Major}.{Version.Minor}"
                 End If
+                If Inherit.EndsWithF(".0") Then Inherit = Left(Inherit, Inherit.Length - 2)
                 If VersionName.Contains("+") Then Inherit &= "-" & VersionName.AfterFirst("+")
             End If
         End Sub

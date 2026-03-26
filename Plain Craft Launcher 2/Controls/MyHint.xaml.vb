@@ -107,11 +107,14 @@ Public Class MyHint
     End Sub
 
     '触发点击事件
+    Public Event Click(sender As Object, e As MouseButtonEventArgs)
     Private IsMouseDown As Boolean = False
     Private Sub MyHint_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonUp
         If Not IsMouseDown Then Return
         IsMouseDown = False
         Log("[Control] 按下提示条" & If(String.IsNullOrEmpty(Name), "", "：" & Name))
+        RaiseEvent Click(sender, e)
+        If e.Handled Then Return
         e.Handled = True
         RaiseCustomEvent() '自定义事件
     End Sub

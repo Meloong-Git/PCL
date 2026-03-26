@@ -1,7 +1,7 @@
 ﻿Imports System.IO.Compression
 
 Public Module ModMod
-    Private Const LocalModCacheVersion As Integer = 12
+    Private Const LocalModCacheVersion As Integer = 13
 
     Public Class McMod
 

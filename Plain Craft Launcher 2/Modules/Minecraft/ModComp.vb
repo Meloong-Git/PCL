@@ -1,35 +1,38 @@
 ﻿Public Module ModComp
 
-    Public Enum CompType
-        ''' <summary>
-        ''' 允许任意种类，或种类未知。
-        ''' </summary>
-        Any = -1
+    <Flags> Public Enum CompType
         ''' <summary> 
         ''' Mod。
         ''' </summary>
-        [Mod] = 0
+        [Mod] = 1
         ''' <summary>
         ''' 整合包。
         ''' </summary>
-        ModPack = 1
+        ModPack = 2
         ''' <summary>
         ''' 资源包。
         ''' </summary>
-        ResourcePack = 2
+        ResourcePack = 4
         ''' <summary>
         ''' 光影包。
         ''' </summary>
-        Shader = 3
+        Shader = 8
         ''' <summary>
-        ''' CurseForge：数据包。
-        ''' Modrinth：数据包，或数据包与 Mod 的混合。
+        ''' 数据包。
         ''' </summary>
-        DataPack = 4
+        DataPack = 16
         ''' <summary>
         ''' 服务端插件。
         ''' </summary>
-        Plugin = 5
+        Plugin = 32
+        ''' <summary>
+        ''' 同时包含数据包以及 Mod。
+        ''' </summary>
+        ModOrDataPack = [Mod] Or DataPack
+        ''' <summary>
+        ''' 允许任意种类，或种类未知。
+        ''' </summary>
+        Any = [Mod] Or ModPack Or ResourcePack Or Shader Or DataPack Or Plugin
     End Enum
     Public Enum CompModLoaderType
         'https://docs.curseforge.com/?http#tocS_ModLoaderType
@@ -132,10 +135,10 @@
         ''' </summary>
         Public ReadOnly FromCurseForge As Boolean
         ''' <summary>
-        ''' 工程的种类。
-        ''' 由于 Modrinth 混合使用 Mod 和数据包，结果不一定准确。
+        ''' 工程中包含的文件种类。
+        ''' 若为 Modrinth 工程，可能为 Mod 或 数据包。
         ''' </summary>
-        Public ReadOnly Type As CompType
+        Public ReadOnly Types As CompType
         ''' <summary>
         ''' 工程的短名。例如 technical-enchant。
         ''' </summary>
@@ -191,6 +194,12 @@
         ''' 例如：261（26.1.x）、180（1.18.x）。
         ''' </summary>
         Public ReadOnly Drops As List(Of Integer)
+        ''' <summary>
+        ''' Modrinth API 返回的原始版本列表。
+        ''' 仅用于 Modrinth 工程的二次筛选，不会被缓存，不会被预处理。
+        ''' 若非从 Modrinth 获取则为 Nothing。
+        ''' </summary>
+        Public ReadOnly UnsafeGameVersions As List(Of String)
 
         '数据库信息
 
@@ -203,7 +212,7 @@
             Get
                 If Not LoadedDatabase Then
                     LoadedDatabase = True
-                    If Type = CompType.Mod OrElse Type = CompType.DataPack Then
+                    If Types.HasFlag(CompType.Mod) OrElse Types.HasFlag(CompType.DataPack) Then
                         _DatabaseEntry = CompDatabase.FirstOrDefault(Function(c) If(FromCurseForge, c.CurseForgeSlug, c.ModrinthSlug) = Slug)
                     End If
                 End If
@@ -240,7 +249,7 @@
             If Data.ContainsKey("Tags") Then
 #Region "CompJson"
                 FromCurseForge = Data("DataSource") = "CurseForge"
-                Type = Data("Type").ToObject(Of Integer)
+                Types = Data("Types").ToObject(Of Integer)
                 Slug = Data("Slug")
                 Id = Data("Id")
                 If Data.ContainsKey("CurseForgeFileIds") Then CurseForgeFileIds = CType(Data("CurseForgeFileIds"), JArray).Select(Function(t) t.ToObject(Of Integer)).ToList
@@ -284,23 +293,23 @@
                     If LogoUrl = "" Then LogoUrl = Nothing
                     'Type
                     If Website.Contains("/mc-mods/") OrElse Website.Contains("/mod/") Then
-                        Type = CompType.Mod
+                        Types = CompType.Mod
                     ElseIf Website.Contains("/modpacks/") Then
-                        Type = CompType.ModPack
+                        Types = CompType.ModPack
                     ElseIf Website.Contains("/resourcepacks/") Then
-                        Type = CompType.ResourcePack
+                        Types = CompType.ResourcePack
                     ElseIf Website.Contains("/texture-packs/") Then
-                        Type = CompType.ResourcePack
+                        Types = CompType.ResourcePack
                     ElseIf Website.Contains("/shaders/") Then
-                        Type = CompType.Shader
+                        Types = CompType.Shader
                     Else
-                        Type = CompType.DataPack
+                        Types = CompType.DataPack
                     End If
                     'FileIndexes / VanillaMajorVersions / ModLoaders
                     ModLoaders = New List(Of CompModLoaderType)
                     Dim Files As New List(Of KeyValuePair(Of Integer, List(Of String))) 'FileId, GameVersions
                     For Each File In If(Data("latestFiles"), New JArray)
-                        Dim NewFile As New CompFile(File, Type)
+                        Dim NewFile As New CompFile(File, Types)
                         If Not NewFile.Available Then Continue For
                         ModLoaders.AddRange(NewFile.ModLoaders)
                         Dim GameVersions = File("gameVersions").ToObject(Of List(Of String))
@@ -408,14 +417,14 @@
                     Website = $"https://modrinth.com/{Data("project_type")}/{Slug}"
                     'GameVersions
                     '搜索结果的键为 versions，获取特定工程的键为 game_versions
-                    Drops = If(CType(If(Data("game_versions"), Data("versions")), JArray), New JArray).
-                        Select(Function(v) McVersion.VersionToDrop(v)).Where(Function(v) v > 0).Distinct.OrderByDescending(Function(v) v).ToList
+                    UnsafeGameVersions = If(CType(If(Data("game_versions"), Data("versions")), JArray), New JArray).Select(Function(v) v.ToString).Distinct.ToList
+                    Drops = UnsafeGameVersions.Select(Function(v) McVersion.VersionToDrop(v)).Where(Function(v) v > 0).Distinct.OrderByDescending(Function(v) v).ToList
                     'Type
                     Select Case Data("project_type").ToString
-                        Case "modpack" : Type = CompType.ModPack
-                        Case "resourcepack" : Type = CompType.ResourcePack
-                        Case "shader" : Type = CompType.Shader
-                        Case Else : Type = CompType.Mod 'Modrinth 将数据包标为 Mod
+                        Case "modpack" : Types = CompType.ModPack
+                        Case "resourcepack" : Types = CompType.ResourcePack
+                        Case "shader" : Types = CompType.Shader
+                        Case Else : Types = CompType.Mod 'Modrinth 将数据包标为 Mod，但 categories 字段里有 datapack
                     End Select
                     'Tags & ModLoaders
                     Tags = New List(Of String)
@@ -437,7 +446,7 @@
                             Case "fabric" : ModLoaders.Add(CompModLoaderType.Fabric)
                             Case "quilt" : ModLoaders.Add(CompModLoaderType.Quilt)
                             Case "neoforge" : ModLoaders.Add(CompModLoaderType.NeoForge)
-                            Case "datapack" : Type = CompType.DataPack '若包含数据包版本，则优先标为 DataPack
+                            Case "datapack" : Types = CompType.DataPack
                             '共用
                             Case "technology" : Tags.Add("科技")
                             Case "magic" : Tags.Add("魔法")
@@ -452,9 +461,9 @@
                             Case "game-mechanics" : Tags.Add("游戏机制")
                             Case "transportation" : Tags.Add("运输")
                             Case "storage" : Tags.Add("仓储")
-                            Case "decoration" : If Type <> CompType.ResourcePack Then Tags.Add("装饰")
-                            Case "mobs" : If Type <> CompType.ResourcePack Then Tags.Add("生物")
-                            Case "equipment" : If Type <> CompType.ResourcePack Then Tags.Add("装备")
+                            Case "decoration" : If Types <> CompType.ResourcePack Then Tags.Add("装饰")
+                            Case "mobs" : If Types <> CompType.ResourcePack Then Tags.Add("生物")
+                            Case "equipment" : If Types <> CompType.ResourcePack Then Tags.Add("装备")
                             Case "social" : Tags.Add("服务器")
                             Case "library" : Tags.Add("支持库")
                             '整合包
@@ -504,6 +513,7 @@
                             Case "vanilla" : Tags.Add("原版可用")
                         End Select
                     Next
+                    If Types = CompType.DataPack AndAlso ModLoaders.Any Then Types = CompType.DataPack Or CompType.Mod
 #End Region
                 End If
                 If Not Tags.Any() Then Tags.Add("其他")
@@ -519,7 +529,7 @@
         Public Function ToJson() As JObject
             Dim Json As New JObject
             Json("DataSource") = If(FromCurseForge, "CurseForge", "Modrinth")
-            Json("Type") = CInt(Type)
+            Json("Types") = CInt(Types)
             Json("Slug") = Slug
             Json("Id") = Id
             If CurseForgeFileIds IsNot Nothing Then Json("CurseForgeFileIds") = New JArray(CurseForgeFileIds)
@@ -549,7 +559,7 @@
                 For i = 0 To Drops.Count - 1 '版本号一定为降序
                     '获取当前连续的版本号段
                     Dim StartDrop As Integer = Drops(i), EndDrop As Integer = Drops(i)
-                    If StartDrop < 100 Then '如果支持新版本，则不显示 1.9-
+                    If StartDrop < 120 Then '如果支持新版本，则不显示 1.11-
                         If Segments.Any() AndAlso Not IsOld Then
                             Exit For
                         Else
@@ -567,14 +577,14 @@
                     If StartDrop = EndDrop Then
                         Segments.Add(StartName)
                     ElseIf AllDrops IsNot Nothing AndAlso StartDrop >= AllDrops.First Then
-                        If EndDrop < 100 Then
+                        If EndDrop < 120 Then
                             Segments.Clear()
                             Segments.Add("全版本")
                             Exit For
                         Else
                             Segments.Add(EndName & "+")
                         End If
-                    ElseIf EndDrop < 100 Then
+                    ElseIf EndDrop < 120 Then
                         Segments.Add(StartName & "-")
                         Exit For
                     ElseIf AllDrops Is Nothing OrElse AllDrops.IndexOf(EndDrop) - AllDrops.IndexOf(StartDrop) = 1 Then
@@ -762,7 +772,7 @@ NoSubtitle:
             'Mod 加载器一致
             If ModLoaders.Count <> Project.ModLoaders.Count OrElse ModLoaders.Except(Project.ModLoaders).Any() Then Return False
             '若不为光影，则要求 MC 版本一致
-            If Type <> CompType.Shader AndAlso (Drops.Count <> Project.Drops.Count OrElse Drops.Except(Project.Drops).Any()) Then Return False
+            If Types <> CompType.Shader AndAlso (Drops.Count <> Project.Drops.Count OrElse Drops.Except(Project.Drops).Any()) Then Return False
             '最近更新时间差距在一周以内
             If Math.Abs((LastUpdate - Project.LastUpdate).TotalDays) > 7 Then Return False
             'MCMOD 翻译名 / 原名 / 描述文本 / Slug 的英文部分相同
@@ -813,8 +823,8 @@ NoSubtitle:
         ''' </summary>
         Public ReadOnly Property CanContinue As Boolean
             Get
-                If Tag.StartsWithF("/") OrElse Not Source.HasFlag(CompSourceType.CurseForge) Then Storage.CurseForgeTotal = 0
-                If Tag.EndsWithF("/") OrElse Not Source.HasFlag(CompSourceType.Modrinth) Then Storage.ModrinthTotal = 0
+                If Tag.StartsWithF("/") OrElse Not Sources.HasFlag(CompSourceType.CurseForge) Then Storage.CurseForgeTotal = 0
+                If Tag.EndsWithF("/") OrElse Not Sources.HasFlag(CompSourceType.Modrinth) Then Storage.ModrinthTotal = 0
                 If Storage.CurseForgeTotal = -1 OrElse Storage.ModrinthTotal = -1 Then Return True
                 Return Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse Storage.ModrinthOffset < Storage.ModrinthTotal
             End Get
@@ -845,7 +855,7 @@ NoSubtitle:
         ''' <summary>
         ''' 允许的来源。
         ''' </summary>
-        Public Source As CompSourceType = CompSourceType.Any
+        Public Sources As CompSourceType = CompSourceType.Any
         Public Sub New(Type As CompType, Storage As CompProjectStorage, TargetResultCount As Integer)
             Me.Type = Type
             Me.Storage = Storage
@@ -904,7 +914,7 @@ NoSubtitle:
             Dim request = TryCast(obj, CompProjectRequest)
             Return request IsNot Nothing AndAlso
                 Type = request.Type AndAlso TargetResultCount = request.TargetResultCount AndAlso
-                Tag = request.Tag AndAlso ModLoader = request.ModLoader AndAlso Source = request.Source AndAlso
+                Tag = request.Tag AndAlso ModLoader = request.ModLoader AndAlso Sources = request.Sources AndAlso
                 GameVersion = request.GameVersion AndAlso SearchText = request.SearchText
         End Function
         Public Shared Operator =(left As CompProjectRequest, right As CompProjectRequest) As Boolean
@@ -914,7 +924,7 @@ NoSubtitle:
             Return Not left = right
         End Operator
         Public Overrides Function GetHashCode() As Integer
-            Return (Type, Tag, ModLoader, GameVersion, SearchText, Source).GetHashCode()
+            Return (Type, Tag, ModLoader, GameVersion, SearchText, Sources).GetHashCode()
         End Function
 
     End Class
@@ -1019,7 +1029,7 @@ NoSubtitle:
                 Return Candidates
             End Function
             'CurseForge
-            If Request.Source.HasFlag(CompSourceType.CurseForge) Then
+            If Request.Sources.HasFlag(CompSourceType.CurseForge) Then
                 '数据库搜索
                 Static CurseForgeSearchEntries As List(Of SearchEntry(Of CompDatabaseEntry)) =
                 CompDatabase.Where(Function(Entry) Entry.CurseForgeSlug IsNot Nothing).Select(
@@ -1043,7 +1053,7 @@ NoSubtitle:
                 End If
             End If
             'Modrinth
-            If Request.Source.HasFlag(CompSourceType.Modrinth) Then
+            If Request.Sources.HasFlag(CompSourceType.Modrinth) Then
                 '数据库搜索
                 Static ModrinthSearchEntries As List(Of SearchEntry(Of CompDatabaseEntry)) =
                 CompDatabase.Where(Function(Entry) Entry.ModrinthSlug IsNot Nothing).Select(
@@ -1094,7 +1104,7 @@ NextPage:
         Try
 
             'CurseForge 搜索
-            If Request.Source.HasFlag(CompSourceType.CurseForge) AndAlso
+            If Request.Sources.HasFlag(CompSourceType.CurseForge) AndAlso
                Not (Storage.CurseForgeTotal > -1 AndAlso Storage.CurseForgeTotal <= Storage.CurseForgeOffset) AndAlso '剩余的未显示的搜索结果不足
                (Not IsChineseSearch OrElse (IsChineseSearch AndAlso Not String.IsNullOrEmpty(CurseForgeAltSearchText))) Then '如果是中文搜索，就只在有对应搜索关键词的时候才继续
                 WorkThreads.Add(RunInNewThread(
@@ -1125,7 +1135,7 @@ NextPage:
             End If
 
             'Modrinth 搜索
-            If Request.Source.HasFlag(CompSourceType.Modrinth) AndAlso
+            If Request.Sources.HasFlag(CompSourceType.Modrinth) AndAlso
                Not (Storage.ModrinthTotal > -1 AndAlso Storage.ModrinthTotal <= Storage.ModrinthOffset) AndAlso '剩余的未显示的搜索结果不足
                (Not IsChineseSearch OrElse (IsChineseSearch AndAlso Not String.IsNullOrEmpty(ModrinthAltSearchText))) Then '如果是中文搜索，就只在有对应搜索关键词的时候才继续
                 WorkThreads.Add(RunInNewThread(
@@ -1153,7 +1163,7 @@ NextPage:
             End If
 
             'Modrinth 直接获取工程
-            If Request.Source.HasFlag(CompSourceType.Modrinth) AndAlso
+            If Request.Sources.HasFlag(CompSourceType.Modrinth) AndAlso
                Not (Storage.ModrinthTotal > -1 AndAlso Storage.ModrinthTotal <= Storage.ModrinthOffset) AndAlso '剩余的未显示的搜索结果不足
                ModrinthSlugs.Any Then '有直接获取的 Slug
                 WorkThreads.Add(RunInNewThread(
@@ -1163,7 +1173,16 @@ NextPage:
                         Log("[Comp] 开始 Modrinth 直接获取：" & ModrinthUrl)
                         Dim ProjectList As New List(Of CompProject)
                         For Each JsonEntry As JObject In DlModRequest(ModrinthUrl)
-                            ProjectList.Add(New CompProject(JsonEntry))
+                            Dim Project As New CompProject(JsonEntry)
+                            '应用筛选
+                            If Request.Type <> CompType.Any AndAlso Not Project.Types.HasFlag(Request.Type) Then Continue For
+                            If Not String.IsNullOrEmpty(Request.Tag) AndAlso
+                                Not JsonEntry("categories").Any(Function(c) c.ToString = Request.Tag.AfterLast("/")) Then Continue For 'Project.Tags 已经转换成中文了，只能从 json 判
+                            If Request.ModLoader <> CompModLoaderType.Any AndAlso Not IgnoreModLoaderFilter AndAlso
+                                Not Project.ModLoaders.Any(Function(m) m = Request.ModLoader) Then Continue For
+                            If Not String.IsNullOrEmpty(Request.GameVersion) AndAlso
+                                Not Project.UnsafeGameVersions.Any(Function(d) d = Request.GameVersion) Then Continue For
+                            ProjectList.Add(Project)
                         Next
                         '更新结果
                         ProjectList.ForEach(Sub(p) RawResults.Add(p))
@@ -1196,9 +1215,9 @@ NextPage:
                 Else
                     If IsChineseSearch AndAlso Not (Request.Type = CompType.Mod OrElse Request.Type = CompType.DataPack) Then
                         Throw New Exception(MSG_NO_CHINESE_SEARCH_RESULT)
-                    ElseIf Request.Source = CompSourceType.CurseForge AndAlso Request.Tag.StartsWithF("/") Then
+                    ElseIf Request.Sources = CompSourceType.CurseForge AndAlso Request.Tag.StartsWithF("/") Then
                         Throw New Exception("CurseForge 不兼容所选的类型")
-                    ElseIf Request.Source = CompSourceType.Modrinth AndAlso Request.Tag.EndsWithF("/") Then
+                    ElseIf Request.Sources = CompSourceType.Modrinth AndAlso Request.Tag.EndsWithF("/") Then
                         Throw New Exception("Modrinth 不兼容所选的类型")
                     Else
                         Throw New Exception("没有搜索结果")
@@ -1418,7 +1437,7 @@ NextPage:
         '实例化
 
         ''' <summary>
-        ''' 从文件 Json 中初始化实例。若出错会抛出异常。
+        ''' 从 json 中初始化实例。若出错会抛出异常。
         ''' </summary>
         Public Sub New(Data As JObject, DefaultType As CompType)
             Type = DefaultType
@@ -1505,25 +1524,16 @@ NextPage:
                         Size = File("size")
                         Hash = File("hashes")("sha1")
                     End If
-                    'ModLoaders
+                    'Loaders
                     '结果可能混杂着 Mod、数据包和服务端插件
                     Dim RawLoaders As List(Of String) = Data("loaders").Select(Function(v) v.ToString).ToList
                     ModLoaders = New List(Of CompModLoaderType)
-                    If Type = CompType.Mod Then '以尽量宽容的方式检测加载器，以免同时兼容两种的项被删除
-                        If RawLoaders.Intersect({"bukkit", "folia", "paper", "purpur", "spigot"}).Any() Then Type = CompType.Plugin 'Veinminer Enchantment 同时支持服务端与 Fabric
-                        If RawLoaders.Contains("datapack") Then Type = CompType.DataPack
-                        If RawLoaders.Contains("forge") Then ModLoaders.Add(CompModLoaderType.Forge) : Type = CompType.Mod
-                        If RawLoaders.Contains("neoforge") Then ModLoaders.Add(CompModLoaderType.NeoForge) : Type = CompType.Mod
-                        If RawLoaders.Contains("fabric") Then ModLoaders.Add(CompModLoaderType.Fabric) : Type = CompType.Mod
-                        If RawLoaders.Contains("quilt") Then ModLoaders.Add(CompModLoaderType.Quilt) : Type = CompType.Mod
-                    ElseIf Type = CompType.DataPack Then
-                        If RawLoaders.Intersect({"bukkit", "folia", "paper", "purpur", "spigot"}).Any() Then Type = CompType.Plugin
-                        If RawLoaders.Contains("forge") Then ModLoaders.Add(CompModLoaderType.Forge) : Type = CompType.Mod
-                        If RawLoaders.Contains("neoforge") Then ModLoaders.Add(CompModLoaderType.NeoForge) : Type = CompType.Mod
-                        If RawLoaders.Contains("fabric") Then ModLoaders.Add(CompModLoaderType.Fabric) : Type = CompType.Mod
-                        If RawLoaders.Contains("quilt") Then ModLoaders.Add(CompModLoaderType.Quilt) : Type = CompType.Mod
-                        If RawLoaders.Contains("datapack") Then Type = CompType.DataPack
-                    End If
+                    If RawLoaders.Intersect({"bukkit", "folia", "paper", "purpur", "spigot"}).Any() Then Type = CompType.Plugin 'Veinminer Enchantment 同时支持服务端与 Fabric
+                    If RawLoaders.Contains("datapack") Then Type = CompType.DataPack
+                    If RawLoaders.Contains("forge") Then ModLoaders.Add(CompModLoaderType.Forge) : Type = CompType.Mod
+                    If RawLoaders.Contains("neoforge") Then ModLoaders.Add(CompModLoaderType.NeoForge) : Type = CompType.Mod
+                    If RawLoaders.Contains("fabric") Then ModLoaders.Add(CompModLoaderType.Fabric) : Type = CompType.Mod
+                    If RawLoaders.Contains("quilt") Then ModLoaders.Add(CompModLoaderType.Quilt) : Type = CompType.Mod
                     'Dependencies
                     If Data.ContainsKey("dependencies") Then
                         RawDependencies = Data("dependencies").
@@ -1694,7 +1704,7 @@ NextPage:
                 'Modrinth
                 ResultJsonArray = DlModRequest($"https://api.modrinth.com/v2/project/{ProjectId}/version?include_changelog=false")
             End If
-            CompFilesCache(ProjectId) = ResultJsonArray.Select(Function(a) New CompFile(a, TargetProject.Type)).
+            CompFilesCache(ProjectId) = ResultJsonArray.Select(Function(a) New CompFile(a, TargetProject.Types)).
                 Where(Function(a) a.Available).ToList.
                 Distinct(Function(a, b) a.Id = b.Id) 'CurseForge 可能会重复返回相同项（#1330）
         End If

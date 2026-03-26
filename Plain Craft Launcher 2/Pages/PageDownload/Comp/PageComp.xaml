@@ -34,15 +34,16 @@
                     <TextBlock VerticalAlignment="Center" Grid.Row="2" HorizontalAlignment="Left" Text="版本" Margin="0,0,18,0" />
                     <local:MyComboBox x:Name="TextSearchVersion" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" IsEditable="True">
                         <local:MyComboBoxItem Content="全部 (也可自行输入)" IsSelected="True" />
+                        <local:MyComboBoxItem Content="26.1" />
                         <local:MyComboBoxItem Content="1.21.11" />
+                        <local:MyComboBoxItem Content="1.21.8" />
+                        <local:MyComboBoxItem Content="1.21.4" />
                         <local:MyComboBoxItem Content="1.21.1" />
-                        <local:MyComboBoxItem Content="1.20.6" />
                         <local:MyComboBoxItem Content="1.20.1" />
-                        <local:MyComboBoxItem Content="1.19.4" />
+                        <local:MyComboBoxItem Content="1.19.2" />
                         <local:MyComboBoxItem Content="1.18.2" />
                         <local:MyComboBoxItem Content="1.16.5" />
                         <local:MyComboBoxItem Content="1.12.2" />
-                        <local:MyComboBoxItem Content="1.8.9" />
                         <local:MyComboBoxItem Content="1.7.10" />
                     </local:MyComboBox>
                     <local:MyComboBox x:Name="ComboSearchLoader" Visibility="Collapsed" Grid.Row="2" Grid.Column="2" Margin="10,0,0,0">

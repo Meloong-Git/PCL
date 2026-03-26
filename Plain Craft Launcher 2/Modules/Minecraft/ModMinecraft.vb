@@ -1119,7 +1119,7 @@ ExitDataLoad:
         Public Shared Function IsFormatFit(Version As String) As Boolean
             If Version Is Nothing Then Return False
             If RegexCheck(Version, "^1\.\d") Then Return True
-            If Val(RegexSeek(Version, "^[2-9]\d\.\d+")) > 25 Then Return True
+            If Val(RegexSeek(Version, "^[2-9]\d\.\d+")) >= 26 Then Return True
             Return False
         End Function
         ''' <summary>

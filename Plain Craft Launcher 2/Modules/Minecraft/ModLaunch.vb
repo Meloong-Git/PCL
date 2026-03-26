@@ -1446,9 +1446,10 @@ NextInstance:
             Args = Args.Where(Function(a) Not RegexCheck(a,
                 "( )*-XX:[+-]?(Use\w+GC|ZGenerational|UseCompactObjectHeaders|G1\w+Percent|G1\w+Size|(Max|Min)(GCPauseMillis|HeapFreeRatio))")).ToList
             '添加 GC 参数
+            Args.Add("-XX:+UnlockExperimentalVMOptions")
+            If McLaunchJavaSelected.MajorVersion >= 24 AndAlso McLaunchJavaSelected.Is64Bit Then Args.Add("-XX:+UseCompactObjectHeaders")
             If UseG1GC AndAlso SetupType = 4 Then
                 '优化的 G1GC
-                Args.Add("-XX:+UnlockExperimentalVMOptions")
                 Args.Add("-XX:+UseG1GC")
                 Args.Add("-XX:G1NewSizePercent=20")
                 Args.Add("-XX:G1ReservePercent=20")
@@ -1459,10 +1460,8 @@ NextInstance:
                 If McLaunchJavaSelected.MajorVersion = 8 Then Args.Add("-XX:+ParallelRefProcEnabled")
                 If McLaunchJavaSelected.MajorVersion >= 12 Then Args.Add("-XX:MinHeapFreeRatio=25") '需要比 G1NewSizePercent 大一点
                 If McLaunchJavaSelected.MajorVersion >= 12 Then Args.Add("-XX:MaxHeapFreeRatio=40") '需要比 MinHeapFreeRatio 大一些
-                If McLaunchJavaSelected.MajorVersion >= 24 AndAlso McLaunchJavaSelected.Is64Bit Then Args.Add("-XX:+UseCompactObjectHeaders")
             ElseIf UseG1GC Then
                 'Mojang G1GC
-                Args.Add("-XX:+UnlockExperimentalVMOptions")
                 Args.Add("-XX:+UseG1GC")
                 Args.Add("-XX:G1NewSizePercent=20")
                 Args.Add("-XX:G1ReservePercent=20")

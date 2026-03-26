@@ -21,14 +21,15 @@
         Project = FrmMain.PageCurrent.Additional(0)
         TargetInstance = FrmMain.PageCurrent.Additional(2)
         TargetLoader = FrmMain.PageCurrent.Additional(3)
-        PageType = FrmMain.PageCurrent.Additional(4)
+        TargetType = FrmMain.PageCurrent.Additional(4)
     End Sub
     Private Project As CompProject
     Private TargetInstance As String, TargetLoader As CompModLoaderType
     ''' <summary>
-    ''' 当前页面应展示的内容类别。可能为 Any。
+    ''' 当前页面应展示的内容类别。
+    ''' 若当前页面是在查看前置时进入，则也可能为 Any。
     ''' </summary>
-    Private PageType As CompType
+    Private TargetType As CompType
     '自动重试
     Private Sub Load_State(sender As Object, state As MyLoading.MyLoadingState, oldState As MyLoading.MyLoadingState) Handles Load.StateChanged
         Select Case CompFileLoader.State
@@ -74,13 +75,13 @@
     '筛选类型相同的结果（Modrinth 会返回 Mod、服务端插件、数据包混合的列表）
     Private Function GetResults() As List(Of CompFile)
         Dim Results As List(Of CompFile) = CompFileLoader.Output
-        Select Case PageType
+        Select Case TargetType
             Case CompType.Any
                 Results = Results.Where(Function(r) r.Type <> CompType.Plugin).ToList
             Case CompType.Shader, CompType.ResourcePack
                 '不筛选光影和资源包，否则原版光影会因为是资源包格式而被过滤（#6473）
             Case Else
-                Results = Results.Where(Function(r) r.Type = PageType).ToList
+                Results = Results.Where(Function(r) r.Type = TargetType).ToList
         End Select
         Return Results
     End Function
@@ -204,7 +205,7 @@ GroupDone:
                 If Not Pair.Value.Any() Then Continue For
                 If Pair.Key = TargetCardName.Replace("（所选版本）", "") Then Continue For
                 '增加卡片
-                Dim NewCard As New MyCard With {.Title = Pair.Key, .Margin = New Thickness(0, 0, 0, 15), .SwapType = If(PageType = CompType.ModPack, 9, 8)} '9 是安装，8 是另存为
+                Dim NewCard As New MyCard With {.Title = Pair.Key, .Margin = New Thickness(0, 0, 0, 15), .SwapType = If(TargetType = CompType.ModPack, 9, 8)} '9 是安装，8 是另存为
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Pair.Value}
                 NewCard.Children.Add(NewStack)
                 NewCard.SwapControl = NewStack
@@ -213,7 +214,7 @@ GroupDone:
                 If Pair.Key = TargetCardName OrElse
                    (FrmMain.PageCurrent.Additional IsNot Nothing AndAlso '#2761
                    CType(FrmMain.PageCurrent.Additional(1), List(Of String)).Contains(NewCard.Title)) Then
-                    MyCard.StackInstall(NewStack, If(PageType = CompType.ModPack, 9, 8), Pair.Key) '9 是安装，8 是另存为
+                    MyCard.StackInstall(NewStack, If(TargetType = CompType.ModPack, 9, 8), Pair.Key) '9 是安装，8 是另存为
                 Else
                     NewCard.IsSwapped = True
                 End If
@@ -225,6 +226,14 @@ GroupDone:
             '如果只有一张卡片，展开第一张卡片
             If PanResults.Children.Count = 1 Then
                 CType(PanResults.Children(0), MyCard).IsSwapped = False
+            End If
+            '替代提示
+            If Project.Types = CompType.ModOrDataPack AndAlso (TargetType = CompType.Mod OrElse TargetType = CompType.DataPack) Then
+                HintAlternative.Visibility = Visibility.Visible
+                HintAlternative.Text = If(TargetType = CompType.Mod,
+                    "以下是该项目的 Mod 版本。点击这里查看其数据包版本。", "以下是该项目的数据包版本。点击这里查看其 Mod 版本。")
+            Else
+                HintAlternative.Visibility = Visibility.Collapsed
             End If
         Catch ex As Exception
             Log(ex, "可视化工程下载列表出错", LogLevel.Feedback)
@@ -492,6 +501,13 @@ GroupDone:
     End Sub
     Private Sub BtnIntroCopy_Click(sender As Object, e As EventArgs) Handles BtnIntroCopy.Click
         ClipboardSet(CompItem.LabTitle.Text & CompItem.LabTitleRaw.Text)
+    End Sub
+
+    'Mod / 数据包 互相跳转
+    Private Sub HintAlternative_Click() Handles HintAlternative.Click
+        TargetType = If(TargetType = CompType.Mod, CompType.DataPack, CompType.Mod)
+        FrmMain.PageCurrent.Additional(4) = TargetType '加载器会从这里重新拿数据
+        PageLoaderRestart(IsForceRestart:=True)
     End Sub
 
 End Class
