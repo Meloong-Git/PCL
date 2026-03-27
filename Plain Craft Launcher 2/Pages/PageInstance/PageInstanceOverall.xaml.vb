@@ -135,20 +135,20 @@
             '不能进行遍历重命名，否则在版本名很短的时候容易误伤其他文件（#6443）
             If Directory.Exists($"{NewPath}{OldName}-natives") Then
                 If OnlyChangedCase Then
-                    Directory.Move($"{NewPath}{OldName}-natives", $"{OldName}natives_temp")
-                    Directory.Move($"{NewPath}{OldName}-natives_temp", $"{NewName}-natives")
+                    Directory.Move($"{NewPath}{OldName}-natives", $"{NewPath}{OldName}natives_temp")
+                    Directory.Move($"{NewPath}{OldName}-natives_temp", $"{NewPath}{NewName}-natives")
                 Else
                     DeleteDirectory($"{NewPath}{NewName}-natives")
-                    Directory.Move($"{NewPath}{OldName}-natives", $"{NewName}-natives")
+                    Directory.Move($"{NewPath}{OldName}-natives", $"{NewPath}{NewName}-natives")
                 End If
             End If
             If File.Exists($"{NewPath}{OldName}.jar") Then
                 If OnlyChangedCase Then
-                    File.Move($"{NewPath}{OldName}.jar", $"{OldName}_temp.jar")
-                    File.Move($"{NewPath}{OldName}_temp.jar", $"{NewName}.jar")
+                    File.Move($"{NewPath}{OldName}.jar", $"{NewPath}{OldName}_temp.jar")
+                    File.Move($"{NewPath}{OldName}_temp.jar", $"{NewPath}{NewName}.jar")
                 Else
                     File.Delete($"{NewPath}{NewName}.jar")
-                    File.Move($"{NewPath}{OldName}.jar", $"{NewName}.jar")
+                    File.Move($"{NewPath}{OldName}.jar", $"{NewPath}{NewName}.jar")
                 End If
             End If
             '替换版本设置文件中的路径
