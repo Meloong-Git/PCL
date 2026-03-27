@@ -127,7 +127,7 @@
             End Try
             '重命名主文件夹
             Directory.Move(OldPath, TempPath)
-            Directory.Move(TempPath, NewName)
+            Directory.Move(TempPath, NewPath)
             '清理 ini 缓存
             IniClearCache(PageInstanceLeft.Instance.PathIndie & "options.txt")
             IniClearCache(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini")
