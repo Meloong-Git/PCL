@@ -9,18 +9,19 @@ Public Module ModMinecraft
     ''' </summary>
     Public Property McFolderSelected As String
         Get
-            Dim McFolderSelectedLast As String = Settings.Get("LaunchFolderSelect")
-            McFolderSelectedLast = McFolderSelectedLast.Replace("$", Path)
-            If _McFolderSelected Is Nothing Then _McFolderSelected = McFolderSelectedLast '仅在首次读取时触发
+            If _McFolderSelected Is Nothing Then SetMcFolder(Settings.Get("LaunchFolderSelect")) '不能使用 McFolderSelected 触发 Set，这会被视为为 Get 设置返回值
             Return _McFolderSelected
         End Get
         Set(Value As String)
-            If _McFolderSelected = Value Then Return
-            _McFolderSelected = Value.Replace("$", Path)
-            Settings.Set("LaunchFolderSelect", Value.Replace(Path, "$"))
-            Log("[Minecraft] 当前选择的 Minecraft 文件夹：" & _McFolderSelected)
+            SetMcFolder(Value)
         End Set
     End Property
+    Private Sub SetMcFolder(Value As String) '等同 McFolderSelected.Set
+        If _McFolderSelected = Value Then Return
+        _McFolderSelected = Value.Replace("$", Path)
+        Settings.Set("LaunchFolderSelect", Value.Replace(Path, "$"))
+        Log("[Minecraft] 当前选择的 Minecraft 文件夹：" & _McFolderSelected)
+    End Sub
     Private _McFolderSelected As String
     ''' <summary>
     ''' 当前的 Minecraft 文件夹列表。
@@ -43,8 +44,8 @@ Public Module ModMinecraft
 
         Public Overrides Function Equals(obj As Object) As Boolean
             If Not (TypeOf obj Is McFolder) Then Return False
-            Dim folder = DirectCast(obj, McFolder)
-            Return Name = folder.Name AndAlso Location = folder.Location AndAlso Type = folder.Type
+            Dim Folder = DirectCast(obj, McFolder)
+            Return Name = Folder.Name AndAlso Location = Folder.Location AndAlso Type = Folder.Type
         End Function
         Public Overrides Function ToString() As String
             Return Location

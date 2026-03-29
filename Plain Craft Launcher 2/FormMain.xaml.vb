@@ -11,10 +11,11 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
 #If BETA Then
-        If LastVersion < 386 Then 'Release 2.12.5
+        If LastVersion < 387 Then 'Release 2.12.6
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：降低 Minecraft 的内存占用"))
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：Minecraft 使用 Java 25+ 时的一个性能问题"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法下载 NeoForge 26.1"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：部分关键词搜不到资源，特别是中文 Mod 搜索经常没有结果"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：降低游戏的内存占用"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：老版本 Windows 无法启动游戏"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：连接 Mojang 的服务可能失败，提示错误码 421"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法访问爱发电"))
@@ -94,75 +95,31 @@ Public Class FormMain
             FeatureCount += 9
             BugCount += 26
         End If
-        If LastVersion < 355 Then 'Release 2.9.3
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：Minecraft 会优先使用独立显卡运行"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：简化下载新版本第二步的 UI"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：使用新的版本隔离策略"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：添加了在全局启动设置与版本独立设置之间互相跳转的按钮"))
-            FeatureCount += 20
-            BugCount += 28
-        End If
-        If LastVersion < 352 Then 'Release 2.9.1
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "新增：导出整合包功能"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：支持在超长路径下安装、启动游戏"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法安装 1.21 OptiFine"))
-            FeatureCount += 23
-            BugCount += 10
-        End If
-        If LastVersion < 349 Then 'Release 2.8.13
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：网络环境不佳时，Mod、整合包页面的加载速度"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：部分电脑无法打开程序"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：可能无法识别、更新 Mod"))
-            FeatureCount += 6
-            BugCount += 14
-        End If
-        If LastVersion < 347 Then 'Release 2.8.12
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：Mod 管理页面添加下载 Mod、安装 Mod 选项"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：Mod 详情页面支持按加载器、游戏版本进行分类和筛选"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：支持安装同时包含 modpack 文件和启动器的懒人包"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：整合包导入流程"))
-            FeatureCount += 43
-            BugCount += 37
-        End If
-        If LastVersion < 342 Then 'Release 2.8.9
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：支持下载原版服务端"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：本地 Mod 的标题支持选择显示 Mod 原始文件名"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：搜索后启用/禁用 Mod 时出错"))
-            FeatureCount += 17
-            BugCount += 13
-        End If
-        If LastVersion < 340 Then 'Release 2.8.8
-            If LastVersion = 338 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：数个与新正版登录相关的严重 Bug"))
-            FeatureCount += 3
-            BugCount += 7
-        End If
-        If LastVersion < 338 Then 'Release 2.8.7
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "优化：使用新的正版登录方式，以提高安全性"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：安装整合包、检索 Mod 的稳定性"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法加载部分 Mod 的图标"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：在 Mod 管理页面删除 Mod 导致报错"))
-            FeatureCount += 11
-            BugCount += 21
-        End If
 #Else
         '5：          FEAT+
         '4：     IMP+ FEAT*
         '3：BUG+ IMP* FEAT-
         '2：BUG* IMP-
         '1：BUG-
+        If LastVersion < 386 Then 'Snapshot 2.12.6
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：Minecraft 使用 Java 25+ 时的一个性能问题"))
+            If LastVersion = 384 OrElse LastVersion = 385 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法正常重命名游戏版本"))
+            If LastVersion = 385 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法显示 Modrinth 整合包的版本列表"))
+            BugCount += 1
+        End If
         If LastVersion < 385 Then 'Snapshot 2.12.5
             FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法下载 NeoForge 26.1"))
             If LastVersion = 384 Then
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：下载可能失败，提示下载管理刷新线程出错"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法保存选择的 Minecraft 文件夹"))
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：使用中文搜索 Mod 时， 部分结果会忽略筛选条件"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：使用中文搜索 Mod 时，部分结果会忽略筛选条件"))
             End If
             FeatureCount += 3
             BugCount += 6
         End If
         If LastVersion < 384 Then 'Snapshot 2.12.4
+            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：降低 Minecraft 的内存占用"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：部分关键词搜不到资源，特别是中文 Mod 搜索经常没有结果"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：降低游戏的内存占用"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：老版本 Windows 无法启动游戏"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：连接 Mojang 的服务可能失败，提示错误码 421"))
             FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法访问爱发电"))
@@ -281,81 +238,6 @@ Public Class FormMain
             FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：允许设置文件下载源"))
             FeatureCount += 9
             BugCount += 26
-        End If
-        If LastVersion < 354 Then 'Snapshot 2.9.3
-            If LastVersion = 352 Then
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：低版本 MC 没有声音"))
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：若不安装 Mod 加载器，则无法安装 OptiFine 1.14+"))
-            End If
-            FeatureCount += 8
-            BugCount += 8
-        End If
-        If LastVersion < 352 Then 'Snapshot 2.9.2
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：Minecraft 会优先使用独立显卡运行"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：简化下载新版本第二步的 UI"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：使用新的版本隔离策略"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：添加了在全局启动设置与版本独立设置之间互相跳转的按钮"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：使用快照版导出带 PCL 的整合包可能失败"))
-            FeatureCount += 12
-            BugCount += 20
-        End If
-        If LastVersion < 351 Then 'Snapshot 2.9.1
-            If LastVersion = 350 Then
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "优化：对导出整合包功能进行了 7 项优化，详见完整更新日志"))
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法进行第三方登录"))
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：在部分版本下，打开导出页面会导致启动器崩溃"))
-                BugCount += 1
-            End If
-            BugCount += 2
-        End If
-        If LastVersion < 350 Then 'Snapshot 2.9.0
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "新增：导出整合包功能"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：支持在超长路径下安装、启动游戏"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法安装 1.21 OptiFine"))
-            FeatureCount += 21
-            BugCount += 10
-        End If
-        If LastVersion < 348 Then 'Snapshot 2.8.13
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：网络环境不佳时，Mod、整合包页面的加载速度"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：部分电脑无法打开程序"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：可能无法识别、更新 Mod"))
-            FeatureCount += 6
-            BugCount += 14
-        End If
-        If LastVersion < 346 Then 'Snapshot 2.8.12
-            If LastVersion = 345 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：帮助页面报错"))
-        End If
-        If LastVersion < 345 Then 'Snapshot 2.8.11
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：Mod 管理页面添加下载 Mod、安装 Mod 选项"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：Mod 详情页面支持按加载器、游戏版本进行分类和筛选"))
-            FeatureCount += 23
-            BugCount += 21
-        End If
-        If LastVersion < 343 Then 'Snapshot 2.8.10
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：支持安装同时包含 modpack 文件和启动器的懒人包"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：整合包导入流程"))
-            FeatureCount += 20
-            BugCount += 16
-        End If
-        If LastVersion < 341 Then 'Snapshot 2.8.9
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：支持下载原版服务端"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "新增：本地 Mod 的标题支持选择显示 Mod 原始文件名"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：搜索后启用/禁用 Mod 时出错"))
-            FeatureCount += 17
-            BugCount += 13
-        End If
-        If LastVersion < 339 Then 'Snapshot 2.8.8
-            If LastVersion = 337 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：数个与新正版登录相关的严重 Bug"))
-            FeatureCount += 3
-            BugCount += 7
-        End If
-        If LastVersion < 337 Then 'Snapshot 2.8.7
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "优化：使用新的正版登录方式，以提高安全性"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：安装整合包、检索 Mod 的稳定性"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法加载部分 Mod 的图标"))
-            FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：在 Mod 管理页面删除 Mod 导致报错"))
-            FeatureCount += 11
-            BugCount += 21
         End If
 #End If
         '整理更新日志文本

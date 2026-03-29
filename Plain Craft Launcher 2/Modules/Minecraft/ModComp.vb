@@ -1528,12 +1528,16 @@ NextPage:
                     '结果可能混杂着 Mod、数据包和服务端插件
                     Dim RawLoaders As List(Of String) = Data("loaders").Select(Function(v) v.ToString).ToList
                     ModLoaders = New List(Of CompModLoaderType)
-                    If RawLoaders.Intersect({"bukkit", "folia", "paper", "purpur", "spigot"}).Any() Then Type = CompType.Plugin 'Veinminer Enchantment 同时支持服务端与 Fabric
-                    If RawLoaders.Contains("datapack") Then Type = CompType.DataPack
-                    If RawLoaders.Contains("forge") Then ModLoaders.Add(CompModLoaderType.Forge) : Type = CompType.Mod
-                    If RawLoaders.Contains("neoforge") Then ModLoaders.Add(CompModLoaderType.NeoForge) : Type = CompType.Mod
-                    If RawLoaders.Contains("fabric") Then ModLoaders.Add(CompModLoaderType.Fabric) : Type = CompType.Mod
-                    If RawLoaders.Contains("quilt") Then ModLoaders.Add(CompModLoaderType.Quilt) : Type = CompType.Mod
+                    If Type.HasFlag(CompType.Mod) OrElse Type.HasFlag(CompType.DataPack) Then
+                        If RawLoaders.Intersect({"bukkit", "folia", "paper", "purpur", "spigot"}).Any() Then Type = CompType.Plugin 'Veinminer Enchantment 同时支持服务端与 Fabric
+                        If RawLoaders.Contains("datapack") Then Type = CompType.DataPack
+                        If RawLoaders.Contains("forge") Then ModLoaders.Add(CompModLoaderType.Forge) : Type = CompType.Mod
+                        If RawLoaders.Contains("neoforge") Then ModLoaders.Add(CompModLoaderType.NeoForge) : Type = CompType.Mod
+                        If RawLoaders.Contains("fabric") Then ModLoaders.Add(CompModLoaderType.Fabric) : Type = CompType.Mod
+                        If RawLoaders.Contains("quilt") Then ModLoaders.Add(CompModLoaderType.Quilt) : Type = CompType.Mod
+                    Else
+                        '使用传入的类别，不作修改（#8377）
+                    End If
                     'Dependencies
                     If Data.ContainsKey("dependencies") Then
                         RawDependencies = Data("dependencies").

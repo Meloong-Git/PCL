@@ -1413,12 +1413,22 @@ NextInstance:
         End If
 
         'JLW
-        Dim UseJLW As Boolean = Not Settings.Get("LaunchAdvanceDisableJLW") AndAlso Not Settings.Get("VersionAdvanceDisableJLW", McInstanceSelected)
+        Dim UseJLW As Boolean =
+            Not Settings.Get("LaunchAdvanceDisableJLW") AndAlso Not Settings.Get("VersionAdvanceDisableJLW", McInstanceSelected) AndAlso
+            McLaunchJavaSelected.MajorVersion <= 18
         If UseJLW Then
             If McLaunchJavaSelected.MajorVersion >= 9 Then
                 Args.Add("--add-exports") : Args.Add("cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED")
             End If
             Args.Add("-Doolloo.jlw.tmpdir=${pure_directory}") '这里需要不以 \ 结尾
+        End If
+
+        'LUA
+        Dim UseLUA As Boolean =
+            Not Settings.Get("LaunchAdvanceDisableLUA") AndAlso Not Settings.Get("VersionAdvanceDisableLUA", McInstanceSelected) AndAlso
+            McLaunchJavaSelected.MajorVersion >= 25
+        If UseLUA Then
+            Args.Add($"-javaagent:""{ExtractPatch("LUA")}""")
         End If
 
 #Region "内存管理"
@@ -1489,7 +1499,7 @@ NextInstance:
 
         '为 JLW 添加 -jar，它必须放在最后
         If UseJLW Then
-            Args.Add("-jar") : Args.Add(ExtractJavaWrapper())
+            Args.Add("-jar") : Args.Add(ExtractPatch("JavaWrapper"))
         End If
 
         '再次去重并输出

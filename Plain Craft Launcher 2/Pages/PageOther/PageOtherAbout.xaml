@@ -169,12 +169,14 @@
                         <TextBlock Margin="0,1.5,6,0" Text="jw" />
                         <TextBlock Margin="0,1.5,6,0" Text="ftt" />
                         <TextBlock Margin="0,1.5,6,0" Text="TT" />
+                        <TextBlock Margin="0,1.5,6,0" Text="......" />
                         <TextBlock Margin="0,1.5,6,0" Text="ZZ" />
                         <TextBlock Margin="0,1.5,6,0" Text="zjx" />
                         <TextBlock Margin="0,1.5,6,0" Text="XX" />
                         <TextBlock Margin="0,1.5,6,0" Text="Lie" />
                         <TextBlock Margin="0,1.5,6,0" Text="sjg" />
                         <TextBlock Margin="0,1.5,6,0" Text="yfx" />
+                        <TextBlock Margin="0,1.5,6,0" Text="PQ" />
                         <TextBlock Margin="0,1.5,6,0" Text="hly" />
                         <TextBlock Margin="0,1.5,6,0" Text="l y y" />
                         <TextBlock Margin="0,1.5,6,0" Text="陈jj" />
@@ -188,7 +190,9 @@
                         <TextBlock Margin="0,1.5,6,0" Text="555" />
                         <TextBlock Margin="0,1.5,6,0" Text="轩₩" />
                         <TextBlock Margin="0,1.5,6,0" Text="zzw" />
+                        <TextBlock Margin="0,1.5,6,0" Text="ybb" />
                         <TextBlock Margin="0,1.5,6,0" Text="JJJT" />
+                        <TextBlock Margin="0,1.5,6,0" Text="ZCY" />
                         <TextBlock Margin="0,1.5,6,0" Text="Rou" />
                         <TextBlock Margin="0,1.5,6,0" Text="wyb" />
                         <TextBlock Margin="0,1.5,6,0" Text="qqq" />
@@ -321,6 +325,15 @@
                         <TextBlock Margin="0,1.5,6,0" Text="谷雨" />
                         <TextBlock Margin="0,1.5,6,0" Text="辞七" />
                         <TextBlock Margin="0,1.5,6,0" Text="血狐" />
+                        <TextBlock Margin="0,1.5,6,0" Text="君泽" />
+                        <TextBlock Margin="0,1.5,6,0" Text="歧辰" />
+                        <TextBlock Margin="0,1.5,6,0" Text="嗷嗷" />
+                        <TextBlock Margin="0,1.5,6,0" Text="陌陌" />
+                        <TextBlock Margin="0,1.5,6,0" Text="小王" />
+                        <TextBlock Margin="0,1.5,6,0" Text="小龙" />
+                        <TextBlock Margin="0,1.5,6,0" Text="月桂" />
+                        <TextBlock Margin="0,1.5,6,0" Text="沐槿" />
+                        <TextBlock Margin="0,1.5,6,0" Text="雨润" />
                         <TextBlock Margin="0,1.5,6,0" Text="Alex" />
                         <TextBlock Margin="0,1.5,6,0" Text="JIUZ" />
                         <TextBlock Margin="0,1.5,6,0" Text="hina" />
@@ -359,6 +372,7 @@
                         <TextBlock Margin="0,1.5,6,0" Text="叶子L" />
                         <TextBlock Margin="0,1.5,6,0" Text="lelezi" />
                         <TextBlock Margin="0,1.5,6,0" Text="lucky" />
+                        <TextBlock Margin="0,1.5,6,0" Text="Gd64" />
                         <TextBlock Margin="0,1.5,6,0" Text="bbbb" />
                         <TextBlock Margin="0,1.5,6,0" Text="gugu" />
                         <TextBlock Margin="0,1.5,6,0" Text="Ango" />
@@ -366,6 +380,7 @@
                         <TextBlock Margin="0,1.5,6,0" Text="徐铭h" />
                         <TextBlock Margin="0,1.5,6,0" Text="HKV1" />
                         <TextBlock Margin="0,1.5,6,0" Text="zjunE" />
+                        <TextBlock Margin="0,1.5,6,0" Text="cHEn." />
                         <TextBlock Margin="0,1.5,6,0" Text="少年A" />
                         <TextBlock Margin="0,1.5,6,0" Text="mouy" />
                         <TextBlock Margin="0,1.5,6,0" Text="KSfall" />
@@ -464,6 +479,8 @@
                         <TextBlock Margin="0,1.5,6,0" Text="哦哦哦" />
                         <TextBlock Margin="0,1.5,6,0" Text="咕谷谷" />
                         <TextBlock Margin="0,1.5,6,0" Text="长白山" />
+                        <TextBlock Margin="0,1.5,6,0" Text="杨某某" />
+                        <TextBlock Margin="0,1.5,6,0" Text="云尘眠" />
                         <TextBlock Margin="0,1.5,6,0" Text="UN_41" />
                         <TextBlock Margin="0,1.5,6,0" Text="bguae" />
                         <TextBlock Margin="0,1.5,6,0" Text="yoyal8" />
@@ -507,6 +524,7 @@
                         <TextBlock Margin="0,1.5,6,0" Text="sund3a" />
                         <TextBlock Margin="0,1.5,6,0" Text="Snowill" />
                         <TextBlock Margin="0,1.5,6,0" Text="kvmvvx" />
+                        <TextBlock Margin="0,1.5,6,0" Text="sabrina" />
                         <TextBlock Margin="0,1.5,6,0" Text="ling141" />
                         <TextBlock Margin="0,1.5,6,0" Text="Charile." />
                         <TextBlock Margin="0,1.5,6,0" Text="夜未央S" />
@@ -533,6 +551,7 @@
                         <TextBlock Margin="0,1.5,6,0" Text="weather" />
                         <TextBlock Margin="0,1.5,6,0" Text="qwptpw" />
                         <TextBlock Margin="0,1.5,6,0" Text="RedLink" />
+                        <TextBlock Margin="0,1.5,6,0" Text="SkyArea" />
                         <TextBlock Margin="0,1.5,6,0" Text="Starying" />
                         <TextBlock Margin="0,1.5,6,0" Text="longday" />
                         <TextBlock Margin="0,1.5,6,0" Text="wwwww" />
@@ -552,6 +571,7 @@
                         <TextBlock Margin="0,1.5,6,0" Text="浮世三千" />
                         <TextBlock Margin="0,1.5,6,0" Text="英白拉多" />
                         <TextBlock Margin="0,1.5,6,0" Text="逐兔寻鲸" />
+                        <TextBlock Margin="0,1.5,6,0" Text="红袖添香" />
                         <TextBlock Margin="0,1.5,6,0" Text="氮气炸锅" />
                         <TextBlock Margin="0,1.5,6,0" Text="小小小马" />
                         <TextBlock Margin="0,1.5,6,0" Text="爱莉希雅" />
@@ -619,6 +639,9 @@
                         <TextBlock Margin="0,1.5,6,0" Text="虫草絮语" />
                         <TextBlock Margin="0,1.5,6,0" Text="咸鱼冻肉" />
                         <TextBlock Margin="0,1.5,6,0" Text="六六六折" />
+                        <TextBlock Margin="0,1.5,6,0" Text="摆烂大帝" />
+                        <TextBlock Margin="0,1.5,6,0" Text="念念不忘" />
+                        <TextBlock Margin="0,1.5,6,0" Text="万权之星" />
                         <TextBlock Margin="0,1.5,6,0" Text="(=^x^=)" />
                         <TextBlock Margin="0,1.5,6,0" Text="Milkyink" />
                         <TextBlock Margin="0,1.5,6,0" Text="houteng" />
@@ -650,6 +673,7 @@
                         <TextBlock Margin="0,1.5,6,0" Text="忆恩sama" />
                         <TextBlock Margin="0,1.5,6,0" Text="InertStew" />
                         <TextBlock Margin="0,1.5,6,0" Text="小沉Chen" />
+                        <TextBlock Margin="0,1.5,6,0" Text="QILUOVO" />
                         <TextBlock Margin="0,1.5,6,0" Text="断网没mu" />
                         <TextBlock Margin="0,1.5,6,0" Text="THOPING" />
                         <TextBlock Margin="0,1.5,6,0" Text="EXcloudZ" />
@@ -665,6 +689,7 @@
                         <TextBlock Margin="0,1.5,6,0" Text="执意追风..." />
                         <TextBlock Margin="0,1.5,6,0" Text="ZMMMM" />
                         <TextBlock Margin="0,1.5,6,0" Text="sensei425" />
+                        <TextBlock Margin="0,1.5,6,0" Text="Sariel小懒" />
                         <TextBlock Margin="0,1.5,6,0" Text="aslillusory" />
                         <TextBlock Margin="0,1.5,6,0" Text="androidhi" />
                         <TextBlock Margin="0,1.5,6,0" Text="fjh321008" />
@@ -840,6 +865,7 @@
                         <TextBlock Margin="0,1.5,6,0" Text="照井黎Terui_Rei" />
                         <TextBlock Margin="0,1.5,6,0" Text="CHENDASHUAI" />
                         <TextBlock Margin="0,1.5,6,0" Text="约翰·冯·海格力斯" />
+                        <TextBlock Margin="0,1.5,6,0" Text="星之梦Hoshino_" />
                         <TextBlock Margin="0,1.5,6,0" Text="柚子_grapefruit_" />
                         <TextBlock Margin="0,1.5,6,0" Text="某不知名的GWM" />
                         <TextBlock Margin="0,1.5,6,0" Text="PolarPanda2333" />
@@ -849,6 +875,7 @@
                         <TextBlock Margin="0,1.5,6,0" Text="过年啦(๑ᵔ⌔ᵔ๑)ﾉ🧨" />
                         <TextBlock Margin="0,1.5,6,0" Text="星ベ空(Xingkong)" />
                         <TextBlock Margin="0,1.5,6,0" Text="WerewolfwolfyXD" />
+                        <TextBlock Margin="0,1.5,6,0" Text="Black_Banana_Cat" />
                         <TextBlock Margin="0,1.5,6,0" Text="All systems normal" />
                         <TextBlock Margin="0,1.5,6,0" Text="传奇幻想乡冰之勇者" />
                         <TextBlock Margin="0,1.5,6,0" Text="山有扶苏，隰有荷华" />
@@ -914,7 +941,10 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="60" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="60" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
+                    
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Java Launch Wrapper" TextWrapping="Wrap" FontWeight="Bold" />
                     <TextBlock Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2022 00ll00&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
                     <local:MyButton Grid.Row="1" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
@@ -922,51 +952,58 @@
                     <local:MyButton Grid.Row="1" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/00ll00/java_launch_wrapper?tab=MIT-1-ov-file#readme" />
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Newtonsoft.Json" TextWrapping="Wrap" FontWeight="Bold" />
-                    <TextBlock Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2007 James Newton-King&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="LWJGL Unsafe Agent" TextWrapping="Wrap" FontWeight="Bold" />
+                    <TextBlock Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2026 Glavo&#xa;Licensed under the Apache License, Version 2.0." TextWrapping="Wrap" />
                     <local:MyButton Grid.Row="3" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
-                                    local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.newtonsoft.com/json" />
+                                    local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/HMCL-dev/lwjgl-unsafe-agent" />
                     <local:MyButton Grid.Row="3" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                                    local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.apache.org/licenses/LICENSE-2.0" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Newtonsoft.Json" TextWrapping="Wrap" FontWeight="Bold" />
+                    <TextBlock Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2007 James Newton-King&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
+                    <local:MyButton Grid.Row="5" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                                    local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.newtonsoft.com/json" />
+                    <local:MyButton Grid.Row="5" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://opensource.org/licenses/MIT" />
                     
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="NAudio" TextWrapping="Wrap" FontWeight="Bold" />
-                    <TextBlock Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2015 Mark Heath (mark.heath@gmail.com)&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="5" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="NAudio" TextWrapping="Wrap" FontWeight="Bold" />
+                    <TextBlock Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2015 Mark Heath (mark.heath@gmail.com)&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
+                    <local:MyButton Grid.Row="7" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/naudio/NAudio" />
-                    <local:MyButton Grid.Row="5" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left" 
+                    <local:MyButton Grid.Row="7" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left" 
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/naudio/NAudio/blob/master/license.txt" />
 
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="Ookii.Dialogs" TextWrapping="Wrap" FontWeight="Bold" />
-                    <TextBlock Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2009 Sven Groot (Ookii.org)" TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="7" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Ookii.Dialogs" TextWrapping="Wrap" FontWeight="Bold" />
+                    <TextBlock Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2009 Sven Groot (Ookii.org)" TextWrapping="Wrap" />
+                    <local:MyButton Grid.Row="9" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.ookii.org/Software/Dialogs/" />
-                    <local:MyButton Grid.Row="7" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="9" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/caioproiete/ookii-dialogs-wpf/blob/master/LICENSE" />
                     
-                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Iconmonstr" TextWrapping="Wrap" FontWeight="Bold" />
-                    <TextBlock Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2019 iconmonstr (Alexander Kahlkopf)" TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="9" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <TextBlock Grid.Row="10" Grid.Column="0" Text="Iconmonstr" TextWrapping="Wrap" FontWeight="Bold" />
+                    <TextBlock Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2019 iconmonstr (Alexander Kahlkopf)" TextWrapping="Wrap" />
+                    <local:MyButton Grid.Row="11" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://iconmonstr.com/" />
-                    <local:MyButton Grid.Row="9" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="11" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://iconmonstr.com/license/" />
                     
-                    <TextBlock Grid.Row="10" Grid.Column="0" Text="libwebp wrapper for .NET" TextWrapping="Wrap" FontWeight="Bold" />
-                    <TextBlock Grid.Row="10" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2012 Imazen&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="11" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <TextBlock Grid.Row="12" Grid.Column="0" Text="libwebp wrapper for .NET" TextWrapping="Wrap" FontWeight="Bold" />
+                    <TextBlock Grid.Row="12" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2012 Imazen&#xa;Licensed under the MIT License." TextWrapping="Wrap" />
+                    <local:MyButton Grid.Row="13" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/imazen/libwebp-net" />
-                    <local:MyButton Grid.Row="11" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <local:MyButton Grid.Row="13" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/imazen/libwebp-net/blob/master/LICENSE.txt" />
 
-                    <TextBlock Grid.Row="12" Grid.Column="0" Text="Iconfont" TextWrapping="Wrap" FontWeight="Bold" />
-                    <TextBlock Grid.Row="12" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © ALIMAMA MUX, powered by alimama THX." TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="13" Grid.Column="2" MinWidth="140" Text="查看原网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <TextBlock Grid.Row="14" Grid.Column="0" Text="Iconfont" TextWrapping="Wrap" FontWeight="Bold" />
+                    <TextBlock Grid.Row="14" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © ALIMAMA MUX, powered by alimama THX." TextWrapping="Wrap" />
+                    <local:MyButton Grid.Row="15" Grid.Column="2" MinWidth="140" Text="查看原网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.iconfont.cn/" />
 
-                    <TextBlock Grid.Row="14" Grid.Column="0" Text="EasyTier" TextWrapping="Wrap" FontWeight="Bold" />
-                    <TextBlock Grid.Row="14" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2024-present Easytier Programme within The Commons Conservancy&#xa;Licensed under the GNU Lesser General Public License." TextWrapping="Wrap" />
-                    <local:MyButton Grid.Row="15" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                    <TextBlock Grid.Row="16" Grid.Column="0" Text="EasyTier" TextWrapping="Wrap" FontWeight="Bold" />
+                    <TextBlock Grid.Row="16" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2024-present Easytier Programme within The Commons Conservancy&#xa;Licensed under the GNU Lesser General Public License." TextWrapping="Wrap" />
+                    <local:MyButton Grid.Row="17" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://easytier.cn/" />
-                    <local:MyButton Grid.Row="15" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left" 
+                    <local:MyButton Grid.Row="17" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left" 
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/EasyTier/EasyTier/blob/main/LICENSE" />
                 </Grid>
             </local:MyCard>

@@ -426,7 +426,7 @@ pause"
         '添加 Java Wrapper 作为主 Jar
         Dim Arguments As String
         If UseJavaWrapper AndAlso Not Settings.Get("LaunchAdvanceDisableJLW") Then
-            Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.TrimEnd("\")}"" -Duser.home=""{BaseMcFolderHome.TrimEnd("\")}"" -cp ""{Target}"" -jar ""{ExtractJavaWrapper()}"" optifine.Installer"
+            Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.TrimEnd("\")}"" -Duser.home=""{BaseMcFolderHome.TrimEnd("\")}"" -cp ""{Target}"" -jar ""{ExtractPatch("JavaWrapper")}"" optifine.Installer"
         Else
             Arguments = $"-Duser.home=""{BaseMcFolderHome.TrimEnd("\")}"" -cp ""{Target}"" optifine.Installer"
         End If
@@ -1101,7 +1101,7 @@ Retry:
         '添加 Java Wrapper 作为主 Jar
         Dim Arguments As String
         If UseJavaWrapper AndAlso Not Settings.Get("LaunchAdvanceDisableJLW") Then
-            Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.TrimEnd("\")}"" -cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" -jar ""{ExtractJavaWrapper()}"" com.bangbang93.ForgeInstaller ""{McFolder}"
+            Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.TrimEnd("\")}"" -cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" -jar ""{ExtractPatch("JavaWrapper")}"" com.bangbang93.ForgeInstaller ""{McFolder}"
         Else
             Arguments = $"-cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" com.bangbang93.ForgeInstaller ""{McFolder}"
         End If
@@ -2373,37 +2373,38 @@ Retry:
     Private VanillaSyncLock As New Object
 
     ''' <summary>
-    ''' 释放 Java Wrapper 并返回完整文件路径。
+    ''' 释放补丁文件并返回完整文件路径。
     ''' </summary>
-    Public Function ExtractJavaWrapper() As String
-        Dim WrapperPath As String = PathPure & "JavaWrapper.jar"
-        Log("[Java] 选定的 Java Wrapper 路径：" & WrapperPath)
+    ''' <param name="Patch">"LUA" 或 "JavaWrapper"。</param>
+    Public Function ExtractPatch(Patch As String) As String
+        Dim PatchPath As String = $"{PathPure}{Patch}.jar"
+        Log($"[Java] 选定的 {Patch} 路径：{PatchPath}")
         Static Lock As New Object
-        SyncLock Lock '避免 OptiFine 和 Forge 安装时同时释放 Java Wrapper 导致冲突
+        SyncLock Lock '避免 OptiFine 和 Forge 安装时同时释放导致冲突
             Try
-                WriteFile(WrapperPath, GetResources("JavaWrapper"))
+                WriteFile(PatchPath, GetResources(Patch))
             Catch ex As Exception
-                If File.Exists(WrapperPath) Then
-                    '因为未知原因 Java Wrapper 可能变为只读文件（#4243）
-                    Log(ex, "Java Wrapper 文件释放失败，但文件已存在，将在删除后尝试重新生成", LogLevel.Developer)
+                If File.Exists(PatchPath) Then
+                    '因为未知原因可能变为只读文件（#4243）
+                    Log(ex, $"{Patch} 文件释放失败，但文件已存在，将在删除后尝试重新生成", LogLevel.Developer)
                     Try
-                        File.Delete(WrapperPath)
-                        WriteFile(WrapperPath, GetResources("JavaWrapper"))
+                        File.Delete(PatchPath)
+                        WriteFile(PatchPath, GetResources(Patch))
                     Catch ex2 As Exception
-                        Log(ex2, "Java Wrapper 文件重新释放失败，将尝试更换文件名重新生成", LogLevel.Developer)
-                        WrapperPath = PathPure & "JavaWrapper2.jar"
+                        Log(ex2, $"{Patch} 文件重新释放失败，将尝试更换文件名重新生成", LogLevel.Developer)
+                        PatchPath = $"{PathPure}{Patch}2.jar"
                         Try
-                            WriteFile(WrapperPath, GetResources("JavaWrapper"))
+                            WriteFile(PatchPath, GetResources(Patch))
                         Catch ex3 As Exception
-                            Throw New FileNotFoundException("释放 Java Wrapper 最终尝试失败", ex3)
+                            Throw New FileNotFoundException($"释放 {Patch} 最终尝试失败", ex3)
                         End Try
                     End Try
                 Else
-                    Throw New FileNotFoundException("释放 Java Wrapper 失败", ex)
+                    Throw New FileNotFoundException($"释放 {Patch} 失败", ex)
                 End If
             End Try
         End SyncLock
-        Return WrapperPath
+        Return PatchPath
     End Function
 
 End Module

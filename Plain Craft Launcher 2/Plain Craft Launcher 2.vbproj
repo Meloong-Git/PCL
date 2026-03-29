@@ -923,6 +923,7 @@
     <Resource Include="Images\Heads\EasyTier.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\lwjgl-unsafe-agent-1.0.jar" />
     <Content Include="Resources\System.ValueTuple.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
