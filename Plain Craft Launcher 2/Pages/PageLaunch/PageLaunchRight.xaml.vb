@@ -45,8 +45,18 @@ Public Class PageLaunchRight
         Select Case Settings.Get("UiCustomType")
             Case 1
                 '加载本地文件
-                Log("[Page] 主页自定义数据来源：本地文件")
-                Content = ReadFile(Path & "PCL\Custom.xaml") 'ReadFile 会进行存在检测
+                Dim GlobalCustomPath As String = Path & "PCL\Custom.xaml"
+                Dim VersionCustomPath As String = Nothing
+                If Settings.Get("UiCustomVersionSpecific") AndAlso McInstanceSelected IsNot Nothing AndAlso Not String.IsNullOrWhiteSpace(McInstanceSelected.PathVersion) Then
+                    VersionCustomPath = McInstanceSelected.PathVersion & "PCL\Custom.xaml"
+                End If
+                If Not String.IsNullOrWhiteSpace(VersionCustomPath) AndAlso File.Exists(VersionCustomPath) Then
+                    Log("[Page] 主页自定义数据来源：版本文件")
+                    Content = ReadFile(VersionCustomPath)
+                Else
+                    Log("[Page] 主页自定义数据来源：全局文件")
+                    Content = ReadFile(GlobalCustomPath) 'ReadFile 会进行存在检测
+                End If
             Case 2
                 '联网下载
                 Url = Settings.Get("UiCustomNet")
