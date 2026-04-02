@@ -1422,14 +1422,14 @@ NextInstance:
             End If
             Args.Add("-Doolloo.jlw.tmpdir=${pure_directory}") '这里需要不以 \ 结尾
         End If
+        McLaunchLog("使用 JLW：" & UseJLW)
 
         'LUA
         Dim UseLUA As Boolean =
             Not Settings.Get("LaunchAdvanceDisableLUA") AndAlso Not Settings.Get("VersionAdvanceDisableLUA", McInstanceSelected) AndAlso
-            McLaunchJavaSelected.MajorVersion >= 25
-        If UseLUA Then
-            Args.Add($"-javaagent:""{ExtractPatch("LUA")}""")
-        End If
+            McLaunchJavaSelected.MajorVersion >= 25 AndAlso McInstanceSelected.Version.Drop >= 261
+        If UseLUA Then Args.Add($"-javaagent:""{ExtractPatch("LUA")}""")
+        McLaunchLog("使用 LUA：" & UseLUA)
 
 #Region "内存管理"
 

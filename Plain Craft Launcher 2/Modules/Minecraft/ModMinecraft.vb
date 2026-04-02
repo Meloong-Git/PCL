@@ -170,7 +170,7 @@ Public Module ModMinecraft
 
 #Region "版本处理"
 
-    Public Const McInstanceCacheVersion As Integer = 33
+    Public Const McInstanceCacheVersion As Integer = 34
 
     Private _McInstanceSelected As McInstance
     ''' <summary>
@@ -444,21 +444,7 @@ Public Module ModMinecraft
 VersionSearchFinish:
                 '获取版本号
                 _Version.VanillaName = _Version.VanillaName.Replace("_unobfuscated", "").Replace(" Unobfuscated", "")
-                If _Version.VanillaName.StartsWithF("1.") Then
-                    Dim Segments = _Version.VanillaName.Split(" _-.".ToCharArray)
-                    _Version.Vanilla = New Version(
-                        Val(If(Segments.Count >= 2, Segments(1), "0")),
-                        0,
-                        Val(If(Segments.Count >= 3, Segments(2), "0")))
-                ElseIf RegexCheck(_Version.VanillaName, "^[2-9][0-9]\.") Then
-                    Dim Segments = _Version.VanillaName.Split(" _-.".ToCharArray)
-                    _Version.Vanilla = New Version(
-                        Val(Segments(0)),
-                        Val(If(Segments.Count >= 2, Segments(1), "0")),
-                        Val(If(Segments.Count >= 3, Segments(2), "0")))
-                Else
-                    _Version.Vanilla = New Version(9999, 0, 0)
-                End If
+                _Version.Vanilla = McVersion.NameToVersion(_Version.VanillaName)
                 Return _Version
             End Get
             Set(value As McVersion)
@@ -761,7 +747,8 @@ Recheck:
                     Case Else '根据 API 进行筛选
                         Dim RealJson As String = If(JsonObject, JsonText).ToString
                         '愚人节与快照版本
-                        If If(JsonObject("type"), "").ToString = "fool" OrElse GetMcFoolName(Version.VanillaName) <> "" Then
+                        If If(JsonObject("type"), "").ToString = "fool" OrElse
+                           (ReleaseTime.ToUniversalTime.Month = 4 AndAlso ReleaseTime.ToUniversalTime.Day = 1) OrElse GetMcFoolName(Version.VanillaName) <> "" Then
                             State = McInstanceState.Fool
                         ElseIf IsSnapshot() Then
                             State = McInstanceState.Snapshot
@@ -1126,23 +1113,14 @@ ExitDataLoad:
             Return False
         End Function
         ''' <summary>
-        ''' 尝试将版本字符串转换为 Drop 序数。
-        ''' 若无法转换则返回 0。
+        ''' 将版本名转换为 Drop 序数。
+        ''' 若无法转换则返回 209。
         ''' </summary>
-        Public Shared Function VersionToDrop(Version As String, Optional AllowSnapshot As Boolean = False) As Integer
-            If Not AllowSnapshot AndAlso Version.Contains("-") Then Return 0
-            If Version Is Nothing Then Return 0
-            Dim Segments = Version.BeforeFirst("-").Split(".")
-            If Segments.Length < 2 Then Return 0
-            Dim Major As Integer = Val(Segments(0))
-            Dim Minor As Integer = Val(Segments(1))
-            If Major = 1 Then
-                Return Minor * 10
-            ElseIf Major < 25 Then
-                Return 0
-            Else
-                Return Major * 10 + Minor
-            End If
+        Public Shared Function VersionToDrop(VanillaName As String) As Integer
+            If VanillaName Is Nothing Then Return 209
+            Dim Version = NameToVersion(VanillaName)
+            If Version.Major >= 1000 Then Return 209
+            Return Version.Major * 10 + Version.Minor
         End Function
         ''' <summary>
         ''' 将 Drop 序数转换为版本字符串。
@@ -1150,8 +1128,34 @@ ExitDataLoad:
         Public Shared Function DropToVersion(Drop As Integer) As String
             If Drop >= 250 Then
                 Return $"{Drop \ 10}.{Drop Mod 10}"
+            ElseIf Drop = 209 Then
+                Log("[Minecraft] 尝试将旧快照版 Drop 序数转换为版本字符串，这不应该发生！" & vbCrLf & GetStackTrace(), LogLevel.Debug)
+                Return "1.20"
             Else
                 Return $"1.{Drop \ 10}"
+            End If
+        End Function
+        ''' <summary>
+        ''' 将版本名转换为可比较的三段式原版版本号。
+        ''' 对老版本格式，例如 1.20.3，会被转换为 20.0.3。
+        ''' 若没有版本号，例如旧快照，则为 9999.0.0。
+        ''' </summary>
+        Public Shared Function NameToVersion(VanillaName As String) As Version
+            VanillaName = VanillaName.Replace("_unobfuscated", "").Replace(" Unobfuscated", "")
+            If VanillaName.StartsWithF("1.") Then
+                Dim Segments = VanillaName.Split(" _-.".ToCharArray)
+                Return New Version(
+                    Val(If(Segments.Count >= 2, Segments(1), "0")),
+                    0,
+                    Val(If(Segments.Count >= 3, Segments(2), "0")))
+            ElseIf RegexCheck(VanillaName, "^[2-9][0-9]\.") Then
+                Dim Segments = VanillaName.Split(" _-.".ToCharArray)
+                Return New Version(
+                    Val(Segments(0)),
+                    Val(If(Segments.Count >= 2, Segments(1), "0")),
+                    Val(If(Segments.Count >= 3, Segments(2), "0")))
+            Else
+                Return New Version(9999, 0, 0)
             End If
         End Function
 
@@ -1180,6 +1184,8 @@ ExitDataLoad:
             Return "2024 | 毒马铃薯一直都被大家忽视和低估，于是我们超级加强了它！"
         ElseIf Name = "25w14craftmine" Then
             Return "2025 | 你可以合成任何东西——包括合成你的世界！"
+        ElseIf Name = "26w14a" Then
+            Return "2026 | 为什么需要物品栏？让方块们跟着你走吧！"
         Else
             Return ""
         End If

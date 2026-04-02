@@ -213,6 +213,7 @@
         For Each Version As JObject In Loader.Output.Value("versions")
             Drops.Add(McVersion.VersionToDrop(Version("id")))
         Next
+        Drops.Remove(209)
         AllDrops = Drops.Distinct.OrderByDescending(Function(d) d).ToList()
     End Sub
 

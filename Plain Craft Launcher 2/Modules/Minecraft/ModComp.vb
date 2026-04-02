@@ -1,4 +1,6 @@
-﻿Public Module ModComp
+﻿Imports System.IO.Compression
+
+Public Module ModComp
 
     <Flags> Public Enum CompType
         ''' <summary> 
@@ -58,37 +60,39 @@
             '初始化数据库
             _CompDatabase = New List(Of CompDatabaseEntry)
             Dim i As Integer = 0
-            For Each Line In DecodeBytes(GetResources("ModData")).Replace(vbCrLf, vbLf).Replace(vbCr, "").Split(vbLf)
-                i += 1
-                If Line = "" Then Continue For
-                For Each EntryData As String In Line.Split("¨")
-                    Dim Entry = New CompDatabaseEntry
-                    Dim Splited = EntryData.Split("|")
-                    Entry.Popularity = Val(Splited(0))
-                    If Splited(1).StartsWithF("@") Then
-                        Entry.CurseForgeSlug = Nothing
-                        Entry.ModrinthSlug = Splited(1).Replace("@", "")
-                    ElseIf Splited(1).EndsWithF("@") Then
-                        Entry.CurseForgeSlug = Splited(1).TrimEnd("@")
-                        Entry.ModrinthSlug = Entry.CurseForgeSlug
-                    ElseIf Splited(1).Contains("@") Then
-                        Entry.CurseForgeSlug = Splited(1).Split("@")(0)
-                        Entry.ModrinthSlug = Splited(1).Split("@")(1)
-                    Else
-                        Entry.CurseForgeSlug = Splited(1)
-                        Entry.ModrinthSlug = Nothing
-                    End If
-                    Entry.WikiId = i
-                    If Splited.Count >= 3 Then
-                        Entry.ChineseName = Splited.Last
-                        If Entry.ChineseName.Contains("*") Then '处理 *
-                            Entry.ChineseName = Entry.ChineseName.Replace("*",
-                                $" ({If(Entry.CurseForgeSlug, Entry.ModrinthSlug).Replace("-", " ").Capitalize})")
+            Using Archive As New ZipArchive(New MemoryStream(GetResources("ModData")), ZipArchiveMode.Read)
+                For Each Line In ReadFile(Archive.GetEntry("moddata.txt").Open(), Encoding.UTF8).Replace(vbCrLf, vbLf).Replace(vbCr, "").Split(vbLf)
+                    i += 1
+                    If Line = "" Then Continue For
+                    For Each EntryData As String In Line.Split("¨")
+                        Dim Entry = New CompDatabaseEntry
+                        Dim Splited = EntryData.Split("|")
+                        Entry.Popularity = Val(Splited(0))
+                        If Splited(1).StartsWithF("@") Then
+                            Entry.CurseForgeSlug = Nothing
+                            Entry.ModrinthSlug = Splited(1).Replace("@", "")
+                        ElseIf Splited(1).EndsWithF("@") Then
+                            Entry.CurseForgeSlug = Splited(1).TrimEnd("@")
+                            Entry.ModrinthSlug = Entry.CurseForgeSlug
+                        ElseIf Splited(1).Contains("@") Then
+                            Entry.CurseForgeSlug = Splited(1).Split("@")(0)
+                            Entry.ModrinthSlug = Splited(1).Split("@")(1)
+                        Else
+                            Entry.CurseForgeSlug = Splited(1)
+                            Entry.ModrinthSlug = Nothing
                         End If
-                    End If
-                    _CompDatabase.Add(Entry)
+                        Entry.WikiId = i
+                        If Splited.Count >= 3 Then
+                            Entry.ChineseName = Splited.Last
+                            If Entry.ChineseName.Contains("*") Then '处理 *
+                                Entry.ChineseName = Entry.ChineseName.Replace("*",
+                                    $" ({If(Entry.CurseForgeSlug, Entry.ModrinthSlug).Replace("-", " ").Capitalize})")
+                            End If
+                        End If
+                        _CompDatabase.Add(Entry)
+                    Next
                 Next
-            Next
+            End Using
             Return _CompDatabase
         End Get
     End Property
@@ -322,7 +326,7 @@
                     Next
                     CurseForgeFileIds = Files.Select(Function(f) f.Key).Distinct.ToList
                     Drops = Files.SelectMany(Function(f) f.Value).
-                        Select(Function(v) McVersion.VersionToDrop(v)).Where(Function(v) v > 0).Distinct.OrderByDescending(Function(v) v).ToList
+                        Select(Function(v) McVersion.VersionToDrop(v)).Where(Function(v) v <> 209).Distinct.OrderByDescending(Function(v) v).ToList
                     ModLoaders = ModLoaders.Distinct.OrderBy(Of Integer)(Function(t) t).ToList
                     'Tags
                     Tags = New List(Of String)
@@ -418,7 +422,7 @@
                     'GameVersions
                     '搜索结果的键为 versions，获取特定工程的键为 game_versions
                     UnsafeGameVersions = If(CType(If(Data("game_versions"), Data("versions")), JArray), New JArray).Select(Function(v) v.ToString).Distinct.ToList
-                    Drops = UnsafeGameVersions.Select(Function(v) McVersion.VersionToDrop(v)).Where(Function(v) v > 0).Distinct.OrderByDescending(Function(v) v).ToList
+                    Drops = UnsafeGameVersions.Select(Function(v) McVersion.VersionToDrop(v)).Where(Function(v) v <> 209).Distinct.OrderByDescending(Function(v) v).ToList
                     'Type
                     Select Case Data("project_type").ToString
                         Case "modpack" : Types = CompType.ModPack
@@ -1100,7 +1104,7 @@ NextPage:
 
         '在 1.14-，部分老 Mod 没有设置支持的加载器，因此添加 Forge 筛选就会出现遗漏
         '所以，在发起请求时不筛选加载器，然后在返回的结果中自行筛除不是 Forge 的 Mod
-        Dim IgnoreModLoaderFilter = Request.ModLoader = CompModLoaderType.Forge AndAlso McVersion.VersionToDrop(Request.GameVersion, True) < 140
+        Dim IgnoreModLoaderFilter = Request.ModLoader = CompModLoaderType.Forge AndAlso McVersion.VersionToDrop(Request.GameVersion) < 140
         Try
 
             'CurseForge 搜索

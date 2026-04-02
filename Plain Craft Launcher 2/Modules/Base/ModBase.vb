@@ -14,25 +14,24 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.12.6" '不含分支前缀的显示用版本名
-    Public Const VersionStandardCode As String = "2.12.6." & VersionBranchCode '标准格式的四段式版本号
+    Public Const VersionBaseName As String = "2.12.6.1" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If BETA Then
-    Public Const VersionCode As Integer = 387 'Release
+    Public Const VersionCode As Integer = 389 '正式版
 #Else
-    Public Const VersionCode As Integer = 386 'Snapshot
+    Public Const VersionCode As Integer = 388 '快照版
 #End If
     '自动生成的版本信息
     Public Const VersionDisplayName As String = VersionBranchName & " " & VersionBaseName
 #If RELEASE Then
-    Public Const VersionBranchName As String = "Snapshot"
-    Public Const VersionBranchCode As String = "0"
+    Public Const VersionBranchName As String = "快照版"
+    Public Const VersionBranchCode As Integer = 0
 #ElseIf BETA Then
-    Public Const VersionBranchName As String = "Release"
-    Public Const VersionBranchCode As String = "50"
+    Public Const VersionBranchName As String = "正式版"
+    Public Const VersionBranchCode As Integer = 50
 #Else
-    Public Const VersionBranchName As String = "Debug"
-    Public Const VersionBranchCode As String = "100"
+    Public Const VersionBranchName As String = "开发版"
+    Public Const VersionBranchCode As Integer = 100
 #End If
 
     ''' <summary>
@@ -1270,6 +1269,7 @@ Re:
         End Function
     End Class
 
+    '压缩文件
     ''' <summary>
     ''' 尝试根据后缀名判断文件种类并解压文件，支持 gz 与 zip，会尝试将 jar 以 zip 方式解压。
     ''' 会尝试创建，但不会清空目标文件夹。
@@ -1317,6 +1317,25 @@ Re:
                 Throw
             End Try
         End Try
+    End Sub
+    ''' <summary>
+    ''' 将多个文件打包为一个压缩文件。
+    ''' 这些文件会被直接放在压缩包根目录下。
+    ''' </summary>
+    Public Sub CreateCompressedFile(OutputFullPath As String, SourceFiles As IEnumerable(Of String))
+        Dim DirectoryPath = IO.Path.GetDirectoryName(OutputFullPath)
+        If Not Directory.Exists(DirectoryPath) Then Directory.CreateDirectory(DirectoryPath)
+        Using ZipStream As New FileStream(OutputFullPath, FileMode.Create)
+            Using Archive As New ZipArchive(ZipStream, ZipArchiveMode.Create)
+                For Each FilePath In SourceFiles
+                    If Not File.Exists(FilePath) Then Return
+                    Using SourceStream As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read),
+                          EntryStream As Stream = Archive.CreateEntry(IO.Path.GetFileName(FilePath)).Open()
+                        SourceStream.CopyTo(EntryStream)
+                    End Using
+                Next
+            End Using
+        End Using
     End Sub
 
     ''' <summary>
@@ -3324,9 +3343,11 @@ Retry:
 
     '遥测
     Public Sub Telemetry([Event] As String, ParamArray Datas As String())
+#If Not RELEASE And Not BETA Then
+        Return '开发版不上传遥测
+#End If
         If Not Settings.Get("SystemSystemTelemetry") Then Return '用户关闭了遥测
         If Not ClsBaseUrl.StartsWithF("http") Then Return '开源版没有设置遥测地址
-        If VersionBranchName = "Debug" Then Return '开发版本不上传遥测
         RunInNewThread(
         Sub()
             Try

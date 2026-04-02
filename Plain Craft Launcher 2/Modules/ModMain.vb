@@ -166,7 +166,7 @@ EndHint:
         Public Text As String
         ''' <summary>
         ''' 输入模式：文本框的文本。
-        ''' 选择模式：需要放进去的 List(Of MyListItem)。
+        ''' 选择模式：需要放进去的 IEnumberable(Of IMyRadio)。
         ''' 登录模式：登录步骤 1 中返回的 JSON。
         ''' </summary>
         Public Content As Object
@@ -308,7 +308,7 @@ EndHint:
     ''' <param name="Button1">显示的第一个按钮，默认为 “确定”。</param>
     ''' <param name="Button2">显示的第二个按钮，默认为空。</param>
     ''' <param name="IsWarn">是否为警告弹窗，若为 True，弹窗配色和背景会变为红色。</param>
-    Public Function MyMsgBoxSelect(Selections As List(Of IMyRadio), Optional Title As String = "提示", Optional Button1 As String = "确定", Optional Button2 As String = "", Optional IsWarn As Boolean = False) As Integer?
+    Public Function MyMsgBoxSelect(Selections As IEnumerable(Of IMyRadio), Optional Title As String = "提示", Optional Button1 As String = "确定", Optional Button2 As String = "", Optional IsWarn As Boolean = False) As Integer?
         '将弹窗列入队列
         Dim Converter As New MyMsgBoxConverter With {.Type = MyMsgBoxType.Select, .Button1 = Button1, .Button2 = Button2, .Content = Selections, .IsWarn = IsWarn, .Title = Title}
         WaitingMyMsgBox.Add(Converter)

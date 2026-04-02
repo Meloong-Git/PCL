@@ -161,7 +161,7 @@
     Private VanillaIcon As String
     Private ReadOnly Property VanillaDrop As Integer
         Get
-            Return McVersion.VersionToDrop(VanillaName, True)
+            Return McVersion.VersionToDrop(VanillaName)
         End Get
     End Property
 
@@ -471,7 +471,7 @@
                                 Version("id") = "20w14∞"
                                 Version("type") = "special"
                                 Version.Add("lore", GetMcFoolName(Version("id")))
-                            Case "3d shareware v1.34", "1.rv-pre1", "15w14a", "2.0", "22w13oneblockatatime", "23w13a_or_b", "24w14potato", "25w14craftmine"
+                            Case "3d shareware v1.34", "1.rv-pre1", "15w14a", "2.0", "22w13oneblockatatime", "23w13a_or_b", "24w14potato", "25w14craftmine", "26w14a"
                                 Type = "愚人节版"
                                 Version("type") = "special"
                                 Version.Add("lore", GetMcFoolName(Version("id")))
@@ -915,16 +915,17 @@
         Dim FabricApiName = FabricApi.DisplayName
         Try
             If FabricApiName Is Nothing OrElse VanillaName Is Nothing Then Return False
-            FabricApiName = FabricApiName.Lower : VanillaName = VanillaName.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3").Lower
-            If FabricApiName.StartsWithF("[" & VanillaName & "]") Then Return True
+            FabricApiName = FabricApiName.Lower
+            Dim TargetName = VanillaName.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3").Lower
+            If FabricApiName.StartsWithF("[" & TargetName & "]") Then Return True
             If Not FabricApiName.Contains("/") OrElse Not FabricApiName.Contains("]") Then Return False
             '直接的判断（例如 1.18.1/22w03a）
             For Each Part As String In FabricApiName.BeforeFirst("]").TrimStart("[").Split("/")
-                If Part = VanillaName Then Return True
+                If Part = TargetName Then Return True
             Next
             '将版本名分割语素（例如 1.16.4/5）
             Dim Lefts = RegexSearch(FabricApiName.BeforeFirst("]"), "[a-z/]+|[0-9/]+")
-            Dim Rights = RegexSearch(VanillaName.BeforeFirst("]"), "[a-z/]+|[0-9/]+")
+            Dim Rights = RegexSearch(TargetName.BeforeFirst("]"), "[a-z/]+|[0-9/]+")
             '对每段进行判断
             Dim i As Integer = 0
             While True
