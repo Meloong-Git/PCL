@@ -211,9 +211,10 @@
         '提取所有 Drop 序数
         Dim Drops As New List(Of Integer)
         For Each Version As JObject In Loader.Output.Value("versions")
-            Drops.Add(McVersion.VersionToDrop(Version("id")))
+            Dim Drop As Integer = McVersion.VersionToDrop(Version("id"))
+            If Drop = 209 Then Continue For
+            Drops.Add(Drop)
         Next
-        Drops.Remove(209)
         AllDrops = Drops.Distinct.OrderByDescending(Function(d) d).ToList()
     End Sub
 

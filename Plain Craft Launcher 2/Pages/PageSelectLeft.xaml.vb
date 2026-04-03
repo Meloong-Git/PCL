@@ -286,7 +286,7 @@
                         If File.Exists(Target.Location & "PCL.ini") Then File.Delete(Target.Location & "PCL.ini")
                         If Directory.Exists(Target.Location & "versions\") Then
                             For Each InstanceInfo In New DirectoryInfo(Target.Location & "versions\").EnumerateDirectories
-                                If Directory.Exists(InstanceInfo.FullName & "\PCL\") Then Directory.Delete(InstanceInfo.FullName & "\PCL\", True)
+                                If Directory.Exists(InstanceInfo.FullName & "\PCL\") Then DeleteDirectory(InstanceInfo.FullName & "\PCL\", True)
                             Next
                         End If
                     Case 2

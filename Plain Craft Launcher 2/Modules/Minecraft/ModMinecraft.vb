@@ -170,7 +170,7 @@ Public Module ModMinecraft
 
 #Region "版本处理"
 
-    Public Const McInstanceCacheVersion As Integer = 34
+    Public Const McInstanceCacheVersion As Integer = 35
 
     Private _McInstanceSelected As McInstance
     ''' <summary>
@@ -747,8 +747,11 @@ Recheck:
                     Case Else '根据 API 进行筛选
                         Dim RealJson As String = If(JsonObject, JsonText).ToString
                         '愚人节与快照版本
-                        If If(JsonObject("type"), "").ToString = "fool" OrElse
-                           (ReleaseTime.ToUniversalTime.Month = 4 AndAlso ReleaseTime.ToUniversalTime.Day = 1) OrElse GetMcFoolName(Version.VanillaName) <> "" Then
+                        Dim FixedReleaseTime = ReleaseTime.ToUniversalTime().AddHours(2)
+                        Dim JsonType = If(JsonObject("type"), "").ToString
+                        If JsonType = "fool" OrElse
+                           (FixedReleaseTime.Month = 4 AndAlso FixedReleaseTime.Day = 1 AndAlso JsonType = "snapshot") OrElse
+                           GetMcFoolName(Version.VanillaName) <> "" Then
                             State = McInstanceState.Fool
                         ElseIf IsSnapshot() Then
                             State = McInstanceState.Snapshot
@@ -971,7 +974,7 @@ ExitDataLoad:
         Public VanillaName As String
         ''' <summary>
         ''' 可比较的三段式原版版本号。
-        ''' 对老版本格式，例如 1.20.3，会被转换为 20.0.3。
+        ''' 对老版本格式，例如 1.20.1，会被转换为 20.0.1。
         ''' 若没有版本号，例如旧快照，则为 9999.0.0。
         ''' </summary>
         Public Vanilla As Version
@@ -1058,7 +1061,7 @@ ExitDataLoad:
         ''' </summary>
         Public Forge As String = ""
         ''' <summary>
-        ''' NeoForge 版本名，如 21.0.2-beta、47.1.79。
+        ''' NeoForge 版本名，如 47.1.79、21.0.2-beta、26.1.0.0-alpha.14+snapshot-11。
         ''' </summary>
         Public NeoForge As String = ""
         ''' <summary>

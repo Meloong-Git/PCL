@@ -262,8 +262,7 @@ Retry:
             End If
             '发送请求
             SyncLock RequestClientLock
-                '延迟初始化，以避免在程序启动前加载 CacheCow 导致 DLL 加载失败
-                If RequestClient Is Nothing Then
+                If RequestClient Is Nothing Then '延迟初始化，以避免在程序启动前加载 CacheCow 导致 DLL 加载失败
                     RequestClient = CacheCow.Client.ClientExtensions.CreateClient(New CacheCow.Client.FileCacheStore.FileStore(PathTemp & "Cache/Http/"), New HttpClientHandler With {
                         .AutomaticDecompression = DecompressionMethods.Deflate Or DecompressionMethods.GZip,
                         .UseCookies = False '不设为 False 就不能从 Header 手动传入 Cookies
