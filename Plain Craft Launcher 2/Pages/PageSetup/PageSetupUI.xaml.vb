@@ -65,6 +65,7 @@
             CType(FindName("RadioCustomType" & Settings.Get("UiCustomType")), MyRadioBox).Checked = True
             OnUiCustomTypeChanged(Settings.Get("UiCustomType"))
             TextCustomNet.Text = Settings.Get("UiCustomNet")
+            CheckCustomVersionSpecific.Checked = Settings.Get("UiCustomVersionSpecific")
 
             '功能隐藏
             CheckLauncherEmail.Checked = Settings.Get("UiLauncherEmail")
@@ -109,6 +110,7 @@
             Settings.Reset("UiMusicAuto")
             Settings.Reset("UiCustomType")
             Settings.Reset("UiCustomNet")
+            Settings.Reset("UiCustomVersionSpecific")
             Settings.Reset("UiHiddenPageDownload")
             Settings.Reset("UiHiddenPageLink")
             Settings.Reset("UiHiddenPageSetup")
@@ -139,7 +141,7 @@
     Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderMusicVolume.Change
         If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Value)
     End Sub
-    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckMusicStop.Change, CheckMusicRandom.Change, CheckMusicAuto.Change, CheckLogoLeft.Change, CheckHiddenFunctionHidden.Change, CheckHiddenFunctionSelect.Change, CheckHiddenFunctionModUpdate.Change, CheckHiddenPageDownload.Change, CheckHiddenPageLink.Change, CheckHiddenPageOther.Change, CheckHiddenPageSetup.Change, CheckHiddenSetupLaunch.Change, CheckHiddenSetupSystem.Change, CheckHiddenSetupLink.Change, CheckHiddenSetupUI.Change, CheckHiddenOtherAbout.Change, CheckHiddenOtherFeedback.Change, CheckHiddenOtherVote.Change, CheckHiddenOtherHelp.Change, CheckHiddenOtherTest.Change, CheckMusicStart.Change, CheckLauncherEmail.Change
+    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckMusicStop.Change, CheckMusicRandom.Change, CheckMusicAuto.Change, CheckLogoLeft.Change, CheckHiddenFunctionHidden.Change, CheckHiddenFunctionSelect.Change, CheckHiddenFunctionModUpdate.Change, CheckHiddenPageDownload.Change, CheckHiddenPageLink.Change, CheckHiddenPageOther.Change, CheckHiddenPageSetup.Change, CheckHiddenSetupLaunch.Change, CheckHiddenSetupSystem.Change, CheckHiddenSetupLink.Change, CheckHiddenSetupUI.Change, CheckHiddenOtherAbout.Change, CheckHiddenOtherFeedback.Change, CheckHiddenOtherVote.Change, CheckHiddenOtherHelp.Change, CheckHiddenOtherTest.Change, CheckMusicStart.Change, CheckLauncherEmail.Change, CheckCustomVersionSpecific.Change
         If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Checked)
     End Sub
     Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextLogoText.ValidatedTextChanged, TextCustomNet.ValidatedTextChanged
@@ -396,20 +398,23 @@ Refresh:
             Case 0 '无
                 FrmSetupUI.PanCustomPreset.Visibility = Visibility.Collapsed
                 FrmSetupUI.PanCustomLocal.Visibility = Visibility.Collapsed
+                FrmSetupUI.CheckCustomVersionSpecific.Visibility = Visibility.Collapsed
                 FrmSetupUI.PanCustomNet.Visibility = Visibility.Collapsed
                 FrmSetupUI.HintCustom.Visibility = Visibility.Collapsed
                 FrmSetupUI.HintCustomWarn.Visibility = Visibility.Collapsed
             Case 1 '本地
                 FrmSetupUI.PanCustomPreset.Visibility = Visibility.Collapsed
                 FrmSetupUI.PanCustomLocal.Visibility = Visibility.Visible
+                FrmSetupUI.CheckCustomVersionSpecific.Visibility = Visibility.Visible
                 FrmSetupUI.PanCustomNet.Visibility = Visibility.Collapsed
                 FrmSetupUI.HintCustom.Visibility = Visibility.Visible
                 FrmSetupUI.HintCustomWarn.Visibility = If(Settings.Get("HintCustomWarn"), Visibility.Collapsed, Visibility.Visible)
-                FrmSetupUI.HintCustom.Text = $"从 PCL 文件夹下的 Custom.xaml 读取主页内容。{vbCrLf}你可以手动编辑该文件，向主页添加文本、图片、常用网站、快捷启动等功能。"
+                FrmSetupUI.HintCustom.Text = $"默认从启动器目录下的 PCL\Custom.xaml 读取主页内容。{vbCrLf}启用下方选项后，若当前版本目录存在 PCL\Custom.xaml 则会优先读取该文件。"
                 CustomEventService.SetEventType(FrmSetupUI.HintCustom, CustomEvent.EventType.None)
             Case 2 '联网
                 FrmSetupUI.PanCustomPreset.Visibility = Visibility.Collapsed
                 FrmSetupUI.PanCustomLocal.Visibility = Visibility.Collapsed
+                FrmSetupUI.CheckCustomVersionSpecific.Visibility = Visibility.Collapsed
                 FrmSetupUI.PanCustomNet.Visibility = Visibility.Visible
                 FrmSetupUI.HintCustom.Visibility = Visibility.Visible
                 FrmSetupUI.HintCustomWarn.Visibility = If(Settings.Get("HintCustomWarn"), Visibility.Collapsed, Visibility.Visible)
@@ -419,6 +424,7 @@ Refresh:
             Case 3 '预设
                 FrmSetupUI.PanCustomPreset.Visibility = Visibility.Visible
                 FrmSetupUI.PanCustomLocal.Visibility = Visibility.Collapsed
+                FrmSetupUI.CheckCustomVersionSpecific.Visibility = Visibility.Collapsed
                 FrmSetupUI.PanCustomNet.Visibility = Visibility.Collapsed
                 FrmSetupUI.HintCustom.Visibility = Visibility.Collapsed
                 FrmSetupUI.HintCustomWarn.Visibility = Visibility.Collapsed
