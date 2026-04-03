@@ -55,7 +55,7 @@
                 If Type = "指南" Then
                     MyCard.StackInstall(NewStack, 11, "指南")
                 Else
-                    NewCard.IsSwaped = True
+                    NewCard.IsSwapped = True
                 End If
                 PanList.Children.Add(NewCard)
             Next
@@ -71,7 +71,7 @@
     Public Shared Sub OnItemClick(Entry As HelpEntry)
         Try
             If Entry.IsEvent Then
-                ModEvent.TryStartEvent(Entry.EventType, Entry.EventData)
+                CustomEvent.Raise(Entry.EventType, Entry.EventData)
             Else
                 EnterHelpPage(Entry)
             End If
@@ -144,13 +144,13 @@
                 If Not Entry.ShowInSearch OrElse (Val(VersionBranchCode) <> 50 AndAlso Not Entry.ShowInSnapshot) Then Continue For
                 QueryList.Add(New SearchEntry(Of HelpEntry) With {
                     .Item = Entry,
-                    .SearchSource = New List(Of KeyValuePair(Of String, Double)) From {
-                        New KeyValuePair(Of String, Double)(Entry.Title, 1),
-                        New KeyValuePair(Of String, Double)(Entry.Desc, 0.5),
-                        New KeyValuePair(Of String, Double)(Entry.Search, 1.5)
+                    .SearchSource = New List(Of SearchSource) From {
+                        New SearchSource(Entry.Title, 1),
+                        New SearchSource(Entry.Desc, 0.5),
+                        New SearchSource(Entry.Search, 1.5)
                     }
                 })
-                'New KeyValuePair(Of String, Double)(If(Entry.IsEvent, If(Entry.EventData, ""), Entry.XamlContent), 0.2)
+                'New SearchSource(If(Entry.IsEvent, If(Entry.EventData, ""), Entry.XamlContent), 0.2)
             Next
             '进行搜索，构造列表
             Dim SearchResult = Search(QueryList, SearchBox.Text, MaxBlurCount:=5, MinBlurSimilarity:=0.08)

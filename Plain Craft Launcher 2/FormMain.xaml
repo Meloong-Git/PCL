@@ -95,7 +95,8 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <Canvas x:Name="ImgBack" IsHitTestVisible="False" Grid.Row="1" RenderOptions.BitmapScalingMode="LowQuality" />
+                <Canvas x:Name="ImgBack" IsHitTestVisible="False" Grid.Row="1" RenderOptions.BitmapScalingMode="LowQuality"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
                 <Grid x:Name="PanTitle" Height="48">
                     <Grid.Background>
                         <LinearGradientBrush EndPoint="1,0" StartPoint="0,0">

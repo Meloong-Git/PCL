@@ -8,6 +8,7 @@
         Implements ILoadingTrigger
 
         Public ReadOnly Property IsLoader As Boolean = True Implements ILoadingTrigger.IsLoader
+        Protected Shared LogBlackList As String() = {"EasyTier CLI"}
 
         '基础属性
         ''' <summary>
@@ -87,9 +88,9 @@
             Set(value As LoadState)
                 If _State = value Then Return
                 Dim OldState = _State
-                If value = LoadState.Finished AndAlso Setup.Get("SystemDebugDelay") Then Thread.Sleep(RandomInteger(100, 2000))
+                If value = LoadState.Finished AndAlso Settings.Get("SystemDebugDelay") Then Thread.Sleep(RandomInteger(100, 2000))
                 _State = value
-                Log("[Loader] 加载器 " & Name & " 状态改变：" & GetStringFromEnum(value))
+                If Not LogBlackList.Contains(Name) Then Log($"[Loader] 加载器 {Name} 状态改变：{GetStringFromEnum(value)}")
                 '实现 ILoadingTrigger 接口与 OnStateChanged 回调
                 RunInUi(
                 Sub()
@@ -148,7 +149,7 @@
                     Case LoadState.Waiting
                         Return 0
                     Case LoadState.Loading
-                        Return If(_Progress = -1, 0.02, _Progress)
+                        Return If(_Progress = -1, 0, _Progress)
                     Case Else
                         Return 1
                 End Select
@@ -169,7 +170,8 @@
 
         '状态变化
         Public MustOverride Sub Start(Optional Input As Object = Nothing, Optional IsForceRestart As Boolean = False)
-        Public MustOverride Sub Abort()
+        Public MustOverride Sub Interrupt()
+        Public MustOverride Sub Failed(Ex As Exception)
 
         '等待结束
         Public Const WaitForExitTimeoutMessage As String = "等待加载器执行超时。"
@@ -185,7 +187,7 @@
             Loop
             If State = LoadState.Finished Then
                 Return
-            ElseIf State = LoadState.Aborted Then
+            ElseIf State = LoadState.Interrupted Then
                 Throw New ThreadInterruptedException("加载器执行已中断。")
             ElseIf IsNothing([Error]) Then
                 Throw New Exception("未知错误！")
@@ -208,7 +210,7 @@
             Loop
             If State = LoadState.Finished Then
                 Return
-            ElseIf State = LoadState.Aborted Then
+            ElseIf State = LoadState.Interrupted Then
                 Throw New ThreadInterruptedException("加载器执行已中断。")
             ElseIf IsNothing([Error]) Then
                 Throw New Exception("未知错误！")
@@ -239,16 +241,16 @@
         ''' <summary>
         ''' 当前执行线程是否应当中断。只应用在加载器的工作线程中判断，不可跨线程调用。
         ''' </summary>
-        Public ReadOnly Property IsAborted As Boolean
+        Public ReadOnly Property IsInterrupted As Boolean
             Get
-                Return IsAbortedWithThread(Thread.CurrentThread)
+                Return IsInterruptedWithThread(Thread.CurrentThread)
             End Get
         End Property
         ''' <summary>
         ''' 当前执行线程是否应当中断。需要手动提供加载器线程，用于需要跨线程检查的情况。
         ''' </summary>
-        Public Function IsAbortedWithThread(Thread As Thread) As Boolean
-            Return LastRunningThread Is Nothing OrElse Not ReferenceEquals(Thread, LastRunningThread) OrElse State = LoadState.Aborted
+        Public Function IsInterruptedWithThread(Thread As Thread) As Boolean
+            Return LastRunningThread Is Nothing OrElse Not ReferenceEquals(Thread, LastRunningThread) OrElse State = LoadState.Interrupted
         End Function
         ''' <summary>
         ''' 在输入相同时使用原有结果的超时，单位为毫秒。
@@ -290,18 +292,20 @@
             '检验输入以确定情况
             If IsForceRestart Then Return True '强制要求重启
             If ((Input Is Nothing) <> (Me.Input Is Nothing)) OrElse (Input IsNot Nothing AndAlso Not Input.Equals(Me.Input)) Then Return True '输入不同
-            If (State = LoadState.Loading OrElse State = LoadState.Finished) AndAlso '正在加载或已结束
-               (IgnoreReloadTimeout OrElse ReloadTimeout = -1 OrElse LastFinishedTime = 0 OrElse GetTimeTick() - LastFinishedTime < ReloadTimeout) Then '没有超时
-                Return False '则不重试
+
+            If (State = LoadState.Loading OrElse State = LoadState.Finished) AndAlso '正在加载或已结束…
+               (IgnoreReloadTimeout OrElse ReloadTimeout = -1 OrElse
+               LastFinishedTime = 0 OrElse GetTimeMs() - LastFinishedTime < ReloadTimeout) Then '…且没有超时…
+                Return False '…则不重试
             Else
-                Return True '需要开始
+                Return True '否则需要重启
             End If
         End Function
         Public Overrides Sub Start(Optional Input As Object = Nothing, Optional IsForceRestart As Boolean = False)
             '确认是否开始加载
             If ShouldStart(Input, IsForceRestart) Then
                 '输入不同或失败，开始加载
-                If State = LoadState.Loading Then TriggerThreadAbort()
+                If State = LoadState.Loading Then TriggerThreadInterrupt()
                 Me.Input = Input
                 SyncLock LockState
                     State = LoadState.Loading
@@ -315,44 +319,57 @@
             Sub()
                 Try
                     IsForceRestarting = IsForceRestart
-                    If ModeDebug Then Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已{If(IsForceRestarting, "强制", "")}启动")
+                    If ModeDebug AndAlso Not LogBlackList.Contains(Name) Then Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已{If(IsForceRestarting, "强制", "")}启动")
                     LoadDelegate(Me)
-                    If IsAborted Then
+                    If IsInterrupted Then
                         Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已中断但线程正常运行至结束，输出被弃用（最新线程：{If(LastRunningThread Is Nothing, -1, LastRunningThread.ManagedThreadId)}）", LogLevel.Developer)
                         Return
                     End If
-                    If ModeDebug Then Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已完成")
+                    If ModeDebug AndAlso Not LogBlackList.Contains(Name) Then Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已完成")
                     RaisePreviewFinish()
                     State = LoadState.Finished
-                    LastFinishedTime = GetTimeTick() '未中断，本次输出有效
+                    LastFinishedTime = GetTimeMs() '未中断，本次输出有效
                 Catch ex As CancelledException
                     If ModeDebug Then Log(ex, $"加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已触发取消中断，已完成 {Math.Round(Progress * 100)}%")
-                    If Not IsAborted Then State = LoadState.Aborted
+                    If Not IsInterrupted Then State = LoadState.Interrupted
                 Catch ex As ThreadInterruptedException
                     If ModeDebug Then Log(ex, $"加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已触发线程中断，已完成 {Math.Round(Progress * 100)}%")
-                    '如果线程是因为判断到 IsAborted 而提前中止，则代表已有新线程被重启，此时不应当改为 Aborted
-                    '如果线程是在没有 IsAborted 时手动引发了 ThreadInterruptedException，则代表没有重启线程，这通常代表用户手动取消，应当改为 Aborted
-                    If Not IsAborted Then State = LoadState.Aborted
+                    '如果线程是因为判断到 IsInterrupted 而提前中止，则代表已有新线程被重启，此时不应当改为 Interrupted
+                    '如果线程是在没有 IsInterrupted 时手动引发了 ThreadInterruptedException，则代表没有重启线程，这通常代表用户手动取消，应当改为 Interrupted
+                    If Not IsInterrupted Then State = LoadState.Interrupted
                 Catch ex As Exception
-                    If IsAborted Then Return
-                    Log(ex, $"加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 出错，已完成 {Math.Round(Progress * 100)}%", LogLevel.Developer)
-                    [Error] = ex
-                    State = LoadState.Failed
+                    Failed(ex)
                 End Try
-            End Sub) With {.Name = Name, .Priority = ThreadPriority}
-            LastRunningThread.Start() '不能使用 RunInNewThread，否则在函数返回前线程就会运行完，导致误判 IsAborted
+            End Sub) With {.Name = "L/" & Name, .Priority = ThreadPriority}
+            Try
+                LastRunningThread.Start() '不能使用 RunInNewThread，否则在函数返回前线程就会运行完，导致误判 IsInterrupted
+            Catch ex As ThreadStateException '若遇到偶发的 “线程正在运行或被终止”，则等待后重试
+                Thread.Sleep(500)
+                LastRunningThread.Start()
+            End Try
         End Sub
-        Public Overrides Sub Abort()
-            If State <> LoadState.Loading Then Return
+        Public Overrides Sub Failed(ex As Exception)
+            [Error] = ex
             SyncLock LockState
-                State = LoadState.Aborted
+                If IsInterrupted OrElse State >= LoadState.Finished Then Return
+                State = LoadState.Failed
             End SyncLock
-            TriggerThreadAbort()
+            Log(ex, $"加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 出错，已完成 {Math.Round(Progress * 100)}%", LogLevel.Developer)
+            TriggerThreadInterrupt()
         End Sub
-        Private Sub TriggerThreadAbort()
+        Public Overrides Sub Interrupt()
+            SyncLock LockState
+                If State <> LoadState.Loading Then Return
+                State = LoadState.Interrupted
+            End SyncLock
+            TriggerThreadInterrupt()
+        End Sub
+        Private Sub TriggerThreadInterrupt()
             If LastRunningThread Is Nothing Then Return
-            If ModeDebug Then Log($"[Loader] 加载线程 {Name} ({LastRunningThread.ManagedThreadId}) 已中断")
-            If LastRunningThread.IsAlive Then LastRunningThread.Interrupt()
+            If LastRunningThread.IsAlive Then
+                LastRunningThread.Interrupt()
+                If ModeDebug Then Log($"[Loader] 加载线程 {Name} ({LastRunningThread.ManagedThreadId}) 已中断")
+            End If
             LastRunningThread = Nothing
         End Sub
 
@@ -434,11 +451,11 @@
             End If
             RunInThread(AddressOf Update)
         End Sub
-        Public Overrides Sub Abort()
+        Public Overrides Sub Interrupt()
             '改变状态
             SyncLock LockState
                 If State = LoadState.Loading OrElse State = LoadState.Waiting Then
-                    State = LoadState.Aborted
+                    State = LoadState.Interrupted
                 Else
                     Return
                 End If
@@ -447,9 +464,20 @@
             Sub()
                 '中断加载器
                 For Each Loader In Loaders
-                    Loader.Abort()
+                    Loader.Interrupt()
                 Next
             End Sub)
+        End Sub
+        Public Overrides Sub Failed(Ex As Exception)
+            [Error] = Ex '先设置错误再调整状态，防止父加载器获取不到异常
+            SyncLock LockState
+                If State >= LoadState.Finished Then Return
+                State = LoadState.Failed
+            End SyncLock
+            For Each Loader In Loaders
+                Loader.Interrupt()
+            Next
+            FrmMain.BtnExtraDownload.ShowRefresh()
         End Sub
 
         ''' <summary>
@@ -465,28 +493,19 @@
                 Case LoadState.Finished
                     '正常结束，触发刷新
                     Update()
-                Case LoadState.Aborted
+                Case LoadState.Interrupted
                     '被中断，这个任务也中断
-                    Abort()
-                Case Else
+                    Interrupt()
+                Case LoadState.Failed
                     '完蛋，出错了
-                    SyncLock LockState
-                        If State >= LoadState.Finished Then Return
-                        [Error] = New Exception(Loader.Name & "失败", Loader.Error)
-                        State = Loader.State
-                    End SyncLock
-                    For Each Loader In Loaders
-                        Loader.Abort()
-                    Next
-                    FrmMain.BtnExtraDownload.ShowRefresh()
-                    Return
+                    Failed(New Exception(Loader.Name & "失败", Loader.Error))
             End Select
         End Sub
         ''' <summary>
         ''' 触发一次更新，以启动新加载器或完成。
         ''' </summary>
         Private Sub Update()
-            If State = LoadState.Finished OrElse State = LoadState.Failed OrElse State = LoadState.Aborted Then Return
+            If State = LoadState.Finished OrElse State = LoadState.Failed OrElse State = LoadState.Interrupted Then Return
             Dim IsFinished As Boolean = True
             Dim Blocked As Boolean = False
             Dim Input As Object = Me.Input
@@ -588,7 +607,7 @@ Restart:
             '若单个任务已中止，或全部任务已完成，则刷新并移除
             For Each Task In LoaderTaskbar
                 If LoaderTaskbar.All(Function(l) l.State <> LoadState.Loading) OrElse
-                   (Task.State = LoadState.Waiting OrElse Task.State = LoadState.Aborted) Then
+                   (Task.State = LoadState.Waiting OrElse Task.State = LoadState.Interrupted) Then
                     FrmSpeedLeft?.TaskRefresh(Task)
                     LoaderTaskbar.Remove(Task)
                     Log($"[Taskbar] {Task.Name} 已移出任务列表")

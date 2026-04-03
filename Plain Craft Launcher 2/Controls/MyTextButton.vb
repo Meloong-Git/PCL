@@ -22,15 +22,15 @@
         End Set
     End Property
     Public Shared ReadOnly TextProperty As DependencyProperty =
-        DependencyProperty.Register("Text", GetType(String), GetType(MyTextButton), New PropertyMetadata("", Sub(sender As MyTextButton, e As DependencyPropertyChangedEventArgs)
-                                                                                                                 If Not e.OldValue = e.NewValue Then
-                                                                                                                     AniStart({
-                                                                                                                              AaOpacity(sender, -sender.Opacity, 50),
-                                                                                                                              AaCode(Sub() sender.Content = e.NewValue,, True),
-                                                                                                                              AaOpacity(sender, 1, 170)
-                                                                                                                        }, "MyTextButton Text " & sender.Uuid)
-                                                                                                                 End If
-                                                                                                             End Sub))
+        DependencyProperty.Register("Text", GetType(String), GetType(MyTextButton), New PropertyMetadata("",
+        Sub(sender As MyTextButton, e As DependencyPropertyChangedEventArgs)
+            If e.OldValue = e.NewValue Then Return
+            AniStart({
+                AaOpacity(sender, -sender.Opacity, 50),
+                AaCode(Sub() sender.Content = e.NewValue,, True),
+                AaOpacity(sender, 1, 170)
+            }, "MyTextButton Text " & sender.Uuid)
+        End Sub))
 
     '鼠标事件
 
@@ -43,13 +43,12 @@
         IsMouseDown = False
     End Sub
     Private Sub MyTextButton_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonUp
-        If IsMouseDown Then
-            IsMouseDown = False
-            Log("[Control] 按下文本按钮：" & Text)
-            RaiseEvent Click(Me, Nothing)
-            ModEvent.TryStartEvent(EventType, EventData)
-            e.Handled = True
-        End If
+        If Not IsMouseDown Then Return
+        IsMouseDown = False
+        Log("[Control] 按下文本按钮：" & Text)
+        RaiseEvent Click(Me, Nothing)
+        RaiseCustomEvent()
+        e.Handled = True
     End Sub
 
     '指向动画
@@ -57,7 +56,7 @@
     Private Const AnimationTimeIn As Integer = 100
     Private Const AnimationTimeOut As Integer = 200
     Private ColorName As String
-    Private Sub RefreshColor() Handles Me.MouseEnter, Me.MouseLeave, Me.IsEnabledChanged, Me.MouseLeftButtonDown， Me.MouseLeftButtonUp
+    Private Sub RefreshColor() Handles Me.MouseEnter, Me.MouseLeave, Me.IsEnabledChanged, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp
         '判断当前颜色
         Dim ForeName As String
         Dim Time As Integer
@@ -84,27 +83,5 @@
             SetResourceReference(ForegroundProperty, ForeName)
         End If
     End Sub
-
-    '实现自定义事件
-    Public Property EventType As String
-        Get
-            Return GetValue(EventTypeProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventTypeProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventTypeProperty As DependencyProperty = DependencyProperty.Register(
-        "EventType", GetType(String), GetType(MyTextButton), New PropertyMetadata(Nothing))
-    Public Property EventData As String
-        Get
-            Return GetValue(EventDataProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventDataProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventDataProperty As DependencyProperty = DependencyProperty.Register(
-        "EventData", GetType(String), GetType(MyTextButton), New PropertyMetadata(Nothing))
 
 End Class

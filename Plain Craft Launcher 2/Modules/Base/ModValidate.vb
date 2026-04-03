@@ -114,10 +114,10 @@ Public Class ValidateInteger
     End Sub
     Public Overrides Function Validate(Str As String) As String
         If Str.Length > 9 Then Return "请输入一个大小合理的数字！"
-        Dim Valed As Integer = Val(Str)
-        If Valed.ToString <> Str Then Return "请输入一个整数！"
-        If Val(Str) > Max Then Return "不可超过 " & Max & "！"
-        If Val(Str) < Min Then Return "不可低于 " & Min & "！"
+        Dim Valed As Integer
+        If Not Integer.TryParse(Str, Valed) Then Return "请输入一个整数！"
+        If Valed > Max Then Return "不可超过 " & Max & "！"
+        If Valed < Min Then Return "不可低于 " & Min & "！"
         Return ""
     End Function
 End Class
@@ -148,7 +148,7 @@ End Class
 ''' </summary>
 Public Class ValidateExcept
     Inherits Validate
-    Public Property Excepts As ObjectModel.Collection(Of String) = New ObjectModel.Collection(Of String)
+    Public Property Excepts As New ObjectModel.Collection(Of String)
     Public Property ErrorMessage As String
     Public Sub New()
         ErrorMessage = "输入内容不能包含 %"
@@ -157,12 +157,15 @@ Public Class ValidateExcept
         Me.Excepts = Excepts
         Me.ErrorMessage = ErrorMessage
     End Sub
-    Public Sub New(Excepts As IEnumerable, Optional ErrorMessage As String = "输入内容不能包含 %")
-        Me.Excepts = New ObjectModel.Collection(Of String)
-        Me.ErrorMessage = ErrorMessage
-        For Each Data As String In Excepts
-            Me.Excepts.Add(Data)
-        Next
+    Public Sub New(Excepts As IEnumerable(Of String), Optional ErrorMessage As String = "输入内容不能包含 %")
+        Me.New(
+            New ObjectModel.Collection(Of String)(New List(Of String)(Excepts)),
+            ErrorMessage)
+    End Sub
+    Public Sub New(Excepts As IEnumerable(Of Char), Optional ErrorMessage As String = "输入内容不能包含 %")
+        Me.New(
+            New ObjectModel.Collection(Of String)(Excepts.Select(Function(c) c.ToString).ToList),
+            ErrorMessage)
     End Sub
     Public Overrides Function Validate(Str As String) As String
         For Each Ch As String In Excepts
@@ -181,7 +184,7 @@ End Class
 ''' </summary>
 Public Class ValidateExceptSame
     Inherits Validate
-    Public Property Excepts As ObjectModel.Collection(Of String) = New ObjectModel.Collection(Of String)
+    Public Property Excepts As New ObjectModel.Collection(Of String)
     Public Property ErrorMessage As String
     Public Property IgnoreCase As Boolean = False
     Public Sub New()
@@ -191,24 +194,47 @@ Public Class ValidateExceptSame
         Me.ErrorMessage = ErrorMessage
         Me.IgnoreCase = IgnoreCase
     End Sub
-    Public Sub New(Excepts As IEnumerable, Optional ErrorMessage As String = "输入内容不能为 %", Optional IgnoreCase As Boolean = False)
-        Me.Excepts = New ObjectModel.Collection(Of String)
-        For Each Data As String In Excepts
-            Me.Excepts.Add(Data)
-        Next
-        Me.ErrorMessage = ErrorMessage
-        Me.IgnoreCase = IgnoreCase
+    Public Sub New(Excepts As IEnumerable(Of String), Optional ErrorMessage As String = "输入内容不能为 %", Optional IgnoreCase As Boolean = False)
+        Me.New(
+            New ObjectModel.Collection(Of String)(New List(Of String)(Excepts)),
+            ErrorMessage, IgnoreCase)
+    End Sub
+    Public Sub New(Except As String, Optional ErrorMessage As String = "输入内容不能为 %", Optional IgnoreCase As Boolean = False)
+        Me.New(
+            New ObjectModel.Collection(Of String) From {Except},
+            ErrorMessage, IgnoreCase)
     End Sub
     Public Overrides Function Validate(Str As String) As String
         If Str Is Nothing Then Return ErrorMessage.Replace("%", "null")
         For Each Ch As String In Excepts
             If IgnoreCase Then
-                If Str.ToLower = Ch.ToLower Then Return ErrorMessage.Replace("%", Ch)
+                If Str.Lower = Ch.Lower Then Return ErrorMessage.Replace("%", Ch)
             Else
                 If Str.Equals(Ch) Then Return ErrorMessage.Replace("%", Ch) '使用 = 不确定是否会忽略大小写
             End If
         Next
         Return ""
+    End Function
+
+End Class
+
+''' <summary>
+''' 必须为特定字符串。
+''' </summary>
+Public Class ValidateSame
+    Inherits Validate
+    Public Property Required As String
+    Public Property ErrorMessage As String
+    Public Property IgnoreCase As Boolean = False
+    Public Sub New()
+    End Sub
+    Public Sub New(Required As String, Optional ErrorMessage As String = "输入内容有误", Optional IgnoreCase As Boolean = False)
+        Me.Required = Required
+        Me.ErrorMessage = ErrorMessage
+        Me.IgnoreCase = IgnoreCase
+    End Sub
+    Public Overrides Function Validate(Str As String) As String
+        Return If(String.Compare(Str, Required, IgnoreCase) = 0, "", ErrorMessage)
     End Function
 
 End Class
@@ -350,7 +376,7 @@ Public Class ValidateFolderPath
         '检查开头
         If Str.StartsWithF("\\Mac\") Then GoTo Fin
         For Each Drive As DriveInfo In My.Computer.FileSystem.Drives
-            If Str.ToUpper = Drive.Name Then Return ""
+            If Str.Upper = Drive.Name Then Return ""
             If Str.StartsWithF(Drive.Name, True) Then GoTo Fin
         Next
         Return "文件夹路径头存在错误！"

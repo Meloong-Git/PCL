@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageDownloadCompDetail"
-    PanScroll="{Binding ElementName=PanBack}">
+    PanScroll="PanBack">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <Grid Margin="25,25,25,10">
             <Grid.RowDefinitions>
@@ -20,6 +20,7 @@
                 </StackPanel>
             </local:MyCard>
             <StackPanel Grid.Row="1" Grid.RowSpan="2" Name="PanMain" Grid.IsSharedSizeScope="True">
+                <local:MyHint x:Name="HintAlternative" Theme="Blue" Margin="0,0,0,15" />
                 <local:MyCard Margin="0,0,0,15" x:Name="CardFilter">
                     <StackPanel x:Name="PanFilter" Margin="10,10,0,10" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Left" />
                 </local:MyCard>

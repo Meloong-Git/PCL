@@ -33,13 +33,13 @@
         HasRunningMinecraft = False
         FrmMain.BtnExtraShutdown.ShowRefresh()
         '音乐播放
-        If Setup.Get("UiMusicStop") Then
+        If Settings.Get("UiMusicStop") Then
             RunInUi(Sub() If MusicResume() Then Log("[Music] 已根据设置，在结束后开始音乐播放"))
-        ElseIf Setup.Get("UiMusicStart") Then
+        ElseIf Settings.Get("UiMusicStart") Then
             RunInUi(Sub() If MusicPause() Then Log("[Music] 已根据设置，在结束后暂停音乐播放"))
         End If
         '启动器可见性
-        Select Case Setup.Get("LaunchArgumentVisible")
+        Select Case Settings.Get("LaunchArgumentVisible")
             Case 2
                 '直接关闭
                 If TriggerLauncherShutdown Then
@@ -58,13 +58,13 @@
 
         '初始化
         Public GameProcess As Process
-        Public Version As McVersion
+        Public Instance As McInstance
         Private WindowTitle As String = ""
         Private PID As Integer
         Public Loader As LoaderTask(Of Process, Integer)
-        Public Sub New(Loader As LoaderTask(Of Process, Integer), Version As McVersion, WindowTitle As String)
+        Public Sub New(Loader As LoaderTask(Of Process, Integer), Instance As McInstance, WindowTitle As String)
             Me.Loader = Loader
-            Me.Version = Version
+            Me.Instance = Instance
             Me.WindowTitle = WindowTitle
             Me.PID = Loader.Input.Id
             WatcherLog("开始 Minecraft 日志监控")
@@ -91,13 +91,13 @@
             RunInNewThread(
             Sub()
                 Try
-                    Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Crashed OrElse State = MinecraftState.Canceled OrElse Loader.State = LoadState.Aborted
+                    Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Crashed OrElse State = MinecraftState.Canceled OrElse Loader.State = LoadState.Interrupted
                         TimerWindow()
                         TimerLog()
                         '设置窗口标题
                         For i = 1 To 3
                             If IsWindowFinished AndAlso IsWindowAppeared AndAlso WindowTitle <> "" AndAlso State = MinecraftState.Running AndAlso Not GameProcess.HasExited Then
-                                Dim RealTitle As String = WindowTitle.Replace("{date}", Date.Now.ToString("yyyy/M/d")).Replace("{time}", Date.Now.ToString("HH:mm:ss"))
+                                Dim RealTitle As String = WindowTitle.Replace("{date}", Date.Now.ToString("yyyy'/'M'/'d")).Replace("{time}", Date.Now.ToString("HH':'mm':'ss"))
                                 SetWindowText(WindowHandle, RealTitle.ToCharArray)
                             End If
                             Thread.Sleep(64)
@@ -164,7 +164,7 @@
                         '窗口未出现
                         WatcherLog("Minecraft 尚未加载完成，可能已崩溃")
                         Crashed()
-                    ElseIf GameProcess.ExitCode <> 0 AndAlso State = MinecraftState.Running AndAlso Version.ReleaseTime.Year >= 2012 Then
+                    ElseIf GameProcess.ExitCode <> 0 AndAlso State = MinecraftState.Running AndAlso Instance.ReleaseTime.Year >= 2012 Then
                         '返回值不为 0 且未结束
                         WatcherLog("Minecraft 返回值异常，可能已崩溃")
                         Crashed()
@@ -277,7 +277,7 @@
                     WatcherLog($"Minecraft 窗口已加载：{MinecraftWindowName}（{MinecraftWindowHandle.ToInt64}）")
                     IsWindowFinished = True
                     '最大化
-                    If Setup.Get("LaunchArgumentWindowType") = 4 Then
+                    If Settings.Get("LaunchArgumentWindowType") = 4 Then
                         RunInNewThread(
                         Sub()
                             Try
@@ -349,19 +349,19 @@
             State = MinecraftState.Crashed
             '崩溃分析
             WatcherLog("Minecraft 已崩溃，将在 2 秒后开始崩溃分析")
-            Hint("检测到 Minecraft 出现错误，错误分析已开始……")
+            Hint("检测到 Minecraft 出现错误，错误分析已开始……", HintType.Red)
             FeedbackInfo()
             RunInNewThread(
             Sub()
                 Try
                     Thread.Sleep(2000)
                     WatcherLog("崩溃分析开始")
-                    Dim Analyzer As New CrashAnalyzer(PID)
-                    Analyzer.Collect(Version.PathIndie, LatestLog.ToList)
+                    Dim Analyzer As New CrashAnalyzer(Instance)
+                    Analyzer.Collect(Instance.PathIndie, LatestLog.ToList)
                     Analyzer.Prepare()
-                    Analyzer.Analyze(Version)
+                    Analyzer.Analyze()
                     Analyzer.Output(False, New List(Of String) From
-                        {Version.Path & Version.Name & ".json", Path & "PCL\Log1.txt", Path & "PCL\LatestLaunch.bat"})
+                        {Instance.PathVersion & Instance.Name & ".json", Path & "PCL\Log1.txt", Path & "PCL\LatestLaunch.bat"})
                 Catch ex As Exception
                     Log(ex, "崩溃分析失败", LogLevel.Feedback)
                 End Try

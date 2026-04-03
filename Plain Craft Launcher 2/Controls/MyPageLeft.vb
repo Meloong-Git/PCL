@@ -3,15 +3,15 @@
     Private Uuid As Integer = GetUuid()
 
     '执行逐个进入动画的控件
-    Public Property AnimatedControl As FrameworkElement
+    Public Property AnimatedControl As String '需要在 Loaded 之后才能获取到控件，所以不能用 Binding 直接绑定（#6664）
         Get
             Return GetValue(AnimatedControlProperty)
         End Get
-        Set(value As FrameworkElement)
+        Set(value As String)
             SetValue(AnimatedControlProperty, value)
         End Set
     End Property
-    Public Shared ReadOnly AnimatedControlProperty As DependencyProperty = DependencyProperty.Register("AnimatedControl", GetType(FrameworkElement), GetType(MyPageLeft), New PropertyMetadata(Nothing))
+    Public Shared ReadOnly AnimatedControlProperty As DependencyProperty = DependencyProperty.Register("AnimatedControl", GetType(String), GetType(MyPageLeft), New PropertyMetadata(Nothing))
 
     Public Sub TriggerShowAnimation()
         If AnimatedControl Is Nothing Then
@@ -30,6 +30,7 @@
             Dim AniList As New List(Of AniData)
             Dim Id As Integer = 0, Delay As Integer = 0
             For Each Element As FrameworkElement In GetAllAnimControls(True)
+                Element = MyVirtualizingElement.TryInit(Element)
                 If Element.Visibility = Visibility.Collapsed Then
                     '还原之前的隐藏动画可能导致的改变（#2436）
                     Element.Opacity = 1
@@ -84,7 +85,7 @@
     '遍历获取所有需要生成动画的控件
     Private Function GetAllAnimControls(Optional IgnoreInvisibility As Boolean = False) As List(Of FrameworkElement)
         Dim AllControls As New List(Of FrameworkElement)
-        GetAllAnimControls(AnimatedControl, AllControls, IgnoreInvisibility)
+        GetAllAnimControls(FindName(AnimatedControl), AllControls, IgnoreInvisibility)
         Return AllControls
     End Function
     Private Sub GetAllAnimControls(Element As FrameworkElement, ByRef AllControls As List(Of FrameworkElement), IgnoreInvisibility As Boolean)
@@ -105,7 +106,3 @@
     End Sub
 
 End Class
-
-Public Interface IRefreshable
-    Sub Refresh()
-End Interface

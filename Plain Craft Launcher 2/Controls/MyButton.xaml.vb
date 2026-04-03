@@ -140,39 +140,14 @@ Public Class MyButton
         End Try
     End Sub
 
-    '实现自定义事件
+    '鼠标点击判定（务必放在点击事件之后，以使得 Button_MouseUp 先于 Button_MouseLeave 执行）
+    Private IsMouseDown As Boolean = False
     Private Sub Button_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonUp
         If Not IsMouseDown Then Return
         Log("[Control] 按下按钮：" & Text)
         RaiseEvent Click(sender, e)
-        If Not String.IsNullOrEmpty(Tag) Then
-            If Tag.ToString.StartsWithF("链接-") OrElse Tag.ToString.StartsWithF("启动-") Then
-                Hint("主页自定义按钮语法已更新，且不再兼容老版本语法，请查看新的自定义示例！")
-            End If
-        End If
-        ModEvent.TryStartEvent(EventType, EventData)
+        RaiseCustomEvent() '自定义事件
     End Sub
-    Public Property EventType As String
-        Get
-            Return GetValue(EventTypeProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventTypeProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventTypeProperty As DependencyProperty = DependencyProperty.Register("EventType", GetType(String), GetType(MyButton), New PropertyMetadata(Nothing))
-    Public Property EventData As String
-        Get
-            Return GetValue(EventDataProperty)
-        End Get
-        Set(value As String)
-            SetValue(EventDataProperty, value)
-        End Set
-    End Property
-    Public Shared ReadOnly EventDataProperty As DependencyProperty = DependencyProperty.Register("EventData", GetType(String), GetType(MyButton), New PropertyMetadata(Nothing))
-
-    '鼠标点击判定（务必放在点击事件之后，以使得 Button_MouseUp 先于 Button_MouseLeave 执行）
-    Private IsMouseDown As Boolean = False
     Private Sub Button_MouseDown(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonDown
         IsMouseDown = True
         Focus()

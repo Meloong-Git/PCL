@@ -39,4 +39,7 @@
         TextBox.Focus()
     End Sub
 
+    Private Sub MySearchBox_KeyUp(sender As Object, e As KeyEventArgs) Handles Me.KeyUp
+        If e.Key = Key.Enter Then RaiseCustomEvent()
+    End Sub
 End Class

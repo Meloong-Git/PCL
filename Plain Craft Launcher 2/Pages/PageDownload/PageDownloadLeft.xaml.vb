@@ -11,7 +11,7 @@
     ''' <summary>
     ''' 勾选事件改变页面。
     ''' </summary>
-    Private Sub PageCheck(sender As MyListItem, e As RouteEventArgs) Handles ItemInstall.Check, ItemClient.Check, ItemOptiFine.Check, ItemForge.Check, ItemNeoForge.Check, ItemLiteLoader.Check, ItemMod.Check, ItemFabric.Check, ItemPack.Check, ItemResourcePack.Check, ItemShader.Check, ItemDataPack.Check
+    Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemInstall.Check, ItemMod.Check, ItemPack.Check, ItemResourcePack.Check, ItemShader.Check, ItemDataPack.Check
         '尚未初始化控件属性时，sender.Tag 为 Nothing，会导致切换到页面 0
         '若使用 IsLoaded，则会导致模拟点击不被执行（模拟点击切换页面时，控件的 IsLoaded 为 False）
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
@@ -23,24 +23,6 @@
             Case FormMain.PageSubType.DownloadInstall
                 If FrmDownloadInstall Is Nothing Then FrmDownloadInstall = New PageDownloadInstall
                 Return FrmDownloadInstall
-            Case FormMain.PageSubType.DownloadClient
-                If FrmDownloadClient Is Nothing Then FrmDownloadClient = New PageDownloadClient
-                Return FrmDownloadClient
-            Case FormMain.PageSubType.DownloadOptiFine
-                If FrmDownloadOptiFine Is Nothing Then FrmDownloadOptiFine = New PageDownloadOptiFine
-                Return FrmDownloadOptiFine
-            Case FormMain.PageSubType.DownloadForge
-                If FrmDownloadForge Is Nothing Then FrmDownloadForge = New PageDownloadForge
-                Return FrmDownloadForge
-            Case FormMain.PageSubType.DownloadNeoForge
-                If FrmDownloadNeoForge Is Nothing Then FrmDownloadNeoForge = New PageDownloadNeoForge
-                Return FrmDownloadNeoForge
-            Case FormMain.PageSubType.DownloadLiteLoader
-                If FrmDownloadLiteLoader Is Nothing Then FrmDownloadLiteLoader = New PageDownloadLiteLoader
-                Return FrmDownloadLiteLoader
-            Case FormMain.PageSubType.DownloadFabric
-                If FrmDownloadFabric Is Nothing Then FrmDownloadFabric = New PageDownloadFabric
-                Return FrmDownloadFabric
             Case FormMain.PageSubType.DownloadMod
                 If FrmDownloadMod Is Nothing Then FrmDownloadMod = New PageDownloadMod
                 Return FrmDownloadMod
@@ -163,24 +145,6 @@
                     FrmDownloadDataPack.PageLoaderRestart()
                 End If
                 ItemDataPack.Checked = True
-            Case FormMain.PageSubType.DownloadClient
-                DlClientListLoader.Start(IsForceRestart:=True)
-                ItemClient.Checked = True
-            Case FormMain.PageSubType.DownloadOptiFine
-                DlOptiFineListLoader.Start(IsForceRestart:=True)
-                ItemOptiFine.Checked = True
-            Case FormMain.PageSubType.DownloadForge
-                DlForgeListLoader.Start(IsForceRestart:=True)
-                ItemForge.Checked = True
-            Case FormMain.PageSubType.DownloadNeoForge
-                DlNeoForgeListLoader.Start(IsForceRestart:=True)
-                ItemNeoForge.Checked = True
-            Case FormMain.PageSubType.DownloadLiteLoader
-                DlLiteLoaderListLoader.Start(IsForceRestart:=True)
-                ItemLiteLoader.Checked = True
-            Case FormMain.PageSubType.DownloadFabric
-                DlFabricListLoader.Start(IsForceRestart:=True)
-                ItemFabric.Checked = True
         End Select
         Hint("正在刷新……", Log:=False)
     End Sub
@@ -189,57 +153,6 @@
     Private Sub ItemInstall_Click(sender As Object, e As MouseButtonEventArgs) Handles ItemInstall.Click
         If Not ItemInstall.Checked Then Return
         FrmDownloadInstall.ExitSelectPage()
-    End Sub
-
-    '展开手动安装
-    Private Sub ItemHand_Click(sender As Object, e As RouteEventArgs) Handles ItemHand.Changed
-        If ItemHand.Checked = False Then Return
-        e.Handled = True
-        AniControlEnabled += 1
-        If Not Setup.Get("HintHandInstall") Then
-            Setup.Set("HintHandInstall", True)
-            If MyMsgBox("手动安装包功能提供了 OptiFine、Forge 等组件的 .jar 安装文件下载，但无法自动安装。" & vbCrLf &
-                        "在自动安装页面先选择 MC 版本，然后就可以选择 OptiFine、Forge 等组件，让 PCL 自动进行安装了。", "自动安装提示", "返回自动安装", "继续下载手动安装包") = 1 Then
-                FrmMain.PageChange(New FormMain.PageStackData With {.Page = FormMain.PageType.Download}, FormMain.PageSubType.DownloadInstall)
-                AniControlEnabled -= 1
-                Return
-            End If
-        End If
-        ItemHand.Visibility = Visibility.Collapsed
-        LabGame.Visibility = Visibility.Collapsed
-        LabHand.Visibility = Visibility.Visible
-        ItemClient.Visibility = Visibility.Visible
-        ItemOptiFine.Visibility = Visibility.Visible
-        ItemFabric.Visibility = Visibility.Visible
-        ItemForge.Visibility = Visibility.Visible
-        ItemNeoForge.Visibility = Visibility.Visible
-        ItemLiteLoader.Visibility = Visibility.Visible
-        RunInThread(
-        Sub()
-            Thread.Sleep(20)
-            RunInUiWait(Sub() ItemClient.SetChecked(True, True, True))
-            AniControlEnabled -= 1
-        End Sub)
-    End Sub
-    '折叠手动安装
-    Private Sub LabHand_Click(sender As Object, e As MouseButtonEventArgs) Handles LabHand.MouseLeftButtonUp
-        e.Handled = True
-        AniControlEnabled += 1
-        ItemHand.Visibility = Visibility.Visible
-        LabGame.Visibility = Visibility.Visible
-        LabHand.Visibility = Visibility.Collapsed
-        ItemClient.Visibility = Visibility.Collapsed
-        ItemOptiFine.Visibility = Visibility.Collapsed
-        ItemNeoForge.Visibility = Visibility.Collapsed
-        ItemFabric.Visibility = Visibility.Collapsed
-        ItemForge.Visibility = Visibility.Collapsed
-        ItemLiteLoader.Visibility = Visibility.Collapsed
-        RunInThread(
-        Sub()
-            Thread.Sleep(20)
-            RunInUiWait(Sub() ItemInstall.SetChecked(True, True, True))
-            AniControlEnabled -= 1
-        End Sub)
     End Sub
 
 End Class

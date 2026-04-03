@@ -3,7 +3,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageSetupUI"
-    PanScroll="{Binding ElementName=PanBack}">
+    PanScroll="PanBack">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel x:Name="PanMain" Margin="25,10">
             <local:MyCard Margin="0,15" Title="基础" x:Name="CardLauncher">
@@ -23,15 +23,20 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="不透明度" Margin="0,0,20,0" />
-                            <local:MySlider Grid.ColumnSpan="5" x:Name="SliderLauncherOpacity" Tag="UiLauncherTransparent" MaxValue="600" ValueByKey="10" Grid.Column="1" />
+                            <local:MySlider local:SettingService.Key="UiLauncherTransparent" 
+                                            MaxValue="600" ValueByKey="10" Grid.ColumnSpan="5" x:Name="SliderLauncherTransparent" Grid.Column="1" />
                             <TextBlock Grid.Row="1" VerticalAlignment="Center" Name="LabLauncherHue" Visibility="Collapsed" HorizontalAlignment="Left" Text="色调" Margin="0,10,20,0" />
-                            <local:MySlider Grid.Row="1" Grid.Column="1" x:Name="SliderLauncherHue" Tag="UiLauncherHue" Visibility="Collapsed" MaxValue="360" ValueByKey="10" Margin="0,10,0,0" />
+                            <local:MySlider local:SettingService.Key="UiLauncherHue" 
+                                            Grid.Row="1" Grid.Column="1" x:Name="SliderLauncherHue" Visibility="Collapsed" MaxValue="360" ValueByKey="10" Margin="0,10,0,0" />
                             <TextBlock Grid.Row="2" VerticalAlignment="Center" Name="LabLauncherDelta" Visibility="Collapsed" HorizontalAlignment="Left" Text="色调渐变" Margin="0,10,20,0" />
-                            <local:MySlider Grid.Row="2" Grid.Column="1" x:Name="SliderLauncherDelta" Tag="UiLauncherDelta" Visibility="Collapsed" MaxValue="180" ValueByKey="5" Margin="0,10,0,0" />
+                            <local:MySlider local:SettingService.Key="UiLauncherDelta" 
+                                            Grid.Row="2" Grid.Column="1" x:Name="SliderLauncherDelta" Visibility="Collapsed" MaxValue="180" ValueByKey="5" Margin="0,10,0,0" />
                             <TextBlock Grid.Row="1" Grid.Column="3" VerticalAlignment="Center" Name="LabLauncherSat" Visibility="Collapsed" HorizontalAlignment="Left" Text="饱和度" Margin="0,10,20,0" />
-                            <local:MySlider Grid.Row="1" Grid.Column="4" x:Name="SliderLauncherSat" Tag="UiLauncherSat" Visibility="Collapsed" MaxValue="100" ValueByKey="5" Margin="0,10,0,0" />
+                            <local:MySlider local:SettingService.Key="UiLauncherSat" 
+                                            Grid.Row="1" Grid.Column="4" x:Name="SliderLauncherSat" Visibility="Collapsed" MaxValue="100" ValueByKey="5" Margin="0,10,0,0" />
                             <TextBlock Grid.Row="2" Grid.Column="3" VerticalAlignment="Center" Name="LabLauncherLight" Visibility="Collapsed" HorizontalAlignment="Left" Text="亮度" Margin="0,10,20,0" />
-                            <local:MySlider Grid.Row="2" Grid.Column="4" x:Name="SliderLauncherLight" Tag="UiLauncherLight" Visibility="Collapsed" MaxValue="40" ValueByKey="5" Margin="0,10,0,0" />
+                            <local:MySlider local:SettingService.Key="UiLauncherLight" 
+                                            Grid.Row="2" Grid.Column="4" x:Name="SliderLauncherLight" Visibility="Collapsed" MaxValue="40" ValueByKey="5" Margin="0,10,0,0" />
                         </Grid>
                         <Grid x:Name="PanLauncherTheme" Height="90" Margin="0,0,0,7">
                             <Grid.ColumnDefinitions>
@@ -49,33 +54,49 @@
                             </Grid.RowDefinitions>
                             <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="主题" Margin="0,0,20,0" />
                             <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="隐藏主题" Margin="0,0,20,0" Grid.Row="1" />
-                            <local:MyRadioBox Grid.Column="1" Grid.Row="0" Text="龙猫蓝" x:Name="RadioLauncherTheme0" Tag="UiLauncherTheme/0" />
-                            <local:MyRadioBox Grid.Column="2" Grid.Row="0" Text="甜柠青" x:Name="RadioLauncherTheme1" Tag="UiLauncherTheme/1" />
-                            <local:MyRadioBox Grid.Column="3" Grid.Row="0" Text="小草绿" x:Name="RadioLauncherTheme2" Tag="UiLauncherTheme/2" />
-                            <local:MyRadioBox Grid.Column="4" Grid.Row="0" Text="菠萝黄" x:Name="RadioLauncherTheme3" Tag="UiLauncherTheme/3" />
-                            <local:MyRadioBox Grid.Column="5" Grid.Row="0" Text="橡木棕" x:Name="RadioLauncherTheme4" Tag="UiLauncherTheme/4" />
-                            <local:MyRadioBox Grid.Column="1" Grid.Row="1" Text="玄素黑" x:Name="RadioLauncherTheme5" Tag="UiLauncherTheme/5" Opacity="0" ToolTip="灰色是个谎言" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="1" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme5Gray" IsEnabled="False" Opacity="1" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="0" 
+                                              Grid.Column="1" Grid.Row="0" Text="龙猫蓝" x:Name="RadioLauncherTheme0" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="1" 
+                                              Grid.Column="2" Grid.Row="0" Text="甜柠青" x:Name="RadioLauncherTheme1" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="2" 
+                                              Grid.Column="3" Grid.Row="0" Text="小草绿" x:Name="RadioLauncherTheme2" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="3" 
+                                              Grid.Column="4" Grid.Row="0" Text="菠萝黄" x:Name="RadioLauncherTheme3" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="4" 
+                                              Grid.Column="5" Grid.Row="0" Text="橡木棕" x:Name="RadioLauncherTheme4" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="5" 
+                                              Grid.Column="1" Grid.Row="1" Text="玄素黑" x:Name="RadioLauncherTheme5" Opacity="0" ToolTip="灰色是个谎言" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox Grid.Column="1" Grid.Row="1" Text="玄素黑" x:Name="RadioLauncherTheme5Gray" IsEnabled="False" Opacity="1" />
                             <TextBlock Grid.Column="1" Grid.Row="1" x:Name="LabLauncherTheme5Unlock" Background="{StaticResource ColorBrushSemiTransparent}" ToolTip="灰色是个谎言" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="2" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme12" Tag="UiLauncherTheme/12" IsEnabled="False" ToolTip="滑稽树上滑稽果，滑稽树下你和我，滑稽之日搞事情，欢乐多又多" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="3" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme6" Tag="UiLauncherTheme/6" IsEnabled="False" ToolTip="99 次重逢的喜悦" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="4" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme7" Tag="UiLauncherTheme/7" IsEnabled="False" ToolTip="072 101 108 112 032 068 101 118 032 048 046 052 046 052" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="5" Grid.Row="1" Text="？？？" x:Name="RadioLauncherTheme13" Tag="UiLauncherTheme/13" IsEnabled="False" ToolTip="这就是传说中的欧皇了吧" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="1" Grid.Row="2" Text="？？？" x:Name="RadioLauncherTheme8" Tag="UiLauncherTheme/8" IsEnabled="False" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="12" 
+                                              Grid.Column="2" Grid.Row="1" Text="滑稽彩" x:Name="RadioLauncherTheme12" IsEnabled="False" ToolTip="滑稽树上滑稽果，滑稽树下你和我，滑稽之日搞事情，欢乐多又多" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="6" 
+                                              Grid.Column="3" Grid.Row="1" Text="铁杆粉" x:Name="RadioLauncherTheme6" IsEnabled="False" ToolTip="99 次重逢的喜悦" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="7" 
+                                              Grid.Column="4" Grid.Row="1" Text="神秘紫" x:Name="RadioLauncherTheme7" IsEnabled="False" ToolTip="072 101 108 112 032 068 101 118 032 048 046 052 046 052" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="13" 
+                                              Grid.Column="5" Grid.Row="1" Text="欧皇彩" x:Name="RadioLauncherTheme13" IsEnabled="False" ToolTip="这就是传说中的欧皇了吧" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="8" 
+                                              Grid.Column="1" Grid.Row="2" Text="秋仪金" x:Name="RadioLauncherTheme8" IsEnabled="False" ToolTipService.Placement="Bottom" />
                             <TextBlock Grid.Column="1" Grid.Row="2" x:Name="LabLauncherTheme8Copy" Background="{StaticResource ColorBrushSemiTransparent}" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="2" Grid.Row="2" Text="？？？" x:Name="RadioLauncherTheme9" Tag="UiLauncherTheme/9" IsEnabled="False" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="9" 
+                                              Grid.Column="2" Grid.Row="2" Text="活跃橙" x:Name="RadioLauncherTheme9" IsEnabled="False" ToolTipService.Placement="Bottom" />
                             <TextBlock Grid.Column="2" Grid.Row="2" x:Name="LabLauncherTheme9Copy" Background="{StaticResource ColorBrushSemiTransparent}" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="3" Grid.Row="2" Text="？？？" x:Name="RadioLauncherTheme10" Tag="UiLauncherTheme/10" IsEnabled="False" ToolTip="进行一次正版登录，支持正版游戏！" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="4" Grid.Row="2" Text="？？？" x:Name="RadioLauncherTheme11" Tag="UiLauncherTheme/11" IsEnabled="False" ToolTipService.Placement="Bottom" ToolTip="右键打开解密游戏入口" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="10" 
+                                              Grid.Column="3" Grid.Row="2" Text="跳票红" x:Name="RadioLauncherTheme10" IsEnabled="False" ToolTip="进行一次正版登录，支持正版游戏！" ToolTipService.ShowOnDisabled="True" ToolTipService.Placement="Bottom" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="11" 
+                                              Grid.Column="4" Grid.Row="2" Text="极客蓝" x:Name="RadioLauncherTheme11" IsEnabled="False" ToolTipService.Placement="Bottom" ToolTip="右键打开解密游戏入口" />
                             <TextBlock Grid.Column="4" Grid.Row="2" x:Name="LabLauncherTheme11Click" Background="{StaticResource ColorBrushSemiTransparent}" ToolTipService.Placement="Bottom" />
-                            <local:MyRadioBox Grid.Column="5" Grid.Row="2" Text="自定义" x:Name="RadioLauncherTheme14" Tag="UiLauncherTheme/14" IsEnabled="False" ToolTipService.Placement="Bottom" ToolTip="需要解锁五个隐藏主题" ToolTipService.ShowOnDisabled="True" />
+                            <local:MyRadioBox local:SettingService.Key="UiLauncherTheme" local:SettingService.Value="14" 
+                                              Grid.Column="5" Grid.Row="2" Text="自定义" x:Name="RadioLauncherTheme14" IsEnabled="False" ToolTipService.Placement="Bottom" ToolTip="需要解锁五个隐藏主题" ToolTipService.ShowOnDisabled="True" />
                         </Grid>
-                        <local:MyCheckBox Text="打开启动器时显示 PCL 图标" Margin="-1,0,0,1" Height="22" x:Name="CheckLauncherLogo" Tag="UiLauncherLogo" />
+                        <local:MyCheckBox local:SettingService.Key="UiLauncherLogo" Text="打开启动器时显示 PCL 图标" Margin="-1,0,0,1" Height="22" />
                     </StackPanel>
                     <Border Background="#DDDDDDDD" Margin="-8,23,-5,28" CornerRadius="4" Name="PanLauncherHide" Visibility="Collapsed">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <TextBlock Text="如果可以小小赞助一下 PCL，就能解锁主题颜色更换功能啦……&#xa;多亏了大家的支持，PCL 才能在免费、无任何广告的情况下维持数年的更新（磕头）！" FontSize="13" Margin="0,0,0,0" />
-                            <local:MyButton Height="32" x:Name="BtnLauncherDonate" MinWidth="140" Text="支持 PCL 开发！" Padding="13,0" HorizontalAlignment="Center" Margin="0,9,0,0" ColorType="Highlight" />
+                            <local:MyButton Height="32" MinWidth="140" Text="支持 PCL 开发！" Padding="13,0" HorizontalAlignment="Center" Margin="0,9,0,0" ColorType="Highlight"
+                                            local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://meloong.com/afd/a/LTCat" />
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -88,16 +109,20 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="自适应方式" Margin="0,0,25,0" />
-                        <local:MyComboBox x:Name="ComboBackgroundSuit" Tag="UiBackgroundSuit" Grid.Column="1">
-                            <local:MyComboBoxItem Content="智能" IsSelected="True" ToolTip="当图片较小时选择平铺，较大时选择适应" />
-                            <local:MyComboBoxItem Content="居中" />
-                            <local:MyComboBoxItem Content="适应" ToolTip="拉伸图片并保持长宽比不变，直至填满整个窗口" />
-                            <local:MyComboBoxItem Content="拉伸" ToolTip="拉伸图片使其恰好填满整个窗口，很可能会导致长宽比的改变" />
-                            <local:MyComboBoxItem Content="平铺" />
-                            <local:MyComboBoxItem Content="居于左上" />
-                            <local:MyComboBoxItem Content="居于右上" />
-                            <local:MyComboBoxItem Content="居于左下" />
-                            <local:MyComboBoxItem Content="居于右下" />
+                        <local:MyComboBox local:SettingService.Key="UiBackgroundSuit" Grid.Column="1">
+                            <local:MyComboBoxItem local:SettingService.Value="0" Content="自动" ToolTip="当图片较小时选择平铺，较大时选择居中 (保持长宽比)" />
+                            <local:MyComboBoxItem local:SettingService.Value="4" Content="平铺" />
+                            <local:MyComboBoxItem local:SettingService.Value="1" Content="居中" />
+                            <local:MyComboBoxItem local:SettingService.Value="3" Content="拉伸" ToolTip="拉伸图片使其恰好填满整个窗口，很可能会导致长宽比的改变" />
+                            <local:MyComboBoxItem local:SettingService.Value="5" Content="左上 (保持长宽比)" />
+                            <local:MyComboBoxItem local:SettingService.Value="9" Content="左中 (保持长宽比)" />
+                            <local:MyComboBoxItem local:SettingService.Value="7" Content="左下 (保持长宽比)" />
+                            <local:MyComboBoxItem local:SettingService.Value="11" Content="中上 (保持长宽比)" />
+                            <local:MyComboBoxItem local:SettingService.Value="2" Content="居中 (保持长宽比)" />
+                            <local:MyComboBoxItem local:SettingService.Value="12" Content="中下 (保持长宽比)" />
+                            <local:MyComboBoxItem local:SettingService.Value="6" Content="右上 (保持长宽比)" />
+                            <local:MyComboBoxItem local:SettingService.Value="10" Content="右中 (保持长宽比)" />
+                            <local:MyComboBoxItem local:SettingService.Value="8" Content="右下 (保持长宽比)" />
                         </local:MyComboBox>
                     </Grid>
                     <Grid x:Name="PanBackgroundOpacity" Height="22" Margin="0,0,0,7" Visibility="Collapsed">
@@ -106,7 +131,7 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="不透明度" Margin="0,0,25,0" />
-                        <local:MySlider x:Name="SliderBackgroundOpacity" Tag="UiBackgroundOpacity" MaxValue="1000" ValueByKey="10" Grid.Column="1" />
+                        <local:MySlider local:SettingService.Key="UiBackgroundOpacity" x:Name="SliderBackgroundOpacity" MaxValue="1000" ValueByKey="10" Grid.Column="1" />
                     </Grid>
                     <Grid x:Name="PanBackgroundBlur" Height="22" Margin="0,0,0,10" Visibility="Collapsed">
                         <Grid.ColumnDefinitions>
@@ -114,9 +139,10 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="背景模糊" Margin="0,0,25,0" />
-                        <local:MySlider x:Name="SliderBackgroundBlur" Tag="UiBackgroundBlur" MaxValue="40" Grid.Column="1" ToolTip="较强的模糊会导致启动器严重掉帧，请谨慎使用。&#13;不建议在制作整合包时开启模糊，以确保 PCL 在低性能电脑上可以流畅运行。" />
+                        <local:MySlider local:SettingService.Key="UiBackgroundBlur" x:Name="SliderBackgroundBlur" MaxValue="40" Grid.Column="1" 
+                                        ToolTip="高度的模糊会严重掉帧，请谨慎。&#13;不建议在制作整合包时开启模糊，以确保 PCL 在低性能电脑上可以流畅运行。" />
                     </Grid>
-                    <local:MyCheckBox Text="叠加彩色背景" Margin="-1,0,0,8" Height="22" x:Name="CheckBackgroundColorful" Tag="UiBackgroundColorful" />
+                    <local:MyCheckBox local:SettingService.Key="UiBackgroundColorful" Text="叠加彩色背景" Margin="-1,0,0,8" Height="22" />
                     <Grid Height="35" Margin="0,2,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
@@ -225,7 +251,8 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="下载地址" Margin="0,0,25,0" />
-                        <local:MyTextBox x:Name="TextCustomNet" Tag="UiCustomNet" Grid.Column="1" MaxHeight="28">
+                        <local:MyTextBox x:Name="TextCustomNet" Tag="UiCustomNet" Grid.Column="1" MaxHeight="28"
+                                         ToolTip="你可以用替换标记动态改变网址，以传入参数或变量。&#xa;在 更多 → 帮助 中搜索 “替换标记” 以了解用法。">
                             <local:MyTextBox.ValidateRules>
                                 <local:ValidateNullable />
                                 <local:ValidateHttp />
@@ -238,20 +265,23 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="主页预设" Margin="0,0,25,0" />
-                        <local:MyComboBox x:Name="ComboCustomPreset" Grid.ColumnSpan="2" Tag="UiCustomPreset" Grid.Column="1">
-                            <local:MyComboBoxItem Content="你知道吗？" IsSelected="True" />
-                            <local:MyComboBoxItem Content="回声洞" />
-                            <local:MyComboBoxItem Content="Minecraft 新闻（作者：最亮的信标）" />
-                            <local:MyComboBoxItem Content="简单主页（作者：MFn233）" />
-                            <local:MyComboBoxItem Content="每日整合包推荐（作者：wkea）" />
-                            <local:MyComboBoxItem Content="Minecraft 皮肤推荐（作者：wkea）" />
-                            <local:MyComboBoxItem Content="OpenBMCLAPI 仪表盘 Lite（作者：Silverteal、Mxmilu666）" />
-                            <local:MyComboBoxItem Content="PCL 主页市场（作者：凌云）" />
-                            <local:MyComboBoxItem Content="PCL 新闻速报（作者：Joker2184）" />
-                            <local:MyComboBoxItem Content="PCL 新功能说明书（作者：WForst-Breeze）" />
-                            <local:MyComboBoxItem Content="OpenMCIM 仪表盘（作者：SALTWOOD）" Visibility="Collapsed" />
-                            <local:MyComboBoxItem Content="杂志主页（作者：CreeperIsASpy）" />
-                            <local:MyComboBoxItem Content="PCL GitHub 仪表盘（作者：Deep-Dark-Forest）" />
+                        <local:MyComboBox local:SettingService.Key="UiCustomPreset" Grid.ColumnSpan="2" Grid.Column="1">
+                            <local:MyComboBoxItem local:SettingService.Value="0" Content="你知道吗？" />
+                            <local:MyComboBoxItem local:SettingService.Value="1" Content="回声洞" />
+                            <local:MyComboBoxItem local:SettingService.Value="2" Content="Minecraft 新闻（作者：最亮的信标）" />
+                            <local:MyComboBoxItem local:SettingService.Value="3" Content="简单主页（作者：MFn233）" />
+                            <local:MyComboBoxItem local:SettingService.Value="4" Content="每日整合包推荐（作者：wkea）" />
+                            <local:MyComboBoxItem local:SettingService.Value="5" Content="Minecraft 皮肤推荐（作者：wkea）" />
+                            <local:MyComboBoxItem local:SettingService.Value="6" Content="OpenBMCLAPI 仪表盘 Lite（作者：Silverteal、Mxmilu666）" />
+                            <local:MyComboBoxItem local:SettingService.Value="7" Content="PCL 主页市场（作者：凌云）" />
+                            <!--<local:MyComboBoxItem local:SettingService.Value="8" Content="PCL 新闻速报（作者：Joker2184）" />-->
+                            <local:MyComboBoxItem local:SettingService.Value="9" Content="PCL 新功能说明书（作者：WForst-Breeze）" />
+                            <!--<local:MyComboBoxItem local:SettingService.Value="10" Content="OpenMCIM 仪表盘（作者：SALTWOOD）" />-->
+                            <local:MyComboBoxItem local:SettingService.Value="11" Content="杂志主页（作者：CreeperIsASpy）" />
+                            <local:MyComboBoxItem local:SettingService.Value="12" Content="PCL GitHub 仪表盘（作者：Deep-Dark-Forest）" />
+                            <local:MyComboBoxItem local:SettingService.Value="13" Content="Minecraft 更新摘要（作者：pynickle）" />
+                            <local:MyComboBoxItem local:SettingService.Value="14" Content="今日新闻热点（作者：EYicheng）" />
+                            <local:MyComboBoxItem local:SettingService.Value="15" Content="Minecraft 芝士站（作者：awaEric233）" />
                         </local:MyComboBox>
                     </Grid>
                 </StackPanel>
@@ -279,14 +309,14 @@
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left" Text="主页面" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" Text="下载" x:Name="CheckHiddenPageDownload" Tag="UiHiddenPageDownload" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="3" Visibility="Collapsed" Text="联机" x:Name="CheckHiddenPageLink" Tag="UiHiddenPageLink" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="3" Text="设置" x:Name="CheckHiddenPageSetup" Tag="UiHiddenPageSetup" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="4" Text="更多" x:Name="CheckHiddenPageOther" Tag="UiHiddenPageOther" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="3" Text="联机" x:Name="CheckHiddenPageLink" Tag="UiHiddenPageLink" IsEnabled="False" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="4" Text="设置" x:Name="CheckHiddenPageSetup" Tag="UiHiddenPageSetup" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="1" Grid.Column="5" Text="更多" x:Name="CheckHiddenPageOther" Tag="UiHiddenPageOther" />
                         <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="设置 子页面" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="2" Text="启动" x:Name="CheckHiddenSetupLaunch" Tag="UiHiddenSetupLaunch" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="3" Text="个性化" x:Name="CheckHiddenSetupUI" Tag="UiHiddenSetupUi" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4" Text="其他" x:Name="CheckHiddenSetupSystem" Tag="UiHiddenSetupSystem" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="5" Text="联机" x:Name="CheckHiddenSetupLink" Tag="UiHiddenSetupLink" Visibility="Collapsed" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="3" Text="联机" x:Name="CheckHiddenSetupLink" Tag="UiHiddenSetupLink" IsEnabled="False" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="4" Text="个性化" x:Name="CheckHiddenSetupUI" Tag="UiHiddenSetupUi" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="2" Grid.Column="5" Text="其他" x:Name="CheckHiddenSetupSystem" Tag="UiHiddenSetupSystem" />
                         <TextBlock Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left" Text="更多 子页面" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="2" Text="帮助" x:Name="CheckHiddenOtherHelp" Tag="UiHiddenOtherHelp" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="3" Text="关于与鸣谢" x:Name="CheckHiddenOtherAbout" Tag="UiHiddenOtherAbout" />

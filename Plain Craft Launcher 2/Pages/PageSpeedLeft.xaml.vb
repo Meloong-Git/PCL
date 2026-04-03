@@ -1,6 +1,4 @@
-﻿Imports System.Threading.Tasks
-
-Public Class PageSpeedLeft
+﻿Public Class PageSpeedLeft
     Private Const WatcherInterval As Integer = 300
 
     '初始化
@@ -92,11 +90,11 @@ Public Class PageSpeedLeft
                             Card.Children.Clear()
                             Card.Children.Add(GetObjectFromXML("<Path xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" Stretch=""Uniform"" Tag=""Failed"" Data=""F1 M2.5,0 L0,2.5 7.5,10 0,17.5 2.5,20 10,12.5 17.5,20 20,17.5 12.5,10 20,2.5 17.5,0 10,7.5 2.5,0Z"" Height=""15"" Width=""15"" HorizontalAlignment=""Center"" Grid.Column=""0"" Grid.Row=""0"" Fill=""{DynamicResource ColorBrush3}"" Margin=""0,1,0,0"" VerticalAlignment=""Top""/>"))
                             Dim Tb As TextBlock = GetObjectFromXML("<TextBlock xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" TextWrapping=""Wrap"" HorizontalAlignment=""Left"" ToolTip=""单击复制错误详情"" Grid.Column=""1"" Grid.Row=""0"" Margin=""0,0,0,5"" />")
-                            Tb.Text = GetExceptionDetail(Loader.Error)
+                            Tb.Text = Loader.Error.GetDetail()
                             AddHandler Tb.MouseLeftButtonDown,
                             Sub(sender As TextBlock, e As EventArgs)
                                 ClipboardSet(sender.Text, False)
-                                Hint("已复制错误详情！", HintType.Finish)
+                                Hint("已复制错误详情！", HintType.Green)
                             End Sub
                             Card.Children.Add(Tb)
 #End Region
@@ -142,7 +140,7 @@ Public Class PageSpeedLeft
                 Catch ex As Exception
                     Log(ex, "更新下载管理显示失败（" & Loader.State.ToString & "）", LogLevel.Feedback)
                 End Try
-            ElseIf Not (Loader.State = LoadState.Aborted OrElse Loader.State = LoadState.Finished) Then
+            ElseIf Not (Loader.State = LoadState.Interrupted OrElse Loader.State = LoadState.Finished) Then
                 Try
 #Region "没有卡片且未中断或完成，添加新的卡片"
                     Dim CardXAML As String = "
@@ -196,7 +194,7 @@ Public Class PageSpeedLeft
                         RightCards.Remove(Loader.Name)
                         LoaderTaskbar.Remove(Loader)
                         Log($"[Taskbar] 关闭下载管理卡片：{Loader.Name}，且移出任务列表")
-                        RunInThread(Sub() Loader.Abort())
+                        RunInThread(Sub() Loader.Interrupt())
                     End Sub
                     '如果已经失败，再刷新一次，修改成失败的控件
                     If Loader.State = LoadState.Failed Then

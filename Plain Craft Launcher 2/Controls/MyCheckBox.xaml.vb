@@ -2,6 +2,7 @@
 
 <ContentProperty("Inlines")>
 Public Class MyCheckBox
+    Implements ISettingControl
 
     '基础
 
@@ -12,9 +13,6 @@ Public Class MyCheckBox
     ''' <param name="user">是否为用户手动改变的勾选状态。</param>
     Public Event Change(sender As Object, user As Boolean)
     Public Event PreviewChange(sender As Object, e As RouteEventArgs)
-    Public Sub RaiseChange()
-        RaiseEvent Change(Me, False)
-    End Sub '使外部程序引发本控件的 Change 事件
 
     '自定义属性
     Public Property Checked As Boolean
@@ -59,6 +57,7 @@ Public Class MyCheckBox
 
             '更改动画
             SyncUI()
+            RaiseCustomEvent()
         Catch ex As Exception
             Log(ex, "设置 Checked 失败")
         End Try
@@ -74,7 +73,7 @@ Public Class MyCheckBox
                       AaScale(ShapeBorder, 6, AnimationTimeOfCheck * 2, AnimationTimeOfCheck * 0.7, New AniEaseOutBack, , True)
                  }, "MyCheckBox Scale " & Uuid)
                 AniStart({
-                      AaColor(ShapeBorder, Border.BorderBrushProperty, If(IsEnabled, If(IsMouseOver, "ColorBrush3", "ColorBrush2"), "ColorBrushGray4"), AnimationTimeOfCheck)
+                      AaColor(ShapeBorder, Border.BorderBrushProperty, If(IsEnabled, If(IsMouseOver, "ColorBrush3", "ColorBrush2"), "ColorBrushGray5"), AnimationTimeOfCheck)
                  }, "MyCheckBox BorderColor " & Uuid)
                 AniStart({
                       AaCode(Sub() AllowMouseDown = True, AnimationTimeOfCheck * 2)
@@ -87,7 +86,7 @@ Public Class MyCheckBox
                       AaScale(ShapeBorder, 6, AnimationTimeOfCheck * 2, AnimationTimeOfCheck * 0.7, New AniEaseOutBack, , True)
                  }, "MyCheckBox Scale " & Uuid)
                 AniStart({
-                      AaColor(ShapeBorder, Border.BorderBrushProperty, If(IsEnabled, If(IsMouseOver, "ColorBrush3", "ColorBrush1"), "ColorBrushGray4"), AnimationTimeOfCheck)
+                      AaColor(ShapeBorder, Border.BorderBrushProperty, If(IsEnabled, If(IsMouseOver, "ColorBrush3", "ColorBrush1"), "ColorBrushGray5"), AnimationTimeOfCheck)
                  }, "MyCheckBox BorderColor " & Uuid)
                 AniStart({
                       AaCode(Sub() AllowMouseDown = True, AnimationTimeOfCheck * 2)
@@ -101,11 +100,11 @@ Public Class MyCheckBox
             If Checked Then
                 CType(ShapeCheck.RenderTransform, ScaleTransform).ScaleX = 1
                 CType(ShapeCheck.RenderTransform, ScaleTransform).ScaleY = 1
-                ShapeBorder.SetResourceReference(Border.BorderBrushProperty, If(IsEnabled, "ColorBrush2", "ColorBrushGray4"))
+                ShapeBorder.SetResourceReference(Border.BorderBrushProperty, If(IsEnabled, "ColorBrush2", "ColorBrushGray5"))
             Else
                 CType(ShapeCheck.RenderTransform, ScaleTransform).ScaleX = 0
                 CType(ShapeCheck.RenderTransform, ScaleTransform).ScaleY = 0
-                ShapeBorder.SetResourceReference(Border.BorderBrushProperty, If(IsEnabled, "ColorBrush1", "ColorBrushGray4"))
+                ShapeBorder.SetResourceReference(Border.BorderBrushProperty, If(IsEnabled, "ColorBrush1", "ColorBrushGray5"))
             End If
         End If
     End Sub
@@ -180,18 +179,18 @@ Public Class MyCheckBox
             Else
                 '不可用
                 AniStart({
-                         AaColor(ShapeBorder, Border.BorderBrushProperty, ColorGray4 - ShapeBorder.BorderBrush, AnimationTimeOfMouseOut)
+                         AaColor(ShapeBorder, Border.BorderBrushProperty, ColorGray5 - ShapeBorder.BorderBrush, AnimationTimeOfMouseOut)
                  }, "MyCheckBox BorderColor " & Uuid)
                 AniStart({
-                         AaColor(LabText, TextBlock.ForegroundProperty, ColorGray4 - LabText.Foreground, AnimationTimeOfMouseOut)
+                         AaColor(LabText, TextBlock.ForegroundProperty, ColorGray5 - LabText.Foreground, AnimationTimeOfMouseOut)
                  }, "MyCheckBox TextColor " & Uuid)
             End If
         Else
             '无动画
             AniStop("MyCheckBox TextColor " & Uuid)
             AniStop("MyCheckBox BorderColor " & Uuid)
-            LabText.SetResourceReference(TextBlock.ForegroundProperty, If(Me.IsEnabled, "ColorBrush1", "ColorBrushGray4"))
-            ShapeBorder.SetResourceReference(Border.BorderBrushProperty, If(Me.IsEnabled, If(Checked, "ColorBrush2", "ColorBrush1"), "ColorBrushGray4"))
+            LabText.SetResourceReference(TextBlock.ForegroundProperty, If(Me.IsEnabled, "ColorBrush1", "ColorBrushGray5"))
+            ShapeBorder.SetResourceReference(Border.BorderBrushProperty, If(Me.IsEnabled, If(Checked, "ColorBrush2", "ColorBrush1"), "ColorBrushGray5"))
         End If
     End Sub
     Private Sub Checkbox_MouseEnterAnimation() Handles Me.MouseEnter
@@ -205,11 +204,27 @@ Public Class MyCheckBox
     Private Sub Checkbox_MouseLeaveAnimation() Handles Me.MouseLeave
         If Not IsEnabled Then Return 'MouseLeave 比 IsEnabledChanged 后执行，所以如果自定义事件修改了 IsEnabled，将导致显示错误
         AniStart({
-                 AaColor(LabText, TextBlock.ForegroundProperty, If(Me.IsEnabled, "ColorBrush1", "ColorBrushGray4"), AnimationTimeOfMouseOut)
+                 AaColor(LabText, TextBlock.ForegroundProperty, If(Me.IsEnabled, "ColorBrush1", "ColorBrushGray5"), AnimationTimeOfMouseOut)
          }, "MyCheckBox TextColor " & Uuid)
         AniStart({
-                 AaColor(ShapeBorder, Border.BorderBrushProperty, If(Me.IsEnabled, If(Checked, "ColorBrush2", "ColorBrush1"), "ColorBrushGray4"), AnimationTimeOfMouseOut)
+                 AaColor(ShapeBorder, Border.BorderBrushProperty, If(Me.IsEnabled, If(Checked, "ColorBrush2", "ColorBrush1"), "ColorBrushGray5"), AnimationTimeOfMouseOut)
          }, "MyCheckBox BorderColor " & Uuid)
     End Sub
+
+#Region "设置"
+
+    Private Sub RefreshSetting(NewValue As String) Implements ISettingControl.RefreshSetting
+        Checked = Boolean.Parse(NewValue)
+    End Sub
+
+    Private Function GetCurrentSetting() As String Implements ISettingControl.GetCurrentSetting
+        Return Checked.ToString
+    End Function
+
+    Private Sub SaveSetting() Handles Me.Change
+        SettingService.SaveSetting(Me)
+    End Sub
+
+#End Region
 
 End Class

@@ -12,7 +12,7 @@ body:
       required: false
     - label: "**我已尝试使用 HMCL 启动，HMCL 没有出现问题。** 如果 HMCL 也无法启动就不是 PCL 导致的问题，请 **不要** 提交反馈。[下载 HMCL](https://hmcl.huangyuhui.net/download)"
       required: true
-    - label: "我已在 [Issues 页面](https://github.com/Hex-Dragon/PCL2/issues?q=is%3Aissue+) 和 [常见&难检反馈及问题列表](https://github.com/Hex-Dragon/PCL2/discussions/1930) 中搜索，确认了这一 Bug 未被提交过。"
+    - label: "我已在 [Issues 页面](https://github.com/Meloong-Git/PCL/issues?q=is%3Aissue+) 和 [常见&难检反馈及问题列表](https://github.com/Meloong-Git/PCL/discussions/1930) 中搜索，确认了这一 Bug 未被提交过。"
       required: true
 - type: textarea
   id: "yml-2"
