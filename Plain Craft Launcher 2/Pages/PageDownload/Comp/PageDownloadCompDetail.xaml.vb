@@ -240,14 +240,15 @@ GroupDone:
         End Try
     End Sub
     Private Function GetGroupedVersionName(Name As String, GroupedByDrop As Boolean, FoldOld As Boolean) As String
+        Dim Drop = McVersion.VersionToDrop(Name)
         If Name Is Nothing Then
             Return "其他"
-        ElseIf Name.Contains("w") Then
+        ElseIf Name.Contains("w") OrElse Drop = 209 Then
             Return "快照版"
-        ElseIf Not McVersion.IsFormatFit(Name) OrElse (FoldOld AndAlso McVersion.VersionToDrop(Name, True) < 120) Then
+        ElseIf Not McVersion.IsFormatFit(Name) OrElse (FoldOld AndAlso Drop < 120) Then
             Return "远古版"
         ElseIf GroupedByDrop Then
-            Return McVersion.DropToVersion(McVersion.VersionToDrop(Name, True))
+            Return McVersion.DropToVersion(Drop)
         Else
             Return Name
         End If

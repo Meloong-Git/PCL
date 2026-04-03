@@ -51,15 +51,6 @@ Public Class Application
                     Else
                         Environment.Exit((My.Computer.Info.AvailablePhysicalMemory - Ram) / 1024) '返回清理的内存量（K）
                     End If
-#If DEBUG Then
-                    '制作更新包
-                ElseIf e.Args(0) = "--edit1" Then
-                    ExeEdit(e.Args(1), True)
-                    Environment.Exit(ProcessReturnValues.TaskDone)
-                ElseIf e.Args(0) = "--edit2" Then
-                    ExeEdit(e.Args(1), False)
-                    Environment.Exit(ProcessReturnValues.TaskDone)
-#End If
                 End If
             End If
             '初始化文件结构
@@ -132,7 +123,7 @@ WaitRetry:
             Log($"[Start] 管理员权限：{IsAdmin()}")
             '检测异常环境
             If Path.Contains(IO.Path.GetTempPath()) OrElse Path.Contains("AppData\Local\Temp\") Then
-                MyMsgBox("请将 PCL 从压缩包中解压后再使用！" & vbCrLf & "如果不会解压，可以在网上寻找教程。", "尚未解压", "我知道了", IsWarn:=True)
+                MyMsgBox("请将 PCL 从压缩包中解压后再使用！" & vbCrLf & "如果不会解压，可以在网上寻找教程。", "需要解压！", "我知道了", IsWarn:=True, ForceWait:=True)
                 FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
             If Is32BitSystem Then
@@ -159,7 +150,7 @@ WaitRetry:
 
     '结束
     Private Sub Application_SessionEnding(sender As Object, e As SessionEndingCancelEventArgs) Handles Me.SessionEnding
-        FrmMain.EndProgram(False)
+        FrmMain?.EndProgram(False)
     End Sub
 
     '异常

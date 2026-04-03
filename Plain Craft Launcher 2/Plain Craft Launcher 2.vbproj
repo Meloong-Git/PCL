@@ -761,6 +761,7 @@
   <ItemGroup>
     <Resource Include="Resources\Font.ttf" />
     <None Include="Resources\Help.zip" />
+    <None Include="Resources\moddata.zip" />
     <None Include="Resources\NAudio.dll" />
   </ItemGroup>
   <ItemGroup>
@@ -876,9 +877,6 @@
     <None Include="Resources\java-wrapper.jar" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\ModData.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\Skins\Ari.png" />
     <Resource Include="Images\Skins\Efe.png" />
     <Resource Include="Images\Skins\Kai.png" />
@@ -923,8 +921,10 @@
     <Resource Include="Images\Heads\EasyTier.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\lwjgl-unsafe-agent-1.0.jar" />
-    <Content Include="Resources\System.ValueTuple.dll" />
+    <None Include="Resources\System.ValueTuple.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\lwjgl-unsafe-agent.jar" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>
