@@ -442,6 +442,23 @@ Public Module ModMinecraft
                 End Try
 #End Region
 VersionSearchFinish:
+                '所有带 w 的愚人节版本
+                Select Case _Version.VanillaName
+                    Case "15w14a"
+                        _Version.VanillaName = "1.8.3"
+                    Case "20w14∞", "20w14infinite"
+                        _Version.VanillaName = "20w13b"
+                    Case "22w13oneblockatetime"
+                        _Version.VanillaName = "1.18.2"
+                    Case "23w13a_or_b"
+                        _Version.VanillaName = "23w13a"
+                    Case "24w14potato"
+                        _Version.VanillaName = "24w12a"
+                    Case "25w14craftmine"
+                        _Version.VanillaName  = "1.21.5-rc1"
+                    Case "26w14a"
+                        _Version.VanillaName = "26.1.1"
+                End Select
                 '获取版本号
                 _Version.VanillaName = _Version.VanillaName.Replace("_unobfuscated", "").Replace(" Unobfuscated", "")
                 _Version.Vanilla = McVersion.NameToVersion(_Version.VanillaName)
