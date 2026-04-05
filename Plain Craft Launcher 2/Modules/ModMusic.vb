@@ -24,13 +24,13 @@
                 Directory.CreateDirectory(Path & "PCL\Musics\")
                 For Each File In EnumerateFiles(Path & "PCL\Musics\")
                     '文件夹可能会被加入 .ini 文件夹配置文件、一些乱七八糟的 .jpg 文件啥的
-                    Dim Ext As String = File.Extension.ToLower
+                    Dim Ext As String = File.Extension.Lower
                     If {".ini", ".jpg", ".txt", ".cfg", ".lrc", ".db", ".png"}.Contains(Ext) Then Continue For
                     MusicAllList.Add(File.FullName)
                 Next
             End If
             '打乱顺序播放
-            MusicWaitingList = If(Setup.Get("UiMusicRandom"), New List(Of String)(MusicAllList).Shuffle().ToList, New List(Of String)(MusicAllList))
+            MusicWaitingList = If(Settings.Get("UiMusicRandom"), New List(Of String)(MusicAllList).Shuffle().ToList, New List(Of String)(MusicAllList))
             If PreventFirst IsNot Nothing AndAlso MusicWaitingList.FirstOrDefault = PreventFirst Then
                 '若需要避免成为第一项的为第一项，则将它放在最后
                 MusicWaitingList.RemoveAt(0)
@@ -129,7 +129,7 @@
     ''' 播放下一曲，并显示提示文本。
     ''' </summary>
     Public Sub MusicControlNext()
-        If MusicAllList.Count = 1 Then
+        If MusicAllList.IsSingle Then
             MusicStartPlay(MusicCurrent)
             Hint("重新播放：" & GetFileNameFromPath(MusicCurrent), HintType.Green)
         Else
@@ -280,18 +280,23 @@
             CurrentWave = New NAudio.Wave.WaveOutEvent()
             MusicNAudio = CurrentWave
             CurrentWave.DeviceNumber = -1
-            Reader = New NAudio.Wave.AudioFileReader(MusicCurrent)
+            Try
+                Reader = New NAudio.Wave.AudioFileReader(MusicCurrent)
+            Catch ex As Exception
+                Log(ex, "使用 AudioFileReader 加载音频文件失败，换用 MediaFoundationReader 重试", LogLevel.Developer)
+                Reader = New NAudio.Wave.MediaFoundationReader(MusicCurrent)
+            End Try
             CurrentWave.Init(Reader)
             CurrentWave.Play()
             '第一次打开的暂停
-            If IsFirstLoad AndAlso Not Setup.Get("UiMusicAuto") Then CurrentWave.Pause()
+            If IsFirstLoad AndAlso Not Settings.Get("UiMusicAuto") Then CurrentWave.Pause()
             MusicRefreshUI()
             '停止条件：播放完毕或变化
             Dim PreviousVolume = 0
             While CurrentWave.Equals(MusicNAudio) AndAlso Not CurrentWave.PlaybackState = NAudio.Wave.PlaybackState.Stopped
-                If Setup.Get("UiMusicVolume") <> PreviousVolume Then
+                If Settings.Get("UiMusicVolume") <> PreviousVolume Then
                     '更新音量
-                    PreviousVolume = Setup.Get("UiMusicVolume")
+                    PreviousVolume = Settings.Get("UiMusicVolume")
                     CurrentWave.Volume = PreviousVolume / 1000
                 End If
                 '更新进度条
@@ -311,9 +316,7 @@
                 Hint("由于音频设备变更，音乐播放功能在重启 PCL 后才能恢复！", HintType.Red)
                 Thread.Sleep(1000000000)
             End If
-            If ex.Message.Contains("Got a frame at sample rate") OrElse ex.Message.Contains("does not support changes to") Then
-                Hint("播放音乐失败（" & GetFileNameFromPath(MusicCurrent) & "）：PCL 不支持播放音频属性在中途发生变化的音乐", HintType.Red)
-            ElseIf Not (MusicCurrent.EndsWithF(".wav", True) OrElse MusicCurrent.EndsWithF(".mp3", True) OrElse MusicCurrent.EndsWithF(".flac", True)) OrElse
+            If Not (MusicCurrent.EndsWithF(".wav", True) OrElse MusicCurrent.EndsWithF(".mp3", True) OrElse MusicCurrent.EndsWithF(".flac", True)) OrElse
                 ex.Message.Contains("0xC00D36C4") Then '#5096：不支持给定的 URL 的字节流类型。 (异常来自 HRESULT:0xC00D36C4)
                 Hint("播放音乐失败（" & GetFileNameFromPath(MusicCurrent) & "）：PCL 可能不支持此音乐格式，请将格式转换为 .wav、.mp3 或 .flac 后再试", HintType.Red)
             Else

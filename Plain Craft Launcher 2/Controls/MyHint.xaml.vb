@@ -99,19 +99,22 @@ Public Class MyHint
     End Property
     Public Property RelativeSetup As String = ""
     Private Sub MyHint_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-        If CanClose AndAlso Setup.Get(RelativeSetup) Then Visibility = Visibility.Collapsed
+        If CanClose AndAlso Settings.Get(RelativeSetup) Then Visibility = Visibility.Collapsed
     End Sub
     Private Sub BtnClose_Click(sender As Object, e As EventArgs) Handles BtnClose.Click
-        Setup.SetSafe(RelativeSetup, True)
+        Settings.SetSafe(RelativeSetup, True)
         AniDispose(Me, False)
     End Sub
 
     '触发点击事件
+    Public Event Click(sender As Object, e As MouseButtonEventArgs)
     Private IsMouseDown As Boolean = False
     Private Sub MyHint_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonUp
         If Not IsMouseDown Then Return
         IsMouseDown = False
         Log("[Control] 按下提示条" & If(String.IsNullOrEmpty(Name), "", "：" & Name))
+        RaiseEvent Click(sender, e)
+        If e.Handled Then Return
         e.Handled = True
         RaiseCustomEvent() '自定义事件
     End Sub

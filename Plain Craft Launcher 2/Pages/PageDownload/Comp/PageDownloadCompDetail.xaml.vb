@@ -8,7 +8,7 @@
         Sub(Task)
             LoadTargetFromAdditional()
             Dim Result = CompFilesGet(Project.Id, Project.FromCurseForge)
-            If Task.IsAborted Then Return
+            If Task.IsInterrupted Then Return
             Task.Output = Result
         End Sub)
 
@@ -21,14 +21,15 @@
         Project = FrmMain.PageCurrent.Additional(0)
         TargetInstance = FrmMain.PageCurrent.Additional(2)
         TargetLoader = FrmMain.PageCurrent.Additional(3)
-        PageType = FrmMain.PageCurrent.Additional(4)
+        TargetType = FrmMain.PageCurrent.Additional(4)
     End Sub
     Private Project As CompProject
     Private TargetInstance As String, TargetLoader As CompModLoaderType
     ''' <summary>
-    ''' 当前页面应展示的内容类别。可能为 Any。
+    ''' 当前页面应展示的内容类别。
+    ''' 若当前页面是在查看前置时进入，则也可能为 Any。
     ''' </summary>
-    Private PageType As CompType
+    Private TargetType As CompType
     '自动重试
     Private Sub Load_State(sender As Object, state As MyLoading.MyLoadingState, oldState As MyLoading.MyLoadingState) Handles Load.StateChanged
         Select Case CompFileLoader.State
@@ -74,13 +75,13 @@
     '筛选类型相同的结果（Modrinth 会返回 Mod、服务端插件、数据包混合的列表）
     Private Function GetResults() As List(Of CompFile)
         Dim Results As List(Of CompFile) = CompFileLoader.Output
-        Select Case PageType
+        Select Case TargetType
             Case CompType.Any
                 Results = Results.Where(Function(r) r.Type <> CompType.Plugin).ToList
             Case CompType.Shader, CompType.ResourcePack
                 '不筛选光影和资源包，否则原版光影会因为是资源包格式而被过滤（#6473）
             Case Else
-                Results = Results.Where(Function(r) r.Type = PageType).ToList
+                Results = Results.Where(Function(r) r.Type = TargetType).ToList
         End Select
         Return Results
     End Function
@@ -171,7 +172,7 @@ GroupDone:
                     Version.Type = CompType.Mod AndAlso '是 Mod
                     McVersion.IsFormatFit(VerName) Then '不是 “快照版本” 之类的
                     For Each Loader In Version.ModLoaders
-                        If Loader = CompModLoaderType.Quilt AndAlso Setup.Get("ToolDownloadIgnoreQuilt") Then Continue For
+                        If Loader = CompModLoaderType.Quilt AndAlso Settings.Get("ToolDownloadIgnoreQuilt") Then Continue For
                         If SupportedLoaders.Contains(Loader) Then Loaders.Add(Loader.ToString & " ")
                     Next
                 End If
@@ -204,7 +205,7 @@ GroupDone:
                 If Not Pair.Value.Any() Then Continue For
                 If Pair.Key = TargetCardName.Replace("（所选版本）", "") Then Continue For
                 '增加卡片
-                Dim NewCard As New MyCard With {.Title = Pair.Key, .Margin = New Thickness(0, 0, 0, 15), .SwapType = If(PageType = CompType.ModPack, 9, 8)} '9 是安装，8 是另存为
+                Dim NewCard As New MyCard With {.Title = Pair.Key, .Margin = New Thickness(0, 0, 0, 15), .SwapType = If(TargetType = CompType.ModPack, 9, 8)} '9 是安装，8 是另存为
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Pair.Value}
                 NewCard.Children.Add(NewStack)
                 NewCard.SwapControl = NewStack
@@ -213,7 +214,7 @@ GroupDone:
                 If Pair.Key = TargetCardName OrElse
                    (FrmMain.PageCurrent.Additional IsNot Nothing AndAlso '#2761
                    CType(FrmMain.PageCurrent.Additional(1), List(Of String)).Contains(NewCard.Title)) Then
-                    MyCard.StackInstall(NewStack, If(PageType = CompType.ModPack, 9, 8), Pair.Key) '9 是安装，8 是另存为
+                    MyCard.StackInstall(NewStack, If(TargetType = CompType.ModPack, 9, 8), Pair.Key) '9 是安装，8 是另存为
                 Else
                     NewCard.IsSwapped = True
                 End If
@@ -226,19 +227,28 @@ GroupDone:
             If PanResults.Children.Count = 1 Then
                 CType(PanResults.Children(0), MyCard).IsSwapped = False
             End If
+            '替代提示
+            If Project.Types = CompType.ModOrDataPack AndAlso (TargetType = CompType.Mod OrElse TargetType = CompType.DataPack) Then
+                HintAlternative.Visibility = Visibility.Visible
+                HintAlternative.Text = If(TargetType = CompType.Mod,
+                    "以下是该项目的 Mod 版本。点击这里查看其数据包版本。", "以下是该项目的数据包版本。点击这里查看其 Mod 版本。")
+            Else
+                HintAlternative.Visibility = Visibility.Collapsed
+            End If
         Catch ex As Exception
             Log(ex, "可视化工程下载列表出错", LogLevel.Feedback)
         End Try
     End Sub
     Private Function GetGroupedVersionName(Name As String, GroupedByDrop As Boolean, FoldOld As Boolean) As String
+        Dim Drop = McVersion.VersionToDrop(Name)
         If Name Is Nothing Then
             Return "其他"
-        ElseIf Name.Contains("w") Then
+        ElseIf Name.Contains("w") OrElse Drop = 209 Then
             Return "快照版"
-        ElseIf Not McVersion.IsFormatFit(Name) OrElse (FoldOld AndAlso McVersion.VersionToDrop(Name, True) < 120) Then
+        ElseIf Not McVersion.IsFormatFit(Name) OrElse (FoldOld AndAlso Drop < 120) Then
             Return "远古版"
         ElseIf GroupedByDrop Then
-            Return McVersion.DropToVersion(McVersion.VersionToDrop(Name, True))
+            Return McVersion.DropToVersion(Drop)
         Else
             Return Name
         End If
@@ -303,7 +313,7 @@ GroupDone:
                 Select Case MyLoader.State
                     Case LoadState.Failed
                         Hint(MyLoader.Name & "失败：" & MyLoader.Error.GetBrief(), HintType.Red)
-                    Case LoadState.Aborted
+                    Case LoadState.Interrupted
                         Hint(MyLoader.Name & "已取消！", HintType.Blue)
                     Case LoadState.Loading
                         Return '不重新加载版本列表
@@ -359,8 +369,38 @@ GroupDone:
                         If Not Instance.IsLoaded Then Instance.Load()
                         '只对 Mod 和数据包进行版本检测
                         If File.Type = CompType.Mod OrElse File.Type = CompType.DataPack Then
-                            If File.GameVersions.Any(Function(v) v.Contains(".")) AndAlso
-                               Not File.GameVersions.Any(Function(v) v.Contains(".") AndAlso v = Instance.Version.VanillaName) Then Return False
+                            If Not File.GameVersions.Any( '判断是否有任何一个版本匹配
+                            Function(FileVersion)
+                                Dim FileIsSnapshot As Boolean = FileVersion.Contains("预览版") OrElse Not FileVersion.Contains(".")
+                                Dim InstanceIsSnapshot As Boolean = Instance.Version.VanillaName.Contains("snapshot") OrElse Not Instance.Version.VanillaName.Contains(".")
+                                If FileIsSnapshot <> InstanceIsSnapshot Then
+                                    '只有一种是预览版
+                                    Return False
+                                ElseIf Not FileIsSnapshot AndAlso Not InstanceIsSnapshot Then
+                                    '都不是预览版
+                                    Return FileVersion = Instance.Version.VanillaName
+                                Else
+                                    '都是预览版
+                                    Dim FileIsNewFormat As Boolean = FileVersion.Contains(".") AndAlso Val(FileVersion.BeforeFirst(".")) > 1
+                                    Dim InstanceIsNewFormat As Boolean = Instance.Version.Drop > 250
+                                    If FileIsNewFormat <> InstanceIsNewFormat Then
+                                        '只有一种是新格式快照
+                                        Return False
+                                    ElseIf FileIsNewFormat AndAlso InstanceIsNewFormat Then
+                                        '都是新格式快照
+                                        Return FileVersion.BeforeFirst(" ") = Instance.Version.VanillaName.BeforeFirst("-")
+                                    Else
+                                        '都是旧格式快照
+                                        If FileVersion.Contains("w") AndAlso Instance.Version.VanillaName.Contains("w") Then
+                                            '都是 w 快照
+                                            Return FileVersion = Instance.Version.VanillaName
+                                        Else
+                                            '不全是 w 快照
+                                            Return True '只能假定相同，无法判断
+                                        End If
+                                    End If
+                                End If
+                            End Function) Then Return False
                         End If
                         '加载器
                         If Not AllowedLoaders.Any() Then Return True '无要求
@@ -412,7 +452,7 @@ GroupDone:
                 Else
                     Dim ChineseName As String = Project.TranslatedName.BeforeFirst(" (").BeforeFirst(" - ").
                         Replace("\", "＼").Replace("/", "／").Replace("|", "｜").Replace(":", "：").Replace("<", "＜").Replace(">", "＞").Replace("*", "＊").Replace("?", "？").Replace("""", "").Replace("： ", "：")
-                    Select Case Setup.Get("ToolDownloadTranslateV2")
+                    Select Case Settings.Get("ToolDownloadTranslateV2")
                         Case 0
                             FileName = $"【{ChineseName}】{File.FileName}"
                         Case 1
@@ -433,8 +473,8 @@ GroupDone:
                     Target = SelectSaveFile("选择保存位置", FileName,
                         Desc & "文件|" &
                         If(File.Type = CompType.Mod,
-                            If(File.FileName.EndsWith(".litemod"), "*.litemod", "*.jar"),
-                            If(File.FileName.EndsWith(".mrpack"), "*.mrpack", "*.zip")), DefaultFolder)
+                            If(File.FileName.EndsWithF(".litemod"), "*.litemod", "*.jar"),
+                            If(File.FileName.EndsWithF(".mrpack"), "*.mrpack", "*.zip")), DefaultFolder)
                     If Not Target.Contains("\") Then Return
                     '构造步骤加载器
                     Dim LoaderName As String = Desc & "下载：" & IO.Path.GetFileNameWithoutExtension(Target) & " "
@@ -462,6 +502,13 @@ GroupDone:
     End Sub
     Private Sub BtnIntroCopy_Click(sender As Object, e As EventArgs) Handles BtnIntroCopy.Click
         ClipboardSet(CompItem.LabTitle.Text & CompItem.LabTitleRaw.Text)
+    End Sub
+
+    'Mod / 数据包 互相跳转
+    Private Sub HintAlternative_Click() Handles HintAlternative.Click
+        TargetType = If(TargetType = CompType.Mod, CompType.DataPack, CompType.Mod)
+        FrmMain.PageCurrent.Additional(4) = TargetType '加载器会从这里重新拿数据
+        PageLoaderRestart(IsForceRestart:=True)
     End Sub
 
 End Class

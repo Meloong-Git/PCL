@@ -70,7 +70,7 @@ Public Class PageLinkMain
     '由任意状态切换到 Waiting
     Private Sub SwitchToWaiting(OldState As LinkStates)
         '加载器与进程状态
-        LinkLoader.Abort()
+        LinkLoader.Interrupt()
         SyncLock LinkLoader.LockState
             LinkLoader.State = LoadState.Waiting
         End SyncLock
@@ -171,7 +171,7 @@ Public Class PageLinkMain
     End Function
     Private Shared Function FixCodeFormat(Code As String) As String
         Code = Code.Between("【", "】").Between("[", "]") '从完整消息中提取
-        Code = Code.ToUpper.Replace("O", "0").Replace("I", "1") '输入修正
+        Code = Code.Upper.Replace("O", "0").Replace("I", "1") '输入修正
         '版本 1 兼容
         If Code.Length >= 17 AndAlso (Code.Length < 23 OrElse (Code.Length >= 18 AndAlso Code(17) <> "-"c)) Then
             Code = Code.Substring(0, 17) & "-0105E"
@@ -223,7 +223,7 @@ Public Class PageLinkMain
     '由 Loading 状态切换到 Failed
     Private Sub SwitchToFailed(OldState As LinkStates)
         '加载器与进程状态
-        LinkLoader.Abort()
+        LinkLoader.Interrupt()
         ProcessStop()
         'UI 更新
         UpdateProgressBar(1)
@@ -356,7 +356,7 @@ Public Class PageLinkMain
     Private Sub Copy() Handles BtnFinishCopy.Click
         Dim CodeText As String = $"在 PCL 启动器中输入邀请码【{GetInviteCode()}】，即可加入联机房间！"
         ClipboardSet(CodeText, False)
-        Setup.Set("LinkLastAutoJoinInviteCode", CodeText)
+        Settings.Set("LinkLastAutoJoinInviteCode", CodeText)
         Hint("已复制邀请码！", HintType.Green)
     End Sub
     Private Function GetInviteCode() As String
@@ -460,9 +460,9 @@ Public Class PageLinkMain
         UpdateLoadingPage("正在检查联机模块版本……", "检查联机模块版本")
         If Not (File.Exists(PathEasyTier & "联机模块 CLI.exe") AndAlso File.Exists(PathEasyTier & "联机模块.exe") AndAlso
                 File.Exists(PathEasyTier & "Packet.dll")) Then
-            Setup.Set("LinkEasyTierVersion", -1)
+            Settings.Set("LinkEasyTierVersion", -1)
         End If
-        Dim LocalVersion As Integer = Setup.Get("LinkEasyTierVersion")
+        Dim LocalVersion As Integer = Settings.Get("LinkEasyTierVersion")
         ServerVersion = ServerConfig("Link")("EasyTierVersion")
         Dim RequiredFiles As New List(Of NetFile)
         Log($"[Link] EasyTier 本地版本：{LocalVersion}，需求版本：{ServerVersion}")
@@ -491,18 +491,18 @@ Public Class PageLinkMain
             CopyDirectory(ExtractedPath, PathEasyTier)
             '重命名
             File.Delete(PathEasyTier & "联机模块.exe")
-            Rename(PathEasyTier & "easytier-core.exe", PathEasyTier & "联机模块.exe")
+            File.Move(PathEasyTier & "easytier-core.exe", PathEasyTier & "联机模块.exe")
             File.Delete(PathEasyTier & "联机模块 CLI.exe")
-            Rename(PathEasyTier & "easytier-cli.exe", PathEasyTier & "联机模块 CLI.exe")
+            File.Move(PathEasyTier & "easytier-cli.exe", PathEasyTier & "联机模块 CLI.exe")
             '清理
             File.Delete(PathEasyTier & "EasyTier.zip")
-            Setup.Set("LinkEasyTierVersion", ServerVersion)
+            Settings.Set("LinkEasyTierVersion", ServerVersion)
         End If
         Task.Progress = 0.07
         '获取节点列表
         UpdateLoadingPage("正在获取节点列表……", "获取节点列表")
         Dim RawPeers As List(Of String)
-        Dim CustomPeers As String = Setup.Get("LinkCustomPeer")
+        Dim CustomPeers As String = Settings.Get("LinkCustomPeer")
         If String.IsNullOrWhiteSpace(CustomPeers) Then
             If DiscoverNodeID = -2 AndAlso Not IsServerSide Then
                 Panic("未填写自定义节点设置", $"$你必须在 {vbLQ}自定义节点{vbRQ} 设置中填写与房主相同的内容，{vbCrLf}才能进入该房间！")
@@ -539,7 +539,7 @@ Public Class PageLinkMain
         For Each Peer As String In RawPeers
             Arguments += $" -p=""{Peer}"""
         Next
-        If Setup.Get("LinkLatencyMode") = 1 Then Arguments += " --latency-first"
+        If Settings.Get("LinkLatencyMode") = 1 Then Arguments += " --latency-first"
         '启动进程
         ProcessStart(Arguments)
         Task.Progress = 0.15
@@ -585,8 +585,8 @@ Public Class PageLinkMain
                         Panic("无法连接到房主", $"可能的原因：{vbCrLf}- 你或者房主的网络环境不佳{vbCrLf}- 房主已关闭房间{vbCrLf}- 邀请码输错了")
                 End Select
             End If
-        Loop Until Task.IsAborted
-        If Task.IsAborted Then Throw New ThreadInterruptedException
+        Loop Until Task.IsInterrupted
+        If Task.IsInterrupted Then Throw New ThreadInterruptedException
         '等待连接稳定，最多 5s
         If IsServerSide Then Return
         UpdateLoadingPage("连接优化中……", "优化连接")
@@ -594,7 +594,7 @@ Public Class PageLinkMain
         For i = 1 To 50
             Dim Server = GetTargetPeer()
             If Server IsNot Nothing AndAlso Not Server.Relay AndAlso Server.Ping < 100 Then Return '结束
-            If Task.IsAborted Then Throw New ThreadInterruptedException
+            If Task.IsInterrupted Then Throw New ThreadInterruptedException
             Thread.Sleep(100)
         Next
     End Sub
@@ -1060,7 +1060,7 @@ ForcedPass:
                     Else
                         HintFinish.Text = "你或者房主的网络环境不太好，"
                     End If
-                    If String.IsNullOrWhiteSpace(Setup.Get("LinkCustomPeer")) Then
+                    If String.IsNullOrWhiteSpace(Settings.Get("LinkCustomPeer")) Then
                         HintFinish.Text &= "正使用社区节点进行中继。"
                     Else
                         HintFinish.Text &= "正通过自定义节点进行中继。"

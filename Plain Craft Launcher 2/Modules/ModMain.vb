@@ -166,7 +166,7 @@ EndHint:
         Public Text As String
         ''' <summary>
         ''' 输入模式：文本框的文本。
-        ''' 选择模式：需要放进去的 List(Of MyListItem)。
+        ''' 选择模式：需要放进去的 IEnumberable(Of IMyRadio)。
         ''' 登录模式：登录步骤 1 中返回的 JSON。
         ''' </summary>
         Public Content As Object
@@ -308,7 +308,7 @@ EndHint:
     ''' <param name="Button1">显示的第一个按钮，默认为 “确定”。</param>
     ''' <param name="Button2">显示的第二个按钮，默认为空。</param>
     ''' <param name="IsWarn">是否为警告弹窗，若为 True，弹窗配色和背景会变为红色。</param>
-    Public Function MyMsgBoxSelect(Selections As List(Of IMyRadio), Optional Title As String = "提示", Optional Button1 As String = "确定", Optional Button2 As String = "", Optional IsWarn As Boolean = False) As Integer?
+    Public Function MyMsgBoxSelect(Selections As IEnumerable(Of IMyRadio), Optional Title As String = "提示", Optional Button1 As String = "确定", Optional Button2 As String = "", Optional IsWarn As Boolean = False) As Integer?
         '将弹窗列入队列
         Dim Converter As New MyMsgBoxConverter With {.Type = MyMsgBoxType.Select, .Button1 = Button1, .Button2 = Button2, .Content = Selections, .IsWarn = IsWarn, .Title = Title}
         WaitingMyMsgBox.Add(Converter)
@@ -512,7 +512,7 @@ EndHint:
                 EventData = If(JsonData("EventData"), "")
                 IsEvent = True
             Else
-                Dim XamlAddress As String = FilePath.ToLower.Replace(".json", ".xaml")
+                Dim XamlAddress As String = FilePath.Lower.Replace(".json", ".xaml")
                 If File.Exists(XamlAddress) Then
                     XamlContent = ReadFile(XamlAddress)
                     IsEvent = False
@@ -579,7 +579,7 @@ EndHint:
                     '读取自定义文件
                     If Directory.Exists(Path & "PCL\Help\") Then
                         For Each File In EnumerateFiles(Path & "PCL\Help\")
-                            Select Case File.Extension.ToLower
+                            Select Case File.Extension.Lower
                                 Case ".helpignore"
                                     '加载忽略列表
                                     Log("[Help] 发现 .helpignore 文件：" & File.FullName)
@@ -598,7 +598,7 @@ EndHint:
                     '读取自带文件
                     For Each File In EnumerateFiles(PathTemp & "Help")
                         '跳过非 json 文件与以 . 开头的文件夹
-                        If File.Extension.ToLower <> ".json" OrElse File.Directory.FullName.Replace(PathTemp & "Help", "").Contains("\.") Then Continue For
+                        If File.Extension.Lower <> ".json" OrElse File.Directory.FullName.Replace(PathTemp & "Help", "").Contains("\.") Then Continue For
                         '检查忽略列表
                         Dim RealPath As String = File.FullName.Replace(PathTemp & "Help\", "")
                         For Each Ignore In IgnoreList
@@ -614,7 +614,7 @@ NextFile:
                 Catch ex As Exception
                     Log(ex, "检查帮助文件夹失败", LogLevel.Msgbox)
                 End Try
-                If Loader.IsAborted Then Return
+                If Loader.IsInterrupted Then Return
 
                 '将文件实例化
                 Dim Dict As New List(Of HelpEntry)
@@ -630,7 +630,7 @@ NextFile:
 
                 '回设
                 If Not Dict.Any() Then Throw New Exception("未找到可用的帮助；若不需要帮助页面，可以在 设置 → 个性化 → 功能隐藏 中将其隐藏")
-                If Loader.IsAborted Then Return
+                If Loader.IsInterrupted Then Return
                 Loader.Output = Dict
 
             Catch ex As Exception
@@ -643,12 +643,12 @@ NextFile:
     ''' 尝试解压内置帮助文件。
     ''' </summary>
     Public Sub HelpTryExtract()
-        If Setup.Get("SystemHelpVersion") <> VersionCode OrElse Not File.Exists(PathTemp & "Help\启动器\备份设置.xaml") Then
+        If Settings.Get("SystemHelpVersion") <> VersionCode OrElse Not File.Exists(PathTemp & "Help\启动器\备份设置.xaml") Then
             DeleteDirectory(PathTemp & "Help")
             Directory.CreateDirectory(PathTemp & "Help")
             WriteFile(PathTemp & "Cache\Help.zip", GetResources("Help"))
             ExtractCompressedFile(PathTemp & "Cache\Help.zip", PathTemp & "Help")
-            Setup.Set("SystemHelpVersion", VersionCode)
+            Settings.Set("SystemHelpVersion", VersionCode)
             Log("[Help] 已解压内置帮助文件，目前状态：" & File.Exists(PathTemp & "Help\启动器\备份设置.xaml"), LogLevel.Debug)
         End If
     End Sub
@@ -657,11 +657,19 @@ NextFile:
 
 #Region "愚人节"
 
-    Public IsAprilEnabled As Boolean = Date.Now.Month = 4 AndAlso Date.Now.Day = 1
+    Private _IsAprilEnabled As Boolean? = Nothing
+    Public ReadOnly Property IsAprilEnabled As Boolean
+        Get
+            If _IsAprilEnabled Is Nothing Then
+                _IsAprilEnabled =
+                    Date.Now.Month = 4 AndAlso Date.Now.Day = 1 AndAlso
+                    Settings.Get("AprilDoneYear") <> Date.Now.Year '成功后同年内则不再触发
+            End If
+            Return _IsAprilEnabled.Value
+        End Get
+    End Property
     Public IsAprilGiveup As Boolean = False
-    Private AprilSpeed As New Vector(0, 0)
-    Private AprilIdieCount As Integer = 0, AprilMousePosLast As New Point(0, 0)
-    Private AprilDistance As Integer = 0
+    Private AprilDifficultiedDistance As Integer = 0
     Private Sub TimerFool()
         Try
             If FrmLaunchLeft Is Nothing OrElse FrmLaunchLeft.AprilPosTrans Is Nothing OrElse FrmMain.lastMouseArg Is Nothing Then Return
@@ -669,11 +677,13 @@ NextFile:
 
             '计算是否空闲
             Dim MousePos = FrmMain.lastMouseArg.GetPosition(FrmMain)
-            If MousePos = AprilMousePosLast Then
-                AprilIdieCount += 1
+            Static IdieCount As Integer = 0
+            Static MousePosLast As New Point(0, 0)
+            If MousePos = MousePosLast Then
+                IdieCount += 1
             Else
-                AprilMousePosLast = MousePos
-                AprilIdieCount = 0
+                MousePosLast = MousePos
+                IdieCount = 0
             End If
             '计算躲避移动
             Dim Direction As Vector
@@ -685,9 +695,11 @@ NextFile:
             Direction = -Dir
             Distance = New Vector(Math.Max(0, Math.Abs(Vec.X) - ButtonWidth), Math.Max(0, Math.Abs(Vec.Y) - ButtonHeight)).Length
             Dim BreathScale = Math.Sin(Timer150Count / 37.5 * Math.PI)
-            Dim Acc = Math.Max(0, BreathScale * 0.25 - 0.65 - Math.Log((Distance + 0.4) / 200)) * Direction '加速度
-            '计算回归移动
-            If AprilIdieCount >= 64 * 5 Then
+            Dim Difficulty As Double = 1 / (1 + (AprilDifficultiedDistance / 6000) ^ 2) + 0.25 '难度，初始为 1.25x，6000 距离为 0.75x，12000 为 0.5x，24000 为 0.256x，最低 0.25x
+            Dim Acc = Math.Max(0, -0.65 - Math.Log((Distance / Difficulty + 0.4) / 200)) * Direction * Difficulty '加速度
+            'FrmMain.Title = CInt(AprilTotalDistance) & " - " & Difficulty
+            '5s 不动时回到起始点
+            If IdieCount >= 64 * 5 Then
                 Dim SafeDist As Vector = FrmMain.lastMouseArg.GetPosition(FrmMain.PanMain) - New Vector(ButtonWidth, FrmMain.PanMain.ActualHeight - ButtonHeight * 3)
                 Dim Back As New Vector(FrmLaunchLeft.AprilPosTrans.X, FrmLaunchLeft.AprilPosTrans.Y)
                 If SafeDist.Length > 250 AndAlso Back.Length > 0.4 Then
@@ -697,10 +709,11 @@ NextFile:
                 End If
             End If
             '回到边界
+            Static Speed As New Vector(0, 0)
             Dim Relative As Point = FrmLaunchLeft.BtnLaunch.TranslatePoint(New Point(0, 0), FrmMain.PanForm)
             If Relative.X < -ButtonWidth * 2 Then
                 FrmLaunchLeft.AprilPosTrans.X += FrmMain.PanForm.ActualWidth + ButtonWidth * 2 '离开左边界
-                AprilSpeed.X -= 80
+                Speed.X -= 80
                 If Relative.Y < 0 Then
                     FrmLaunchLeft.AprilPosTrans.Y += ButtonHeight * 2.5
                 ElseIf Relative.Y > FrmMain.PanForm.ActualHeight - ButtonHeight * 2 Then
@@ -708,7 +721,7 @@ NextFile:
                 End If
             ElseIf Relative.X > FrmMain.PanForm.ActualWidth Then
                 FrmLaunchLeft.AprilPosTrans.X -= FrmMain.PanForm.ActualWidth + ButtonWidth * 2 '离开右边界
-                AprilSpeed.X += 80
+                Speed.X += 80
                 If Relative.Y < 0 Then
                     FrmLaunchLeft.AprilPosTrans.Y += ButtonHeight * 2.5
                 ElseIf Relative.Y > FrmMain.PanForm.ActualHeight - ButtonHeight * 2 Then
@@ -716,7 +729,7 @@ NextFile:
                 End If
             ElseIf Relative.Y < -ButtonHeight * 2 Then
                 FrmLaunchLeft.AprilPosTrans.Y += FrmMain.PanForm.ActualHeight + ButtonHeight * 2 '离开上边界
-                AprilSpeed.Y -= 25
+                Speed.Y -= 25
                 If Relative.X < 0 Then
                     FrmLaunchLeft.AprilPosTrans.X += ButtonWidth * 2
                 ElseIf Relative.X > FrmMain.PanForm.ActualWidth - ButtonWidth * 2 Then
@@ -724,7 +737,7 @@ NextFile:
                 End If
             ElseIf Relative.Y > FrmMain.PanForm.ActualHeight Then
                 FrmLaunchLeft.AprilPosTrans.Y -= FrmMain.PanForm.ActualHeight + ButtonHeight * 2 '离开下边界
-                AprilSpeed.Y += 25
+                Speed.Y += 25
                 If Relative.X < 0 Then
                     FrmLaunchLeft.AprilPosTrans.X += ButtonWidth * 2
                 ElseIf Relative.X > FrmMain.PanForm.ActualWidth - ButtonWidth * 2 Then
@@ -732,29 +745,31 @@ NextFile:
                 End If
             End If
             '移动
-            AprilSpeed = AprilSpeed * 0.8 + Acc
-            Dim SpeedValue = Math.Min(60, AprilSpeed.Length)
+            Speed = Speed * 0.8 + Acc
+            Dim SpeedValue = Math.Min(60, Speed.Length)
             If SpeedValue < 0.01 Then Return
-            AprilSpeed.Normalize()
-            AprilSpeed *= SpeedValue
-            AprilDistance += SpeedValue
-            FrmLaunchLeft.AprilPosTrans.X += AprilSpeed.X
-            FrmLaunchLeft.AprilPosTrans.Y += AprilSpeed.Y
+            Speed.Normalize()
+            Speed *= SpeedValue
+            AprilDifficultiedDistance += SpeedValue
+            FrmLaunchLeft.AprilPosTrans.X += Speed.X
+            FrmLaunchLeft.AprilPosTrans.Y += Speed.Y
             '大小改变
             FrmLaunchLeft.AprilScaleTrans.ScaleX = MathClamp(1 - (Math.Abs(Direction.X) - Math.Abs(Direction.Y)) * (SpeedValue / 160), 0.2, 1.8)
             FrmLaunchLeft.AprilScaleTrans.ScaleY = MathClamp(1 - (Math.Abs(Direction.Y) - Math.Abs(Direction.X)) * (SpeedValue / 100), 0.2, 1.8)
             '放弃提示
-            If AprilDistance > 4000 Then
-                AprilDistance = -4000
+            Static GiveUpDistance As Double = -1500
+            GiveUpDistance += SpeedValue
+            If GiveUpDistance > 2500 Then
+                GiveUpDistance = 0
                 Select Case RandomInteger(0, 3)
                     Case 0
-                        Hint("放弃吧！只需要点一下右下角的小白旗……")
+                        Hint("放弃吧！只需要点一下右下角的小白旗……", HintType.Red)
                     Case 1
-                        Hint("看到右下角的那面小白旗了吗？")
+                        Hint("看到右下角的那面小白旗了吗？", HintType.Red)
                     Case 2
-                        Hint("这里建议点一下右下角的小白旗投降呢.jpg")
+                        Hint("这里建议点一下右下角的小白旗投降呢.jpg", HintType.Red)
                     Case 3
-                        Hint("右下角的小白旗永远等着你……")
+                        Hint("右下角的小白旗永远等着你……", HintType.Red)
                 End Select
             End If
 
@@ -843,7 +858,7 @@ NextFile:
             Text = Text.Replace("{version_path}", Replacer(McInstanceSelected.PathVersion)) : Text = Text.Replace("{verpath}", Replacer(McInstanceSelected.PathVersion))
             Text = Text.Replace("{version_indie}", Replacer(McInstanceSelected.PathIndie)) : Text = Text.Replace("{verindie}", Replacer(McInstanceSelected.PathIndie))
             Text = Text.Replace("{name}", Replacer(McInstanceSelected.Name))
-            If {"unknown", "old", "pending"}.Contains(McInstanceSelected.Version.VanillaName.ToLower) Then
+            If {"unknown", "old", "pending"}.Contains(McInstanceSelected.Version.VanillaName.Lower) Then
                 Text = Text.Replace("{version}", Replacer(McInstanceSelected.Name))
             Else
                 Text = Text.Replace("{version}", Replacer(McInstanceSelected.Version.VanillaName))
@@ -857,7 +872,7 @@ NextFile:
         '登录信息
         If McLoginLoader.State = LoadState.Finished Then
             Text = Text.Replace("{user}", Replacer(McLoginLoader.Output.Name))
-            Text = Text.Replace("{uuid}", Replacer(McLoginLoader.Output.Uuid?.ToLower))
+            Text = Text.Replace("{uuid}", Replacer(McLoginLoader.Output.Uuid?.Lower))
             Select Case McLoginLoader.Input.Type
                 Case McLoginType.Legacy
                     Text = Text.Replace("{login}", Replacer("离线"))
@@ -876,7 +891,7 @@ NextFile:
         '高级
         Text = Text.RegexReplaceEach("\{hint\}", Function() Replacer(PageOtherTest.GetRandomHint()))
         Text = Text.RegexReplaceEach("\{cave\}", Function() Replacer(PageOtherTest.GetRandomCave()))
-        Text = Text.RegexReplaceEach("\{setup:([a-zA-Z0-9]+)\}", Function(m) Replacer(Setup.GetSafe(m.Groups(1).Value, McInstanceSelected)))
+        Text = Text.RegexReplaceEach("\{setup:([a-zA-Z0-9]+)\}", Function(m) Replacer(Settings.GetSafe(m.Groups(1).Value, McInstanceSelected)))
         Text = Text.RegexReplaceEach("\{varible:([^:\}]+)(?::([^\}]+))?\}", Function(m) Replacer(ReadReg("CustomEvent" & m.Groups(1).Value, m.Groups(2).Value)))
         Text = Text.RegexReplaceEach("\{variable:([^:\}]+)(?::([^\}]+))?\}", Function(m) Replacer(ReadReg("CustomEvent" & m.Groups(1).Value, m.Groups(2).Value)))
         Return Text
@@ -971,7 +986,7 @@ NextFile:
             Timer150Count = 0
             Try
 #Region "每 7.5s 执行一次的代码"
-                If FrmMain.BtnExtraApril_ShowCheck AndAlso AprilDistance <> 0 Then FrmMain.BtnExtraApril.Ribble()
+                If FrmMain.BtnExtraApril_ShowCheck AndAlso AprilDifficultiedDistance <> 0 Then FrmMain.BtnExtraApril.Ribble()
                 '以未知原因窗口被丢到一边去的修复（Top、Left = -25600），还有 #745
                 RunInUi(
                 Sub()

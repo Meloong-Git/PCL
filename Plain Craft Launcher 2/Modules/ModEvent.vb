@@ -302,7 +302,7 @@ Public Class CustomEvent
 
                 Case EventType.修改设置, EventType.写入设置
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 UiLauncherTransparent|400")
-                    Setup.SetSafe(Args(0), Args(1), Instance:=McInstanceSelected)
+                    Settings.SetSafe(Args(0), Args(1), Instance:=McInstanceSelected)
                     If Args.Length = 2 Then Hint($"已写入设置：{Args(0)} → {Args(1)}", HintType.Green)
 
                 Case EventType.修改变量, EventType.写入变量
@@ -369,7 +369,7 @@ Public Class CustomEvent
             End Try
             RelativeUrl = LocalTemp
         End If
-        RelativeUrl = RelativeUrl.Replace("/", "\").ToLower.TrimStart("\")
+        RelativeUrl = RelativeUrl.Replace("/", "\").Lower.TrimStart("\")
 
         '确认实际路径
         Dim Location As String, WorkingDir As String = Path & "PCL"
@@ -408,12 +408,12 @@ Public Class CustomEvent
     ''' 弹出安全确认弹窗。返回是否继续执行。
     ''' </summary>
     Private Shared Function EventSafetyConfirm(Message As String) As Boolean
-        If Setup.Get("HintCustomCommand") Then Return True
+        If Settings.Get("HintCustomCommand") Then Return True
         Select Case MyMsgBox(Message & vbCrLf & "请在确认没有安全隐患后再继续。", "执行确认", "继续", "继续且今后不再要求确认", "取消")
             Case 1
                 Return True
             Case 2
-                Setup.Set("HintCustomCommand", True)
+                Settings.Set("HintCustomCommand", True)
                 Return True
             Case Else
                 Return False

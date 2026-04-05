@@ -127,7 +127,7 @@ Public Class PageComp
             .GameVersion = GameVersion
             .Tag = ComboSearchTag.SelectedItem.Tag
             .ModLoader = If(PageType = CompType.Mod, Val(ComboSearchLoader.SelectedItem.Tag), CompModLoaderType.Any)
-            .Source = CType(Val(ComboSearchSource.SelectedItem.Tag), CompSourceType)
+            .Sources = CType(Val(ComboSearchSource.SelectedItem.Tag), CompSourceType)
         End With
         Return Request
     End Function

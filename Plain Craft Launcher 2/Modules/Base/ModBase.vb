@@ -14,25 +14,24 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.12.2" '不含分支前缀的显示用版本名
-    Public Const VersionStandardCode As String = "2.12.2." & VersionBranchCode '标准格式的四段式版本号
+    Public Const VersionBaseName As String = "2.12.6.2" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If BETA Then
-    Public Const VersionCode As Integer = 379 'Release
+    Public Const VersionCode As Integer = 391 '正式版
 #Else
-    Public Const VersionCode As Integer = 380 'Snapshot
+    Public Const VersionCode As Integer = 390 '快照版
 #End If
     '自动生成的版本信息
     Public Const VersionDisplayName As String = VersionBranchName & " " & VersionBaseName
 #If RELEASE Then
-    Public Const VersionBranchName As String = "Snapshot"
-    Public Const VersionBranchCode As String = "0"
+    Public Const VersionBranchName As String = "快照版"
+    Public Const VersionBranchCode As Integer = 0
 #ElseIf BETA Then
-    Public Const VersionBranchName As String = "Release"
-    Public Const VersionBranchCode As String = "50"
+    Public Const VersionBranchName As String = "正式版"
+    Public Const VersionBranchCode As Integer = 50
 #Else
-    Public Const VersionBranchName As String = "Debug"
-    Public Const VersionBranchCode As String = "100"
+    Public Const VersionBranchName As String = "开发版"
+    Public Const VersionBranchCode As Integer = 100
 #End If
 
     ''' <summary>
@@ -55,10 +54,6 @@ Public Module ModBase
     ''' 当前程序的语言。
     ''' </summary>
     Public Lang As String = "zh_CN"
-    ''' <summary>
-    ''' 设置对象。
-    ''' </summary>
-    Public Setup As New ModSetup
     ''' <summary>
     ''' 程序的打开计时。
     ''' </summary>
@@ -86,11 +81,11 @@ Public Module ModBase
     ''' <summary>
     ''' 系统盘盘符，以 \ 结尾。例如 “C:\”。
     ''' </summary>
-    Public OsDrive As String = Environment.GetLogicalDrives().Where(Function(p) Directory.Exists(p)).First.ToUpper.First & ":\" '#3799
+    Public OsDrive As String = Environment.GetLogicalDrives().Where(Function(p) Directory.Exists(p)).First.Upper.First & ":\" '#3799
     ''' <summary>
     ''' 程序的缓存文件夹路径，以 \ 结尾。
     ''' </summary>
-    Public PathTemp As String = If(Setup.Get("SystemSystemCache") = "", IO.Path.GetTempPath() & "PCL\", Setup.Get("SystemSystemCache")).ToString.Replace("/", "\").TrimEnd("\") & "\"
+    Public PathTemp As String = If(Settings.Get("SystemSystemCache") = "", IO.Path.GetTempPath() & "PCL\", Settings.Get("SystemSystemCache")).ToString.Replace("/", "\").TrimEnd("\") & "\"
     ''' <summary>
     ''' AppData 中的 PCL 文件夹路径，以 \ 结尾。
     ''' </summary>
@@ -416,17 +411,13 @@ Public Module ModBase
         Loading
         Finished
         Failed
-        Aborted
+        Interrupted
     End Enum
 
     ''' <summary>
     ''' 执行返回值。
     ''' </summary>
     Public Enum ProcessReturnValues
-        ''' <summary>
-        ''' 执行成功，或进程被中断。
-        ''' </summary>
-        Aborted = -1
         ''' <summary>
         ''' 执行成功。
         ''' </summary>
@@ -620,7 +611,8 @@ Public Module ModBase
     Public Sub DeleteReg(Key As String, Optional ThrowException As Boolean = False)
         Try
             Dim SubKey As Microsoft.Win32.RegistryKey = My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, True)
-            SubKey?.DeleteValue(Key)
+            If SubKey?.GetValue(Key) Is Nothing Then Return
+            SubKey.DeleteValue(Key)
         Catch ex As Exception
             Log(ex, "删除注册表出错：" & Key, If(ThrowException, LogLevel.Hint, LogLevel.Developer))
             If ThrowException Then Throw
@@ -1071,25 +1063,25 @@ Public Module ModBase
     ''' 获取文件 MD5，若失败则返回空字符串。
     ''' </summary>
     Public Function GetFileMD5(FilePath As String) As String
-        Dim Retry As Boolean = False
+        Dim Retried As Boolean = False
 Re:
         Try
-            '获取 MD5
-            Dim Result As New StringBuilder()
-            Dim File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-            Dim MD5 As MD5 = New MD5CryptoServiceProvider()
-            Dim Retval As Byte() = MD5.ComputeHash(File)
-            File.Close()
-            For i = 0 To Retval.Length - 1
-                Result.Append(Retval(i).ToString("x2"))
-            Next
-            Return Result.ToString
+            Using File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                Using h = MD5Cng.Create()
+                    Dim Retval As Byte() = h.ComputeHash(File)
+                    Dim Result As New StringBuilder(Retval.Length * 2)
+                    For i = 0 To Retval.Length - 1
+                        Result.Append(Retval(i).ToString("x2"))
+                    Next
+                    Return Result.ToString
+                End Using
+            End Using
         Catch ex As Exception
-            If Retry OrElse TypeOf ex Is FileNotFoundException Then
+            If Retried OrElse TypeOf ex Is FileNotFoundException Then
                 Log(ex, "获取文件 MD5 失败：" & FilePath)
                 Return ""
             Else
-                Retry = True
+                Retried = True
                 Log(ex, "获取文件 MD5 可重试失败：" & FilePath, LogLevel.Normal)
                 Thread.Sleep(RandomInteger(200, 500))
                 GoTo Re
@@ -1100,27 +1092,25 @@ Re:
     ''' 获取文件 SHA512，若失败则返回空字符串。
     ''' </summary>
     Public Function GetFileSHA512(FilePath As String) As String
-        Dim Retry As Boolean = False
+        Dim Retried As Boolean = False
 Re:
         Try
-            ''检测该文件是否在下载中，若在下载则放弃检测
-            'If IgnoreOnDownloading AndAlso NetManage.Files.ContainsKey(FilePath) AndAlso NetManage.Files(FilePath).State <= NetState.Merge Then Return ""
-            '获取 SHA512
-            Dim file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-            Dim sha512 As SHA512 = New SHA512CryptoServiceProvider()
-            Dim retval As Byte() = sha512.ComputeHash(file)
-            file.Close()
-            Dim Result As New StringBuilder()
-            For i As Integer = 0 To retval.Length - 1
-                Result.Append(retval(i).ToString("x2"))
-            Next
-            Return Result.ToString
+            Using File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                Using h = SHA512Cng.Create()
+                    Dim retval As Byte() = h.ComputeHash(File)
+                    Dim Result As New StringBuilder(retval.Length * 2)
+                    For i As Integer = 0 To retval.Length - 1
+                        Result.Append(retval(i).ToString("x2"))
+                    Next
+                    Return Result.ToString
+                End Using
+            End Using
         Catch ex As Exception
-            If Retry OrElse TypeOf ex Is FileNotFoundException Then
+            If Retried OrElse TypeOf ex Is FileNotFoundException Then
                 Log(ex, "获取文件 SHA512 失败：" & FilePath)
                 Return ""
             Else
-                Retry = True
+                Retried = True
                 Log(ex, "获取文件 SHA512 可重试失败：" & FilePath, LogLevel.Normal)
                 Thread.Sleep(RandomInteger(200, 500))
                 GoTo Re
@@ -1134,18 +1124,16 @@ Re:
         Dim Retry As Boolean = False
 Re:
         Try
-            ''检测该文件是否在下载中，若在下载则放弃检测
-            'If IgnoreOnDownloading AndAlso NetManage.Files.ContainsKey(FilePath) AndAlso NetManage.Files(FilePath).State <= NetState.Merge Then Return ""
-            '获取 SHA256
-            Dim file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-            Dim sha256 As SHA256 = New SHA256CryptoServiceProvider()
-            Dim retval As Byte() = sha256.ComputeHash(file)
-            file.Close()
-            Dim Result As New StringBuilder()
-            For i As Integer = 0 To retval.Length - 1
-                Result.Append(retval(i).ToString("x2"))
-            Next
-            Return Result.ToString
+            Using File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                Using h = SHA256Cng.Create()
+                    Dim retval As Byte() = h.ComputeHash(File)
+                    Dim Result As New StringBuilder(retval.Length * 2)
+                    For i As Integer = 0 To retval.Length - 1
+                        Result.Append(retval(i).ToString("x2"))
+                    Next
+                    Return Result.ToString()
+                End Using
+            End Using
         Catch ex As Exception
             If Retry OrElse TypeOf ex Is FileNotFoundException Then
                 Log(ex, "获取文件 SHA256 失败：" & FilePath)
@@ -1165,16 +1153,16 @@ Re:
         Dim Retry As Boolean = False
 Re:
         Try
-            '获取 SHA1
-            Dim file As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
-            Dim sha1 As SHA1 = New SHA1CryptoServiceProvider()
-            Dim retval As Byte() = sha1.ComputeHash(file)
-            file.Close()
-            Dim Result As New StringBuilder()
-            For i As Integer = 0 To retval.Length - 1
-                Result.Append(retval(i).ToString("x2"))
-            Next
-            Return Result.ToString
+            Using File As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)
+                Using h = SHA1Cng.Create()
+                    Dim retval As Byte() = h.ComputeHash(File)
+                    Dim Result As New StringBuilder(retval.Length * 2)
+                    For i As Integer = 0 To retval.Length - 1
+                        Result.Append(retval(i).ToString("x2"))
+                    Next
+                    Return Result.ToString
+                End Using
+            End Using
         Catch ex As Exception
             If Retry OrElse TypeOf ex Is FileNotFoundException Then
                 Log(ex, "获取文件 SHA1 失败：" & FilePath)
@@ -1257,11 +1245,11 @@ Re:
                 End If
                 If Not String.IsNullOrEmpty(Hash) Then
                     If Hash.Length < 35 Then 'MD5
-                        If Hash.ToLowerInvariant <> GetFileMD5(LocalPath) Then Return "文件 MD5 应为 " & Hash & "，实际为 " & GetFileMD5(LocalPath)
+                        If Hash.Lower <> GetFileMD5(LocalPath) Then Return "文件 MD5 应为 " & Hash & "，实际为 " & GetFileMD5(LocalPath)
                     ElseIf Hash.Length = 64 Then 'SHA256
-                        If Hash.ToLowerInvariant <> GetFileSHA256(LocalPath) Then Return "文件 SHA256 应为 " & Hash & "，实际为 " & GetFileSHA256(LocalPath)
+                        If Hash.Lower <> GetFileSHA256(LocalPath) Then Return "文件 SHA256 应为 " & Hash & "，实际为 " & GetFileSHA256(LocalPath)
                     Else 'SHA1 (40)
-                        If Hash.ToLowerInvariant <> GetFileSHA1(LocalPath) Then Return "文件 SHA1 应为 " & Hash & "，实际为 " & GetFileSHA1(LocalPath)
+                        If Hash.Lower <> GetFileSHA1(LocalPath) Then Return "文件 SHA1 应为 " & Hash & "，实际为 " & GetFileSHA1(LocalPath)
                     End If
                 End If
                 If IsJson Then
@@ -1281,6 +1269,7 @@ Re:
         End Function
     End Class
 
+    '压缩文件
     ''' <summary>
     ''' 尝试根据后缀名判断文件种类并解压文件，支持 gz 与 zip，会尝试将 jar 以 zip 方式解压。
     ''' 会尝试创建，但不会清空目标文件夹。
@@ -1291,7 +1280,7 @@ Re:
         '解压 gz（gz 不需要考虑编码）
         If CompressFilePath.EndsWithF(".gz", True) Then
             Using stream As New GZipStream(New FileStream(CompressFilePath, FileMode.Open, FileAccess.Read, FileShare.Read), CompressionMode.Decompress)
-                Using decompressedFile As New FileStream(DestDirectory & GetFileNameFromPath(CompressFilePath).ToLower.Replace(".tar", "").Replace(".gz", ""),
+                Using decompressedFile As New FileStream(DestDirectory & GetFileNameFromPath(CompressFilePath).Lower.Replace(".tar", "").Replace(".gz", ""),
                                                          FileMode.OpenOrCreate, FileAccess.Write)
                     Dim data As Integer = stream.ReadByte()
                     While data <> -1
@@ -1319,7 +1308,7 @@ Re:
             End Using
         End Sub
         Try
-            TryExtractZip(Encoding.UTF8)
+            TryExtractZip(New UTF8Encoding(False, True))
         Catch ex As Exception
             Log(ex, $"首次解压尝试失败，将更换编码并重试（{CompressFilePath} → {DestDirectory}）")
             Try
@@ -1329,6 +1318,25 @@ Re:
             End Try
         End Try
     End Sub
+    ''' <summary>
+    ''' 将多个文件打包为一个压缩文件。
+    ''' 这些文件会被直接放在压缩包根目录下。
+    ''' </summary>
+    Public Sub CreateCompressedFile(OutputFullPath As String, SourceFiles As IEnumerable(Of String))
+        Dim DirectoryPath = IO.Path.GetDirectoryName(OutputFullPath)
+        If Not Directory.Exists(DirectoryPath) Then Directory.CreateDirectory(DirectoryPath)
+        Using ZipStream As New FileStream(OutputFullPath, FileMode.Create)
+            Using Archive As New ZipArchive(ZipStream, ZipArchiveMode.Create)
+                For Each FilePath In SourceFiles
+                    If Not File.Exists(FilePath) Then Return
+                    Using SourceStream As New FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.Read),
+                          EntryStream As Stream = Archive.CreateEntry(IO.Path.GetFileName(FilePath)).Open()
+                        SourceStream.CopyTo(EntryStream)
+                    End Using
+                Next
+            End Using
+        End Using
+    End Sub
 
     ''' <summary>
     ''' 删除文件夹，返回删除的文件个数。通过参数选择是否抛出异常。
@@ -1336,7 +1344,7 @@ Re:
     Public Function DeleteDirectory(Path As String, Optional IgnoreIssue As Boolean = False) As Integer
         If Not Directory.Exists(Path) Then Return 0
         If Not Path.EndsWithF("\") Then Path &= "\"
-        If Path.EndsWith(":\") OrElse
+        If Path.EndsWithF(":\") OrElse
            Path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) & "\" OrElse
            Path = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory) & "\" OrElse
            Path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) & "\" Then '#7030
@@ -1347,11 +1355,12 @@ Re:
         Dim Files As String()
         Try
             Files = Directory.GetFiles(Path)
-        Catch ex As DirectoryNotFoundException '#4549
-            If Not Directory.Exists(Path) Then Return 0 '可能已被其他线程删除
-            Log(ex, $"疑似为孤立符号链接，尝试直接删除（{Path}）", LogLevel.Developer)
-            Directory.Delete(Path)
-            Return 0
+        Catch ex As DirectoryNotFoundException '#4549，也可能已被其他线程删除
+            If Directory.Exists(Path) Then
+                Log(ex, $"疑似为孤立符号链接，尝试直接删除（{Path}）", LogLevel.Developer)
+                Directory.Delete(Path)
+            End If
+            Return DeletedCount
         End Try
         For Each FilePath As String In Files
             Dim RetriedFile As Boolean = False
@@ -1359,6 +1368,8 @@ RetryFile:
             Try
                 File.Delete(FilePath)
                 DeletedCount += 1
+            Catch ex As DirectoryNotFoundException
+                Return DeletedCount
             Catch ex As Exception
                 If Not RetriedFile Then
                     RetriedFile = True
@@ -1420,17 +1431,25 @@ RetryDir:
 
     ''' <summary>
     ''' 若路径长度大于指定值，则将长路径转换为短路径。
-    ''' 如果路径不存在，则返回原始路径。
     ''' </summary>
-    Public Function ShortenPath(LongPath As String) As String
-        If LongPath.Length <= 200 OrElse LongPath.StartsWithF("http", True) Then Return LongPath
-        If Not Directory.Exists(LongPath) AndAlso Not File.Exists(LongPath) Then Return LongPath
-        Dim ShortPath As New StringBuilder(260)
-        GetShortPathName(LongPath.Replace("/", "\"), ShortPath, 260) '第一个参数也会在调用后被修改，使用 Replace 后不会影响原始字符串
-        ShortenPath = ShortPath.ToString
-        If String.IsNullOrEmpty(ShortenPath) Then Return LongPath
+    Public Function ShortenPath(Raw As String) As String
+        If Raw.Length <= 200 OrElse Raw.StartsWithF("http", True) Then Return Raw
+        If Not Directory.Exists(Raw) AndAlso Not File.Exists(Raw) Then Return Raw
+        Dim PathToShorten As String, Ignored As String
+        If Not Directory.Exists(Raw) AndAlso Raw.EndsWithF(".jar", True) Then '只能缩短文件夹部分，必须保留 jar 文件名，否则会导致 Forge 1.20.1 无法通过文件名识别模块名
+            PathToShorten = GetPathFromFullPath(Raw)
+            Ignored = GetFileNameFromPath(Raw)
+        Else
+            PathToShorten = Raw
+            Ignored = ""
+        End If
+        Dim ShortPathBuffer As New StringBuilder(260)
+        GetShortPathNameW(PathToShorten.Replace("/", "\"), ShortPathBuffer, 260)
+        Dim DirShortPath As String = ShortPathBuffer.ToString()
+        If String.IsNullOrEmpty(DirShortPath) Then Return Raw
+        Return If(String.IsNullOrEmpty(Ignored), DirShortPath, IO.Path.Combine(DirShortPath, Ignored))
     End Function
-    Private Declare Function GetShortPathName Lib "kernel32" Alias "GetShortPathNameA" (lpszLongPath As String, lpszShortPath As StringBuilder, cchBuffer As Integer) As Integer
+    Private Declare Unicode Function GetShortPathNameW Lib "kernel32" Alias "GetShortPathNameW" (lpszLongPath As String, lpszShortPath As StringBuilder, cchBuffer As Integer) As Integer
 
 #End Region
 
@@ -1497,7 +1516,7 @@ RetryDir:
             Ex = Ex.InnerException
         Loop
         DescList = DescList.Distinct.ToList
-        Dim Desc As String = Join(DescList, vbCrLf & "→ ")
+        Dim Desc As String = DescList.Join(vbCrLf & "→ ")
 
         '构造输出信息
         Dim UsualReason As String = AnalyzeUsualReason(InnerEx, OuterEx, DescList)
@@ -1505,7 +1524,7 @@ RetryDir:
             Return UsualReason & "详细错误：" & DescList.First
         Else
             DescList.Reverse() '让最深层错误在最左边
-            Return Join(DescList, " ← ")
+            Return DescList.Join(" ← ")
         End If
     End Function
     Private Function AnalyzeUsualReason(InnerEx As Exception, OuterEx As Exception, DescList As List(Of String)) As String
@@ -1588,7 +1607,7 @@ RetryDir:
     ''' </summary>
     <Extension> Public Function Capitalize(word As String) As String
         If String.IsNullOrEmpty(word) Then Return word
-        Return word.Substring(0, 1).ToUpperInvariant() & word.Substring(1).ToLowerInvariant()
+        Return word.Substring(0, 1).Upper() & word.Substring(1).Lower()
     End Function
 
     ''' <summary>
@@ -1608,7 +1627,24 @@ RetryDir:
     ''' <summary>
     ''' 连接字符串。
     ''' </summary>
+    <Extension> Public Function Join(List As IEnumerable, Split As Char) As String
+        Dim Builder As New StringBuilder
+        Dim IsFirst As Boolean = True
+        For Each Element In List
+            If IsFirst Then
+                IsFirst = False
+            Else
+                Builder.Append(Split)
+            End If
+            If Element IsNot Nothing Then Builder.Append(Element)
+        Next
+        Return Builder.ToString
+    End Function
+    ''' <summary>
+    ''' 连接字符串。
+    ''' </summary>
     <Extension> Public Function Join(List As IEnumerable, Split As String) As String
+        If Split.IsSingle Then Return List.Join(Split(0))
         Dim Builder As New StringBuilder
         Dim IsFirst As Boolean = True
         For Each Element In List
@@ -1626,7 +1662,7 @@ RetryDir:
     ''' 若原始字符串为空，则返回 {""}。
     ''' </summary>
     <Extension> Public Function Split(FullStr As String, SplitStr As String) As String()
-        If SplitStr.Length = 1 Then
+        If SplitStr.IsSingle Then
             Return FullStr.Split(SplitStr(0))
         Else
             Return FullStr.Split({SplitStr}, StringSplitOptions.None)
@@ -1647,14 +1683,14 @@ RetryDir:
     ''' 获取字符串 MD5。
     ''' </summary>
     Public Function GetStringMD5(Str As String) As String
-        Dim md5Hasher As New MD5CryptoServiceProvider
-        Dim hashedDataBytes As Byte()
-        hashedDataBytes = md5Hasher.ComputeHash(Encoding.GetEncoding("gb2312").GetBytes(Str))
-        Dim tmp As New StringBuilder()
-        For Each i As Byte In hashedDataBytes
-            tmp.Append(i.ToString("x2"))
-        Next
-        Return tmp.ToString()
+        Using h = MD5Cng.Create()
+            Dim hashedDataBytes = h.ComputeHash(Encoding.GetEncoding("gb2312").GetBytes(Str))
+            Dim tmp As New StringBuilder(hashedDataBytes.Length * 2)
+            For Each i As Byte In hashedDataBytes
+                tmp.Append(i.ToString("x2"))
+            Next
+            Return tmp.ToString()
+        End Using
     End Function
     ''' <summary>
     ''' 检查字符串中的字符是否均为 ASCII 字符。
@@ -1799,6 +1835,19 @@ RetryDir:
         End Try
     End Function
 
+    ''' <summary>
+    ''' 等效 ToLowerInvariant。
+    ''' </summary>
+    <Extension> <MethodImpl(MethodImplOptions.AggressiveInlining)> Public Function Lower(Str As String) As String
+        Return Str.ToLowerInvariant()
+    End Function
+    ''' <summary>
+    ''' 等效 ToUpperInvariant。
+    ''' </summary>
+    <Extension> <MethodImpl(MethodImplOptions.AggressiveInlining)> Public Function Upper(Str As String) As String
+        Return Str.ToUpperInvariant()
+    End Function
+
     '转义
     ''' <summary>
     ''' 为字符串进行 XML 转义。
@@ -1888,50 +1937,53 @@ RetryDir:
     ''' <param name="Source">被搜索的长内容。</param>
     ''' <param name="Query">用户输入的搜索文本。</param>
     Private Function SearchSimilarity(Source As String, Query As String) As Double
+        If String.IsNullOrEmpty(Source) OrElse String.IsNullOrEmpty(Query) Then Return 0
         Dim qp As Integer = 0, lenSum As Double = 0
-        Source = Source.ToLower.Replace(" ", "")
-        Query = Query.ToLower.Replace(" ", "")
-        Dim sourceLength As Integer = Source.Length, queryLength As Integer = Query.Length '用于计算最后因数的长度缓存
+        Dim str As New StringBuilder(Source.Length)
+        str.Append(Source.Lower().Replace(" ", ""))
+        Query = Query.Lower().Replace(" ", "")
+        Dim sourceLength As Integer = str.Length, queryLength As Integer = Query.Length '用于计算最后因数的长度缓存
+        If queryLength = 0 Then Return 0
         Do While qp < queryLength
             '对 qp 作为开始位置计算
             Dim sp As Integer = 0, lenMax As Integer = 0, spMax As Integer = 0
-            '查找以 qp 为头的最大子串
-            Do While sp < Source.Length
-                '对每个 sp 作为开始位置计算最大子串
+            Dim currentSourceLength As Integer = str.Length
+            Do While sp < currentSourceLength
                 Dim len As Integer = 0
-                Do While (qp + len) < queryLength AndAlso (sp + len) < Source.Length AndAlso Source(sp + len) = Query(qp + len)
+                While (qp + len) < queryLength AndAlso (sp + len) < currentSourceLength AndAlso str(sp + len) = Query(qp + len)
                     len += 1
-                Loop
+                End While
                 '存储 len
                 If len > lenMax Then
                     lenMax = len
                     spMax = sp
                 End If
                 '根据结果增加 sp
-                sp += Math.Max(1, len)
+                sp += If(len > 0, len, 1)
             Loop
             If lenMax > 0 Then
-                Source = Source.Substring(0, spMax) & If(Source.Count > spMax + lenMax, Source.Substring(spMax + lenMax), String.Empty) '将源中的对应字段替换空
+                str.Remove(spMax, lenMax) '将源中的对应字段移除
                 '存储 lenSum
                 Dim IncWeight = (Math.Pow(1.4, 3 + lenMax) - 3.6) '根据长度加成
                 IncWeight *= 1 + 0.3 * Math.Max(0, 3 - Math.Abs(qp - spMax)) '根据位置加成
                 lenSum += IncWeight
             End If
-            '根据结果增加 qp
-            qp += Math.Max(1, lenMax)
+            qp += If(lenMax > 0, lenMax, 1)
         Loop
         '计算结果：重复字段量 × 源长度影响比例
-        Return (lenSum / queryLength) * (3 / Math.Pow(sourceLength + 15, 0.5)) * If(queryLength <= 2, 3 - queryLength, 1)
+        Return (lenSum / queryLength) * (3 / Math.Sqrt(sourceLength + 15)) * If(queryLength <= 2, 3 - queryLength, 1)
     End Function
     ''' <summary>
     ''' 获取多段文本加权后的相似度。
     ''' </summary>
-    Private Function SearchSimilarityWeighted(Source As List(Of KeyValuePair(Of String, Double)), Query As String) As Double
+    Private Function SearchSimilarityWeighted(Source As List(Of SearchSource), Query As String) As Double
         Dim TotalWeight As Double = 0
         Dim Sum As Double = 0
         For Each Pair In Source
-            Sum += SearchSimilarity(Pair.Key, Query) * Pair.Value
-            TotalWeight += Pair.Value
+            If Pair.Aliases.Any Then
+                Sum += Pair.Aliases.Max(Function(a) SearchSimilarity(a, Query)) * Pair.Weight
+            End If
+            TotalWeight += Pair.Weight
         Next
         Return Sum / TotalWeight
     End Function
@@ -1944,9 +1996,10 @@ RetryDir:
         ''' </summary>
         Public Item As T
         ''' <summary>
-        ''' 该项目用于搜索的源。
+        ''' 该项目用于搜索的文本源。
+        ''' 在搜索时，会对每个文本源单独加权，但单个文本源内的多个别名只取最高的一个的相似度。
         ''' </summary>
-        Public SearchSource As List(Of KeyValuePair(Of String, Double))
+        Public SearchSource As List(Of SearchSource)
         ''' <summary>
         ''' 相似度。
         ''' </summary>
@@ -1955,9 +2008,29 @@ RetryDir:
         ''' 是否完全匹配。
         ''' </summary>
         Public AbsoluteRight As Boolean
+        Public Overrides Function ToString() As String
+            Return Math.Round(Similarity, 3) & " - " & Item.ToString()
+        End Function
+    End Class
+    ''' <summary>
+    ''' 单个用于搜索的文本源。
+    ''' </summary>
+    Public Class SearchSource
+        Public Aliases As String()
+        Public Weight As Double
+        Public Sub New(Aliases As String(), Optional Weight As Double = 1)
+            Me.Aliases = Aliases
+            Me.Weight = Weight
+        End Sub
+        Public Sub New(Text As String, Optional Weight As Double = 1)
+            Me.Aliases = {Text}
+            Me.Weight = Weight
+        End Sub
     End Class
     ''' <summary>
     ''' 进行多段文本加权搜索，获取相似度较高的数项结果。
+    ''' 在搜索时，会对每个文本源单独加权，但单个文本源内的多个别名只取最高的一个的相似度。
+    ''' 这会修改 Entries 中每项的 Similarity 与 AbsoluteRight 字段。
     ''' </summary>
     ''' <param name="MaxBlurCount">返回的最大模糊结果数。</param>
     ''' <param name="MinBlurSimilarity">返回结果要求的最低相似度。</param>
@@ -1966,29 +2039,26 @@ RetryDir:
         Dim ResultList As New List(Of SearchEntry(Of T))
         If Not Entries.Any() Then Return ResultList
         '进行搜索，获取相似信息
+        Dim QueryParts = Query.Split({" "c}, StringSplitOptions.RemoveEmptyEntries)
+        Dim Candidates As New List(Of SearchEntry(Of T))
         For Each Entry In Entries
             Entry.Similarity = SearchSimilarityWeighted(Entry.SearchSource, Query)
             Entry.AbsoluteRight =
-                Query.Split(" ").All( '对于按空格分割的每一段
+                QueryParts.All( '对于按空格分割的每一段
                 Function(QueryPart) Entry.SearchSource.Any( '若与任意一个搜索源完全匹配，则标记为完全匹配项
-                Function(Source) Source.Key.Replace(" ", "").ContainsF(QueryPart, True)))
+                Function(Source) Source.Aliases.Any(
+                Function([Alias]) [Alias].Replace(" ", "").ContainsF(QueryPart, True))))
+            If Entry.AbsoluteRight OrElse Entry.Similarity >= MinBlurSimilarity Then Candidates.Add(Entry)
         Next
         '按照相似度进行排序
-        Entries = Entries.SortByComparison(
-        Function(Left, Right) As Boolean
-            If Left.AbsoluteRight Xor Right.AbsoluteRight Then
-                Return Left.AbsoluteRight
-            Else
-                Return Left.Similarity > Right.Similarity
-            End If
-        End Function)
+        Candidates = Candidates.SortByComparison(Function(Left, Right) If(Left.AbsoluteRight <> Right.AbsoluteRight, Left.AbsoluteRight, Left.Similarity > Right.Similarity))
         '返回结果
         Dim BlurCount As Integer = 0
-        For Each Entry In Entries
+        For Each Entry In Candidates
             If Entry.AbsoluteRight Then
                 ResultList.Add(Entry) '完全匹配，直接加入
             Else
-                If Entry.Similarity < MinBlurSimilarity OrElse BlurCount = MaxBlurCount Then Exit For '模糊结果边界条件
+                If BlurCount = MaxBlurCount Then Exit For
                 ResultList.Add(Entry)
                 BlurCount += 1 '模糊结果计数
             End If
@@ -2167,7 +2237,7 @@ RetryDir:
     ''' </summary>
     <Extension> Public Function GetResultWithTimeout(Of T)(TargetTask As Task(Of T), TokenSource As CancellationTokenSource, TimeoutMs As Integer) As T
         Dim DelayTask = Task.Delay(TimeoutMs)
-        If Task.WhenAny(TargetTask, DelayTask).GetAwaiter().GetResult() Is DelayTask Then
+        If Task.WhenAny(TargetTask, DelayTask).ConfigureAwait(False).GetAwaiter().GetResult() Is DelayTask Then
             TokenSource.Cancel()
             Throw New TimeoutException($"任务超时（{TimeoutMs} ms）")
         End If
@@ -2178,7 +2248,7 @@ RetryDir:
     ''' </summary>
     <Extension> Public Sub GetResultWithTimeout(TargetTask As Task, TokenSource As CancellationTokenSource, TimeoutMs As Integer)
         Dim DelayTask = Task.Delay(TimeoutMs)
-        If Task.WhenAny(TargetTask, DelayTask).GetAwaiter().GetResult() Is DelayTask Then
+        If Task.WhenAny(TargetTask, DelayTask).ConfigureAwait(False).GetAwaiter().GetResult() Is DelayTask Then
             TokenSource.Cancel()
             Throw New TimeoutException($"任务超时（{TimeoutMs} ms）")
         End If
@@ -2294,6 +2364,22 @@ NextElement:
     End Function
     <Extension> Public Function Any(Arr As UIElementCollection) As Boolean
         Return Arr?.Count > 0
+    End Function
+    ''' <summary>
+    ''' 判断这是否是仅有一个元素的集合。
+    ''' </summary>
+    <Extension> Public Function IsSingle(Of T)(Source As IEnumerable(Of T)) As Boolean
+        If Source Is Nothing Then
+            Return False
+        ElseIf TypeOf Source Is IList(Of T) Then
+            Return DirectCast(Source, IList(Of T)).Count = 1
+        Else
+            Using Enumerator = Source.GetEnumerator()
+                If Not Enumerator.MoveNext() Then Return False
+                If Enumerator.MoveNext() Then Return False
+                Return True
+            End Using
+        End If
     End Function
     ''' <summary>
     ''' 对集合的每个元素执行指定操作。
@@ -2526,10 +2612,62 @@ NextElement:
     End Sub
 
     ''' <summary>
+    ''' 选择所有最大值对应的对象。
+    ''' 若没有元素则返回空列表。
+    ''' </summary>
+    <Extension> Public Function MaxByAll(Of T, C As IComparable(Of C))(Source As IEnumerable(Of T), Selector As Func(Of T, C)) As List(Of T)
+        Dim Results As New List(Of T)
+        Using Enumerator = Source.GetEnumerator()
+            If Not Enumerator.MoveNext() Then Return Results
+            Dim MaxItem As T = Enumerator.Current
+            Dim MaxValue As C = Selector(MaxItem)
+            Results.Add(MaxItem)
+            While Enumerator.MoveNext()
+                Dim CurrentItem = Enumerator.Current
+                Dim CurrentValue = Selector(CurrentItem)
+                Dim Comparison = CurrentValue.CompareTo(MaxValue)
+                If Comparison > 0 Then
+                    MaxValue = CurrentValue
+                    Results.Clear()
+                    Results.Add(CurrentItem)
+                ElseIf Comparison = 0 Then
+                    Results.Add(CurrentItem)
+                End If
+            End While
+        End Using
+        Return Results
+    End Function
+    ''' <summary>
+    ''' 选择所有最小值对应的对象。
+    ''' 若没有元素则返回空列表。
+    ''' </summary>
+    <Extension> Public Function MinByAll(Of T, C As IComparable(Of C))(List As IEnumerable(Of T), Selector As Func(Of T, C)) As List(Of T)
+        Dim Results As New List(Of T)
+        Using Enumerator = List.GetEnumerator()
+            If Not Enumerator.MoveNext() Then Return Results
+            Dim MinItem As T = Enumerator.Current
+            Dim MinValue As C = Selector(MinItem)
+            Results.Add(MinItem)
+            While Enumerator.MoveNext()
+                Dim CurrentItem = Enumerator.Current
+                Dim CurrentValue = Selector(CurrentItem)
+                Dim Comparison = CurrentValue.CompareTo(MinValue)
+                If Comparison < 0 Then
+                    MinValue = CurrentValue
+                    Results.Clear()
+                    Results.Add(CurrentItem)
+                ElseIf Comparison = 0 Then
+                    Results.Add(CurrentItem)
+                End If
+            End While
+        End Using
+        Return Results
+    End Function
+    ''' <summary>
     ''' 选择最大值对应的对象。
     ''' 若没有元素则返回 Nothing。
     ''' </summary>
-    <Extension> Public Function MaxOf(Of T, C As IComparable(Of C))(Source As IEnumerable(Of T), Selector As Func(Of T, C)) As T
+    <Extension> Public Function MaxBy(Of T, C As IComparable(Of C))(Source As IEnumerable(Of T), Selector As Func(Of T, C)) As T
         Using Enumerator = Source.GetEnumerator()
             If Not Enumerator.MoveNext() Then Return Nothing
             Dim MaxItem As T = Enumerator.Current
@@ -2547,7 +2685,7 @@ NextElement:
     ''' 选择最小值对应的对象。
     ''' 若没有元素则返回 Nothing。
     ''' </summary>
-    <Extension> Public Function MinOf(Of T, C As IComparable(Of C))(List As IEnumerable(Of T), Selector As Func(Of T, C)) As T
+    <Extension> Public Function MinBy(Of T, C As IComparable(Of C))(List As IEnumerable(Of T), Selector As Func(Of T, C)) As T
         Using Enumerator = List.GetEnumerator()
             If Not Enumerator.MoveNext() Then Return Nothing
             Dim MinItem As T = Enumerator.Current
@@ -2660,7 +2798,7 @@ NextElement:
         Try
             Location = Location.Replace("/", "\").Trim(" "c, """"c)
             Log("[System] 正在打开资源管理器：" & Location)
-            If Location.EndsWith("\") Then
+            If Location.EndsWithF("\") Then
                 StartProcess(Location)
             Else
                 StartProcess("explorer", $"/select,""{Location}""")
@@ -2860,7 +2998,7 @@ Retry:
             '类型检查
             Using Reader As New XamlXmlReader(Stream)
                 While Reader.Read()
-                    For Each BlackListType In {GetType(WebBrowser), GetType(Frame), GetType(MediaElement), GetType(ObjectDataProvider), GetType(XamlReader), GetType(Window), GetType(XmlDataProvider)}
+                    For Each BlackListType In {GetType(WebBrowser), GetType(Frame), GetType(MediaElement), GetType(ObjectDataProvider), GetType(XamlReader), GetType(Window), GetType(XmlDataProvider), GetType(SettingService)}
                         If Reader.Type IsNot Nothing AndAlso BlackListType.IsAssignableFrom(Reader.Type.UnderlyingType) Then Throw New UnauthorizedAccessException($"基于安全考虑，不允许使用 {BlackListType.Name} 类型。")
                         If Reader.Value IsNot Nothing AndAlso Reader.Value = BlackListType.Name Then Throw New UnauthorizedAccessException($"基于安全考虑，不允许使用 {BlackListType.Name} 值。")
                     Next
@@ -2917,11 +3055,22 @@ Retry:
         Return formattedText.Width
     End Function
 
+    ''' <summary>
+    ''' 将布尔值转换为 Visibility。True 转换为 Visible，False 转换为 Collapsed。
+    ''' </summary>
+    <Extension> Public Function ToVisibility(IsVisible As Boolean) As Visibility
+        Return If(IsVisible, Visibility.Visible, Visibility.Collapsed)
+    End Function
+
 #End Region
 
 #Region "Debug"
 
-    Public ModeDebug As Boolean = False
+    Public ReadOnly Property ModeDebug As Boolean
+        Get
+            Return Settings.Get("SystemDebugMode")
+        End Get
+    End Property
 
     'Log
     Public Enum LogLevel
@@ -3194,9 +3343,11 @@ Retry:
 
     '遥测
     Public Sub Telemetry([Event] As String, ParamArray Datas As String())
-        If Not Setup.Get("SystemSystemTelemetry") Then Return '用户关闭了遥测
+#If Not RELEASE And Not BETA Then
+        Return '开发版不上传遥测
+#End If
+        If Not Settings.Get("SystemSystemTelemetry") Then Return '用户关闭了遥测
         If Not ClsBaseUrl.StartsWithF("http") Then Return '开源版没有设置遥测地址
-        If VersionBranchName = "Debug" Then Return '开发版本不上传遥测
         RunInNewThread(
         Sub()
             Try
@@ -3214,10 +3365,10 @@ Retry:
 
     '获取当前的堆栈信息
     Public Function GetStackTrace() As String
-        Dim Stack As New StackTrace()
-        Return Join(Stack.GetFrames().Skip(1).Select(Function(f) f.GetMethod).
-                    Select(Function(f) f.Name & "(" & Join(f.GetParameters.Select(Function(p) p.ToString).ToList, ", ") & ") - " & f.Module.ToString).ToList,
-                    vbCrLf).Replace(vbCrLf & vbCrLf, vbCrLf)
+        Return (New StackTrace).GetFrames().Skip(1).
+            Select(Function(f) f.GetMethod).
+            Select(Function(f) $"{f.Name}({f.GetParameters.Select(Function(p) p.ToString).Join(", ")}) - {f.Module}").
+            Join(vbCrLf).Replace(vbCrLf & vbCrLf, vbCrLf)
     End Function
 
 #End Region

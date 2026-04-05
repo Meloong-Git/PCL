@@ -55,7 +55,7 @@
             Dim FileAddress As String = SelectSaveFile("选取保存皮肤的位置", GetFileNameFromPath(Address), "皮肤图片文件(*.png)|*.png")
             If FileAddress.Contains("\") Then
                 File.Delete(FileAddress)
-                If Address.StartsWith(PathImage) Then
+                If Address.StartsWithF(PathImage) Then
                     Dim Image As New MyBitmap(Address)
                     Image.Save(FileAddress)
                 Else
@@ -79,7 +79,7 @@
             '检查文件存在
             Address = Loader.Output
             If String.IsNullOrEmpty(Address) Then Throw New Exception("皮肤加载器 " & Loader.Name & " 没有输出")
-            If Not Address.StartsWith(PathImage) AndAlso Not File.Exists(Address) Then Throw New FileNotFoundException("皮肤文件未找到", Address)
+            If Not Address.StartsWithF(PathImage) AndAlso Not File.Exists(Address) Then Throw New FileNotFoundException("皮肤文件未找到", Address)
             '加载
             Dim Image As MyBitmap
             Try
@@ -142,7 +142,7 @@
             End If
         Next
         If FrmLaunchLeft IsNot Nothing AndAlso HasLoaderRunning Then
-            '由于 Abort 不是实时的，暂时不会释放文件，会导致删除报错，故只能取消执行
+            '由于 Interrupt 不是实时的，暂时不会释放文件，会导致删除报错，故只能取消执行
             Hint("有正在获取中的皮肤，请稍后再试！", HintType.Blue)
         Else
             RunInThread(
@@ -177,8 +177,8 @@
         Sub()
             Try
                 '更新缓存
-                WriteIni(PathTemp & "Cache\Skin\IndexMs.ini", Setup.Get("CacheMsV2Uuid"), SkinAddress)
-                Log($"[Skin] 已写入皮肤地址缓存 {Setup.Get("CacheMsV2Uuid")} -> {SkinAddress}")
+                WriteIni(PathTemp & "Cache\Skin\IndexMs.ini", Settings.Get("CacheMsV2Uuid"), SkinAddress)
+                Log($"[Skin] 已写入皮肤地址缓存 {Settings.Get("CacheMsV2Uuid")} -> {SkinAddress}")
                 '刷新控件
                 For Each SkinLoader In {PageLaunchLeft.SkinMs, PageLaunchLeft.SkinLegacy}
                     SkinLoader.WaitForExit(IsForceRestart:=True)

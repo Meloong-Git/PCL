@@ -39,7 +39,7 @@
         Dim LogoCustom As Boolean = ReadIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "LogoCustom", "False")
         If LogoCustom Then
             For Each Selection As MyComboBoxItem In ComboDisplayLogo.Items
-                If Selection.Tag = Logo OrElse (Selection.Tag = "PCL\Logo.png" AndAlso Logo.EndsWith("PCL\Logo.png")) Then
+                If Selection.Tag = Logo OrElse (Selection.Tag = "PCL\Logo.png" AndAlso Logo.EndsWithF("PCL\Logo.png")) Then
                     ComboDisplayLogo.SelectedItem = Selection
                     Exit For
                 End If
@@ -71,12 +71,12 @@
         Else
             '改为隐藏
             Try
-                If Not Setup.Get("HintHide") Then
+                If Not Settings.Get("HintHide") Then
                     If MyMsgBox("确认要从版本列表中隐藏该版本吗？隐藏该版本后，它将不再出现于 PCL 显示的版本列表中。" & vbCrLf & "此后，在版本列表页面按下 F11 才可以查看被隐藏的版本。", "隐藏版本提示",, "取消") <> 1 Then
                         ComboDisplayType.SelectedIndex = 0
                         Return
                     End If
-                    Setup.Set("HintHide", True)
+                    Settings.Set("HintHide", True)
                 End If
                 WriteIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "DisplayType", McInstanceCardType.Hidden)
                 WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '要求刷新缓存
@@ -115,7 +115,7 @@
             '获取临时中间名，以防止仅修改大小写的重命名失败
             Dim TempName As String = NewName & "_temp"
             Dim TempPath As String = McFolderSelected & "versions\" & TempName & "\"
-            Dim OnlyChangedCase As Boolean = NewName.ToLower = OldName.ToLower
+            Dim OnlyChangedCase As Boolean = NewName.Lower = OldName.Lower
             '重新读取版本 JSON 信息，避免 JsonObject 中已被合并的项被重新存储
             Dim JsonObject As JObject
             Dim OldJsonPath As String = PageInstanceLeft.Instance.GetJsonPath()
@@ -126,8 +126,8 @@
                 JsonObject = PageInstanceLeft.Instance.JsonObject
             End Try
             '重命名主文件夹
-            My.Computer.FileSystem.RenameDirectory(OldPath, TempName)
-            My.Computer.FileSystem.RenameDirectory(TempPath, NewName)
+            Directory.Move(OldPath, TempPath)
+            Directory.Move(TempPath, NewPath)
             '清理 ini 缓存
             IniClearCache(PageInstanceLeft.Instance.PathIndie & "options.txt")
             IniClearCache(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini")
@@ -135,20 +135,20 @@
             '不能进行遍历重命名，否则在版本名很短的时候容易误伤其他文件（#6443）
             If Directory.Exists($"{NewPath}{OldName}-natives") Then
                 If OnlyChangedCase Then
-                    My.Computer.FileSystem.RenameDirectory($"{NewPath}{OldName}-natives", $"{OldName}natives_temp")
-                    My.Computer.FileSystem.RenameDirectory($"{NewPath}{OldName}-natives_temp", $"{NewName}-natives")
+                    Directory.Move($"{NewPath}{OldName}-natives", $"{NewPath}{OldName}natives_temp")
+                    Directory.Move($"{NewPath}{OldName}-natives_temp", $"{NewPath}{NewName}-natives")
                 Else
                     DeleteDirectory($"{NewPath}{NewName}-natives")
-                    My.Computer.FileSystem.RenameDirectory($"{NewPath}{OldName}-natives", $"{NewName}-natives")
+                    Directory.Move($"{NewPath}{OldName}-natives", $"{NewPath}{NewName}-natives")
                 End If
             End If
             If File.Exists($"{NewPath}{OldName}.jar") Then
                 If OnlyChangedCase Then
-                    My.Computer.FileSystem.RenameFile($"{NewPath}{OldName}.jar", $"{OldName}_temp.jar")
-                    My.Computer.FileSystem.RenameFile($"{NewPath}{OldName}_temp.jar", $"{NewName}.jar")
+                    File.Move($"{NewPath}{OldName}.jar", $"{NewPath}{OldName}_temp.jar")
+                    File.Move($"{NewPath}{OldName}_temp.jar", $"{NewPath}{NewName}.jar")
                 Else
                     File.Delete($"{NewPath}{NewName}.jar")
-                    My.Computer.FileSystem.RenameFile($"{NewPath}{OldName}.jar", $"{NewName}.jar")
+                    File.Move($"{NewPath}{OldName}.jar", $"{NewPath}{NewName}.jar")
                 End If
             End If
             '替换版本设置文件中的路径
@@ -267,7 +267,7 @@
             End If
             '生成脚本
             If McLaunchStart(New McLaunchOptions With {.SaveBatch = SavePath, .Instance = PageInstanceLeft.Instance}) Then
-                If Setup.Get("LoginType") = McLoginType.Legacy Then
+                If Settings.Get("LoginType") = McLoginType.Legacy Then
                     Hint("正在导出启动脚本……")
                 Else
                     Hint("正在导出启动脚本……（注意，使用脚本启动可能会导致登录失效！）")
@@ -301,7 +301,7 @@
                         Hint(Loader.Name & "成功！", HintType.Green)
                     Case LoadState.Failed
                         Hint(Loader.Name & "失败：" & Loader.Error.GetBrief(), HintType.Red)
-                    Case LoadState.Aborted
+                    Case LoadState.Interrupted
                         Hint(Loader.Name & "已取消！", HintType.Blue)
                 End Select
             End Sub
