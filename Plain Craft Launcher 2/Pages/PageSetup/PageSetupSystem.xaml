@@ -23,6 +23,7 @@
                             <RowDefinition Height="27" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="文件下载源" Margin="0,0,25,0" />
                         <local:MyComboBox x:Name="ComboDownloadSource" Grid.ColumnSpan="2" Tag="ToolDownloadSource" Grid.Column="1">
@@ -44,7 +45,9 @@
                                         ToolTip="设置下载的速度上限，以避免在下载时导致其他需要联网的程序卡死" />
                         <TextBlock VerticalAlignment="Top" Grid.Row="6" HorizontalAlignment="Left" Text="目标文件夹" Margin="0,5,25,5" />
                         <TextBlock Margin="0,5" HorizontalAlignment="Left" Text="请在 启动 → 版本选择 → 文件夹列表 中更改下载目标文件夹。&#xa;在某个文件夹或游戏版本上右键，即可选择打开对应文件夹。" Grid.Row="6" Grid.Column="1" VerticalAlignment="Center" Opacity="0.5" />
-                        <local:MyCheckBox Margin="0,2,0,4" Text="在正版登录时验证 SSL 证书" Grid.Row="7" Height="22" Grid.ColumnSpan="2"
+                        <TextBlock VerticalAlignment="Center" Grid.Row="7" HorizontalAlignment="Left" Text="HTTP 代理" Margin="0,0,25,0" />
+                        <local:MyTextBox x:Name="TextToolDownloadProxy" Grid.Row="7" Tag="ToolDownloadProxy" Grid.Column="1" HintText="比如 http://127.0.0.1:1080/" ToolTip="不正确的代理服务器地址会导致无法连接网络，因使用代理导致的网络问题不予处理。&#xa;请勿填写不信任的代理服务器地址，这可能会导致你的账号信息泄露，甚至账号被盗。"/>
+                        <local:MyCheckBox Margin="0,2,0,4" Text="在正版登录时验证 SSL 证书" Grid.Row="8" Height="22"
                                           x:Name="CheckDownloadCert" Tag="ToolDownloadCert" 
                                           ToolTip="开启验证可以提高安全性，但可能会导致正版登录失败（见 #3018）。&#xa;若登录因为 “未能为 SSL/TLS 安全通道建立信任关系” 失败，请考虑关闭此选项。" />
                     </Grid>
