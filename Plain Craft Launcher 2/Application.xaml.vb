@@ -51,15 +51,6 @@ Public Class Application
                     Else
                         Environment.Exit((My.Computer.Info.AvailablePhysicalMemory - Ram) / 1024) '返回清理的内存量（K）
                     End If
-#If DEBUG Then
-                    '制作更新包
-                ElseIf e.Args(0) = "--edit1" Then
-                    ExeEdit(e.Args(1), True)
-                    Environment.Exit(ProcessReturnValues.TaskDone)
-                ElseIf e.Args(0) = "--edit2" Then
-                    ExeEdit(e.Args(1), False)
-                    Environment.Exit(ProcessReturnValues.TaskDone)
-#End If
                 End If
             End If
             '初始化文件结构
@@ -73,7 +64,7 @@ Public Class Application
                     MyMsgBox("PCL 无法访问缓存文件夹，可能导致程序出错或无法正常使用！" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDetail(), "缓存文件夹不可用")
                 Else
                     MyMsgBox("手动设置的缓存文件夹不可用，PCL 将使用默认缓存文件夹。" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDetail(), "缓存文件夹不可用")
-                    Setup.Set("SystemSystemCache", "")
+                    Settings.Set("SystemSystemCache", "")
                     PathTemp = IO.Path.GetTempPath() & "PCL\"
                 End If
             End Try
@@ -114,7 +105,7 @@ WaitRetry:
             ServicePointManager.EnableDnsRoundRobin = True
             ServicePointManager.ReusePort = True
             '设置初始窗口
-            If Setup.Get("UiLauncherLogo") Then
+            If Settings.Get("UiLauncherLogo") Then
                 FrmStart = New SplashScreen("Images\icon.ico")
                 FrmStart.Show(False, True)
             End If
@@ -132,18 +123,12 @@ WaitRetry:
             Log($"[Start] 管理员权限：{IsAdmin()}")
             '检测异常环境
             If Path.Contains(IO.Path.GetTempPath()) OrElse Path.Contains("AppData\Local\Temp\") Then
-                MyMsgBox("请将 PCL 从压缩包中解压后再使用！" & vbCrLf & "如果不会解压，可以在网上寻找教程。", "尚未解压", "我知道了", IsWarn:=True)
+                MyMsgBox("请将 PCL 从压缩包中解压后再使用！" & vbCrLf & "如果不会解压，可以在网上寻找教程。", "需要解压！", "我知道了", IsWarn:=True, ForceWait:=True)
                 FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
             If Is32BitSystem Then
                 MyMsgBox("PCL 和新版 Minecraft 均不再支持 32 位系统，部分功能将无法使用。" & vbCrLf & "非常建议重装为 64 位系统后再进行游戏！", "环境警告", "我知道了", IsWarn:=True)
             End If
-            '设置初始化
-            Setup.Load("SystemDebugMode")
-            Setup.Load("SystemDebugAnim")
-            Setup.Load("ToolDownloadThread")
-            Setup.Load("ToolDownloadCert")
-            Setup.Load("ToolDownloadSpeed")
             '计时
             Log("[Start] 第一阶段加载用时：" & GetTimeMs() - ApplicationStartTick & " ms")
             ApplicationStartTick = GetTimeMs()
@@ -165,7 +150,7 @@ WaitRetry:
 
     '结束
     Private Sub Application_SessionEnding(sender As Object, e As SessionEndingCancelEventArgs) Handles Me.SessionEnding
-        FrmMain.EndProgram(False)
+        FrmMain?.EndProgram(False)
     End Sub
 
     '异常
@@ -228,36 +213,36 @@ WaitRetry:
 
     '控件模板事件
     Private Sub MyIconButton_Click(sender As Object, e As EventArgs)
-        Select Case Setup.Get("LoginType")
+        Select Case Settings.Get("LoginType")
             Case McLoginType.Ms
                 '微软
-                Dim MsJson As JObject = GetJson(Setup.Get("LoginMsJson"))
+                Dim MsJson As JObject = GetJson(Settings.Get("LoginMsJson"))
                 MsJson.Remove(sender.Tag)
-                Setup.Set("LoginMsJson", MsJson.ToString(Newtonsoft.Json.Formatting.None))
+                Settings.Set("LoginMsJson", MsJson.ToString(Newtonsoft.Json.Formatting.None))
                 If FrmLoginMs.ComboAccounts.SelectedItem Is sender.Parent Then FrmLoginMs.ComboAccounts.SelectedIndex = 0
                 FrmLoginMs.ComboAccounts.Items.Remove(sender.Parent)
             Case McLoginType.Legacy
                 '离线
                 Dim Names As New List(Of String)
-                Names.AddRange(Setup.Get("LoginLegacyName").ToString.Split("¨"))
+                Names.AddRange(Settings.Get("LoginLegacyName").ToString.Split("¨"))
                 Names.Remove(sender.Tag)
-                Setup.Set("LoginLegacyName", Join(Names, "¨"))
+                Settings.Set("LoginLegacyName", Names.Join("¨"c))
                 FrmLoginLegacy.ComboName.ItemsSource = Names
                 FrmLoginLegacy.ComboName.Text = If(Names.Any, Names(0), "")
             Case Else
                 '第三方
-                Dim Token As String = GetStringFromEnum(Setup.Get("LoginType"))
+                Dim Token As String = GetStringFromEnum(Settings.Get("LoginType"))
                 Dim Dict As New Dictionary(Of String, String)
                 Dim Names As New List(Of String)
                 Dim Passs As New List(Of String)
-                If Not Setup.Get("Login" & Token & "Email") = "" Then Names.AddRange(Setup.Get("Login" & Token & "Email").ToString.Split("¨"))
-                If Not Setup.Get("Login" & Token & "Pass") = "" Then Passs.AddRange(Setup.Get("Login" & Token & "Pass").ToString.Split("¨"))
+                If Not Settings.Get("Login" & Token & "Email") = "" Then Names.AddRange(Settings.Get("Login" & Token & "Email").ToString.Split("¨"))
+                If Not Settings.Get("Login" & Token & "Pass") = "" Then Passs.AddRange(Settings.Get("Login" & Token & "Pass").ToString.Split("¨"))
                 For i = 0 To Names.Count - 1
                     Dict.Add(Names(i), Passs(i))
                 Next
                 Dict.Remove(sender.Tag)
-                Setup.Set("Login" & Token & "Email", Join(Dict.Keys, "¨"))
-                Setup.Set("Login" & Token & "Pass", Join(Dict.Values, "¨"))
+                Settings.Set("Login" & Token & "Email", Dict.Keys.Join("¨"c))
+                Settings.Set("Login" & Token & "Pass", Dict.Values.Join("¨"c))
                 Select Case Token
                     Case "Nide"
                         FrmLoginNide.ComboName.ItemsSource = Dict.Keys

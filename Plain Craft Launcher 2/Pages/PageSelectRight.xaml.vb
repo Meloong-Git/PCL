@@ -102,7 +102,7 @@
                 Else
                     LabEmptyTitle.Text = "无可用版本"
                     LabEmptyContent.Text = "未找到任何版本的游戏，请先下载任意版本的游戏。" & vbCrLf & "若有已存在的游戏，请在左边的列表中选择添加文件夹，选择 .minecraft 文件夹将其导入。"
-                    BtnEmptyDownload.Visibility = If(Setup.Get("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow, Visibility.Collapsed, Visibility.Visible)
+                    BtnEmptyDownload.Visibility = If(Settings.Get("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow, Visibility.Collapsed, Visibility.Visible)
                 End If
             Else
                 PanBack.Visibility = Visibility.Visible
@@ -184,7 +184,6 @@
         If New McInstance(Instance.PathVersion).Check Then
             '正常版本
             McInstanceSelected = Instance
-            Setup.Set("LaunchVersionSelect", McInstanceSelected.Name)
             FrmMain.PageBack()
         Else
             '错误版本
@@ -246,7 +245,7 @@
     End Sub
 
     Public Sub BtnEmptyDownload_Loaded() Handles BtnEmptyDownload.Loaded
-        Dim NewVisibility = If((Setup.Get("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow) OrElse ShowHidden, Visibility.Collapsed, Visibility.Visible)
+        Dim NewVisibility = If((Settings.Get("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow) OrElse ShowHidden, Visibility.Collapsed, Visibility.Visible)
         If BtnEmptyDownload.Visibility <> NewVisibility Then
             BtnEmptyDownload.Visibility = NewVisibility
             PanLoad.TriggerForceResize()

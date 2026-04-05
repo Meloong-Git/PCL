@@ -140,7 +140,7 @@
                 Catch ex As Exception
                     Log(ex, "更新下载管理显示失败（" & Loader.State.ToString & "）", LogLevel.Feedback)
                 End Try
-            ElseIf Not (Loader.State = LoadState.Aborted OrElse Loader.State = LoadState.Finished) Then
+            ElseIf Not (Loader.State = LoadState.Interrupted OrElse Loader.State = LoadState.Finished) Then
                 Try
 #Region "没有卡片且未中断或完成，添加新的卡片"
                     Dim CardXAML As String = "
@@ -194,7 +194,7 @@
                         RightCards.Remove(Loader.Name)
                         LoaderTaskbar.Remove(Loader)
                         Log($"[Taskbar] 关闭下载管理卡片：{Loader.Name}，且移出任务列表")
-                        RunInThread(Sub() Loader.Abort())
+                        RunInThread(Sub() Loader.Interrupt())
                     End Sub
                     '如果已经失败，再刷新一次，修改成失败的控件
                     If Loader.State = LoadState.Failed Then

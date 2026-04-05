@@ -27,64 +27,62 @@
     Public Sub Reload()
 
         '下载
-        SliderDownloadThread.Value = Setup.Get("ToolDownloadThread")
-        SliderDownloadSpeed.Value = Setup.Get("ToolDownloadSpeed")
-        ComboDownloadSource.SelectedIndex = Setup.Get("ToolDownloadSource")
-        ComboDownloadVersion.SelectedIndex = Setup.Get("ToolDownloadVersion")
-        CheckDownloadCert.Checked = Setup.Get("ToolDownloadCert")
-        TextToolDownloadProxy.Text = Setup.Get("ToolDownloadProxy")
+        SliderDownloadThread.Value = Settings.Get("ToolDownloadThread")
+        SliderDownloadSpeed.Value = Settings.Get("ToolDownloadSpeed")
+        ComboDownloadSource.SelectedIndex = Settings.Get("ToolDownloadSource")
+        ComboDownloadVersion.SelectedIndex = Settings.Get("ToolDownloadVersion")
+        CheckDownloadCert.Checked = Settings.Get("ToolDownloadCert")
 
         'Mod 与整合包
-        ComboDownloadTranslateV2.SelectedIndex = Setup.Get("ToolDownloadTranslateV2")
-        ComboDownloadMod.SelectedIndex = Setup.Get("ToolDownloadMod")
-        ComboModLocalNameStyle.SelectedIndex = Setup.Get("ToolModLocalNameStyle")
-        CheckDownloadIgnoreQuilt.Checked = Setup.Get("ToolDownloadIgnoreQuilt")
+        ComboDownloadTranslateV2.SelectedIndex = Settings.Get("ToolDownloadTranslateV2")
+        ComboDownloadMod.SelectedIndex = Settings.Get("ToolDownloadMod")
+        ComboModLocalNameStyle.SelectedIndex = Settings.Get("ToolModLocalNameStyle")
+        CheckDownloadIgnoreQuilt.Checked = Settings.Get("ToolDownloadIgnoreQuilt")
 
         'Minecraft 更新提示
-        CheckUpdateRelease.Checked = Setup.Get("ToolUpdateRelease")
-        CheckUpdateSnapshot.Checked = Setup.Get("ToolUpdateSnapshot")
+        CheckUpdateRelease.Checked = Settings.Get("ToolUpdateRelease")
+        CheckUpdateSnapshot.Checked = Settings.Get("ToolUpdateSnapshot")
 
         '辅助设置
-        CheckHelpChinese.Checked = Setup.Get("ToolHelpChinese")
+        CheckHelpChinese.Checked = Settings.Get("ToolHelpChinese")
 
         '系统设置
-        ComboSystemUpdate.SelectedIndex = Setup.Get("SystemSystemUpdate")
-        ComboSystemActivity.SelectedIndex = Setup.Get("SystemSystemActivity")
-        TextSystemCache.Text = Setup.Get("SystemSystemCache")
-        CheckSystemTelemetry.Checked = Setup.Get("SystemSystemTelemetry")
+        ComboSystemUpdate.SelectedIndex = Settings.Get("SystemSystemUpdate")
+        ComboSystemActivity.SelectedIndex = Settings.Get("SystemSystemActivity")
+        TextSystemCache.Text = Settings.Get("SystemSystemCache")
+        CheckSystemTelemetry.Checked = Settings.Get("SystemSystemTelemetry")
 
         '调试选项
-        CheckDebugMode.Checked = Setup.Get("SystemDebugMode")
-        SliderDebugAnim.Value = Setup.Get("SystemDebugAnim")
-        CheckDebugDelay.Checked = Setup.Get("SystemDebugDelay")
-        CheckDebugSkipCopy.Checked = Setup.Get("SystemDebugSkipCopy")
+        CheckDebugMode.Checked = Settings.Get("SystemDebugMode")
+        SliderDebugAnim.Value = Settings.Get("SystemDebugAnim")
+        CheckDebugDelay.Checked = Settings.Get("SystemDebugDelay")
+        CheckDebugSkipCopy.Checked = Settings.Get("SystemDebugSkipCopy")
 
     End Sub
 
     '初始化
     Public Sub Reset()
         Try
-            Setup.Reset("ToolDownloadThread")
-            Setup.Reset("ToolDownloadSpeed")
-            Setup.Reset("ToolDownloadSource")
-            Setup.Reset("ToolDownloadVersion")
-            Setup.Reset("ToolDownloadTranslateV2")
-            Setup.Reset("ToolDownloadIgnoreQuilt")
-            Setup.Reset("ToolDownloadCert")
-            Setup.Reset("ToolDownloadProxy")
-            Setup.Reset("ToolDownloadMod")
-            Setup.Reset("ToolModLocalNameStyle")
-            Setup.Reset("ToolUpdateRelease")
-            Setup.Reset("ToolUpdateSnapshot")
-            Setup.Reset("ToolHelpChinese")
-            Setup.Reset("SystemDebugMode")
-            Setup.Reset("SystemDebugAnim")
-            Setup.Reset("SystemDebugDelay")
-            Setup.Reset("SystemDebugSkipCopy")
-            Setup.Reset("SystemSystemCache")
-            Setup.Reset("SystemSystemUpdate")
-            Setup.Reset("SystemSystemActivity")
-            Setup.Reset("SystemSystemTelemetry")
+            Settings.Reset("ToolDownloadThread")
+            Settings.Reset("ToolDownloadSpeed")
+            Settings.Reset("ToolDownloadSource")
+            Settings.Reset("ToolDownloadVersion")
+            Settings.Reset("ToolDownloadTranslateV2")
+            Settings.Reset("ToolDownloadIgnoreQuilt")
+            Settings.Reset("ToolDownloadCert")
+            Settings.Reset("ToolDownloadMod")
+            Settings.Reset("ToolModLocalNameStyle")
+            Settings.Reset("ToolUpdateRelease")
+            Settings.Reset("ToolUpdateSnapshot")
+            Settings.Reset("ToolHelpChinese")
+            Settings.Reset("SystemDebugMode")
+            Settings.Reset("SystemDebugAnim")
+            Settings.Reset("SystemDebugDelay")
+            Settings.Reset("SystemDebugSkipCopy")
+            Settings.Reset("SystemSystemCache")
+            Settings.Reset("SystemSystemUpdate")
+            Settings.Reset("SystemSystemActivity")
+            Settings.Reset("SystemSystemTelemetry")
 
             Log("[Setup] 已初始化启动器页设置")
             Hint("已初始化启动器页设置！", HintType.Green, False)
@@ -97,16 +95,16 @@
 
     '将控件改变路由到设置改变
     Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckDebugMode.Change, CheckDebugDelay.Change, CheckDebugSkipCopy.Change, CheckUpdateRelease.Change, CheckUpdateSnapshot.Change, CheckHelpChinese.Change, CheckDownloadIgnoreQuilt.Change, CheckDownloadCert.Change, CheckSystemTelemetry.Change
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Checked)
+        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Checked)
     End Sub
     Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderDebugAnim.Change, SliderDownloadThread.Change, SliderDownloadSpeed.Change
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Value)
+        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Value)
     End Sub
     Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboDownloadVersion.SelectionChanged, ComboModLocalNameStyle.SelectionChanged, ComboDownloadTranslateV2.SelectionChanged, ComboSystemUpdate.SelectionChanged, ComboSystemActivity.SelectionChanged, ComboDownloadSource.SelectionChanged, ComboDownloadMod.SelectionChanged
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex)
+        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.SelectedIndex)
     End Sub
-    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextSystemCache.ValidatedTextChanged, TextToolDownloadProxy.TextChanged
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Text)
+    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextSystemCache.ValidatedTextChanged
+        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Text)
     End Sub
 
     '滑动条
@@ -129,8 +127,8 @@
     End Sub
     Private Sub SliderDownloadThread_PreviewChange(sender As Object, e As RouteEventArgs) Handles SliderDownloadThread.PreviewChange
         If SliderDownloadThread.Value < 100 Then Return
-        If Not Setup.Get("HintDownloadThread") Then
-            Setup.Set("HintDownloadThread", True)
+        If Not Settings.Get("HintDownloadThread") Then
+            Settings.Set("HintDownloadThread", True)
             MyMsgBox("如果设置过多的下载线程，可能会导致下载时出现非常严重的卡顿。" & vbCrLf &
                      "一般设置 64 线程即可满足大多数下载需求，除非你知道你在干什么，否则不建议设置更多的线程数！", "警告", "我知道了", IsWarn:=True)
         End If

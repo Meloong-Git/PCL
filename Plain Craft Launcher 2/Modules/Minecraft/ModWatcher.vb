@@ -33,13 +33,13 @@
         HasRunningMinecraft = False
         FrmMain.BtnExtraShutdown.ShowRefresh()
         '音乐播放
-        If Setup.Get("UiMusicStop") Then
+        If Settings.Get("UiMusicStop") Then
             RunInUi(Sub() If MusicResume() Then Log("[Music] 已根据设置，在结束后开始音乐播放"))
-        ElseIf Setup.Get("UiMusicStart") Then
+        ElseIf Settings.Get("UiMusicStart") Then
             RunInUi(Sub() If MusicPause() Then Log("[Music] 已根据设置，在结束后暂停音乐播放"))
         End If
         '启动器可见性
-        Select Case Setup.Get("LaunchArgumentVisible")
+        Select Case Settings.Get("LaunchArgumentVisible")
             Case 2
                 '直接关闭
                 If TriggerLauncherShutdown Then
@@ -91,7 +91,7 @@
             RunInNewThread(
             Sub()
                 Try
-                    Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Crashed OrElse State = MinecraftState.Canceled OrElse Loader.State = LoadState.Aborted
+                    Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Crashed OrElse State = MinecraftState.Canceled OrElse Loader.State = LoadState.Interrupted
                         TimerWindow()
                         TimerLog()
                         '设置窗口标题
@@ -277,7 +277,7 @@
                     WatcherLog($"Minecraft 窗口已加载：{MinecraftWindowName}（{MinecraftWindowHandle.ToInt64}）")
                     IsWindowFinished = True
                     '最大化
-                    If Setup.Get("LaunchArgumentWindowType") = 4 Then
+                    If Settings.Get("LaunchArgumentWindowType") = 4 Then
                         RunInNewThread(
                         Sub()
                             Try

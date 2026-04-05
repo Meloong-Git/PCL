@@ -1,18 +1,17 @@
-﻿Public Module LazyLoadBehavior
+﻿Public Class LazyLoadBehavior
 
     ''' <summary>
     ''' 指定首次进入 ScrollViewer 的可视范围时执行的操作。
     ''' </summary>
-    <Runtime.CompilerServices.Extension()>
-    Public Sub OnFirstEnterScrollViewerViewport(obj As DependencyObject, value As Action)
+    Public Shared Sub OnFirstEnterScrollViewerViewport(obj As DependencyObject, value As Action)
         obj.SetValue(IsInViewportProperty, value)
     End Sub
 
-    Private ReadOnly IsInViewportProperty As DependencyProperty =
+    Private Shared ReadOnly IsInViewportProperty As DependencyProperty =
         DependencyProperty.RegisterAttached("IsInViewport", GetType(Action), GetType(LazyLoadBehavior),
         New PropertyMetadata(Nothing, AddressOf OnIsInViewportChanged))
 
-    Private Sub OnIsInViewportChanged(d As DependencyObject, e As DependencyPropertyChangedEventArgs)
+    Private Shared Sub OnIsInViewportChanged(d As DependencyObject, e As DependencyPropertyChangedEventArgs)
         Dim Element = TryCast(d, FrameworkElement)
         If Element Is Nothing OrElse e.NewValue Is Nothing Then Return
 
@@ -36,7 +35,7 @@
         AddHandler Element.LayoutUpdated, Handler
     End Sub
 
-    Private Function FindParentScrollViewer(d As DependencyObject) As ScrollViewer
+    Private Shared Function FindParentScrollViewer(d As DependencyObject) As ScrollViewer
         While d IsNot Nothing
             If TypeOf d Is ScrollViewer Then Return CType(d, ScrollViewer)
             d = VisualTreeHelper.GetParent(d)
@@ -44,4 +43,4 @@
         Return Nothing
     End Function
 
-End Module
+End Class
