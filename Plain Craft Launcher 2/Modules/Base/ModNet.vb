@@ -11,7 +11,7 @@ Public Module ModNet
     ''' </summary>
     ''' <returns>返回 WebProxy 或者 Nothing</returns>
     Public Function GetProxy() As WebProxy
-        Dim ProxyServer As String = Setup.Get("ToolDownloadProxy")
+        Dim ProxyServer As String = Settings.Get("ToolDownloadProxy")
         If Not String.IsNullOrWhiteSpace(ProxyServer) Then
             Log("[Net] 当前代理状态：自定义")
             Dim ProxyUri As New Uri(ProxyServer)

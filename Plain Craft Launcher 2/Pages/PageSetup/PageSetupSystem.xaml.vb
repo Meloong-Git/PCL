@@ -32,6 +32,7 @@
         ComboDownloadSource.SelectedIndex = Settings.Get("ToolDownloadSource")
         ComboDownloadVersion.SelectedIndex = Settings.Get("ToolDownloadVersion")
         CheckDownloadCert.Checked = Settings.Get("ToolDownloadCert")
+        TextToolDownloadProxy.Text = Settings.Get("ToolDownloadProxy")
 
         'Mod 与整合包
         ComboDownloadTranslateV2.SelectedIndex = Settings.Get("ToolDownloadTranslateV2")
@@ -70,6 +71,7 @@
             Settings.Reset("ToolDownloadTranslateV2")
             Settings.Reset("ToolDownloadIgnoreQuilt")
             Settings.Reset("ToolDownloadCert")
+            Settings.Reset("ToolDownloadProxy")
             Settings.Reset("ToolDownloadMod")
             Settings.Reset("ToolModLocalNameStyle")
             Settings.Reset("ToolUpdateRelease")
@@ -103,7 +105,7 @@
     Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboDownloadVersion.SelectionChanged, ComboModLocalNameStyle.SelectionChanged, ComboDownloadTranslateV2.SelectionChanged, ComboSystemUpdate.SelectionChanged, ComboSystemActivity.SelectionChanged, ComboDownloadSource.SelectionChanged, ComboDownloadMod.SelectionChanged
         If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.SelectedIndex)
     End Sub
-    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextSystemCache.ValidatedTextChanged
+    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextSystemCache.ValidatedTextChanged, TextToolDownloadProxy.TextChanged
         If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Text)
     End Sub
 

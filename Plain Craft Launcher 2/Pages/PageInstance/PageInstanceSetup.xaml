@@ -250,6 +250,9 @@
                         <local:MyCheckBox Height="28" Text="禁用 LWJGL Unsafe Agent" local:SettingService.Key="VersionAdvanceDisableLUA"
                                           ToolTipService.Placement="Right" 
                                           ToolTip="是否使用 LWJGL Unsafe Agent 修复 Java 25+ 的一个性能问题。&#xa;详见：https://github.com/HMCL-dev/lwjgl-unsafe-agent" />
+                        <local:MyCheckBox Height="28" Text="使用代理" local:SettingService.Key="VersionAdvanceUseProxy"
+                                          ToolTipService.Placement="Right"
+                                          ToolTip="PCL 会使用 设置 → 其他 → 下载 → HTTP 代理 中填写的代理来启动游戏。" />
                     </StackPanel>
                 </Grid>
             </local:MyCard>
