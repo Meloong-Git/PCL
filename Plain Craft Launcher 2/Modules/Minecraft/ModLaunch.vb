@@ -1330,6 +1330,23 @@ Retry:
 
 #End Region
 
+#Region "获取 LWJGL 版本"
+    Private Function McLaunchGetLwjglVersion(Mc As McInstance) As String
+        For Each library As McLibToken In McLibListGet(Mc, False)
+            If String.IsNullOrWhiteSpace(library.OriginalName) Then Continue For
+
+            Dim parts = library.OriginalName.Split(":"c)
+            If parts.Length >= 3 AndAlso
+               parts(0).Equals("org.lwjgl", StringComparison.OrdinalIgnoreCase) AndAlso
+               parts(1).Equals("lwjgl", StringComparison.OrdinalIgnoreCase) Then
+                Return parts(2)
+            End If
+        Next
+
+        Return Nothing
+    End Function
+#End Region
+
 #Region "启动参数"
     Private McLaunchArgument As String
 
@@ -1447,7 +1464,7 @@ NextInstance:
         'LUA
         Dim UseLUA As Boolean =
             Not Settings.Get("LaunchAdvanceDisableLUA") AndAlso Not Settings.Get("VersionAdvanceDisableLUA", McInstanceSelected) AndAlso
-            McLaunchJavaSelected.MajorVersion >= 25 AndAlso McInstanceSelected.Version.Drop >= 261
+            McLaunchGetLwjglVersion(McInstanceSelected) = "3.4.1"
         If UseLUA Then Args.Add($"-javaagent:""{ExtractPatch("LUA")}""")
         McLaunchLog("使用 LUA：" & UseLUA)
 
