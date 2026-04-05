@@ -64,6 +64,7 @@
                     </Grid.ColumnDefinitions>
                     <local:MyButton x:Name="BtnSearchRun" Text="搜索" MinWidth="140" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" />
                     <local:MyButton x:Name="BtnSearchReset" Text="重置条件" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" />
+                    <local:MyButton x:Name="BtnSearchMatch" Text="适配当前版本" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2" />
                     <local:MyButton x:Name="BtnSearchInstallModPack" Text="安装已有整合包" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2"
                                     ToolTip="在当前选择的 Minecraft 文件夹下安装整合包" ToolTipService.HorizontalOffset="-55" ToolTipService.VerticalOffset="5" />
                 </Grid>

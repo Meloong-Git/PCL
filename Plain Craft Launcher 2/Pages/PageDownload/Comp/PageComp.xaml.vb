@@ -55,6 +55,7 @@ Public Class PageComp
         Set(Value As CompType)
             If _Type = Value Then Return
             _Type = Value
+            BtnSearchMatch.Visibility = If(Value = CompType.ModPack, Visibility.Collapsed, Visibility.Visible)
             BtnSearchInstallModPack.Visibility = If(Value = CompType.ModPack, Visibility.Visible, Visibility.Collapsed)
         End Set
     End Property
@@ -227,6 +228,25 @@ Public Class PageComp
     End Sub
     Private Sub EnterTrigger(sender As Object, e As KeyEventArgs) Handles TextSearchName.KeyDown, TextSearchVersion.KeyDown
         If e.Key = Key.Enter Then StartNewSearch()
+    End Sub
+
+    '当前按钮
+    Private Sub MatchFilter() Handles BtnSearchMatch.Click
+        If McInstanceSelected Is Nothing Then '确保用户选择了版本
+            Hint("请先选择一个版本！", HintType.Red)
+            Return
+        End If
+        If (PageType = CompType.Mod Or PageType = CompType.Shader) And Not McInstanceSelected.Modable Then '确认用户在下载 Mod 相关资源时选择了可使用 Mod 的版本
+            Hint("该版本不可使用 Mod！", HintType.Red)
+            Return
+        End If
+        TextSearchVersion.Text = McInstanceSelected.Version.VanillaName
+        Dim LoaderType As Integer = 0
+        If McInstanceSelected.Version.HasForge Then LoaderType = 1
+        If McInstanceSelected.Version.HasNeoForge Then LoaderType = 2
+        If McInstanceSelected.Version.HasFabric Then LoaderType = 3
+        ComboSearchLoader.SelectedIndex = LoaderType
+        Loader.LastFinishedTime = 0 '要求强制重新开始
     End Sub
 
     '重置按钮
