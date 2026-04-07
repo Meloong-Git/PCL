@@ -676,7 +676,7 @@ Public Class PageInstanceExport
                 '首次压缩整合包
                 ZipFile.CreateFromDirectory(CacheFolder & "modpack\", CacheFolder & "modpack.mrpack")
                 Loader.Progress = 0.5
-                Directory.Delete(CacheFolder & "modpack\", True)
+                DeleteDirectory(CacheFolder & "modpack\")
                 Loader.Progress = 0.6
                 '二次压缩整合包
                 ZipFile.CreateFromDirectory(CacheFolder, PackPath)
@@ -686,7 +686,7 @@ Public Class PageInstanceExport
                 ZipFile.CreateFromDirectory(CacheFolder & "modpack\", PackPath)
                 Loader.Progress = 0.8
             End If
-            Directory.Delete(CacheFolder, True)
+            DeleteDirectory(CacheFolder, True)
             OpenExplorer(PackPath)
         End Sub) With {.ProgressWeight = 6})
 

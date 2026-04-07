@@ -1202,7 +1202,7 @@ Retry:
             End If
         End If
 
-        'Forge 检测
+        'Forge 检测（部分测试结果见 #8432）
         If McInstanceSelected.Version.HasForge Then
             If McInstanceSelected.Version.Vanilla >= New Version(6, 0, 1) AndAlso McInstanceSelected.Version.Vanilla <= New Version(7, 0, 2) Then
                 '1.6.1 - 1.7.2：必须 Java 7
@@ -1220,11 +1220,32 @@ Retry:
                 MinVer = If(New Version(1, 8, 0, 0) > MinVer, New Version(1, 8, 0, 0), MinVer)
                 MaxVer = If(New Version(1, 15, 999, 999) < MaxVer, New Version(1, 15, 999, 999), MaxVer)
             ElseIf CompareVersionGE(McInstanceSelected.Version.Forge, "34.0.0") AndAlso CompareVersionGE("36.2.25", McInstanceSelected.Version.Forge) Then
-                '1.16，Forge 34.X ~ 36.2.25：最高 Java 8u320
+                '1.16.3~5，Forge 34.0.0 ~ 36.2.25：最高 Java 8u320
                 MaxVer = If(New Version(1, 8, 0, 320) < MaxVer, New Version(1, 8, 0, 320), MaxVer)
-            ElseIf McInstanceSelected.Version.Vanilla.Major >= 18 AndAlso McInstanceSelected.Version.Vanilla.Major < 19 AndAlso McInstanceSelected.Version.HasOptiFine Then '#305
+            ElseIf CompareVersionGE(McInstanceSelected.Version.Forge, "36.2.26") AndAlso CompareVersionGE("36.999.999", McInstanceSelected.Version.Forge) Then
+                '1.16.5，Forge 36.2.26+，<37.0.0：最高 Java 23
+                MaxVer = If(New Version(1, 23, 999, 999) < MaxVer, New Version(1, 23, 999, 999), MaxVer)
+            ElseIf CompareVersionGE(McInstanceSelected.Version.Forge, "37.0.0") AndAlso CompareVersionGE("37.0.79", McInstanceSelected.Version.Forge) Then
+                '1.17.1，Forge 37.0.0 ~ 37.0.79：最高 Java 16
+                MaxVer = If(New Version(1, 16, 999, 999) < MaxVer, New Version(1, 16, 999, 999), MaxVer)
+            ElseIf McInstanceSelected.Version.Vanilla.Major = 18 AndAlso McInstanceSelected.Version.HasOptiFine Then '#305
                 '1.18：若安装了 OptiFine，最高 Java 18
                 MaxVer = If(New Version(1, 18, 999, 999) < MaxVer, New Version(1, 18, 999, 999), MaxVer)
+            ElseIf CompareVersionGE(McInstanceSelected.Version.Forge, "45.0.21") AndAlso CompareVersionGE("45.0.65", McInstanceSelected.Version.Forge) Then
+                '1.19.4，Forge 45.0.21 ~ 45.0.65：最高 Java 19
+                MaxVer = If(New Version(1, 19, 999, 999) < MaxVer, New Version(1, 19, 999, 999), MaxVer)
+            ElseIf CompareVersionGE(McInstanceSelected.Version.Forge, "45.0.66") AndAlso CompareVersionGE("47.4.8", McInstanceSelected.Version.Forge) Then
+                '1.19.4~1.20.1，Forge 45.0.66 ~ 47.4.8：最高 Java 21
+                MaxVer = If(New Version(1, 21, 999, 999) < MaxVer, New Version(1, 21, 999, 999), MaxVer)
+            End If
+        End If
+
+        'NeoForge 检测
+        If McInstanceSelected.Version.HasNeoForge Then
+            If McInstanceSelected.Version.Vanilla = New Version(20, 0, 1) OrElse
+               (CompareVersionGE("20.2.62-beta", McInstanceSelected.Version.NeoForge) AndAlso Not McInstanceSelected.Version.NeoForge.Contains("25w14craftmine")) Then
+                '1.20.1，以及 1.20.2 的 20.2.62-beta 之前：最高 Java 21
+                MaxVer = If(New Version(1, 21, 999, 999) < MaxVer, New Version(1, 21, 999, 999), MaxVer)
             End If
         End If
 
@@ -1354,22 +1375,21 @@ NextInstance:
             McLaunchLog($"新版 JVM 参数：从版本 JSON 获取（{CurrentInstance.Name}）")
             If CurrentInstance.JsonObject("arguments") IsNot Nothing AndAlso CurrentInstance.JsonObject("arguments")("jvm") IsNot Nothing Then
                 For Each SubJson As JToken In CurrentInstance.JsonObject("arguments")("jvm")
-                    If SubJson.Type = JTokenType.String Then
-                        '字符串类型
-                        Args.Add(SubJson.ToString.Trim)
-                    Else
-                        '非字符串类型
-                        If McJsonRuleCheck(SubJson("rules")) Then
-                            '满足准则
-                            If SubJson("value").Type = JTokenType.String Then
-                                Args.Add(SubJson("value").ToString.Trim)
+                    Select Case SubJson.Type
+                        Case JTokenType.String
+                            Args.Add(SubJson.ToString.Trim)
+                        Case JTokenType.Object
+                            Dim Argument As JObject = CType(SubJson, JObject)
+                            If Argument.ContainsKey("rules") AndAlso Not McJsonRuleCheck(Argument("rules")) Then Continue For '不满足准则
+                            If Not Argument.ContainsKey("value") Then Continue For '没有 value 字段
+                            If Argument("value").Type = JTokenType.String Then
+                                Args.Add(Argument("value").ToString.Trim)
                             Else
-                                For Each value As JToken In SubJson("value")
+                                For Each value As JToken In Argument("value")
                                     Args.Add(value.ToString.Trim)
                                 Next
                             End If
-                        End If
-                    End If
+                    End Select
                 Next
             End If
             If CurrentInstance.InheritName <> "" Then
@@ -1525,18 +1545,21 @@ NextInstance:
             McLaunchLog($"新版游戏参数：从版本 JSON 获取（{CurrentInstance.Name}）")
             If CurrentInstance.JsonObject("arguments") IsNot Nothing AndAlso CurrentInstance.JsonObject("arguments")("game") IsNot Nothing Then
                 For Each SubJson As JToken In CurrentInstance.JsonObject("arguments")("game")
-                    If SubJson.Type = JTokenType.String Then '字符串类型
-                        AppendArg(SubJson.ToString)
-                    Else '非字符串类型
-                        If Not McJsonRuleCheck(SubJson("rules")) Then Continue For '检查要求
-                        If SubJson("value").Type = JTokenType.String Then
-                            AppendArg(SubJson("value").ToString)
-                        Else
-                            For Each value As JToken In SubJson("value")
-                                AppendArg(value.ToString)
-                            Next
-                        End If
-                    End If
+                    Select Case SubJson.Type
+                        Case JTokenType.String
+                            AppendArg(SubJson.ToString)
+                        Case JTokenType.Object
+                            Dim Argument As JObject = CType(SubJson, JObject)
+                            If Argument.ContainsKey("rules") AndAlso Not McJsonRuleCheck(Argument("rules")) Then Continue For '不满足准则
+                            If Not Argument.ContainsKey("value") Then Continue For '没有 value 字段
+                            If Argument("value").Type = JTokenType.String Then
+                                AppendArg(Argument("value").ToString)
+                            Else
+                                For Each value As JToken In Argument("value")
+                                    AppendArg(value.ToString)
+                                Next
+                            End If
+                    End Select
                 Next
             End If
             If CurrentInstance.InheritName <> "" Then
@@ -1823,7 +1846,7 @@ NextInstance:
     ''' 获取 Natives 文件夹路径，不以 \ 结尾。
     ''' </summary>
     Private Function GetNativesFolder() As String
-        Dim Result As String = McInstanceSelected.PathVersion & McInstanceSelected.Name & "-natives"
+        Dim Result As String = ShortenPath(McInstanceSelected.PathVersion) & McInstanceSelected.Name & "-natives"
         If Not (IsGBKEncoding OrElse Result.IsASCII()) Then
             Result = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\bin\natives"
             If Not Result.IsASCII() Then

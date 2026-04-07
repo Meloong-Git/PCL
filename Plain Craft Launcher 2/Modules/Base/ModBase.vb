@@ -14,12 +14,12 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.12.6.1" '显示用版本名
+    Public Const VersionBaseName As String = "2.12.6.2" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If BETA Then
-    Public Const VersionCode As Integer = 389 '正式版
+    Public Const VersionCode As Integer = 391 '正式版
 #Else
-    Public Const VersionCode As Integer = 388 '快照版
+    Public Const VersionCode As Integer = 390 '快照版
 #End If
     '自动生成的版本信息
     Public Const VersionDisplayName As String = VersionBranchName & " " & VersionBaseName
