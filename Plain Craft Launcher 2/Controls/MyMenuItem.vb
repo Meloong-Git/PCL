@@ -7,7 +7,7 @@
             If IconControl IsNot Nothing Then IconControl.Data = (New GeometryConverter).ConvertFromString(Icon)
         End If
         '对父级设置透明度
-        CType(Parent, ContextMenu).Opacity = Setup.Get("UiLauncherTransparent") / 1000 + 0.4
+        CType(Parent, ContextMenu).Opacity = Settings.Get("UiLauncherTransparent") / 1000 + 0.4
     End Sub
 
     '基础

@@ -23,7 +23,7 @@ Public Class PageInstanceExport
         AniControlEnabled += 1
         If CurrentInstance <> PageInstanceLeft.Instance.PathVersion Then RefreshAll() '切换到了另一个版本，重置页面
         CustomEventService.SetEventData(BtnAdvancedHelp,
-            If(VersionBranchName = "Release", "指南/整合包制作 - Public.json", "指南/整合包制作 - Snapshot.json"))
+            If(VersionBranchCode = 50, "指南/整合包制作 - Public.json", "指南/整合包制作 - Snapshot.json"))
         AniControlEnabled -= 1
     End Sub
     Public Sub RefreshAll() Implements IRefreshable.Refresh
@@ -305,9 +305,9 @@ Public Class PageInstanceExport
     '保存配置文件
     Private Sub ExportConfig() Handles BtnAdvancedExport.Click
         Try
-            Dim ConfigPath As String = SelectSaveFile("选择文件位置", "export_config.txt", "整合包导出配置(*.txt)|*.txt", Setup.Get("CacheExportConfig"))
+            Dim ConfigPath As String = SelectSaveFile("选择文件位置", "export_config.txt", "整合包导出配置(*.txt)|*.txt", Settings.Get("CacheExportConfig"))
             If String.IsNullOrEmpty(ConfigPath) Then Return
-            Setup.Set("CacheExportConfig", ConfigPath)
+            Settings.Set("CacheExportConfig", ConfigPath)
             Dim ConfigLines As New List(Of String)
             'ini 段
             ConfigLines.Add("Name:" & TextExportName.Text)
@@ -351,9 +351,9 @@ Public Class PageInstanceExport
     '读取配置文件
     Private Sub ImportConfig() Handles BtnAdvancedImport.Click
         Try
-            Dim ConfigPath As String = SelectFile("整合包导出配置(*.txt)|*.txt", "选择配置文件", Setup.Get("CacheExportConfig"))
+            Dim ConfigPath As String = SelectFile("整合包导出配置(*.txt)|*.txt", "选择配置文件", Settings.Get("CacheExportConfig"))
             If String.IsNullOrEmpty(ConfigPath) Then Return
-            Setup.Set("CacheExportConfig", ConfigPath)
+            Settings.Set("CacheExportConfig", ConfigPath)
             Dim Segments As String() = ReadFile(ConfigPath).Split(Sperator)
             'ini 段
             Dim Ini As New Dictionary(Of String, String)
@@ -367,8 +367,8 @@ Public Class PageInstanceExport
             TextExportVersion.Text = Ini.GetOrDefault("Version", "")
             CheckOptionsPcl.Checked = Ini.GetOrDefault("IncludeLauncher", True)
             CheckOptionsPclCustom.Checked = Ini.GetOrDefault("IncludeLauncherCustom", True)
-            CheckAdvancedModrinth.Checked = Ini.GetOrDefault("ModrinthUploadMode", False)
             CheckAdvancedInclude.Checked = Ini.GetOrDefault("DontCheckHostedAssets", False)
+            If Not CheckAdvancedInclude.Checked Then CheckAdvancedModrinth.Checked = Ini.GetOrDefault("ModrinthUploadMode", False) '#7979，加个特判
             ConfigPackPath = Ini.GetOrDefault("PackPath", Nothing)
             '导出内容段
             RulesOverrides = Segments(1).Replace(vbCr, vbLf).Replace(vbLf & vbLf, vbLf).Split(vbLf).ToList
@@ -485,7 +485,7 @@ Public Class PageInstanceExport
                     '检查规则
                     Dim ShouldKeep As Boolean = False
                     For Each Rule In AllRules
-                        Dim Revert = Rule.StartsWith("!")
+                        Dim Revert = Rule.StartsWithF("!")
                         If RelativePath Like Rule.TrimStart("!") Then ShouldKeep = Not Revert
                     Next
                     If Not ShouldKeep Then Continue For
@@ -493,7 +493,7 @@ Public Class PageInstanceExport
                     CopyFile(Entry.FullName, TargetPath)
                     '若为压缩包，考虑联网获取路径
                     If CheckHostedAssets AndAlso
-                       {".zip", ".rar", ".jar", ".disabled", ".old"}.Contains(Entry.Extension.ToLower) AndAlso
+                       {".zip", ".rar", ".jar", ".disabled", ".old"}.Contains(Entry.Extension.Lower) AndAlso
                        {"mods", "packs", "openloader", "resource"}.Any(Function(s) RelativePath.Contains(s)) Then
                         Dim ModFile As New McMod(TargetPath)
                         Dim Unused = ModFile.ModrinthHash '提前计算 Hash
@@ -617,7 +617,7 @@ Public Class PageInstanceExport
 
             '等待线程结束
             Do Until EndedThreadCount = 2
-                If Loader.IsAborted Then Return
+                If Loader.IsInterrupted Then Return
                 Thread.Sleep(10)
             Loop
 
@@ -676,7 +676,7 @@ Public Class PageInstanceExport
                 '首次压缩整合包
                 ZipFile.CreateFromDirectory(CacheFolder & "modpack\", CacheFolder & "modpack.mrpack")
                 Loader.Progress = 0.5
-                Directory.Delete(CacheFolder & "modpack\", True)
+                DeleteDirectory(CacheFolder & "modpack\")
                 Loader.Progress = 0.6
                 '二次压缩整合包
                 ZipFile.CreateFromDirectory(CacheFolder, PackPath)
@@ -686,7 +686,7 @@ Public Class PageInstanceExport
                 ZipFile.CreateFromDirectory(CacheFolder & "modpack\", PackPath)
                 Loader.Progress = 0.8
             End If
-            Directory.Delete(CacheFolder, True)
+            DeleteDirectory(CacheFolder, True)
             OpenExplorer(PackPath)
         End Sub) With {.ProgressWeight = 6})
 

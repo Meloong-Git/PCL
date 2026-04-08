@@ -305,7 +305,7 @@
     ''' 返回输入的文件是否为一个 Mod 文件，仅用于判断拖拽行为。
     ''' </summary>
     Public Shared Function InstallMods(FilePathList As IEnumerable(Of String)) As Boolean
-        Dim Extension As String = FilePathList.First.AfterLast(".").ToLower
+        Dim Extension As String = FilePathList.First.AfterLast(".").Lower
         '检查文件扩展名
         If Not {"jar", "litemod", "disabled", "old"}.Any(Function(t) t = Extension) Then Return False
         Log("[System] 文件为 jar/litemod 格式，尝试作为 Mod 安装")
@@ -322,7 +322,7 @@
             Hint("若要安装 Mod，请先选择一个可以安装 Mod 的版本！")
         ElseIf Not (FrmMain.PageCurrent = FormMain.PageType.InstanceSetup AndAlso FrmMain.PageCurrentSub = FormMain.PageSubType.InstanceMod) Then
             '未处于 Mod 管理页面
-            If MyMsgBox($"是否要将这{If(FilePathList.Count = 1, "个", "些")}文件作为 Mod 安装到 {Instance.Name}？", "Mod 安装确认", "确定", "取消") = 1 Then GoTo Install
+            If MyMsgBox($"是否要将这{If(FilePathList.IsSingle, "个", "些")}文件作为 Mod 安装到 {Instance.Name}？", "Mod 安装确认", "确定", "取消") = 1 Then GoTo Install
         Else
             '处于 Mod 管理页面
 Install:
@@ -332,7 +332,7 @@ Install:
                     If Not NewFileName.Contains(".") Then NewFileName += ".jar" '#4227
                     CopyFile(ModFile, Instance.PathIndie & "mods\" & NewFileName)
                 Next
-                If FilePathList.Count = 1 Then
+                If FilePathList.IsSingle Then
                     Hint($"已安装 {GetFileNameFromPath(FilePathList.First).Replace(".disabled", "").Replace(".old", "")}！", HintType.Green)
                 Else
                     Hint($"已安装 {FilePathList.Count} 个 Mod！", HintType.Green)
@@ -503,7 +503,7 @@ Install:
                     End If
                 End If
                 File.Delete(NewPath)
-                FileSystem.Rename(ModEntity.Path, NewPath)
+                File.Move(ModEntity.Path, NewPath)
             Catch ex As FileNotFoundException
                 Log(ex, $"未找到需要重命名的 Mod（{If(ModEntity.Path, "null")}）", LogLevel.Feedback)
                 ReloadModList(True)
@@ -556,9 +556,9 @@ Install:
     Public Shared UpdatingInstanceModFolders As New List(Of String)
     Public Sub UpdateMods(ModList As IEnumerable(Of McMod))
         '更新前警告
-        If Not Setup.Get("HintUpdateMod") OrElse ModList.Count >= 15 Then
+        If Not Settings.Get("HintUpdateMod") OrElse ModList.Count >= 15 Then
             If MyMsgBox($"新版本 Mod 可能不兼容旧存档或者其他 Mod，这可能导致游戏崩溃，甚至永久损坏存档！{vbCrLf}如果你在游玩整合包，请千万不要自行更新 Mod！{vbCrLf}{vbCrLf}在更新前，请先备份存档，并检查 Mod 的更新日志。{vbCrLf}如果更新后出现问题，你也可以在回收站找回更新前的 Mod。", "Mod 更新警告", "我已了解风险，继续更新", "取消", IsWarn:=True) = 1 Then
-                Setup.Set("HintUpdateMod", True)
+                Settings.Set("HintUpdateMod", True)
             Else
                 Return
             End If
@@ -592,8 +592,8 @@ Install:
                     Shortened = True
                 Loop
                 If Shortened AndAlso CurrentSegs.Any() AndAlso NewestSegs.Any() Then
-                    CurrentReplaceName = Join(CurrentSegs, "-")
-                    NewestReplaceName = Join(NewestSegs, "-")
+                    CurrentReplaceName = CurrentSegs.Join("-")
+                    NewestReplaceName = NewestSegs.Join("-")
                 End If
                 '添加到下载列表
                 Dim TempAddress As String = PathTemp & "mods\" & Entry.FileName.Replace(CurrentReplaceName, NewestReplaceName) '需要下载到 mods 文件夹，以便重复文件检查时识别
@@ -649,7 +649,7 @@ Install:
                         End Select
                     Case LoadState.Failed
                         Hint("Mod 更新失败：" & Loader.Error.GetBrief(), HintType.Red)
-                    Case LoadState.Aborted
+                    Case LoadState.Interrupted
                         Hint("Mod 更新已中止！", HintType.Blue)
                     Case Else
                         Return
@@ -737,13 +737,13 @@ Install:
             '显示结果提示
             If Not IsSuccessful Then Return
             If IsShiftPressed Then
-                If ModList.Count = 1 Then
+                If ModList.IsSingle Then
                     Hint($"已彻底删除 {ModList.Single.FileName}！", HintType.Green)
                 Else
                     Hint($"已彻底删除 {ModList.Count} 个文件！", HintType.Green)
                 End If
             Else
-                If ModList.Count = 1 Then
+                If ModList.IsSingle Then
                     Hint($"已将 {ModList.Single.FileName} 删除到回收站！", HintType.Green)
                 Else
                     Hint($"已将 {ModList.Count} 个文件删除到回收站！", HintType.Green)
@@ -797,8 +797,8 @@ Install:
                 Dim ModOriginalName As String = ModEntry.DisplayName.Replace(" ", "+")
                 Dim ModSearchName As String = ModOriginalName.Substring(0, 1)
                 For i = 1 To ModOriginalName.Count - 1
-                    Dim IsLastLower As Boolean = ModOriginalName(i - 1).ToString.ToLower.Equals(ModOriginalName(i - 1).ToString)
-                    Dim IsCurrentLower As Boolean = ModOriginalName(i).ToString.ToLower.Equals(ModOriginalName(i).ToString)
+                    Dim IsLastLower As Boolean = ModOriginalName(i - 1).ToString.Lower.Equals(ModOriginalName(i - 1).ToString)
+                    Dim IsCurrentLower As Boolean = ModOriginalName(i).ToString.Lower.Equals(ModOriginalName(i).ToString)
                     If IsLastLower AndAlso Not IsCurrentLower Then
                         '上一个字母为小写，这一个字母为大写
                         ModSearchName += "+"
@@ -807,7 +807,7 @@ Install:
                 Next
                 ModSearchName = ModSearchName.Replace("++", "+").Replace("pti+Fine", "ptiFine")
                 '百科搜索链接
-                If MyMsgBox(Join(ContentLines, vbCrLf), ModEntry.DisplayName, "百科搜索", "返回") = 1 Then
+                If MyMsgBox(ContentLines.Join(vbCrLf), ModEntry.DisplayName, "百科搜索", "返回") = 1 Then
                     OpenWebsite("https://www.mcmod.cn/s?key=" & ModSearchName & "&site=all&filter=0")
                 End If
             End If
@@ -850,22 +850,22 @@ Install:
             '构造请求
             Dim QueryList As New List(Of SearchEntry(Of McMod))
             For Each Entry As McMod In McModLoader.Output
-                Dim SearchSource As New List(Of KeyValuePair(Of String, Double))
-                SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.DisplayName, 1))
-                SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.FileName, 1))
+                Dim SearchSources As New List(Of SearchSource)
+                SearchSources.Add(New SearchSource(Entry.DisplayName, 1))
+                SearchSources.Add(New SearchSource(Entry.FileName, 1))
                 If Entry.Version IsNot Nothing Then
-                    SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.Version, 0.2))
+                    SearchSources.Add(New SearchSource(Entry.Version, 0.2))
                 End If
                 If Entry.Description IsNot Nothing AndAlso Entry.Description <> "" Then
-                    SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.Description, 0.4))
+                    SearchSources.Add(New SearchSource(Entry.Description, 0.4))
                 End If
                 If Entry.Comp IsNot Nothing Then
-                    If Entry.Comp.RawName <> Entry.DisplayName Then SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.Comp.RawName, 1))
-                    If Entry.Comp.TranslatedName <> Entry.Comp.RawName Then SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.Comp.TranslatedName, 1))
-                    If Entry.Comp.Description <> Entry.Description Then SearchSource.Add(New KeyValuePair(Of String, Double)(Entry.Comp.Description, 0.4))
-                    SearchSource.Add(New KeyValuePair(Of String, Double)(String.Join("", Entry.Comp.Tags), 0.2))
+                    If Entry.Comp.RawName <> Entry.DisplayName Then SearchSources.Add(New SearchSource(Entry.Comp.RawName, 1))
+                    If Entry.Comp.TranslatedName <> Entry.Comp.RawName Then SearchSources.Add(New SearchSource(Entry.Comp.TranslatedName, 1))
+                    If Entry.Comp.Description <> Entry.Description Then SearchSources.Add(New SearchSource(Entry.Comp.Description, 0.4))
+                    SearchSources.Add(New SearchSource(String.Join("", Entry.Comp.Tags), 0.2))
                 End If
-                QueryList.Add(New SearchEntry(Of McMod) With {.Item = Entry, .SearchSource = SearchSource})
+                QueryList.Add(New SearchEntry(Of McMod) With {.Item = Entry, .SearchSource = SearchSources})
             Next
             '进行搜索
             SearchResult = Search(QueryList, SearchBox.Text, MaxBlurCount:=6, MinBlurSimilarity:=0.35).Select(Function(r) r.Item).ToList

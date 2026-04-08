@@ -5,9 +5,9 @@
     Private Sub PageOtherLeft_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
         '是否处于隐藏的子页面
         Dim IsHiddenPage As Boolean = False
-        If ItemHelp.Checked AndAlso Setup.Get("UiHiddenOtherHelp") Then IsHiddenPage = True
-        If ItemAbout.Checked AndAlso Setup.Get("UiHiddenOtherAbout") Then IsHiddenPage = True
-        If ItemTest.Checked AndAlso Setup.Get("UiHiddenOtherTest") Then IsHiddenPage = True
+        If ItemHelp.Checked AndAlso Settings.Get("UiHiddenOtherHelp") Then IsHiddenPage = True
+        If ItemAbout.Checked AndAlso Settings.Get("UiHiddenOtherAbout") Then IsHiddenPage = True
+        If ItemTest.Checked AndAlso Settings.Get("UiHiddenOtherTest") Then IsHiddenPage = True
         If PageSetupUI.HiddenForceShow Then IsHiddenPage = False
         '若页面错误，或尚未加载，则继续
         If IsLoad AndAlso Not IsHiddenPage Then Return
@@ -16,9 +16,9 @@
         PageSetupUI.HiddenRefresh()
         '选择第一个未被禁用的子页面
         If IsPageSwitched Then Return
-        If Not Setup.Get("UiHiddenOtherHelp") Then
+        If Not Settings.Get("UiHiddenOtherHelp") Then
             ItemHelp.SetChecked(True, False, False)
-        ElseIf Not Setup.Get("UiHiddenOtherAbout") Then
+        ElseIf Not Settings.Get("UiHiddenOtherAbout") Then
             ItemAbout.SetChecked(True, False, False)
         Else
             ItemTest.SetChecked(True, False, False)
@@ -37,9 +37,9 @@
     Public Sub New()
         InitializeComponent()
         '选择第一个未被禁用的子页面
-        If Not Setup.Get("UiHiddenOtherHelp") Then
+        If Not Settings.Get("UiHiddenOtherHelp") Then
             PageID = FormMain.PageSubType.OtherHelp
-        ElseIf Not Setup.Get("UiHiddenOtherAbout") Then
+        ElseIf Not Settings.Get("UiHiddenOtherAbout") Then
             PageID = FormMain.PageSubType.OtherAbout
         Else
             PageID = FormMain.PageSubType.OtherTest
@@ -119,7 +119,7 @@
         Hint("正在刷新……", Log:=False)
     End Sub
     Public Shared Sub RefreshHelp()
-        Setup.Set("SystemHelpVersion", 0) '强制重新解压文件
+        Settings.Set("SystemHelpVersion", 0) '强制重新解压文件
         FrmOtherHelp.PageLoaderRestart()
         FrmOtherHelp.SearchBox.Text = ""
     End Sub

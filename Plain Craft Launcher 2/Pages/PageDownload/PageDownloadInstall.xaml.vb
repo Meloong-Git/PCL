@@ -161,7 +161,7 @@
     Private VanillaIcon As String
     Private ReadOnly Property VanillaDrop As Integer
         Get
-            Return McVersion.VersionToDrop(VanillaName, True)
+            Return McVersion.VersionToDrop(VanillaName)
         End Get
     End Property
 
@@ -322,7 +322,7 @@
             Else
                 BtnOptiFabricClear.Visibility = Visibility.Visible
                 ImgOptiFabric.Visibility = Visibility.Visible
-                LabOptiFabric.Text = SelectedOptiFabric.DisplayName.ToLower.Replace("optifabric-", "").Replace(".jar", "").Trim.TrimStart("v")
+                LabOptiFabric.Text = SelectedOptiFabric.DisplayName.Lower.Replace("optifabric-", "").Replace(".jar", "").Trim.TrimStart("v")
                 LabOptiFabric.Foreground = ColorGray1
             End If
         End If
@@ -456,22 +456,22 @@
                     Case "snapshot"
                         Type = "预览版"
                         'Mojang 误分类
-                        If Version("id").ToString.StartsWith("1.") AndAlso
-                            Not Version("id").ToString.ToLower.Contains("combat") AndAlso
-                            Not Version("id").ToString.ToLower.Contains("rc") AndAlso
-                            Not Version("id").ToString.ToLower.Contains("experimental") AndAlso
-                            Not Version("id").ToString.ToLower.Contains("pre") Then
+                        If Version("id").ToString.StartsWithF("1.") AndAlso
+                            Not Version("id").ToString.Lower.Contains("combat") AndAlso
+                            Not Version("id").ToString.Lower.Contains("rc") AndAlso
+                            Not Version("id").ToString.Lower.Contains("experimental") AndAlso
+                            Not Version("id").ToString.Lower.Contains("pre") Then
                             Type = "正式版"
                             Version("type") = "release"
                         End If
                         '愚人节版本
-                        Select Case Version("id").ToString.ToLower
+                        Select Case Version("id").ToString.Lower
                             Case "20w14infinite", "20w14∞"
                                 Type = "愚人节版"
                                 Version("id") = "20w14∞"
                                 Version("type") = "special"
                                 Version.Add("lore", GetMcFoolName(Version("id")))
-                            Case "3d shareware v1.34", "1.rv-pre1", "15w14a", "2.0", "22w13oneblockatatime", "23w13a_or_b", "24w14potato", "25w14craftmine"
+                            Case "3d shareware v1.34", "1.rv-pre1", "15w14a", "2.0", "22w13oneblockatatime", "23w13a_or_b", "24w14potato", "25w14craftmine", "26w14a"
                                 Type = "愚人节版"
                                 Version("type") = "special"
                                 Version.Add("lore", GetMcFoolName(Version("id")))
@@ -566,7 +566,7 @@
         Dim HasAny As Boolean = False
         Dim HasRequiredVersion As Boolean = False
         For Each OptiFineVersion As DlOptiFineListEntry In DlOptiFineListLoader.Output.Value
-            If Not OptiFineVersion.DisplayName.StartsWith(VanillaName & " ") Then Continue For '不是同一个大版本
+            If Not OptiFineVersion.DisplayName.StartsWithF(VanillaName & " ") Then Continue For '不是同一个大版本
             HasAny = True
             If SelectedForge Is Nothing Then Return Nothing '未选择 Forge
             If IsOptiFineSuitForForge(OptiFineVersion, SelectedForge) Then Return Nothing '该版本可用
@@ -609,7 +609,7 @@
             Dim Versions As New List(Of DlOptiFineListEntry)
             For Each Version As DlOptiFineListEntry In DlOptiFineListLoader.Output.Value
                 If SelectedForge IsNot Nothing AndAlso Not IsOptiFineSuitForForge(Version, SelectedForge) Then Continue For
-                If Version.DisplayName.StartsWith(VanillaName & " ") Then Versions.Add(Version)
+                If Version.DisplayName.StartsWithF(VanillaName & " ") Then Versions.Add(Version)
             Next
             If Not Versions.Any() Then Return
             '排序
@@ -915,16 +915,17 @@
         Dim FabricApiName = FabricApi.DisplayName
         Try
             If FabricApiName Is Nothing OrElse VanillaName Is Nothing Then Return False
-            FabricApiName = FabricApiName.ToLower : VanillaName = VanillaName.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3").ToLower
-            If FabricApiName.StartsWith("[" & VanillaName & "]") Then Return True
+            FabricApiName = FabricApiName.Lower
+            Dim TargetName = VanillaName.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3").Lower
+            If FabricApiName.StartsWithF("[" & TargetName & "]") Then Return True
             If Not FabricApiName.Contains("/") OrElse Not FabricApiName.Contains("]") Then Return False
             '直接的判断（例如 1.18.1/22w03a）
             For Each Part As String In FabricApiName.BeforeFirst("]").TrimStart("[").Split("/")
-                If Part = VanillaName Then Return True
+                If Part = TargetName Then Return True
             Next
             '将版本名分割语素（例如 1.16.4/5）
             Dim Lefts = RegexSearch(FabricApiName.BeforeFirst("]"), "[a-z/]+|[0-9/]+")
-            Dim Rights = RegexSearch(VanillaName.BeforeFirst("]"), "[a-z/]+|[0-9/]+")
+            Dim Rights = RegexSearch(TargetName.BeforeFirst("]"), "[a-z/]+|[0-9/]+")
             '对每段进行判断
             Dim i As Integer = 0
             While True
@@ -980,7 +981,7 @@
             Dim Versions As New List(Of CompFile)
             For Each Version In DlFabricApiLoader.Output
                 If IsFabricApiCompatible(Version) Then
-                    If Not Version.DisplayName.StartsWith("[") Then
+                    If Not Version.DisplayName.StartsWithF("[") Then
                         Log("[Download] 已特判修改 Fabric API 显示名：" & Version.DisplayName, LogLevel.Debug)
                         Version.DisplayName = "[" & VanillaName & "] " & Version.DisplayName
                     End If
@@ -1122,7 +1123,7 @@
     Private Sub BtnStart_Click() Handles BtnStart.Click
         '确认版本隔离
         If (SelectedForge IsNot Nothing OrElse SelectedNeoForge IsNot Nothing OrElse SelectedFabric IsNot Nothing) AndAlso
-           (Setup.Get("LaunchArgumentIndieV2") = 0 OrElse Setup.Get("LaunchArgumentIndieV2") = 2) Then
+           (Settings.Get("LaunchArgumentIndieV2") = 0 OrElse Settings.Get("LaunchArgumentIndieV2") = 2) Then
             If MyMsgBox("你尚未开启版本隔离，多个 MC 版本会共用同一个 Mod 文件夹。" & vbCrLf &
                         "因此，游戏可能会因为读取到与当前版本不符的 Mod 而崩溃。" & vbCrLf &
                         "推荐先在 设置 → 启动选项 → 默认版本隔离 中开启版本隔离！", "版本隔离提示", "取消下载", "继续") = 1 Then

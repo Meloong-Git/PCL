@@ -4,7 +4,7 @@
     Private Initializer As Func(Of T)
     Public Sub New(Initializer As Func(Of T))
         Me.Initializer = Initializer
-        OnFirstEnterScrollViewerViewport(AddressOf Init)
+        LazyLoadBehavior.OnFirstEnterScrollViewerViewport(Me, AddressOf Init)
     End Sub
 
     ''' <summary>
@@ -34,7 +34,7 @@ Public Class MyVirtualizingElement
     Private Initializer As Func(Of FrameworkElement)
     Public Sub New(Initializer As Func(Of FrameworkElement))
         Me.Initializer = Initializer
-        OnFirstEnterScrollViewerViewport(AddressOf Init)
+        LazyLoadBehavior.OnFirstEnterScrollViewerViewport(Me, AddressOf Init)
     End Sub
 
     ''' <summary>

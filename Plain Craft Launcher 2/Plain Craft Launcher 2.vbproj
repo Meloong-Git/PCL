@@ -383,7 +383,7 @@
     <Compile Include="Pages\PageSetup\PageSetupLeft.xaml.vb">
       <DependentUpon>PageSetupLeft.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageSetup\ModSetup.vb" />
+    <Compile Include="Pages\PageSetup\Settings.vb" />
     <Compile Include="Pages\PageSetup\PageSetupLaunch.xaml.vb">
       <DependentUpon>PageSetupLaunch.xaml</DependentUpon>
     </Compile>
@@ -396,6 +396,7 @@
     <Compile Include="Pages\PageSetup\PageSetupUI.xaml.vb">
       <DependentUpon>PageSetupUI.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PageSetup\SettingService.vb" />
     <Compile Include="Pages\PageSpeedLeft.xaml.vb">
       <DependentUpon>PageSpeedLeft.xaml</DependentUpon>
     </Compile>
@@ -760,6 +761,7 @@
   <ItemGroup>
     <Resource Include="Resources\Font.ttf" />
     <None Include="Resources\Help.zip" />
+    <None Include="Resources\moddata.zip" />
     <None Include="Resources\NAudio.dll" />
   </ItemGroup>
   <ItemGroup>
@@ -875,9 +877,6 @@
     <None Include="Resources\java-wrapper.jar" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\ModData.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\Skins\Ari.png" />
     <Resource Include="Images\Skins\Efe.png" />
     <Resource Include="Images\Skins\Kai.png" />
@@ -922,7 +921,10 @@
     <Resource Include="Images\Heads\EasyTier.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\System.ValueTuple.dll" />
+    <None Include="Resources\System.ValueTuple.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\lwjgl-unsafe-agent.jar" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

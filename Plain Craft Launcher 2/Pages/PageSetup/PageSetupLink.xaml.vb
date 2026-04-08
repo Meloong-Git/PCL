@@ -17,15 +17,15 @@
 
     End Sub
     Public Sub Reload()
-        ComboLatencyMode.SelectedIndex = Setup.Get("LinkLatencyMode")
-        TextCustomPeer.Text = Setup.Get("LinkCustomPeer")
+        ComboLatencyMode.SelectedIndex = Settings.Get("LinkLatencyMode")
+        TextCustomPeer.Text = Settings.Get("LinkCustomPeer")
     End Sub
 
     '初始化
     Public Sub Reset()
         Try
-            Setup.Reset("LinkLatencyMode")
-            Setup.Reset("LinkCustomPeer")
+            Settings.Reset("LinkLatencyMode")
+            Settings.Reset("LinkCustomPeer")
 
             Log("[Setup] 已初始化联机页设置")
             Hint("已初始化联机页设置！", HintType.Green, False)
@@ -38,10 +38,10 @@
 
     '将控件改变路由到设置改变
     Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextCustomPeer.ValidatedTextChanged
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.Text)
+        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Text)
     End Sub
     Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboLatencyMode.SelectionChanged
-        If AniControlEnabled = 0 Then Setup.Set(sender.Tag, sender.SelectedIndex)
+        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.SelectedIndex)
     End Sub
 
 End Class
