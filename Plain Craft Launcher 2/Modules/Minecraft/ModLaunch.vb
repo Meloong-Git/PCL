@@ -541,7 +541,7 @@ NextInner:
         McLaunchLog("登录方式：正版（" & If(LogUsername = "", "尚未登录", LogUsername) & "）")
         Data.Progress = 0.05
         '检查是否已经登录完成
-        If Not Data.IsForceRestarting AndAlso '不要求强行重启 'Input.AccessToken <> "" AndAlso '已经登录过了
+        If Not Data.IsForceRestarting AndAlso '不要求强行重启 'Input.AccessToken <> "" AndAlso '因为会影响有效期判断（每次启动就刷新，不论是否过期），所以注释掉了
            (McLoginMsRefreshTime > 0 AndAlso GetUnixTimestamp() < McLoginMsRefreshTime) Then '完成时间在有效期内
             Data.Output = New McLoginResult With
                 {.AccessToken = Input.AccessToken, .Name = Input.UserName, .Uuid = Input.Uuid, .Type = "Microsoft", .ClientToken = Input.Uuid, .ProfileJson = Input.ProfileJson}
@@ -592,7 +592,6 @@ Relogin:
         Settings.Set("LoginMsJson", MsJson.ToString(Newtonsoft.Json.Formatting.None))
         Data.Output = New McLoginResult With {.AccessToken = AccessToken, .Name = Result(1), .Uuid = Result(0), .Type = "Microsoft", .ClientToken = Result(0), .ProfileJson = Result(2)}
         '结束
-        McLoginMsRefreshTime = GetTimeMs()
         McLaunchLog("微软登录完成")
 SkipLogin:
         Settings.Set("HintBuy", True) '关闭正版购买提示
