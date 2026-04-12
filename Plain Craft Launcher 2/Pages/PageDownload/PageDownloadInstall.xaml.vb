@@ -301,7 +301,7 @@
             Else
                 BtnFabricApiClear.Visibility = Visibility.Visible
                 ImgFabricApi.Visibility = Visibility.Visible
-                LabFabricApi.Text = SelectedFabricApi.DisplayName.Split("]")(1).Replace("Fabric API ", "").Replace(" build ", ".").Split("+").First.Trim
+                LabFabricApi.Text = SelectedFabricApi.DisplayName.Split("]")(1).Replace("Fabric API ", "").Replace(" build ", ".").Trim
                 LabFabricApi.Foreground = ColorGray1
             End If
         End If
@@ -916,7 +916,7 @@
         Try
             If FabricApiName Is Nothing OrElse VanillaName Is Nothing Then Return False
             Dim TargetName = VanillaName.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3").Lower
-            If FabricApi.GameVersions.Any(Function(f) f = TargetName)
+            If FabricApi.RawGameVersions.Any(Function(f) f = TargetName)
                 Return True
             End If
             Return False
