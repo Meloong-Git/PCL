@@ -53,6 +53,13 @@ Public Class Application
                     End If
                 End If
             End If
+            'CLI 整合包导入
+            For Index As Integer = 0 To e.Args.Length - 1
+                If e.Args(Index).Equals("--import", StringComparison.OrdinalIgnoreCase) AndAlso Index + 1 < e.Args.Length Then
+                    Properties("PendingImportFile") = e.Args(Index + 1).Trim(""""c)
+                    Exit For
+                End If
+            Next
             '初始化文件结构
             Directory.CreateDirectory(Path & "PCL\Pictures")
             Directory.CreateDirectory(Path & "PCL\Musics")

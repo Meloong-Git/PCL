@@ -456,6 +456,26 @@ Public Class FormMain
             Telemetry("启动")
         End Sub, "初始化", ThreadPriority.Lowest)
 
+        'CLI 整合包导入
+        If Application.Current.Properties.Contains("PendingImportFile") Then
+            Dim ImportPath As String = CStr(Application.Current.Properties("PendingImportFile"))
+            Application.Current.Properties.Remove("PendingImportFile")
+            If IO.File.Exists(ImportPath) Then
+                RunInNewThread(
+                Sub()
+                    Try
+                        Thread.Sleep(500)
+                        ModpackInstall(ImportPath)
+                    Catch ex As CancelledException
+                    Catch ex As Exception
+                        Log(ex, "CLI 导入整合包失败", LogLevel.Msgbox)
+                    End Try
+                End Sub, "CLI 整合包导入")
+            Else
+                Hint("CLI 导入失败：文件不存在 - " & ImportPath, HintType.Red)
+            End If
+        End If
+
         Log("[Start] 第三阶段加载用时：" & GetTimeMs() - ApplicationStartTick & " ms")
     End Sub
     '根据打开次数触发的事件
