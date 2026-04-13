@@ -823,6 +823,8 @@ ExitDataLoad:
                     If State = McInstanceState.Fool Then
                         Info = GetMcFoolName(Version.VanillaName)
                     ElseIf State <> McInstanceState.Error Then
+                        '这里不应使用缓存，因为不同实例有不同值 (#8508)
+                        Settings.MakeInstanceDirty()
                         If Settings.Get("VersionServerLogin", Instance:=Me) = 3 Then Info += ", 统一通行证验证"
                         If Settings.Get("VersionServerLogin", Instance:=Me) = 4 Then Info += ", Authlib 验证"
                     End If
