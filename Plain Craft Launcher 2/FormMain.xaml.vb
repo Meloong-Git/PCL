@@ -1670,7 +1670,15 @@ Public Class FormMain
     '关闭 Minecraft
     Public Sub BtnExtraShutdown_Click() Handles BtnExtraShutdown.Click
         Try
-            If McLaunchLoaderReal IsNot Nothing Then McLaunchLoaderReal.Interrupt()
+            Try
+                If McLaunchLoaderReal IsNot Nothing Then McLaunchLoaderReal.Interrupt()
+                For Each Watcher In McWatcherList
+                    Watcher.Kill()
+                Next
+                Hint("已取消启动并终止游戏进程", HintType.Green)
+            Catch ex As Exception
+                Log(ex, "取消启动时终止游戏进程失败", LogLevel.Feedback)
+            End Try
             For Each Watcher In McWatcherList
                 Watcher.Kill()
             Next
