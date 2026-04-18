@@ -45,6 +45,7 @@
         New Setting("CacheMsName", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("CacheMsV2Migrated", False, Source:=Sources.Registry),
         New Setting("CacheMsV2OAuthRefresh", "", Source:=Sources.Registry, Encrypted:=True),
+        New Setting("CacheMsV2OAuthExpires", 0, Source:=Sources.Registry),
         New Setting("CacheMsV2Access", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("CacheMsV2ProfileJson", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("CacheMsV2Uuid", "", Source:=Sources.Registry, Encrypted:=True),
