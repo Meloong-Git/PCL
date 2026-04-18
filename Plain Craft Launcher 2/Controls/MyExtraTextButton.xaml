@@ -4,7 +4,7 @@
     xmlns:local="clr-namespace:PCL"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     x:Name="PanBack" mc:Ignorable="d" x:Class="MyExtraTextButton"
-    RenderTransformOrigin="0.5,0.5" ToolTipService.Placement="Left" Height="52" Margin="20">
+    RenderTransformOrigin="0.5,0.5" ToolTipService.Placement="Left" Height="52" Margin="20" Cursor="Hand">
     <Grid.RenderTransform>
         <ScaleTransform ScaleX="0" ScaleY="0" />
     </Grid.RenderTransform>

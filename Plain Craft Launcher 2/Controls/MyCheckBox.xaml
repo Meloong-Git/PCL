@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="MyCheckBox"
              FocusVisualStyle="{x:Null}"
-            MinWidth="20" x:Name="PanBack" UseLayoutRounding="False" SnapsToDevicePixels="False" MinHeight="20" Background="{StaticResource ColorBrushSemiTransparent}" Focusable="True" d:DesignWidth="126.4" d:DesignHeight="44.8">
+            MinWidth="20" x:Name="PanBack" UseLayoutRounding="False" SnapsToDevicePixels="False" MinHeight="20" Background="{StaticResource ColorBrushSemiTransparent}" Focusable="True" d:DesignWidth="126.4" d:DesignHeight="44.8" Cursor="Hand">
     <TextBlock IsHitTestVisible="False" FontSize="13" x:FieldModifier="Public" x:Name="LabText" Padding="0" Margin="26,0,0,0" Foreground="{DynamicResource ColorBrush1}" HorizontalAlignment="Left" VerticalAlignment="Center" />
     <Border IsHitTestVisible="False" x:Name="ShapeBorder" BorderThickness="1.1" HorizontalAlignment="Left" VerticalAlignment="Center" Width="18" Height="18" BorderBrush="{DynamicResource ColorBrush1}" CornerRadius="3" Margin="1,0,0,0" Background="{StaticResource ColorBrushHalfWhite}" />
     <Path IsHitTestVisible="False" x:Name="ShapeCheck" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="{Binding BorderBrush, ElementName=ShapeBorder}" Width="12" Height="12" Margin="4,0,0,0" Data="M0,6L1.5,4.5 4.5,7.5 10.5,1.5 12,3 4.5,10.5 0,6z">
