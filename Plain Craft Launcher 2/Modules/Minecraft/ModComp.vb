@@ -1373,6 +1373,10 @@ NextPage:
         ''' </summary>
         Public ReadOnly ModLoaders As List(Of CompModLoaderType)
         ''' <summary>
+        ''' 未经处理的支持的游戏版本列表。
+        ''' </summary>
+        Public ReadOnly RawGameVersions As List(Of String)
+        ''' <summary>
         ''' 支持的游戏版本列表。类型包括："26.1.5"，"26.1"，"26.1 预览版"，"1.18.5"，"1.18"，"1.18 预览版"，"21w15a"，"未知版本"。
         ''' </summary>
         Public ReadOnly GameVersions As List(Of String)
@@ -1459,6 +1463,7 @@ NextPage:
                 If Data.ContainsKey("ModLoaders") Then ModLoaders = Data("ModLoaders").ToObject(Of List(Of CompModLoaderType))
                 If Data.ContainsKey("Size") Then Size = Data("Size").ToObject(Of Integer)
                 If Data.ContainsKey("Hash") Then Hash = Data("Hash").ToString
+                If Data.ContainsKey("RawGameVersions") Then RawGameVersions = Data("RawGameVersions").ToObject(Of List(Of String))
                 If Data.ContainsKey("GameVersions") Then GameVersions = Data("GameVersions").ToObject(Of List(Of String))
                 If Data.ContainsKey("RawDependencies") Then RawDependencies = Data("RawDependencies").ToObject(Of List(Of String))
                 If Data.ContainsKey("Dependencies") Then Dependencies = Data("Dependencies").ToObject(Of List(Of String))
@@ -1492,8 +1497,8 @@ NextPage:
                             Select(Function(d) d("modId").ToString).ToList
                     End If
                     'GameVersions
-                    Dim RawVersions As List(Of String) = Data("gameVersions").Select(Function(t) t.ToString.Trim.Lower).ToList
-                    GameVersions = RawVersions.
+                    RawGameVersions = Data("gameVersions").Select(Function(t) t.ToString.Trim.Lower).ToList
+                    GameVersions = RawGameVersions.
                         Where(Function(v) McVersion.IsFormatFit(v)).
                         Select(Function(v) v.Replace("-snapshot", " 预览版")).
                         Distinct.ToList
@@ -1507,10 +1512,10 @@ NextPage:
                     End If
                     'ModLoaders
                     ModLoaders = New List(Of CompModLoaderType)
-                    If RawVersions.Contains("forge") Then ModLoaders.Add(CompModLoaderType.Forge)
-                    If RawVersions.Contains("fabric") Then ModLoaders.Add(CompModLoaderType.Fabric)
-                    If RawVersions.Contains("quilt") Then ModLoaders.Add(CompModLoaderType.Quilt)
-                    If RawVersions.Contains("neoforge") Then ModLoaders.Add(CompModLoaderType.NeoForge)
+                    If RawGameVersions.Contains("forge") Then ModLoaders.Add(CompModLoaderType.Forge)
+                    If RawGameVersions.Contains("fabric") Then ModLoaders.Add(CompModLoaderType.Fabric)
+                    If RawGameVersions.Contains("quilt") Then ModLoaders.Add(CompModLoaderType.Quilt)
+                    If RawGameVersions.Contains("neoforge") Then ModLoaders.Add(CompModLoaderType.NeoForge)
 #End Region
                 Else
 #Region "Modrinth"
@@ -1551,8 +1556,8 @@ NextPage:
                             Select(Function(d) d("project_id").ToString).ToList
                     End If
                     'GameVersions
-                    Dim RawVersions As List(Of String) = Data("game_versions").Select(Function(t) t.ToString.Trim.Lower).ToList
-                    GameVersions = RawVersions.Where(Function(v) v.Contains(".")).
+                    RawGameVersions = Data("game_versions").Select(Function(t) t.ToString.Trim.Lower).ToList
+                    GameVersions = RawGameVersions.Where(Function(v) v.Contains(".")).
                                                Select(Function(v) If(v.Contains("-"), v.BeforeFirst("-") & " 预览版", If(v.StartsWithF("b1."), "远古版本", v))).
                                                Distinct.ToList
                     If GameVersions.IsSingle Then
@@ -1560,8 +1565,8 @@ NextPage:
                     ElseIf GameVersions.Count > 1 Then
                         GameVersions = GameVersions.SortByComparison(AddressOf CompareVersionGE).ToList
                         If Type = CompType.ModPack Then GameVersions = New List(Of String) From {GameVersions(0)} '整合包理应只 “支持” 一个版本
-                    ElseIf RawVersions.Any(Function(v) RegexCheck(v, "[0-9]{2}w[0-9]{2}[a-z]")) Then
-                        GameVersions = RawVersions.Where(Function(v) RegexCheck(v, "[0-9]{2}w[0-9]{2}[a-z]")).ToList
+                    ElseIf RawGameVersions.Any(Function(v) RegexCheck(v, "[0-9]{2}w[0-9]{2}[a-z]")) Then
+                        GameVersions = RawGameVersions.Where(Function(v) RegexCheck(v, "[0-9]{2}w[0-9]{2}[a-z]")).ToList
                     Else
                         GameVersions = New List(Of String) From {"未知版本"}
                     End If
@@ -1595,6 +1600,7 @@ NextPage:
             Json.Add("ReleaseDate", ReleaseDate)
             Json.Add("DownloadCount", DownloadCount)
             Json.Add("ModLoaders", New JArray(ModLoaders.Select(Function(m) CInt(m))))
+            Json.Add("RawGameVersions", New JArray(RawGameVersions))
             Json.Add("GameVersions", New JArray(GameVersions))
             Json.Add("Status", CInt(Status))
             If FileName IsNot Nothing Then Json.Add("FileName", FileName)

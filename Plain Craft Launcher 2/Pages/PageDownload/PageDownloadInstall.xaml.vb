@@ -301,7 +301,7 @@
             Else
                 BtnFabricApiClear.Visibility = Visibility.Visible
                 ImgFabricApi.Visibility = Visibility.Visible
-                LabFabricApi.Text = SelectedFabricApi.DisplayName.Split("]")(1).Replace("Fabric API ", "").Replace(" build ", ".").Split("+").First.Trim
+                LabFabricApi.Text = SelectedFabricApi.DisplayName.Split("]")(1).Replace("Fabric API ", "").Replace(" build ", ".").Trim
                 LabFabricApi.Foreground = ColorGray1
             End If
         End If
@@ -915,34 +915,11 @@
         Dim FabricApiName = FabricApi.DisplayName
         Try
             If FabricApiName Is Nothing OrElse VanillaName Is Nothing Then Return False
-            FabricApiName = FabricApiName.Lower
             Dim TargetName = VanillaName.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3").Lower
-            If FabricApiName.StartsWithF("[" & TargetName & "]") Then Return True
-            If Not FabricApiName.Contains("/") OrElse Not FabricApiName.Contains("]") Then Return False
-            '直接的判断（例如 1.18.1/22w03a）
-            For Each Part As String In FabricApiName.BeforeFirst("]").TrimStart("[").Split("/")
-                If Part = TargetName Then Return True
-            Next
-            '将版本名分割语素（例如 1.16.4/5）
-            Dim Lefts = RegexSearch(FabricApiName.BeforeFirst("]"), "[a-z/]+|[0-9/]+")
-            Dim Rights = RegexSearch(TargetName.BeforeFirst("]"), "[a-z/]+|[0-9/]+")
-            '对每段进行判断
-            Dim i As Integer = 0
-            While True
-                '两边均缺失，感觉是一个东西
-                If Lefts.Count - 1 < i AndAlso Rights.Count - 1 < i Then Return True
-                '确定两边是否一致
-                Dim LeftValue As String = If(Lefts.Count - 1 < i, "-1", Lefts(i))
-                Dim RightValue As String = If(Rights.Count - 1 < i, "-1", Rights(i))
-                If Not LeftValue.Contains("/") Then
-                    If LeftValue <> RightValue Then Return False
-                Else
-                    '左边存在斜杠
-                    If Not LeftValue.Contains(RightValue) Then Return False
-                End If
-                i += 1
-            End While
-            Return True
+            If FabricApi.RawGameVersions.Any(Function(f) f = TargetName)
+                Return True
+            End If
+            Return False
         Catch ex As Exception
             Log(ex, "判断 Fabric API 版本适配性出错（" & FabricApiName & ", " & VanillaName & "）")
             Return False
