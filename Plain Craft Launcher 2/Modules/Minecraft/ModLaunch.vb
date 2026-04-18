@@ -1432,6 +1432,13 @@ NextInstance:
             End Try
         End If
 
+        '设置代理
+        If Settings.Get("VersionAdvanceUseProxy", McInstanceSelected) AndAlso Not String.IsNullOrWhiteSpace(Settings.Get("ToolDownloadProxy")) Then
+            Dim ProxyAddress As New Uri(Settings.Get("ToolDownloadProxy"))
+            Args.Add($"-D{If(ProxyAddress.Scheme.StartsWithF("https"), "https", "http")}.proxyHost={ProxyAddress.Host}")
+            Args.Add($"-D{If(ProxyAddress.Scheme.StartsWithF("https"), "https", "http")}.proxyPort={ProxyAddress.Port}")
+        End If
+
         'JLW
         Dim UseJLW As Boolean =
             Not Settings.Get("LaunchAdvanceDisableJLW") AndAlso Not Settings.Get("VersionAdvanceDisableJLW", McInstanceSelected) AndAlso
