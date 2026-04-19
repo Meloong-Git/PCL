@@ -436,6 +436,18 @@ Public Class FormMain
                 End Select
             End If
             '启动加载器池
+            ' 在FormMain类的构造函数里加这一句（Public Sub New() 里）
+            System.Net.ServicePointManager.Expect100Continue = True
+            System.Net.ServicePointManager.UseNagleAlgorithm = True
+            System.Net.ServicePointManager.DefaultConnectionLimit = 1000
+
+            ' 强制所有网络请求使用IPv4
+            Dim ipv4Only = New System.Net.WebProxy()
+            ipv4Only.BypassProxyOnLocal = True
+            System.Net.WebRequest.DefaultWebProxy = ipv4Only
+
+            ' 或者直接修改系统的DNS解析行为
+            System.Net.ServicePointManager.SetTcpKeepAlive(True, 30000, 3000)
             Try
                 JavaListInit() '延后到同意协议后再执行，避免在初次启动时进行进程操作
                 Thread.Sleep(100)
