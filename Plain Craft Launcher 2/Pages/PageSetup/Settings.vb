@@ -140,6 +140,7 @@
         New Setting("UiCustomType", 0, OnChanged:=AddressOf PageSetupUI.OnUiCustomTypeChanged),
         New Setting("UiCustomPreset", 0),
         New Setting("UiCustomNet", ""),
+        New Setting("UiCustomVersionSpecific", True),
         New Setting("UiLogoType", 1, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiLogoText", "", OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiLogoLeft", False, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
