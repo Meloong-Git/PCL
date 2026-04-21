@@ -26,6 +26,9 @@
     Public Sub Reload()
         Try
 
+            '清除缓存
+            Settings.MakeInstanceDirty()
+            
             '启动参数
             TextArgumentTitle.Text = Settings.Get("VersionArgumentTitle", Instance:=PageInstanceLeft.Instance)
             TextArgumentInfo.Text = Settings.Get("VersionArgumentInfo", Instance:=PageInstanceLeft.Instance)
