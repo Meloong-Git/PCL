@@ -4,8 +4,6 @@ Imports System.Security.Cryptography
 
 Friend Module ModSecret
 
-#Region "杂项"
-
     '标注 PCL 的不同分支，仅用于替换标记
     Public Const VersionBranchMain As String = "OpenSource"
     '在开源版的注册表与常规版的注册表隔离，以防数据冲突
@@ -16,53 +14,6 @@ Friend Module ModSecret
     Public CurseForgeAPIKey As String = If(Environment.GetEnvironmentVariable("PCL_CURSEFORGE_API_KEY"), "")
     '用于匿名数据收集的腾讯云日志服务上报 URL，形如 https://{region}.cls.tencentcs.com/track?topic_id={topic_id}
     Public Const ClsBaseUrl As String = ""
-
-    Friend Sub SecretOnApplicationStart()
-        '提升 UI 线程优先级
-        Thread.CurrentThread.Priority = ThreadPriority.Highest
-        '确保 .NET Framework 版本
-        Try
-            Dim VersionTest As New FormattedText("", Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Fonts.SystemTypefaces.First, 96, New MyColor, DPI)
-        Catch ex As UriFormatException '修复 #3555
-            Environment.SetEnvironmentVariable("windir", Environment.GetEnvironmentVariable("SystemRoot"), EnvironmentVariableTarget.User)
-            Dim VersionTest As New FormattedText("", Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Fonts.SystemTypefaces.First, 96, New MyColor, DPI)
-        End Try
-        '检测当前文件夹权限
-        Try
-            Directory.CreateDirectory(Path & "PCL")
-        Catch ex As Exception
-            MsgBox($"PCL 无法创建 PCL 文件夹（{Path & "PCL"}），请尝试：" & vbCrLf &
-                  "1. 将 PCL 移动到其他文件夹" & If(Path.StartsWithF("C:", True), "，例如 C 盘和桌面以外的其他位置。", "。") & vbCrLf &
-                  "2. 删除当前目录中的 PCL 文件夹，然后再试。" & vbCrLf &
-                  "3. 右键 PCL 选择属性，打开 兼容性 中的 以管理员身份运行此程序。",
-                MsgBoxStyle.Critical, "运行环境错误")
-            Environment.[Exit](ProcessReturnValues.Cancel)
-        End Try
-        If Not CheckPermission(Path & "PCL") Then
-            MsgBox("PCL 没有对当前文件夹的写入权限，请尝试：" & vbCrLf &
-                  "1. 将 PCL 移动到其他文件夹" & If(Path.StartsWithF("C:", True), "，例如 C 盘和桌面以外的其他位置。", "。") & vbCrLf &
-                  "2. 删除当前目录中的 PCL 文件夹，然后再试。" & vbCrLf &
-                  "3. 右键 PCL 选择属性，打开 兼容性 中的 以管理员身份运行此程序。",
-                MsgBoxStyle.Critical, "运行环境错误")
-            Environment.[Exit](ProcessReturnValues.Cancel)
-        End If
-        '开源版本提示
-        MyMsgBox($"该版本中无法使用以下特性：
-- CurseForge API 调用：需要你自行申请 API Key，然后添加到 ModSecret.vb 的开头
-- 正版登录：需要你自行申请 Client ID，然后添加到 ModSecret.vb 的开头
-- 更新与联网通知：避免滥用隐患
-- 主题切换：这是需要赞助解锁的纪念性质的功能，别让赞助者太伤心啦……
-- 百宝箱：开发早期往里面塞了些开发工具，整理起来太麻烦了", "开源版本说明")
-    End Sub
-
-    ''' <summary>
-    ''' 获取设备标识码。
-    ''' </summary>
-    Friend Function SecretGetIdentify() As String
-        Return "0000-0000-0000-0000"
-    End Function
-
-#End Region
 
 #Region "网络鉴权"
 
@@ -78,9 +29,9 @@ Friend Module ModSecret
             If Url.Contains("baidupcs.com") OrElse Url.Contains("baidu.com") Then
                 Req.Headers.Add("User-Agent", "LogStatistic")  '#4951
             ElseIf SimulateBrowserHeaders Then
-                Req.Headers.Add("User-Agent", $"PCL2/{VersionBaseName}.{VersionBranchCode} Mozilla/5.0 AppleWebKit/537.36 Chrome/63.0.3239.132 Safari/537.36")
+                Req.Headers.Add("User-Agent", $"PCL2/{VersionBaseName}.{CInt(BuildType)} Mozilla/5.0 AppleWebKit/537.36 Chrome/63.0.3239.132 Safari/537.36")
             Else
-                Req.Headers.Add("User-Agent", $"PCL2/{VersionBaseName}.{VersionBranchCode}")
+                Req.Headers.Add("User-Agent", $"PCL2/{VersionBaseName}.{CInt(BuildType)}")
             End If
         End If
         If Not SimulateBrowserHeaders Then Req.Headers.Add("Referer", $"http://{VersionCode}.open.pcl2.server/")
@@ -157,7 +108,7 @@ Friend Module ModSecret
     Public ColorSemiTransparent As New MyColor(1, Color8)
 
     Public ThemeNow As Integer = -1
-    Public ColorHue As Integer = 210, ColorSat As Integer = 85, ColorLightAdjust As Integer = 0, ColorHueTopbarDelta As Object = 0
+    Public ColorHue As Integer = 210, ColorSat As Integer = 85, ColorLightAdjust As Integer = 0, ColorHueTopbarDelta As OneOf(Of Integer, Integer()) = 0
     Public ThemeDontClick As Integer = 0
 
     Public Sub ThemeRefresh(Optional NewTheme As Integer = -1)
@@ -199,7 +150,7 @@ Friend Module ModSecret
             Application.Current.Resources("ColorObjectBg1") = CType(ColorBg1, Color)
             ThemeRefreshMain()
         Catch ex As Exception
-            Log(ex, "刷新主题颜色失败", LogLevel.Hint)
+            Log(ex, "刷新主题颜色失败", NotifyLevel.AllUsers)
         End Try
     End Sub
     Public Sub ThemeRefreshMain()
@@ -208,15 +159,10 @@ Friend Module ModSecret
             If Not FrmMain.IsLoaded Then Return
             '顶部条背景
             Dim Brush = New LinearGradientBrush With {.EndPoint = New Point(1, 0), .StartPoint = New Point(0, 0)}
-            If TypeOf ColorHueTopbarDelta Is Integer Then
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 0, .Color = New MyColor().FromHSL2(ColorHue - ColorHueTopbarDelta, ColorSat, 48 + ColorLightAdjust)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 0.5, .Color = New MyColor().FromHSL2(ColorHue, ColorSat, 54 + ColorLightAdjust)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 1, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta, ColorSat, 48 + ColorLightAdjust)})
-            Else
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 0, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta(0), ColorSat, 48 + ColorLightAdjust)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 0.5, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta(1), ColorSat, 54 + ColorLightAdjust)})
-                Brush.GradientStops.Add(New GradientStop With {.Offset = 1, .Color = New MyColor().FromHSL2(ColorHue + ColorHueTopbarDelta(2), ColorSat, 48 + ColorLightAdjust)})
-            End If
+            Dim Deltas = ColorHueTopbarDelta.Switch(Function(d) New Integer() {-d, 0, d}, Function(d) d)
+            Brush.GradientStops.Add(New GradientStop With {.Offset = 0, .Color = New MyColor().FromHSL2(ColorHue + Deltas(0), ColorSat, 48 + ColorLightAdjust)})
+            Brush.GradientStops.Add(New GradientStop With {.Offset = 0.5, .Color = New MyColor().FromHSL2(ColorHue + Deltas(1), ColorSat, 54 + ColorLightAdjust)})
+            Brush.GradientStops.Add(New GradientStop With {.Offset = 1, .Color = New MyColor().FromHSL2(ColorHue + Deltas(2), ColorSat, 48 + ColorLightAdjust)})
             FrmMain.PanTitle.Background = Brush
             FrmMain.PanTitle.Background.Freeze()
             '主页面背景
@@ -240,30 +186,23 @@ Friend Module ModSecret
     Friend Function ThemeUnlock(Id As Integer, Optional ShowDoubleHint As Boolean = True, Optional UnlockHint As String = Nothing) As Boolean
         Return False
     End Function
-    Friend Function ThemeCheckGold(Optional Code As String = Nothing) As Boolean
-        Return False
-    End Function
-    Friend Function DonateCodeInput() As Boolean?
-        Return Nothing
-    End Function
 
 #End Region
 
 #Region "更新"
 
-    Public IsUpdateStarted As Boolean = False
-    Public IsUpdateWaitingRestart As Boolean = False
-    Public Sub UpdateCheckByButton()
+    Friend Sub UpdateCheckByButton()
         Hint("该版本中不包含更新功能……")
     End Sub
-    Public Sub UpdateStart(BaseUrl As String, Slient As Boolean, Optional ReceivedKey As String = Nothing, Optional ForceValidated As Boolean = False)
-    End Sub
+
+    Friend IsUpdateWaitingRestart As Boolean = False
     Public Sub UpdateRestart(TriggerRestartAndByEnd As Boolean)
     End Sub
     Public Sub UpdateReplace(ProcessId As Integer, OldFileName As String, NewFileName As String, TriggerRestart As Boolean)
     End Sub
+
     ''' <summary>
-    ''' 确保 PathTemp 下的 Latest.exe 是最新正式版的 PCL，它会被用于整合包打包。
+    ''' 确保 PathTemp/Latest.exe 是最新正式版的 PCL，它会被用于整合包打包。
     ''' 如果不是，则下载一个。
     ''' </summary>
     Friend Sub DownloadLatestPCL(Optional LoaderToSyncProgress As LoaderBase = Nothing)
@@ -282,6 +221,28 @@ Friend Module ModSecret
 
     Public ServerLoader As New LoaderTask(Of Integer, Integer)("PCL 配置更新", Sub() Log("[Server] 该版本中不包含更新通知功能……"), Priority:=ThreadPriority.BelowNormal) With
         {.ReloadTimeout = 1000 * 60 * 60} '超时 1 小时
+
+#End Region
+
+#Region "赞助等级"
+
+    Public ReadOnly Property DonationRank As DonationRanks
+        Get
+            Return DonationRanks.None
+        End Get
+    End Property
+
+    Public Sub InputPotatoCode(IsUpdating As Boolean)
+    End Sub
+    Friend Sub GeneratePotatoCode()
+    End Sub
+
+    ''' <summary>
+    ''' 获取设备识别码。
+    ''' </summary>
+    Friend Function GetIdentify() As String
+        Return "0000-0000-0000-0000"
+    End Function
 
 #End Region
 

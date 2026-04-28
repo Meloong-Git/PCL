@@ -36,8 +36,8 @@
                                 LogoScale="1.1" Logo="M462.336 924.891429L73.142857 950.857143l25.965714-389.193143 467.017143-467.017143a73.398857 73.398857 0 0 1 103.789715 0l259.437714 259.437714a73.398857 73.398857 0 0 1 0 103.789715l-467.017143 467.017143z m155.684571-778.349715L202.861714 561.664l259.474286 259.474286L877.458286 405.942857 618.057143 146.541714zM151.003429 873.033143l233.508571-25.965714-207.579429-207.579429-25.965714 233.545143z m544.841142-492.982857l51.894858 51.894857-233.508572 233.508571-51.931428-51.894857 233.545142-233.508571z">
                     <local:MyIconButton.ContextMenu>
                         <ContextMenu Closed="HidePanel" HorizontalOffset="10" VerticalOffset="18">
-                            <local:MyMenuItem Click="BtnEditPassword_Click" Header="修改密码" />
-                            <local:MyMenuItem Click="BtnEditName_Click" Header="修改玩家名" />
+                            <local:MyMenuItem Header="修改密码" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://account.live.com/password/Change" />
+                            <local:MyMenuItem Header="修改玩家名" local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://www.minecraft.net/zh-hans/msaprofile/mygames/editprofile" />
                         </ContextMenu>
                     </local:MyIconButton.ContextMenu>
                 </local:MyIconButton>

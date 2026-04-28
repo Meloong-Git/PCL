@@ -44,9 +44,6 @@
         }, "PageLoginNideSkin Button")
     End Sub
 
-    Private Sub BtnEdit_Click(sender As Object, e As EventArgs) Handles BtnEdit.Click
-        OpenWebsite("https://login.mc-user.com:233/account/changepw")
-    End Sub
     Public Shared Sub ExitLogin() Handles BtnExit.Click
         Settings.Set("CacheNideAccess", "")
         McLoginNideLoader.Input = Nothing '防止因为输入的用户名密码相同，直接使用了上次登录的加载器结果

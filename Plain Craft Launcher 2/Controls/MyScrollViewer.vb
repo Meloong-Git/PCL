@@ -27,7 +27,7 @@
         AniStart(
             AaDouble(
             Sub(AnimDelta As Double)
-                RealOffset = MathClamp(RealOffset + AnimDelta, 0, ExtentHeight - ActualHeight)
+                RealOffset = (RealOffset + AnimDelta).Clamp(0, ExtentHeight - ActualHeight)
                 ScrollToVerticalOffset(RealOffset)
             End Sub, Delta * DeltaMult, 300,, New AniEaseOutFluent(6)))
     End Sub

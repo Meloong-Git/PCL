@@ -23,10 +23,10 @@
         Sub()
             '自动整合包安装：准备
             Dim PackInstallPath As String = Nothing
-            If File.Exists(Path & "modpack.zip") Then PackInstallPath = Path & "modpack.zip"
-            If File.Exists(Path & "modpack.mrpack") Then PackInstallPath = Path & "modpack.mrpack"
+            If File.Exists(PathExeFolder & "modpack.zip") Then PackInstallPath = PathExeFolder & "modpack.zip"
+            If File.Exists(PathExeFolder & "modpack.mrpack") Then PackInstallPath = PathExeFolder & "modpack.mrpack"
             If PackInstallPath IsNot Nothing Then
-                Log("[Launch] 需自动安装整合包：" & PackInstallPath, LogLevel.Debug)
+                Log("[Launch] 需自动安装整合包：" & PackInstallPath, NotifyLevel.DebugModeOnly)
                 PageSelectLeft.CreateMcFolderInCurrentPath()
                 McFolderListLoader.WaitForExit()
             End If
@@ -36,7 +36,7 @@
                 If McFolderSelected = "" Then
                     Log("[Launch] 没有已储存的 Minecraft 文件夹")
                 Else
-                    Log("[Launch] Minecraft 文件夹无效，该文件夹已不存在：" & McFolderSelected, LogLevel.Debug)
+                    Log("[Launch] Minecraft 文件夹无效，该文件夹已不存在：" & McFolderSelected, NotifyLevel.DebugModeOnly)
                 End If
                 McFolderListLoader.WaitForExit(IsForceRestart:=True)
                 McFolderSelected = McFolderList.First.Location
@@ -55,7 +55,7 @@
                 Catch ex As CancelledException
                     Log(ex, "自动安装整合包被用户取消：" & PackInstallPath)
                 Catch ex As Exception
-                    Log(ex, "自动安装整合包失败：" & PackInstallPath, LogLevel.Msgbox)
+                    Log(ex, "自动安装整合包失败：" & PackInstallPath, NotifyLevel.MsgBox)
                 End Try
             End If
             '确认 Minecraft 版本存在
@@ -63,7 +63,7 @@
             Dim Instance As McInstance = If(Selection = "", Nothing, New McInstance(Selection))
             If Instance Is Nothing OrElse Not Instance.PathVersion.StartsWithF(McFolderSelected) OrElse Not Instance.Check() Then
                 '无效的版本
-                Log("[Launch] 当前选择的 Minecraft 版本无效：" & If(Instance Is Nothing, "null", Instance.PathVersion), If(IsNothing(Instance), LogLevel.Normal, LogLevel.Debug))
+                Log("[Launch] 当前选择的 Minecraft 版本无效：" & If(Instance Is Nothing, "null", Instance.PathVersion), If(IsNothing(Instance), NotifyLevel.Silent, NotifyLevel.DebugModeOnly))
                 If Not McInstanceListLoader.State = LoadState.Finished Then LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\", WaitForExit:=True)
                 If Not McInstanceList.Any() OrElse McInstanceList.First.Value(0).Logo.Contains("RedstoneBlock") Then
                     Instance = Nothing
@@ -80,6 +80,7 @@
                 RefreshButtonsUI()
                 RefreshPage(False, False) '有可能选择的版本变化了，需要重新刷新
                 If McLoginAble() = "" Then McLoginLoader.Start() '自动登录
+                If Environment.CommandLine.Contains("--test") Then FormMain.EndProgramForce(123) '用于更新器测试生成的程序是否可以正常运行
             End Sub)
         End Sub, "Version Check", ThreadPriority.AboveNormal)
 
@@ -256,7 +257,7 @@
             PageCurrent = Type
             Return PageNew
         Catch ex As Exception
-            Log(ex, "切换登录分页失败（" & GetStringFromEnum(CType(Type, [Enum])) & "）", LogLevel.Feedback)
+            Log(ex, "切换登录分页失败（" & GetStringFromEnum(CType(Type, [Enum])) & "）", NotifyLevel.MsgBoxAndFeedback)
             Return PageNew
         End Try
     End Function
@@ -337,7 +338,7 @@ UnknownType:
                 LabTypeOne.Text = If(McInstanceSelected Is Nothing, Settings.Get("CacheAuthServerName"), Settings.Get("VersionServerAuthName", Instance:=McInstanceSelected))
                 If LabTypeOne.Text = "" Then LabTypeOne.Text = "第三方登录"
             Case Else
-                Log("[Control] 未知的登录页面：" & LoginPageType, LogLevel.Hint)
+                Log("[Control] 未知的登录页面：" & LoginPageType, NotifyLevel.AllUsers)
                 GoTo UnknownType
         End Select
         '刷新页面
@@ -384,13 +385,13 @@ UnknownType:
         Catch ex As Exception
             If ex.GetBrief.Contains("(429)") Then
                 Data.Output = PathImage & "Skins/" & McSkinSex(McLoginLegacyUuid(UserName)) & ".png"
-                Log("[Minecraft] 获取正版皮肤失败（" & UserName & "）：获取皮肤太过频繁，请 5 分钟后再试！", LogLevel.Hint)
+                Log("[Minecraft] 获取正版皮肤失败（" & UserName & "）：获取皮肤太过频繁，请 5 分钟后再试！", NotifyLevel.AllUsers)
             ElseIf ex.GetBrief.Contains("未设置自定义皮肤") Then
                 Data.Output = PathImage & "Skins/" & McSkinSex(McLoginLegacyUuid(UserName)) & ".png"
                 Log("[Minecraft] 用户未设置自定义皮肤，跳过皮肤加载")
             Else
                 Data.Output = PathImage & "Skins/" & McSkinSex(McLoginLegacyUuid(UserName)) & ".png"
-                Log(ex, "获取微软正版皮肤失败（" & UserName & "）", LogLevel.Hint)
+                Log(ex, "获取微软正版皮肤失败（" & UserName & "）", NotifyLevel.AllUsers)
             End If
         End Try
 Finish:
@@ -506,13 +507,13 @@ UseDefault:
         Catch ex As Exception
             If ex.GetBrief.Contains("(429)") Then
                 Data.Output = PathImage & "Skins/Steve.png"
-                Log("[Minecraft] 获取统一通行证皮肤失败（" & UserName & "）：获取皮肤太过频繁，请 5 分钟后再试！", LogLevel.Hint)
+                Log("[Minecraft] 获取统一通行证皮肤失败（" & UserName & "）：获取皮肤太过频繁，请 5 分钟后再试！", NotifyLevel.AllUsers)
             ElseIf ex.GetBrief.Contains("未设置自定义皮肤") Then
                 Data.Output = PathImage & "Skins/Steve.png"
                 Log("[Minecraft] 用户未设置自定义皮肤，跳过皮肤加载")
             Else
                 Data.Output = PathImage & "Skins/Steve.png"
-                Log(ex, "获取统一通行证皮肤失败（" & UserName & "）", LogLevel.Hint)
+                Log(ex, "获取统一通行证皮肤失败（" & UserName & "）", NotifyLevel.AllUsers)
             End If
         End Try
 Finish:
@@ -554,13 +555,13 @@ Finish:
         Catch ex As Exception
             If ex.GetBrief.Contains("(429)") Then
                 Data.Output = PathImage & "Skins/Steve.png"
-                Log("[Minecraft] 获取 Authlib-Injector 皮肤失败（" & UserName & "）：获取皮肤太过频繁，请 5 分钟后再试！", LogLevel.Hint)
+                Log("[Minecraft] 获取 Authlib-Injector 皮肤失败（" & UserName & "）：获取皮肤太过频繁，请 5 分钟后再试！", NotifyLevel.AllUsers)
             ElseIf ex.GetBrief.Contains("未设置自定义皮肤") Then
                 Data.Output = PathImage & "Skins/Steve.png"
                 Log("[Minecraft] 用户未设置自定义皮肤，跳过皮肤加载")
             Else
                 Data.Output = PathImage & "Skins/Steve.png"
-                Log(ex, "获取 Authlib-Injector 皮肤失败（" & UserName & "）", LogLevel.Hint)
+                Log(ex, "获取 Authlib-Injector 皮肤失败（" & UserName & "）", NotifyLevel.AllUsers)
             End If
         End Try
 Finish:
@@ -678,7 +679,7 @@ ExitRefresh:
                     If Not McLaunchProcess.HasExited Then McLaunchProcess.Kill()
                 End If
             Catch ex As Exception
-                Log(ex, "取消启动结束进程失败", LogLevel.Hint)
+                Log(ex, "取消启动结束进程失败", NotifyLevel.AllUsers)
             End Try
         End If
     End Sub
@@ -735,7 +736,7 @@ ExitRefresh:
                 Log(ex, "获取 Minecraft 启动下载器失败，可能是因为启动被取消")
                 HasLaunchDownloader = False
             End Try
-            LabLaunchingDownload.Text = GetString(NetManager.Speed) & "/s"
+            LabLaunchingDownload.Text = FormatFileSize(NetManager.Speed) & "/s"
             '进度改变动画
             Dim AnimList As New List(Of AniData) From {
                  AaGridLengthWidth(ProgressLaunchingFinished, ShowProgress - ProgressLaunchingFinished.Width.Value, 130,, New AniEaseOutFluent),
@@ -768,7 +769,7 @@ ExitRefresh:
             End If
             AniStart(AnimList, "Launching Progress")
         Catch ex As Exception
-            Log(ex, "刷新启动信息失败", LogLevel.Feedback)
+            Log(ex, "刷新启动信息失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Private ShowProgress As Double = 0

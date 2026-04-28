@@ -4,7 +4,7 @@
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" x:Class="PageDownloadResourcePack"
     PanScroll="Content">
-    <local:PageComp x:Name="Content" PageType="ResourcePack" TypeName="资源包" TypeNameSpaced="资源包">
+    <local:PageResource x:Name="Content" PageType="ResourcePack" TypeName="资源包" TypeNameSpaced="资源包">
         <local:MyComboBoxItem Tag="" Content="全部" IsSelected="True" />
 
         <local:MyComboBoxItem Content="风格" IsEnabled="False" />
@@ -41,5 +41,5 @@
         <local:MyComboBoxItem Margin="15,0,0,0" Content="128x" Tag="396/128x" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="256x" Tag="397/256x" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="512x 或更高" Tag="398/512x+" />
-    </local:PageComp>
+    </local:PageResource>
 </local:MyPageRight>

@@ -4,6 +4,7 @@
         New Setting("WindowHeight", 550),
         New Setting("WindowWidth", 900),
         New Setting("AprilDoneYear", 0, Source:=Sources.Registry),
+        New Setting("Potatoes", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("HintDownloadThread", False, Source:=Sources.Registry),
         New Setting("HintNotice", 0, Source:=Sources.Registry),
         New Setting("HintDownload", 0, Source:=Sources.Registry),
@@ -17,6 +18,7 @@
         New Setting("HintMoreAdvancedSetup", False, Source:=Sources.Registry),
         New Setting("HintIndieSetup", False, Source:=Sources.Registry),
         New Setting("HintExportConfig", False, Source:=Sources.Registry),
+        New Setting("HintSnapshot", False, Source:=Sources.Registry),
         New Setting("SystemEulaVersion", 0, Source:=Sources.Registry),
         New Setting("SystemCount", 0, Source:=Sources.Registry, Encrypted:=True),
         New Setting("SystemLaunchCount", 0, Source:=Sources.Registry, Encrypted:=True),
@@ -128,7 +130,6 @@
         New Setting("UiLauncherDelta", 90),
         New Setting("UiLauncherLight", 20),
         New Setting("UiLauncherTheme", 0, OnChanged:=AddressOf ThemeRefresh),
-        New Setting("UiLauncherThemeGold", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("UiLauncherThemeHide", "0|1|2|3|4", Source:=Sources.Registry, Encrypted:=True),
         New Setting("UiLauncherThemeHide2", "0|1|2|3|4", Source:=Sources.Registry, Encrypted:=True),
         New Setting("UiLauncherLogo", True),
@@ -137,7 +138,7 @@
         New Setting("UiBackgroundOpacity", 1000, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiBackgroundBlur", 0, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiBackgroundSuit", 0, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
-        New Setting("UiCustomType", 0, OnChanged:=AddressOf PageSetupUI.OnUiCustomTypeChanged),
+        New Setting("UiCustomType", 0, OnChanged:=AddressOf PageSetupUI.OnMainPageTypeChanged),
         New Setting("UiCustomPreset", 0),
         New Setting("UiCustomNet", ""),
         New Setting("UiLogoType", 1, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
@@ -198,12 +199,8 @@
     End Enum
     Private Class Setting
         Public Key As String
-        ''' <summary>
-        ''' 若已调用过 Get 方法，则为当前值；否则为 Nothing。
-        ''' </summary>
-        Public Value = Nothing
         Public Encrypted As Boolean
-        Public DefaultValue
+        Public DefaultValue As Object
         Public Source As Sources
         ''' <summary>
         ''' 当设置项的值实际被改变时触发，参数为新值。
@@ -222,21 +219,35 @@
                 Me.Type = If(Value, "").GetType
                 Me.OnChanged = OnChanged
             Catch ex As Exception
-                Log(ex, "初始化设置项失败", LogLevel.Feedback) '#5095 的 fallback
+                Log(ex, "初始化设置项失败", NotifyLevel.MsgBoxAndFeedback) '#5095 的 fallback
             End Try
+        End Sub
+
+        ''' <summary>
+        ''' 读取过的设置的缓存，若从未读取过则为 Nothing。
+        ''' 若为版本独立设置，键为版本路径；否则，键为空字符串。
+        ''' </summary>
+        Private ValueCache As New Dictionary(Of String, Object)
+        Public Function GetCache(Instance As McInstance)
+            Dim Key As String = If(Source = Sources.Instance, Instance.PathVersion, "")
+            Return If(ValueCache.ContainsKey(Key), ValueCache(Key), Nothing)
+        End Function
+        Public Sub [Set](Value As Object, Instance As McInstance)
+            Dim Key As String = If(Source = Sources.Instance, Instance.PathVersion, "")
+            ValueCache(Key) = Value
         End Sub
 
         ''' <summary>
         ''' 立即将当前的 Value 写入对应的注册表或文件。
         ''' </summary>
         Public Sub Save(Optional Instance As McInstance = Nothing)
-            Dim Value As String = Me.Value
+            Dim Value As String = GetCache(Instance)
             If Encrypted Then
                 Try
                     If Value Is Nothing Then Value = ""
                     Value = SecretEncrypt(Value, "PCL" & Identify)
                 Catch ex As Exception
-                    Log(ex, "加密设置失败：" & Key, LogLevel.Developer)
+                    Log(ex, "加密设置失败：" & Key, NotifyLevel.DevelopOnly)
                 End Try
             End If
             Select Case Source
@@ -249,6 +260,7 @@
                     WriteIni(Instance.PathVersion & "PCL\Setup.ini", Key, Value)
             End Select
         End Sub
+
     End Class
 
     ''' <summary>
@@ -259,16 +271,16 @@
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         Try
             '判断是否一致
-            If Entry.Value Is Nothing Then [Get](Key, Instance)
             Value = CTypeDynamic(Value, Entry.Type)
-            If Entry.Value = Value Then Return
+            If Entry.GetCache(Instance) Is Nothing Then [Get](Key, Instance)
+            If Entry.GetCache(Instance) = Value Then Return
             '设置新值
-            Entry.Value = Value
+            Entry.Set(Value, Instance)
             Entry.Save(Instance)
             '触发改变事件（必须在保存之后，以保证 VersionServerLogin 之类的在事件中读取到的是最新的值）
-            If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Entry.Value)
+            If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Value)
         Catch ex As Exception
-            Log(ex, "设置设置项时出错（" & Key & ", " & Value & "）", LogLevel.Feedback)
+            Log(ex, "设置设置项时出错（" & Key & ", " & Value & "）", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     ''' <summary>
@@ -279,7 +291,7 @@
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         If Entry.Encrypted Then Throw New InvalidOperationException("禁止写入加密设置项：" & Key)
-        [Set](Key, Instance, Instance)
+        [Set](Key, Value, Instance)
     End Sub
 
     ''' <summary>
@@ -288,7 +300,8 @@
     Public Shared Function [Get](Key As String, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
-        If Entry.Value IsNot Nothing Then Return Entry.Value
+        Dim Value = Entry.GetCache(Instance)
+        If Value IsNot Nothing Then Return Value
         '对部分设置强制赋值
         Static ForcedSettings As New Dictionary(Of String, Object) From {
             {"UiHiddenPageLink", True},
@@ -296,8 +309,8 @@
         }
         Dim ForcedSetting As Object = Nothing
         If ForcedSettings.TryGetValue(Key, ForcedSetting) Then
-            Entry.Value = ForcedSetting
-            Return Entry.Value
+            Entry.Set(ForcedSetting, Instance)
+            Return ForcedSetting
         End If
         '正常读取
         Try
@@ -322,19 +335,19 @@
                     Try
                         GotValue = SecretDecrypt(GotValue, "PCL" & Identify)
                     Catch ex As Exception
-                        Log(ex, "解密设置失败：" & Key, LogLevel.Developer)
+                        Log(ex, "解密设置失败：" & Key, NotifyLevel.DevelopOnly)
                         GotValue = Entry.DefaultValue
-                        Entry.Value = Entry.DefaultValue
+                        Entry.Set(Entry.DefaultValue, Instance)
                         Entry.Save(Instance)
                     End Try
                 End If
             End If
-            Entry.Value = CTypeDynamic(GotValue, Entry.Type)
+            Entry.Set(CTypeDynamic(GotValue, Entry.Type), Instance)
         Catch ex As Exception
-            Log(ex, "读取设置失败：" & Key, LogLevel.Hint)
-            Entry.Value = CTypeDynamic(Entry.DefaultValue, Entry.Type)
+            Log(ex, "读取设置失败：" & Key, NotifyLevel.AllUsers)
+            Entry.Set(CTypeDynamic(Entry.DefaultValue, Entry.Type), Instance)
         End Try
-        Return Entry.Value
+        Return Entry.GetCache(Instance)
     End Function
     ''' <summary>
     ''' 获取某个未经加密的设置项的值。
@@ -355,10 +368,10 @@
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         Try
             '判断是否一致
-            If Entry.Value Is Nothing Then [Get](Key, Instance)
-            If Entry.Value = Entry.DefaultValue Then Return
+            If Entry.GetCache(Instance) Is Nothing Then [Get](Key, Instance)
+            If Entry.GetCache(Instance) = Entry.DefaultValue Then Return
             '设置新值
-            Entry.Value = Entry.DefaultValue
+            Entry.Set(Entry.DefaultValue, Instance)
             Select Case Entry.Source
                 Case Sources.Normal
                     DeleteIniKey("Setup", Key)
@@ -369,9 +382,9 @@
                     DeleteIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
             End Select
             '触发改变事件
-            If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Entry.Value)
+            If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Entry.DefaultValue)
         Catch ex As Exception
-            Log(ex, "重置设置项时出错（" & Key & "）", LogLevel.Feedback)
+            Log(ex, "重置设置项时出错（" & Key & "）", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
 
@@ -397,14 +410,5 @@
                 Return HasIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
         End Select
     End Function
-
-    ''' <summary>
-    ''' 当前版本改变时，要求所有版本独立设置需要重新读取。
-    ''' </summary>
-    Public Shared Sub MakeInstanceDirty()
-        For Each Entry In Entries.Values
-            If Entry.Source = Sources.Instance Then Entry.Value = Nothing
-        Next
-    End Sub
 
 End Class

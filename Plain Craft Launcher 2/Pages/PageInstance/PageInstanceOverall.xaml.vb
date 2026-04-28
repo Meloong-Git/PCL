@@ -65,7 +65,7 @@
                 WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '要求刷新缓存
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             Catch ex As Exception
-                Log(ex, "修改版本分类失败（" & PageInstanceLeft.Instance.Name & "）", LogLevel.Feedback)
+                Log(ex, "修改版本分类失败（" & PageInstanceLeft.Instance.Name & "）", NotifyLevel.MsgBoxAndFeedback)
             End Try
             Reload() '更新 “打开 Mod 文件夹” 按钮
         Else
@@ -82,7 +82,7 @@
                 WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '要求刷新缓存
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             Catch ex As Exception
-                Log(ex, "隐藏版本 " & PageInstanceLeft.Instance.Name & " 失败", LogLevel.Feedback)
+                Log(ex, "隐藏版本 " & PageInstanceLeft.Instance.Name & " 失败", NotifyLevel.MsgBoxAndFeedback)
             End Try
         End If
     End Sub
@@ -97,7 +97,7 @@
             Reload()
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
         Catch ex As Exception
-            Log(ex, "版本 " & PageInstanceLeft.Instance.Name & " 描述更改失败", LogLevel.Msgbox)
+            Log(ex, "版本 " & PageInstanceLeft.Instance.Name & " 描述更改失败", NotifyLevel.MsgBox)
         End Try
     End Sub
 
@@ -153,7 +153,7 @@
             End If
             '替换版本设置文件中的路径
             If File.Exists(NewPath & "PCL\Setup.ini") Then
-                WriteFile(NewPath & "PCL\Setup.ini", ReadFile(NewPath & "PCL\Setup.ini").Replace(OldPath, NewPath))
+                FileUtils.Write(NewPath & "PCL\Setup.ini", ReadFile(NewPath & "PCL\Setup.ini").Replace(OldPath, NewPath))
             End If
             '更改已选中的版本
             If ReadIni(McFolderSelected & "PCL.ini", "Version") = OldName Then
@@ -162,7 +162,7 @@
             '更新版本 Json
             Try
                 JsonObject("id") = NewName
-                WriteFile(NewPath & NewName & ".json", JsonObject.ToString)
+                FileUtils.Write(NewPath & NewName & ".json", JsonObject.ToString)
                 File.Delete(NewPath & GetFileNameFromPath(OldJsonPath))
             Catch ex As Exception
                 Log(ex, "重命名版本 json 失败")
@@ -174,7 +174,7 @@
             Reload()
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
         Catch ex As Exception
-            Log(ex, "重命名版本失败", LogLevel.Msgbox)
+            Log(ex, "重命名版本失败", NotifyLevel.MsgBox)
         End Try
     End Sub
 
@@ -194,7 +194,7 @@
                 File.Delete(PageInstanceLeft.Instance.PathVersion & "PCL\Logo.png")
             End If
         Catch ex As Exception
-            Log(ex, "更改自定义版本图标失败（" & PageInstanceLeft.Instance.Name & "）", LogLevel.Feedback)
+            Log(ex, "更改自定义版本图标失败（" & PageInstanceLeft.Instance.Name & "）", NotifyLevel.MsgBoxAndFeedback)
         End Try
         '进行更改
         Try
@@ -207,7 +207,7 @@
             Reload()
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
         Catch ex As Exception
-            Log(ex, "更改版本图标失败（" & PageInstanceLeft.Instance.Name & "）", LogLevel.Feedback)
+            Log(ex, "更改版本图标失败（" & PageInstanceLeft.Instance.Name & "）", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
 
@@ -220,7 +220,7 @@
             McInstanceListForceRefresh = True
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
         Catch ex As Exception
-            Log(ex, "版本 " & PageInstanceLeft.Instance.Name & " 收藏状态更改失败", LogLevel.Msgbox)
+            Log(ex, "版本 " & PageInstanceLeft.Instance.Name & " 收藏状态更改失败", NotifyLevel.MsgBox)
         End Try
     End Sub
 
@@ -238,16 +238,16 @@
 
     '存档文件夹
     Private Sub BtnFolderSaves_Click() Handles BtnFolderSaves.Click
-        Dim FolderPath As String = PageInstanceLeft.Instance.PathIndie & "saves\"
-        Directory.CreateDirectory(FolderPath)
-        OpenExplorer(FolderPath)
+        Dim Folder As String = PageInstanceLeft.Instance.PathIndie & "saves\"
+        DirectoryUtils.Create(Folder)
+        OpenExplorer(Folder)
     End Sub
 
     'Mod 文件夹
     Private Sub BtnFolderMods_Click() Handles BtnFolderMods.Click
-        Dim FolderPath As String = PageInstanceLeft.Instance.PathIndie & "mods\"
-        Directory.CreateDirectory(FolderPath)
-        OpenExplorer(FolderPath)
+        Dim Folder As String = PageInstanceLeft.Instance.PathIndie & "mods\"
+        DirectoryUtils.Create(Folder)
+        OpenExplorer(Folder)
     End Sub
 
 #End Region
@@ -274,7 +274,7 @@
                 End If
             End If
         Catch ex As Exception
-            Log(ex, "导出启动脚本失败（" & PageInstanceLeft.Instance.Name & "）", LogLevel.Msgbox)
+            Log(ex, "导出启动脚本失败（" & PageInstanceLeft.Instance.Name & "）", NotifyLevel.MsgBox)
         End Try
     End Sub
 
@@ -310,7 +310,7 @@
             FrmMain.BtnExtraDownload.ShowRefresh()
             FrmMain.BtnExtraDownload.Ribble()
         Catch ex As Exception
-            Log(ex, "尝试补全文件失败（" & PageInstanceLeft.Instance.Name & "）", LogLevel.Msgbox)
+            Log(ex, "尝试补全文件失败（" & PageInstanceLeft.Instance.Name & "）", NotifyLevel.MsgBox)
         End Try
     End Sub
 
@@ -340,7 +340,7 @@
         Catch ex As OperationCanceledException
             Log(ex, "删除版本 " & PageInstanceLeft.Instance.Name & " 被主动取消")
         Catch ex As Exception
-            Log(ex, "删除版本 " & PageInstanceLeft.Instance.Name & " 失败", LogLevel.Msgbox)
+            Log(ex, "删除版本 " & PageInstanceLeft.Instance.Name & " 失败", NotifyLevel.MsgBox)
         End Try
     End Sub
 

@@ -18,7 +18,7 @@
                             <RowDefinition Height="28" />
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="模式" Margin="0,0,25,0" />
-                        <local:MyComboBox Grid.Row="0" x:Name="ComboLatencyMode" Grid.ColumnSpan="2" Tag="LinkLatencyMode" Grid.Column="1">
+                        <local:MyComboBox Grid.Row="0" x:Name="ComboLatencyMode" Grid.ColumnSpan="2" local:SettingService.Key="LinkLatencyMode" Grid.Column="1">
                             <local:MyComboBoxItem Content="优先直连" IsSelected="True" ToolTip="尽量不进行中转，而是 P2P 直连。" />
                             <local:MyComboBoxItem Content="优先低延迟" ToolTip="如果使用中转节点能降低延迟，就不进行直连。&#xa;不过，这会增加社区节点的负载……" />
                         </local:MyComboBox>
@@ -37,7 +37,7 @@
                         <RowDefinition Height="35" />
                     </Grid.RowDefinitions>
                     <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="自定义节点" Margin="0,0,25,0" />
-                    <local:MyTextBox x:Name="TextCustomPeer" Tag="LinkCustomPeer" Grid.Column="1" MaxHeight="28" 
+                    <local:MyTextBox x:Name="TextCustomPeer" local:SettingService.Key="LinkCustomPeer" Grid.Column="1" MaxHeight="28" 
                         ToolTip="覆盖 PCL 所选择的节点，仅连接此处填写的节点。&#xa;如果你自己搭建了 EasyTier 节点，你可以用这个设置让 PCL 连接它。&#xa;&#xa;使用逗号分隔多个节点，例如：&#xa;tcp://public.easytier.cn:11010,tcp://public2.easytier.cn:54321&#xa;&#xa;房主和加入者必须连接到至少一个相同节点，才能互相连上。" />
                     <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left">
                         <local:MyButton MinWidth="140" Padding="13,5" Margin="0,0,20,0" HorizontalAlignment="Left"

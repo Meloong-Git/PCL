@@ -1,6 +1,4 @@
-﻿Imports System.IO.Compression
-
-Public Module ModDownloadLib
+﻿Public Module ModDownloadLib
 
 #Region "Minecraft 下载"
 
@@ -51,7 +49,7 @@ Public Module ModDownloadLib
             Try
                 Dim InstanceJson As JObject = GetJson(ReadFile(VersionFolder & InstanceName & ".json"))
                 InstanceJson.Add("clientVersion", Id)
-                WriteFile($"{VersionFolder}{InstanceName}.json", InstanceJson.ToString)
+                FileUtils.Write($"{VersionFolder}{InstanceName}.json", InstanceJson.ToString)
             Catch ex As Exception
                 Throw New Exception("添加客户端版本失败", ex)
             End Try
@@ -206,7 +204,7 @@ echo ------------------------------
 echo ----------------------
 echo 服务端已停止。
 pause"
-                WriteFile(VersionFolder & "Launch Server.bat", Bat,
+                FileUtils.Write(VersionFolder & "Launch Server.bat", Bat,
                         Encoding:=If(Encoding.Default.Equals(Encoding.UTF8), Encoding.UTF8, Encoding.GetEncoding("GB18030")))
                 '删除版本 JSON
                 File.Delete(VersionFolder & Id & ".json")
@@ -221,7 +219,7 @@ pause"
             FrmMain.BtnExtraDownload.ShowRefresh()
             FrmMain.BtnExtraDownload.Ribble()
         Catch ex As Exception
-            Log(ex, "开始 Minecraft 服务端下载失败", LogLevel.Feedback)
+            Log(ex, "开始 Minecraft 服务端下载失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Public Sub McDownloadMenuSave(sender As Object, e As RoutedEventArgs)
@@ -266,7 +264,7 @@ pause"
             FrmMain.BtnExtraDownload.ShowRefresh()
             FrmMain.BtnExtraDownload.Ribble()
         Catch ex As Exception
-            Log(ex, "开始 Minecraft 下载失败", LogLevel.Feedback)
+            Log(ex, "开始 Minecraft 下载失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     ''' <summary>
@@ -325,7 +323,7 @@ pause"
         ElseIf Id.StartsWithF("rd-") Then
             WikiName = "Java版Pre-classic_" & Id
         Else
-            Log("[Error] 未知的版本格式：" & Id & "。", LogLevel.Feedback)
+            Log("[Error] 未知的版本格式：" & Id & "。", NotifyLevel.MsgBoxAndFeedback)
             Return
         End If
         OpenWebsite("https://zh.minecraft.wiki/w/" & WikiName.Replace("_experimental-snapshot-", "-exp"))
@@ -355,7 +353,7 @@ pause"
             FrmMain.BtnExtraDownload.Ribble()
 
         Catch ex As Exception
-            Log(ex, "开始 OptiFine 下载失败", LogLevel.Feedback)
+            Log(ex, "开始 OptiFine 下载失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Private Sub McDownloadOptiFineInstall(BaseMcFolderHome As String, Target As String, Task As LoaderTask(Of List(Of NetFile), Boolean), UseJavaWrapper As Boolean)
@@ -397,7 +395,7 @@ pause"
                 .CreateNoWindow = True,
                 .RedirectStandardError = True,
                 .RedirectStandardOutput = True,
-                .WorkingDirectory = ShortenPath(BaseMcFolderHome)
+                .WorkingDirectory = FileUtils.ShortenPath(BaseMcFolderHome)
             }
             If Info.EnvironmentVariables.ContainsKey("appdata") Then
                 Info.EnvironmentVariables("appdata") = BaseMcFolderHome
@@ -534,7 +532,7 @@ pause"
             If Not IsCustomFolder Then Return
             SyncLock VanillaSyncLock
                 Dim ClientName As String = GetFolderNameFromPath(ClientFolder)
-                Directory.CreateDirectory(McFolder & "versions\" & DownloadInfo.Inherit)
+                DirectoryUtils.Create(McFolder & "versions\" & DownloadInfo.Inherit)
                 If Not File.Exists(McFolder & "versions\" & DownloadInfo.Inherit & "\" & DownloadInfo.Inherit & ".json") Then
                     CopyFile($"{ClientFolder}{ClientName}.json", $"{McFolder}versions\{DownloadInfo.Inherit}\{DownloadInfo.Inherit}.json")
                 End If
@@ -556,7 +554,7 @@ pause"
                     If Directory.Exists(BaseMcFolder & "versions\" & DownloadInfo.Inherit) Then
                         DeleteDirectory(BaseMcFolder & "versions\" & DownloadInfo.Inherit)
                     End If
-                    Directory.CreateDirectory(BaseMcFolder & "versions\" & DownloadInfo.Inherit & "\")
+                    DirectoryUtils.Create(BaseMcFolder & "versions\" & DownloadInfo.Inherit & "\")
                     McFolderLauncherProfilesJsonCreate(BaseMcFolder)
                     CopyFile(McFolder & "versions\" & DownloadInfo.Inherit & "\" & DownloadInfo.Inherit & ".json",
                               BaseMcFolder & "versions\" & DownloadInfo.Inherit & "\" & DownloadInfo.Inherit & ".json")
@@ -595,7 +593,7 @@ Retry:
             Sub(Task As LoaderTask(Of List(Of NetFile), Boolean))
                 Try
                     '新建版本文件夹
-                    Directory.CreateDirectory(VersionFolder)
+                    DirectoryUtils.Create(VersionFolder)
                     Task.Progress = 0.1
                     '复制 Jar 文件
                     If File.Exists(VersionFolder & Id & ".jar") Then File.Delete(VersionFolder & Id & ".jar")
@@ -633,7 +631,7 @@ Retry:
     }
 }"
                     End If
-                    WriteFile(VersionFolder & Id & ".json", Json)
+                    FileUtils.Write(VersionFolder & Id & ".json", Json)
                 Catch ex As Exception
                     Throw New Exception("安装 OptiFine（方式 B）失败", ex)
                 End Try
@@ -798,7 +796,7 @@ Retry:
             FrmMain.BtnExtraDownload.Ribble()
 
         Catch ex As Exception
-            Log(ex, "开始 LiteLoader 安装器下载失败", LogLevel.Feedback)
+            Log(ex, "开始 LiteLoader 安装器下载失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
 
@@ -820,8 +818,6 @@ Retry:
         Loaders.Add(New LoaderTask(Of String, String)("安装 LiteLoader",
         Sub(Task As LoaderTask(Of String, String))
             Try
-                '新建版本文件夹
-                Directory.CreateDirectory(VersionFolder)
                 '构造版本 Json
                 Dim VersionJson As New JObject
                 VersionJson.Add("id", VersionName)
@@ -835,8 +831,8 @@ Retry:
                 VersionJson.Add("minimumLauncherVersion", 18)
                 VersionJson.Add("inheritsFrom", DownloadInfo.Inherit)
                 VersionJson.Add("jar", DownloadInfo.Inherit)
-                '输出 Json 文件
-                WriteFile(VersionFolder & VersionName & ".json", VersionJson.ToString)
+                '输出 Json 文件，同时会新建该文件夹
+                FileUtils.Write(VersionFolder & VersionName & ".json", VersionJson.ToString)
             Catch ex As Exception
                 Throw New Exception("安装新 LiteLoader 版本失败", ex)
             End Try
@@ -966,7 +962,7 @@ Retry:
             FrmMain.BtnExtraDownload.Ribble()
 
         Catch ex As Exception
-            Log(ex, $"开始 {Info.LoaderName} 安装器下载失败", LogLevel.Feedback)
+            Log(ex, $"开始 {Info.LoaderName} 安装器下载失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
 
@@ -1235,7 +1231,7 @@ Retry:
                     For i = 0 To Libs.Count - 1
                         If Libs(i).LocalPath.EndsWithF($"{LoaderName.Lower}-{Inherit}-{LoaderVersion}.jar") OrElse
                            Libs(i).LocalPath.EndsWithF($"{LoaderName.Lower}-{Inherit}-{LoaderVersion}-client.jar") Then
-                            Log($"[Download] 已从待下载 {LoaderName} 支持库中移除：" & Libs(i).LocalPath, LogLevel.Debug)
+                            Log($"[Download] 已从待下载 {LoaderName} 支持库中移除：" & Libs(i).LocalPath, NotifyLevel.DebugModeOnly)
                             Libs.RemoveAt(i)
                             Exit For
                         End If
@@ -1256,7 +1252,7 @@ Retry:
                     For Each LibFile As McLibToken In Libs
                         Dim RealPath As String = LibFile.LocalPath.Replace(McFolderSelected, McFolder)
                         If Not File.Exists(RealPath) Then
-                            Directory.CreateDirectory(IO.Path.GetDirectoryName(RealPath))
+                            DirectoryUtils.Create(RealPath, isFilePath:=True)
                             CopyFile(LibFile.LocalPath, RealPath)
                         End If
                         If ModeDebug Then Log($"[Download] 复制的 {LoaderName} 支持库文件：" & LibFile.LocalPath)
@@ -1278,7 +1274,7 @@ Retry:
                 If Not IsCustomFolder Then Return
                 SyncLock VanillaSyncLock
                     Dim ClientName As String = GetFolderNameFromPath(ClientFolder)
-                    Directory.CreateDirectory(McFolder & "versions\" & Inherit)
+                    DirectoryUtils.Create(McFolder & "versions\" & Inherit)
                     If Not File.Exists(McFolder & "versions\" & Inherit & "\" & Inherit & ".json") Then
                         CopyFile(ClientFolder & ClientName & ".json", McFolder & "versions\" & Inherit & "\" & Inherit & ".json")
                     End If
@@ -1299,7 +1295,7 @@ Retry:
                     Installer = New ZipArchive(New FileStream(InstallerAddress, FileMode.Open, FileAccess.Read, FileShare.Read))
                     Dim Json As JObject = GetJson(ReadFile(Installer.GetEntry("install_profile.json").Open))
                     '新建目标版本文件夹
-                    Directory.CreateDirectory(VersionFolder)
+                    DirectoryUtils.Create(VersionFolder)
                     Task.Progress = 0.04
                     '释放 launcher_installer.json
                     McFolderLauncherProfilesJsonCreate(McFolder)
@@ -1309,7 +1305,7 @@ Retry:
 Retry:
                     Try
                         '释放 Forge 注入器
-                        WriteFile(PathTemp & "Cache\forge_installer.jar", GetResources("ForgeInstaller"))
+                        FileUtils.Write(PathTemp & "Cache\forge_installer.jar", GetResources("ForgeInstaller"))
                         Task.Progress = 0.06
                         '运行注入器
                         ForgelikeInjector(InstallerAddress, Task, McFolder, UseJavaWrapper, IsNeoForge)
@@ -1329,13 +1325,13 @@ Retry:
                     If DeltaList.Count > 1 Then
                         '它可能和 OptiFine 安装同时运行，导致增加的文件不止一个（这导致了 #151）
                         '也可能是因为 Forge 安装器的 Bug，生成了一个名字错误的文件夹，所以需要检查文件夹是否为空
-                        DeltaList = DeltaList.Where(Function(l) l.Name.ContainsF("forge", True) AndAlso l.EnumerateFiles.Any).ToList
+                        DeltaList = DeltaList.Where(Function(l) l.Name.ContainsIgnoreCase("forge") AndAlso l.EnumerateFiles.Any).ToList
                     End If
                     If DeltaList.Count = 1 Then
                         '如果没有新增文件夹，那么预测的文件夹名就是正确的
                         '如果只新增 1 个文件夹，那么拷贝 json 文件
                         Dim JsonFile As FileInfo = DeltaList(0).EnumerateFiles.First()
-                        WriteFile(VersionFolder & NewInstanceName & ".json", ReadFile(JsonFile.FullName))
+                        FileUtils.Write(VersionFolder & NewInstanceName & ".json", ReadFile(JsonFile.FullName))
                         Log($"[Download] 已拷贝新增的版本 JSON 文件：{JsonFile.FullName} -> {VersionFolder}{NewInstanceName}.json")
                     ElseIf DeltaList.Count > 1 Then
                         '新增了多个文件夹
@@ -1368,7 +1364,7 @@ Retry:
                     Dim Json As JObject = GetJson(ReadFile(Installer.GetEntry("install_profile.json").Open))
                     Task.Progress = 0.4
                     '新建版本文件夹
-                    Directory.CreateDirectory(VersionFolder)
+                    DirectoryUtils.Create(VersionFolder)
                     Task.Progress = 0.5
                     If Json("install") Is Nothing Then
                         '中版：Legacy 方式 1
@@ -1376,7 +1372,7 @@ Retry:
                         '建立 Json 文件
                         Dim JsonVersion As JObject = GetJson(ReadFile(Installer.GetEntry(Json("json").ToString.TrimStart("/")).Open))
                         JsonVersion("id") = NewInstanceName
-                        WriteFile(VersionFolder & NewInstanceName & ".json", JsonVersion.ToString)
+                        FileUtils.Write(VersionFolder & NewInstanceName & ".json", JsonVersion.ToString)
                         Task.Progress = 0.6
                         '解压支持库文件
                         Installer.Dispose()
@@ -1389,12 +1385,12 @@ Retry:
                         '解压 Jar 文件
                         Dim JarAddress As String = McLibGet(Json("install")("path"), CustomMcFolder:=McFolder)
                         If File.Exists(JarAddress) Then File.Delete(JarAddress)
-                        WriteFile(JarAddress, Installer.GetEntry(Json("install")("filePath")).Open)
+                        FileUtils.Write(JarAddress, Installer.GetEntry(Json("install")("filePath")).Open)
                         Task.Progress = 0.9
                         '建立 Json 文件
                         Json("versionInfo")("id") = NewInstanceName
                         If Json("versionInfo")("inheritsFrom") Is Nothing Then CType(Json("versionInfo"), JObject).Add("inheritsFrom", Inherit)
-                        WriteFile(VersionFolder & NewInstanceName & ".json", Json("versionInfo").ToString)
+                        FileUtils.Write(VersionFolder & NewInstanceName & ".json", Json("versionInfo").ToString)
                     End If
                 Catch ex As Exception
                     Throw New Exception("非新版方式安装 Forge 失败", ex)
@@ -1542,7 +1538,7 @@ Retry:
                 If RecommendedList.Count < 5 Then Throw New Exception("获取的推荐版本数过少（" & Result & "）")
                 '保存
                 Dim CacheJson As String = "{" & RecommendedList.Join(",") & "}"
-                WriteFile(PathTemp & "Cache\ForgeRecommendedList.json", CacheJson)
+                FileUtils.Write(PathTemp & "Cache\ForgeRecommendedList.json", CacheJson)
                 Log("[Download] 刷新 Forge 推荐版本缓存成功")
             Catch ex As Exception
                 Log(ex, "刷新 Forge 推荐版本缓存失败")
@@ -1566,7 +1562,7 @@ Retry:
             If Json Is Nothing OrElse (Not If(McVersion, "").Contains(".")) OrElse Not Json.ContainsKey(McVersion) Then Return Nothing
             Return If(Json(McVersion), "").ToString
         Catch ex As Exception
-            Log(ex, "获取 Forge 推荐版本失败（" & If(McVersion, "null") & "）", LogLevel.Feedback)
+            Log(ex, "获取 Forge 推荐版本失败（" & If(McVersion, "null") & "）", NotifyLevel.MsgBoxAndFeedback)
             Return Nothing
         End Try
     End Function
@@ -1591,7 +1587,7 @@ Retry:
                 End If
             Next
         Else
-            Log("[System] 未找到可用的 NeoForge 版本", LogLevel.Debug)
+            Log("[System] 未找到可用的 NeoForge 版本", NotifyLevel.DebugModeOnly)
         End If
         '显示各个版本
         If FreshStableVersion IsNot Nothing Then
@@ -1705,7 +1701,7 @@ Retry:
             FrmMain.BtnExtraDownload.Ribble()
 
         Catch ex As Exception
-            Log(ex, "开始 Fabric 安装器下载失败", LogLevel.Feedback)
+            Log(ex, "开始 Fabric 安装器下载失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
 
@@ -1751,24 +1747,24 @@ Retry:
             Return NewItem
         End Function) With {.Height = 42}
     End Function
-    Public Function FabricApiDownloadListItem(Entry As CompFile, OnClick As MyListItem.ClickEventHandler) As MyVirtualizingElement(Of MyListItem)
+    Public Function FabricApiDownloadListItem(Entry As ResourceVersion, OnClick As MyListItem.ClickEventHandler) As MyVirtualizingElement(Of MyListItem)
         Return New MyVirtualizingElement(Of MyListItem)(
         Function()
             Dim NewItem As New MyListItem With {
-                .Title = Entry.DisplayName.Split("]")(1).Replace("Fabric API ", "").Replace(" build ", ".").BeforeFirst("+").Trim, .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
-                .Info = Entry.StatusDescription & "，发布于 " & Entry.ReleaseDate.ToString("yyyy'/'MM'/'dd HH':'mm"),
+                .Title = Entry.Display.Split("]")(1).Replace("Fabric API ", "").Replace(" build ", ".").BeforeFirst("+").Trim, .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
+                .Info = Entry.ReleaseTypeDisplay & "，发布于 " & Entry.ReleaseDate.ToString("yyyy'/'MM'/'dd HH':'mm"),
                 .Logo = PathImage & "Blocks/Fabric.png"
             }
             AddHandler NewItem.Click, OnClick
             Return NewItem
         End Function) With {.Height = 42}
     End Function
-    Public Function OptiFabricDownloadListItem(Entry As CompFile, OnClick As MyListItem.ClickEventHandler) As MyVirtualizingElement(Of MyListItem)
+    Public Function OptiFabricDownloadListItem(Entry As ResourceVersion, OnClick As MyListItem.ClickEventHandler) As MyVirtualizingElement(Of MyListItem)
         Return New MyVirtualizingElement(Of MyListItem)(
         Function()
             Dim NewItem As New MyListItem With {
-               .Title = Entry.DisplayName.Lower.Replace("optifabric-", "").Replace(".jar", "").Trim.TrimStart("v"), .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
-               .Info = Entry.StatusDescription & "，发布于 " & Entry.ReleaseDate.ToString("yyyy'/'MM'/'dd HH':'mm"),
+               .Title = Entry.Display.Lower.Replace("optifabric-", "").Replace(".jar", "").Trim.TrimStart("v"), .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
+               .Info = Entry.ReleaseTypeDisplay & "，发布于 " & Entry.ReleaseDate.ToString("yyyy'/'MM'/'dd HH':'mm"),
                .Logo = PathImage & "Blocks/OptiFabric.png"
             }
             AddHandler NewItem.Click, OnClick
@@ -1841,12 +1837,12 @@ Retry:
         ''' <summary>
         ''' 欲下载的 Fabric API 信息。
         ''' </summary>
-        Public FabricApi As CompFile = Nothing
+        Public FabricApi As ResourceVersion = Nothing
 
         ''' <summary>
         ''' 欲下载的 OptiFabric 信息。
         ''' </summary>
-        Public OptiFabric As CompFile = Nothing
+        Public OptiFabric As ResourceVersion = Nothing
 
         ''' <summary>
         ''' 欲下载的 LiteLoader 详细信息。
@@ -1894,9 +1890,9 @@ Retry:
             If Loader.State = LoadState.Failed OrElse Loader.State = LoadState.Interrupted Then
                 '删除版本文件夹
                 If Directory.Exists(Loader.Input & "saves\") OrElse Directory.Exists(Loader.Input & "versions\") Then
-                    Log("[Download] 由于版本已被独立启动，不清理版本文件夹：" & Loader.Input, LogLevel.Developer)
+                    Log("[Download] 由于版本已被独立启动，不清理版本文件夹：" & Loader.Input, NotifyLevel.DevelopOnly)
                 Else
-                    Log("[Download] 由于下载失败或取消，清理版本文件夹：" & Loader.Input, LogLevel.Developer)
+                    Log("[Download] 由于下载失败或取消，清理版本文件夹：" & Loader.Input, NotifyLevel.DevelopOnly)
                     DeleteDirectory(Loader.Input)
                 End If
             End If
@@ -1924,7 +1920,7 @@ Retry:
         Catch ex As CancelledException
             Return False
         Catch ex As Exception
-            Log(ex, "开始合并安装失败", LogLevel.Feedback)
+            Log(ex, "开始合并安装失败", NotifyLevel.MsgBoxAndFeedback)
             Return False
         End Try
     End Function
@@ -1945,9 +1941,9 @@ Retry:
             Request.OptiFineEntry = New DlOptiFineListEntry With {
                 .DisplayName = Request.MinecraftName & " " & Request.OptiFineVersion.Replace("HD_U_", "").Replace("_", "").Replace("pre", " pre"),
                 .Inherit = Request.MinecraftName,
-                .IsPreview = Request.OptiFineVersion.ContainsF("pre", True),
+                .IsPreview = Request.OptiFineVersion.ContainsIgnoreCase("pre"),
                 .InstanceName = Request.MinecraftName & "-OptiFine_" & Request.OptiFineVersion,
-                .FileName = If(Request.OptiFineVersion.ContainsF("pre", True), "preview_", "") &
+                .FileName = If(Request.OptiFineVersion.ContainsIgnoreCase("pre"), "preview_", "") &
                     "OptiFine_" & Request.MinecraftName & "_" & Request.OptiFineVersion & ".jar"
             }
         End If
@@ -1992,7 +1988,7 @@ Retry:
 
         Dim LoaderList As New List(Of LoaderBase)
         '添加忽略标识
-        LoaderList.Add(New LoaderTask(Of Integer, Integer)("添加忽略标识", Sub() WriteFile(VersionFolder & ".pclignore", "用于临时地在 PCL 的版本列表中屏蔽此版本。")) With {.Show = False, .Block = False})
+        LoaderList.Add(New LoaderTask(Of Integer, Integer)("添加忽略标识", Sub() FileUtils.Write(VersionFolder & ".pclignore", "用于临时地在 PCL 的版本列表中屏蔽此版本。")) With {.Show = False, .Block = False})
         'Fabric API
         If Request.FabricApi IsNot Nothing Then
             LoaderList.Add(New LoaderDownload("下载 Fabric API", New List(Of NetFile) From {Request.FabricApi.ToNetFile(ModsTempFolder)}) With {.ProgressWeight = 3, .Block = False})
@@ -2049,11 +2045,11 @@ Retry:
             If Directory.Exists(ModsTempFolder) Then
                 CopyDirectory(ModsTempFolder, ModsFolder)
             ElseIf Modable Then
-                Directory.CreateDirectory(ModsFolder)
+                DirectoryUtils.Create(ModsFolder)
                 Log("[Download] 自动创建 Mod 文件夹：" & ModsFolder)
             End If
             Dim ResourcepacksFolder = New McInstance(VersionFolder).PathIndie & "resourcepacks\"
-            Directory.CreateDirectory(ResourcepacksFolder)
+            DirectoryUtils.Create(ResourcepacksFolder)
             Log("[Download] 自动创建资源包文件夹：" & ResourcepacksFolder)
         End Sub) With {.ProgressWeight = 2, .Block = True})
         '补全文件
@@ -2079,7 +2075,7 @@ Retry:
             If(NeoForgeFolder IsNot Nothing, "，NeoForge：" & NeoForgeFolder, "") &
             If(LiteLoaderFolder IsNot Nothing, "，LiteLoader：" & LiteLoaderFolder, "") &
             If(FabricFolder IsNot Nothing, "，Fabric：" & FabricFolder, ""))
-        Directory.CreateDirectory(OutputFolder)
+        DirectoryUtils.Create(OutputFolder)
 
         Dim HasOptiFine As Boolean = OptiFineFolder IsNot Nothing AndAlso Not OptiFineAsMod, HasForge As Boolean = ForgeFolder IsNot Nothing, HasNeoForge As Boolean = NeoForgeFolder IsNot Nothing, HasLiteLoader As Boolean = LiteLoaderFolder IsNot Nothing, HasFabric As Boolean = FabricFolder IsNot Nothing
         Dim OutputName As String, MinecraftName As String, OptiFineName As String, ForgeName As String, NeoForgeName As String, LiteLoaderName As String, FabricName As String
@@ -2227,7 +2223,7 @@ Retry:
 #End Region
 
 #Region "保存"
-        WriteFile(OutputJsonPath, OutputJson.ToString)
+        FileUtils.Write(OutputJsonPath, OutputJson.ToString)
         If MinecraftJar <> OutputJar Then '可能是同一个文件
             If File.Exists(OutputJar) Then File.Delete(OutputJar)
             CopyFile(MinecraftJar, OutputJar)
@@ -2258,19 +2254,19 @@ Retry:
         Static Lock As New Object
         SyncLock Lock '避免 OptiFine 和 Forge 安装时同时释放导致冲突
             Try
-                WriteFile(PatchPath, GetResources(Patch))
+                FileUtils.Write(PatchPath, GetResources(Patch))
             Catch ex As Exception
                 If File.Exists(PatchPath) Then
                     '因为未知原因可能变为只读文件（#4243）
-                    Log(ex, $"{Patch} 文件释放失败，但文件已存在，将在删除后尝试重新生成", LogLevel.Developer)
+                    Log(ex, $"{Patch} 文件释放失败，但文件已存在，将在删除后尝试重新生成", NotifyLevel.DevelopOnly)
                     Try
                         File.Delete(PatchPath)
-                        WriteFile(PatchPath, GetResources(Patch))
+                        FileUtils.Write(PatchPath, GetResources(Patch))
                     Catch ex2 As Exception
-                        Log(ex2, $"{Patch} 文件重新释放失败，将尝试更换文件名重新生成", LogLevel.Developer)
+                        Log(ex2, $"{Patch} 文件重新释放失败，将尝试更换文件名重新生成", NotifyLevel.DevelopOnly)
                         PatchPath = $"{PathPure}{Patch}2.jar"
                         Try
-                            WriteFile(PatchPath, GetResources(Patch))
+                            FileUtils.Write(PatchPath, GetResources(Patch))
                         Catch ex3 As Exception
                             Throw New FileNotFoundException($"释放 {Patch} 最终尝试失败", ex3)
                         End Try

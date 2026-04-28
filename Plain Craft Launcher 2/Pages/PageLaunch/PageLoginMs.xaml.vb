@@ -18,7 +18,7 @@
                 ComboAccounts.Items.Add(Item)
             Next
         Catch ex As Exception
-            Log(ex, $"微软登录信息出错，登录信息已被重置（{Settings.Get("LoginMsJson")}）", LogLevel.Hint)
+            Log(ex, $"微软登录信息出错，登录信息已被重置（{Settings.Get("LoginMsJson")}）", NotifyLevel.AllUsers)
             Settings.Set("LoginMsJson", "{}")
         End Try
         '如果不保留输入，刷新列表后自动选择第一项
@@ -91,10 +91,10 @@
                 If ex.Message = "$$" Then
                 ElseIf ex.Message.StartsWithF("$") Then
                     Hint(ex.Message.TrimStart("$"), HintType.Red)
-                ElseIf TypeOf ex Is Security.Authentication.AuthenticationException AndAlso ex.Message.ContainsF("SSL/TLS") Then
-                    Log(ex, "正版登录验证失败，请考虑在 [设置 → 其他] 中关闭 [在正版登录时验证 SSL 证书]，然后再试。" & vbCrLf & vbCrLf & "原始错误信息：", LogLevel.Msgbox)
+                ElseIf TypeOf ex Is Security.Authentication.AuthenticationException AndAlso ex.Message.Contains("SSL/TLS") Then
+                    Log(ex, "正版登录验证失败，请考虑在 [设置 → 其他] 中关闭 [在正版登录时验证 SSL 证书]，然后再试。" & vbCrLf & vbCrLf & "原始错误信息：", NotifyLevel.MsgBox)
                 Else
-                    Log(ex, "正版登录尝试失败", LogLevel.Msgbox)
+                    Log(ex, "正版登录尝试失败", NotifyLevel.MsgBox)
                 End If
             Finally
                 RunInUi(

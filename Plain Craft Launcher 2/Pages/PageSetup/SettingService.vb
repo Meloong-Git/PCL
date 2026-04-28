@@ -34,7 +34,7 @@
     ''' 重置该控件以及它所有的子控件的设置值。
     ''' </summary>
     Public Shared Sub ResetSettings(Target As DependencyObject)
-        LogicalTreeHelper.GetChildren(Target).OfType(Of DependencyObject)().ForEach(Sub(c) ResetSettings(c)) '处理子控件
+        LogicalTreeHelper.GetChildren(Target).OfType(Of DependencyObject)().ForAll(Sub(c) ResetSettings(c)) '处理子控件
         Dim Key = GetKey(Target)
         If Key Is Nothing Then Return
         Settings.Reset(Key, Instance:=PageInstanceLeft.Instance)
@@ -44,7 +44,7 @@
     ''' 更新该控件以及它所有的子控件当前显示的设置值。
     ''' </summary>
     Public Shared Sub RefreshSettings(Target As DependencyObject)
-        LogicalTreeHelper.GetChildren(Target).OfType(Of DependencyObject)().ForEach(Sub(c) RefreshSettings(c)) '处理子控件
+        LogicalTreeHelper.GetChildren(Target).OfType(Of DependencyObject)().ForAll(Sub(c) RefreshSettings(c)) '处理子控件
         Dim Key = GetKey(Target)
         If Key Is Nothing Then Return
         Dim NewValue = Settings.Get(Key, Instance:=PageInstanceLeft.Instance)

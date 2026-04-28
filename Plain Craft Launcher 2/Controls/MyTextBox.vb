@@ -228,7 +228,7 @@
             '改变文本
             RaiseEvent ValidatedTextChanged(sender, e)
         Catch ex As Exception
-            Log(ex, "进行输入验证时出错", LogLevel.Critical)
+            Log(ex, "进行输入验证时出错", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
 

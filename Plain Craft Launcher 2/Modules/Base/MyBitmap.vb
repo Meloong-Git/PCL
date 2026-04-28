@@ -97,7 +97,7 @@ Public Class MyBitmap
                     Throw New Exception($"加载 MyBitmap 意外失败（{FilePathOrResourceName}）", ex)
                 End If
             Else
-                Log(ex, $"指定类型有误的 MyBitmap 加载（{FilePathOrResourceName}）", LogLevel.Developer)
+                Log(ex, $"指定类型有误的 MyBitmap 加载（{FilePathOrResourceName}）", NotifyLevel.DevelopOnly)
                 Exit Try
             End If
         End Try

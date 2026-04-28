@@ -1,7 +1,7 @@
 ﻿Imports System.Windows.Markup
 
 <ContentProperty("SearchTags")>
-Public Class PageComp
+Public Class PageResource
 
 #Region "属性"
 
@@ -48,17 +48,17 @@ Public Class PageComp
     ''' <summary>
     ''' 该页面对应的资源类型。
     ''' </summary>
-    Public Property PageType As CompType
+    Public Property PageType As ResourceTypes
         Get
             Return _Type
         End Get
-        Set(Value As CompType)
+        Set(Value As ResourceTypes)
             If _Type = Value Then Return
             _Type = Value
-            BtnSearchInstallModPack.Visibility = If(Value = CompType.ModPack, Visibility.Visible, Visibility.Collapsed)
+            BtnSearchInstallModPack.Visibility = If(Value = ResourceTypes.ModPack, Visibility.Visible, Visibility.Collapsed)
         End Set
     End Property
-    Private _Type As CompType = -1
+    Private _Type As ResourceTypes = -1
 
 #End Region
 
@@ -73,10 +73,10 @@ Public Class PageComp
     ''' </summary>
     Public Shared TargetName As String = Nothing
 
-    '在点击 MyCompItem 时会获取 Loader 的输入，以使资源详情页面可以应用相同的筛选项
-    Public Loader As New LoaderTask(Of CompProjectRequest, Integer)("社区资源获取：XXX", AddressOf CompProjectsGet, AddressOf LoaderInput) With {.ReloadTimeout = 60 * 1000}
+    '在点击 MyResourceItem 时会获取 Loader 的输入，以使资源详情页面可以应用相同的筛选项
+    Public Loader = ResourceSearcher.GetLoader(AddressOf LoaderInput)
 
-    Private Sub PageCompControls_Inited(sender As Object, e As EventArgs) Handles Me.Loaded
+    Private Sub PageResource_Loaded(sender As Object, e As EventArgs) Handles Me.Loaded
         Static IsFirstLoaded As Boolean = False
         '不知道从 Initialized 改成 Loaded 会不会有问题，但用 Initialized 会导致初始的筛选器修改被覆盖回默认值
         If TargetInstance IsNot Nothing Then
@@ -118,23 +118,23 @@ Public Class PageComp
             End If
         End If
     End Sub
-    Private Function LoaderInput() As CompProjectRequest
-        Dim Request As New CompProjectRequest(PageType, Storage, (Page + 1) * PAGE_SIZE)
+    Private Function LoaderInput() As ResourceSearcher.SearchRequest
+        Dim Request As New ResourceSearcher.SearchRequest(PageType, Storage, (Page + 1) * PAGE_SIZE)
         Dim GameVersion As String = If(TextSearchVersion.Text = "全部 (也可自行输入)", Nothing,
             If(TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w"), TextSearchVersion.Text, Nothing))
         With Request
             .SearchText = TextSearchName.Text
             .GameVersion = GameVersion
             .Tag = ComboSearchTag.SelectedItem.Tag
-            .ModLoader = If(PageType = CompType.Mod, Val(ComboSearchLoader.SelectedItem.Tag), CompModLoaderType.Any)
-            .Sources = CType(Val(ComboSearchSource.SelectedItem.Tag), CompSourceType)
+            .ModLoader = If(PageType = ResourceTypes.Mod, Val(ComboSearchLoader.SelectedItem.Tag), ModLoaderTypes.Any)
+            .Sources = CType(Val(ComboSearchSource.SelectedItem.Tag), ResourcePlatforms)
         End With
         Return Request
     End Function
 
 #End Region
 
-    Public Storage As New CompProjectStorage
+    Public Storage As New ResourceSearcher.SearchResult
     ''' <summary>
     ''' 每页展示的结果数量。
     ''' </summary>
@@ -144,14 +144,14 @@ Public Class PageComp
     '结果 UI 化
     Private Sub Load_OnFinish()
         Try
-            Log($"[Comp] 开始可视化{TypeNameSpaced}列表，已储藏 {Storage.Results.Count} 个结果，当前在第 {Page + 1} 页")
+            Log($"[Resource] 开始可视化{TypeNameSpaced}列表，已储藏 {Storage.Results.Count} 个结果，当前在第 {Page + 1} 页")
             '列表项
             PanProjects.Children.Clear()
             Dim Index As Integer = Math.Min(Page * PAGE_SIZE, Storage.Results.Count - 1)
             For Each Result In Storage.Results.GetRange(Index, Math.Min(Storage.Results.Count - Index, PAGE_SIZE))
-                PanProjects.Children.Add(Result.ToCompItem(
+                PanProjects.Children.Add(Result.ToResourceItem(
                     ShowMcVersionDesc:=Loader.Input.GameVersion Is Nothing,
-                    ShowLoaderDesc:=Loader.Input.ModLoader = CompModLoaderType.Any AndAlso (PageType = CompType.Mod OrElse PageType = CompType.ModPack)))
+                    ShowLoaderDesc:=Loader.Input.ModLoader = ModLoaderTypes.Any AndAlso (PageType = ResourceTypes.Mod OrElse PageType = ResourceTypes.ModPack)))
             Next
             '页码
             CardPages.Visibility = If(Storage.Results.Count > 40 OrElse
@@ -177,7 +177,7 @@ Public Class PageComp
             '强制返回顶部
             ScrollToTop()
         Catch ex As Exception
-            Log(ex, $"可视化{TypeNameSpaced}列表出错", LogLevel.Feedback)
+            Log(ex, $"可视化{TypeNameSpaced}列表出错", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
 
@@ -188,7 +188,7 @@ Public Class PageComp
                 Dim ErrorMessage As String = ""
                 If Loader.Error IsNot Nothing Then ErrorMessage = Loader.Error.Message
                 If ErrorMessage.Contains("不是有效的 json 文件") Then
-                    Log($"[Download] 下载的{TypeNameSpaced}列表 json 文件损坏，已自动重试", LogLevel.Debug)
+                    Log($"[Download] 下载的{TypeNameSpaced}列表 json 文件损坏，已自动重试", NotifyLevel.DebugModeOnly)
                     CType(Parent, MyPageRight).PageLoaderRestart()
                 End If
         End Select
@@ -222,7 +222,7 @@ Public Class PageComp
     '搜索按钮
     Private Sub StartNewSearch() Handles BtnSearchRun.Click
         Page = 0
-        If Loader.ShouldStart(LoaderInput()) Then Storage = New CompProjectStorage '避免连续搜索两次使得 CompProjectStorage 引用丢失（#1311）
+        If Loader.ShouldStart(LoaderInput()) Then Storage = New ResourceSearcher.SearchResult '避免连续搜索两次导致 ProjectStorage 引用丢失（#1311）
         Loader.Start()
     End Sub
     Private Sub EnterTrigger(sender As Object, e As KeyEventArgs) Handles TextSearchName.KeyDown, TextSearchVersion.KeyDown
@@ -246,7 +246,7 @@ Public Class PageComp
         If Not TextSearchVersion.IsDropDownOpen Then UpdateSearchLoaderVisibility()
     End Sub
     Private Sub UpdateSearchLoaderVisibility() Handles TextSearchVersion.DropDownClosed
-        If PageType = CompType.Mod AndAlso (TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w")) Then
+        If PageType = ResourceTypes.Mod AndAlso (TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w")) Then
             ComboSearchLoader.Visibility = Visibility.Visible
             Grid.SetColumnSpan(TextSearchVersion, 1)
         Else

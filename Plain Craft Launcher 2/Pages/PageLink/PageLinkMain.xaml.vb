@@ -102,11 +102,11 @@ Public Class PageLinkMain
         Function() As String
             Dim Result As String = ""
             For i = 1 To 5
-                Result &= RadixConvert(RandomInteger(0, 35), 10, 36)
+                Result &= RandomInteger(0, 35).ConvertRadix(36)
             Next
             Return Result.Replace("O", "0").Replace("I", "1")
         End Function
-        NetworkName = $"P{RadixConvert(ServerPort, 10, 16).PadLeft(4, "0"c)}-{GenerateRandomCode()}"
+        NetworkName = $"P{ServerPort.ConvertRadix(16).PadLeft(4, "0"c)}-{GenerateRandomCode()}"
         NetworkSecret = GenerateRandomCode()
         DiscoverNodeID = -1
         Log($"[Link] 尝试创建房间，网络名 {NetworkName}，网络密码 {NetworkSecret}，端口 {ServerPort}")
@@ -138,13 +138,13 @@ Public Class PageLinkMain
         Log($"[Link] 实际使用的邀请码：{Code}")
         '基础信息
         IsServerSide = False
-        ServerPort = RadixConvert(Code.Substring(1, 4), 16, 10)
+        ServerPort = Code.Substring(1, 4).Upper.ConvertRadix(16, 10)
         NetworkName = Code.Substring(0, 11)
         NetworkSecret = Code.Substring(12, 5)
         If Code.Substring(20, 3) = "000" Then
             DiscoverNodeID = -2
         Else
-            DiscoverNodeID = RadixConvert(Code.Substring(20, 3), 16, 10)
+            DiscoverNodeID = Code.Substring(20, 3).Upper.ConvertRadix(16, 10)
         End If
         Log($"[Link] 尝试加入房间，网络名 {NetworkName}，网络密码 {NetworkSecret}，端口 {ServerPort}，发现节点 {DiscoverNodeID}")
         '启动
@@ -339,9 +339,9 @@ Public Class PageLinkMain
     ''' 退出联机。
     ''' 返回是否弹出了警告窗口并且玩家选择了取消。
     ''' </summary>
-    Public Function TryExit(Slient As Boolean, Closing As Boolean) As Boolean
+    Public Function TryExit(Silent As Boolean, Closing As Boolean) As Boolean
         If LinkState = LinkStates.Waiting OrElse LinkState = LinkStates.Failed Then Return False
-        If Not Slient Then
+        If Not Silent Then
             If IsServerSide AndAlso PeopleCount > 1 Then
                 If MyMsgBox("你确定要关闭联机房间吗？" & vbCrLf & "所有玩家都需要重新输入邀请码才可加入游戏！", "退出联机", "确定", "取消", IsWarn:=True) = 2 Then Return True
             ElseIf Closing Then
@@ -361,7 +361,7 @@ Public Class PageLinkMain
     End Sub
     Private Function GetInviteCode() As String
         Return $"{NetworkName}-{NetworkSecret}-{INVITE_CODE_VERSION.ToString.PadLeft(2, "0"c)}{ _
-            RadixConvert(If(DiscoverNodeID = -1, 0, DiscoverNodeID), 10, 16).PadLeft(3, "0"c)}"
+            If(DiscoverNodeID = -1, 0, DiscoverNodeID).ConvertRadix(16).PadLeft(3, "0"c)}"
     End Function
 
     '复制 IP
@@ -451,7 +451,7 @@ Public Class PageLinkMain
             Case Reflection.ProcessorArchitecture.Arm
                 Architecture = "arm64"
             Case Else
-                Log($"[Link] CPU 是不支持的 {Architecture} 架构，这可能会导致联机模块无法启动！", LogLevel.Debug)
+                Log($"[Link] CPU 是不支持的 {Architecture} 架构，这可能会导致联机模块无法启动！", NotifyLevel.DebugModeOnly)
                 Architecture = "arm64"
         End Select
         Log("[Link] CPU 架构：" & Architecture)
@@ -524,7 +524,7 @@ Public Class PageLinkMain
         '获取启动参数
         Dim Arguments As String = ServerConfig("Link")("Argument")
         Arguments += $" --network-name={NetworkName} --network-secret={NetworkSecret} --listeners {ListenersPort} --rpc-portal {RPCPort} --private-mode true"
-        Dim HostName = If(IsServerSide, "Server-", "Client-") & RadixConvert(Math.Abs(Identify.GetHashCode), 10, 36)
+        Dim HostName = If(IsServerSide, "Server-", "Client-") & Math.Abs(Identify.GetHashCode).ConvertRadix(36)
         If IsServerSide Then
             Arguments += $" -i 10.114.114.114 --hostname={HostName} --tcp-whitelist={ServerPort} --udp-whitelist={ServerPort}"
         Else
@@ -562,13 +562,13 @@ Public Class PageLinkMain
             Dim PeerCount As Integer = If(Peers Is Nothing, -1, Peers.Where(Function(p) p.Ping > 0).Count)
             Select Case PeerCount
                 Case -1 'CLI 无返回
-                    Task.Progress = MathClamp(Task.Progress + 0.02, 0.15, 0.25)
+                    Task.Progress = (Task.Progress + 0.02).Clamp(0.15, 0.25)
                 Case 0 'CLI 有返回，但未连接到任何节点
                     UpdateLoadingPage("正在连接到节点……", "连接节点")
-                    Task.Progress = MathClamp(Task.Progress + 0.02, If(IsServerSide, 0.5, 0.3), If(IsServerSide, 0.95, 0.5))
+                    Task.Progress = (Task.Progress + 0.02).Clamp(If(IsServerSide, 0.5, 0.3), If(IsServerSide, 0.95, 0.5))
                 Case Else '已连接到节点，但未连接到房主
                     UpdateLoadingPage("正在连接到房主……", "连接房主")
-                    Task.Progress = MathClamp(Task.Progress + 0.02, Math.Min(0.45 + PeerCount * 0.05, 0.65), 0.95)
+                    Task.Progress = (Task.Progress + 0.02).Clamp(Math.Min(0.45 + PeerCount * 0.05, 0.65), 0.95)
             End Select
             '超时判定
             If LastProgress <> Task.Progress Then
@@ -654,14 +654,14 @@ ForcedPass:
             ElseIf DiscoverNodeID > 0 Then '>0：作为加入者，根据 ID 选择对应的发现节点；如果没有，使用回退发现节点
                 SelectedDiscoverNode = Nodes.FirstOrDefault(Function(n) n("id").ToObject(Of Integer) = DiscoverNodeID)
                 If SelectedDiscoverNode Is Nothing Then
-                    Log($"[Link] 未找到 ID {DiscoverNodeID} 的发现节点", LogLevel.Debug)
+                    Log($"[Link] 未找到 ID {DiscoverNodeID} 的发现节点", NotifyLevel.DebugModeOnly)
                     Panic("房间已过期", "请让房主重新创建房间！")
                     Throw New ThreadInterruptedException
                 End If
             End If
             If SelectedDiscoverNode Is Nothing Then '使用回退发现节点
                 SelectedDiscoverNode = New JObject From {{"address", FallbackDiscoverAddress}, {"id", FallbackDiscoverID}}
-                Log("[Link] 将使用回退发现节点", LogLevel.Debug)
+                Log("[Link] 将使用回退发现节点", NotifyLevel.DebugModeOnly)
             End If
             FinalPeers.Add(SelectedDiscoverNode("address").ToString())
             FinalDiscoverID = SelectedDiscoverNode("id").ToObject(Of Integer)
@@ -676,7 +676,7 @@ ForcedPass:
         Catch ex As ThreadInterruptedException
             Throw
         Catch ex As Exception
-            Log(ex, "获取节点列表失败，联机质量可能受到影响", LogLevel.Hint)
+            Log(ex, "获取节点列表失败，联机质量可能受到影响", NotifyLevel.AllUsers)
             FinalPeers.AddRange(ServerConfig("Link")("Peers").Select(Function(p) p.ToString))
             If FinalDiscoverID <= 0 Then
                 FinalPeers.Add(FallbackDiscoverAddress)
@@ -800,11 +800,11 @@ ForcedPass:
         LogHistory.Enqueue(Line)
         If LogHistory.Count >= 10 Then LogHistory.Dequeue()
         '检查日志内容
-        If Line.ContainsF("new peer connection added", True) Then
-            Log("[Link] 已建立连接：" & If(RegexSeek(Line, "(?<=remote_addr.+?"")[^""}]{3,}"), Line), LogLevel.Debug)
+        If Line.ContainsIgnoreCase("new peer connection added") Then
+            Log("[Link] 已建立连接：" & If(RegexSeek(Line, "(?<=remote_addr.+?"")[^""}]{3,}"), Line), NotifyLevel.DebugModeOnly)
             Update()
-        ElseIf Line.ContainsF("peer connection removed", True) Then
-            Log("[Link] 已断开连接：" & If(RegexSeek(Line, "(?<=remote_addr.+?"")[^""}]{3,}"), Line), LogLevel.Debug)
+        ElseIf Line.ContainsIgnoreCase("peer connection removed") Then
+            Log("[Link] 已断开连接：" & If(RegexSeek(Line, "(?<=remote_addr.+?"")[^""}]{3,}"), Line), NotifyLevel.DebugModeOnly)
             Update()
         End If
     End Sub
@@ -873,8 +873,8 @@ ForcedPass:
             '基础信息
             Double.TryParse(Info("lat_ms"), NumberStyles.Any, CultureInfo.InvariantCulture, Ping)
             Name = PeerName
-            Relay = Info("cost").ToString.ContainsF("relay", True)
-            NATType = Info("nat_type").ToString.ParseToEnum(Of NATTypes)
+            Relay = Info("cost").ToString.ContainsIgnoreCase("relay")
+            NATType = Info("nat_type").ToString.ToEnum(Of NATTypes)
         End Sub
         Public Overrides Function ToString() As String
             Return $"{Type} - {Name} - Ping {Ping:0.0}ms [中继? {Relay}] - NAT {NATType}"
@@ -1011,7 +1011,7 @@ ForcedPass:
                     '每 200ms 更新进度条
                     If LinkState = LinkStates.Loading Then RunInUi(AddressOf UpdateProgressBar)
                 Catch ex As Exception
-                    Log(ex, "联机模块主时钟出错", LogLevel.Feedback)
+                    Log(ex, "联机模块主时钟出错", NotifyLevel.MsgBoxAndFeedback)
                     Thread.Sleep(10000)
                 End Try
             Loop

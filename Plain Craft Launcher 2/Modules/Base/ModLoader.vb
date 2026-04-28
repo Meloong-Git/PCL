@@ -38,7 +38,7 @@
                         RealParent = RealParent.Parent
                     End While
                 Catch ex As Exception
-                    Log(ex, "获取父加载器失败（" & Name & "）", LogLevel.Feedback)
+                    Log(ex, "获取父加载器失败（" & Name & "）", NotifyLevel.MsgBoxAndFeedback)
                     Return Nothing
                 End Try
             End Get
@@ -283,7 +283,7 @@
             Try
                 Input = StartGetInput(Input)
             Catch ex As Exception
-                Log(ex, "加载输入获取失败（" & Name & "）", LogLevel.Hint)
+                Log(ex, "加载输入获取失败（" & Name & "）", NotifyLevel.AllUsers)
                 [Error] = ex
                 SyncLock LockState
                     State = LoadState.Failed
@@ -322,7 +322,7 @@
                     If ModeDebug AndAlso Not LogBlackList.Contains(Name) Then Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已{If(IsForceRestarting, "强制", "")}启动")
                     LoadDelegate(Me)
                     If IsInterrupted Then
-                        Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已中断但线程正常运行至结束，输出被弃用（最新线程：{If(LastRunningThread Is Nothing, -1, LastRunningThread.ManagedThreadId)}）", LogLevel.Developer)
+                        Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已中断但线程正常运行至结束，输出被弃用（最新线程：{If(LastRunningThread Is Nothing, -1, LastRunningThread.ManagedThreadId)}）", NotifyLevel.DevelopOnly)
                         Return
                     End If
                     If ModeDebug AndAlso Not LogBlackList.Contains(Name) Then Log($"[Loader] 加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 已完成")
@@ -354,7 +354,7 @@
                 If IsInterrupted OrElse State >= LoadState.Finished Then Return
                 State = LoadState.Failed
             End SyncLock
-            Log(ex, $"加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 出错，已完成 {Math.Round(Progress * 100)}%", LogLevel.Developer)
+            Log(ex, $"加载线程 {Name} ({Thread.CurrentThread.ManagedThreadId}) 出错，已完成 {Math.Round(Progress * 100)}%", NotifyLevel.DevelopOnly)
             TriggerThreadInterrupt()
         End Sub
         Public Overrides Sub Interrupt()
@@ -527,7 +527,7 @@
                         '检查是否需要重启
                         If Loader.GetType.Name.StartsWithF("LoaderTask") Then
                             If CType(Loader, Object).ShouldStart(If(Input IsNot Nothing AndAlso Loader.GetType.GenericTypeArguments.First Is Input.GetType, Input, Nothing), IgnoreReloadTimeout:=True) Then
-                                Log("[Loader] 由于输入条件变更，重启进行中的加载器 " & Loader.Name, LogLevel.Developer)
+                                Log("[Loader] 由于输入条件变更，重启进行中的加载器 " & Loader.Name, NotifyLevel.DevelopOnly)
                                 GoTo Restart
                             End If
                         End If
@@ -591,7 +591,7 @@ Restart:
     End Class
 
     '任务栏进度条
-    Public LoaderTaskbar As New SafeList(Of LoaderBase)
+    Public LoaderTaskbar As New ConcurrentList(Of LoaderBase)
     Public LoaderTaskbarProgress As Double = 0 '平滑后的进度
     Private LoaderTaskbarProgressLast As Shell.TaskbarItemProgressState = Shell.TaskbarItemProgressState.None
 
@@ -635,15 +635,15 @@ Restart:
                 FrmMain.BtnExtraDownload.ShowRefresh()
             End If
         Catch ex As Exception
-            Log(ex, "刷新任务栏进度显示失败", LogLevel.Feedback)
+            Log(ex, "刷新任务栏进度显示失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Public Function LoaderTaskbarProgressGet() As Double
         Try
             If Not LoaderTaskbar.Any Then Return 1
-            Return MathClamp(LoaderTaskbar.Select(Function(l) l.Progress).Average(), 0, 1)
+            Return LoaderTaskbar.Select(Function(l) l.Progress).Average().Clamp(0, 1)
         Catch ex As Exception
-            Log(ex, "获取任务栏进度出错", LogLevel.Feedback)
+            Log(ex, "获取任务栏进度出错", NotifyLevel.MsgBoxAndFeedback)
             Return 0.5
         End Try
     End Function

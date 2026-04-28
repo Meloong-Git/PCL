@@ -148,6 +148,12 @@
   <data name="LUA" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\lwjgl-unsafe-agent.jar;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="MeloongCore" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\PCLCS\bin\MeloongCore.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="MeloongCore.Wpf" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\PCLCS\bin\MeloongCore.Wpf.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="ModData" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\moddata.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
@@ -159,6 +165,9 @@
   </data>
   <data name="Ookii.Dialogs.Wpf" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\ookii.dialogs.wpf.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="PCLCS" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\PCLCS\bin\PCLCS.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="System.Net.Http.Formatting" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\System.Net.Http.Formatting.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

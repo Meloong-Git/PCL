@@ -5,23 +5,12 @@ Public Class PageLaunchRight
 
     Private Sub Init() Handles Me.Loaded
         PanBack.ScrollToHome()
-        PanLog.Visibility = If(ModeDebug, Visibility.Visible, Visibility.Collapsed)
+        PanLog.Visibility = ModeDebug.ToVisibility
         '快照版提示
-#If BETA Then
-        PanHint.Visibility = Visibility.Collapsed
-#Else
-        PanHint.Visibility = If(ThemeCheckGold(), Visibility.Collapsed, Visibility.Visible)
-        LabHint1.Text = "快照版包含尚未正式发布的测试功能，仅用于赞助者本人尝鲜。请不要发给其他人或者用来制作整合包哦！"
-        LabHint2.Text = $"若已累积赞助￥23.33，在爱发电私信发送 {vbLQ}解锁码{vbRQ} 即可永久隐藏此提示。"
-#End If
+        PanHint.Visibility =
+            (BuildType <> BuildTypes.Release AndAlso VersionBranchMain = "Official" AndAlso
+             DonationRank < DonationRanks.Rank23 AndAlso Not CType(Settings.Get("HintSnapshot"), Boolean)).ToVisibility
     End Sub
-
-    '暂时关闭快照版提示
-#If Not BETA Then
-    Private Sub BtnHintClose_Click(sender As Object, e As EventArgs) Handles BtnHintClose.Click
-        AniDispose(PanHint, True)
-    End Sub
-#End If
 
 #Region "主页"
 
@@ -36,7 +25,7 @@ Public Class PageLaunchRight
                     RefreshReal()
                 End SyncLock
             Catch ex As Exception
-                Log(ex, "加载 PCL 主页自定义信息失败", If(ModeDebug, LogLevel.Msgbox, LogLevel.Hint))
+                Log(ex, "加载 PCL 主页自定义信息失败", If(ModeDebug, NotifyLevel.MsgBox, NotifyLevel.AllUsers))
             End Try
         End Sub)
     End Sub
@@ -46,7 +35,7 @@ Public Class PageLaunchRight
             Case 1
                 '加载本地文件
                 Log("[Page] 主页自定义数据来源：本地文件")
-                Content = ReadFile(Path & "PCL\Custom.xaml") 'ReadFile 会进行存在检测
+                Content = ReadFile(PathExeFolder & "PCL\Custom.xaml") 'ReadFile 会进行存在检测
             Case 2
                 '联网下载
                 Url = Settings.Get("UiCustomNet")
@@ -168,7 +157,7 @@ Public Class PageLaunchRight
                 End If
                 Log($"[Page] 需要下载联网主页，当前版本：{Version}，检查源：{VersionAddress}")
             Catch exx As Exception
-                Log(exx, $"联网获取主页版本失败", LogLevel.Developer)
+                Log(exx, $"联网获取主页版本失败", NotifyLevel.DevelopOnly)
                 Log($"[Page] 无法检查联网主页版本，将直接下载，检查源：{VersionAddress}")
             End Try
             '实际下载
@@ -176,11 +165,11 @@ Public Class PageLaunchRight
             Log($"[Page] 已联网下载主页，内容长度：{FileContent.Length}，来源：{Address}")
             Settings.Set("CacheSavedPageUrl", Address)
             Settings.Set("CacheSavedPageVersion", Version)
-            WriteFile(PathTemp & "Cache\Custom.xaml", FileContent)
+            FileUtils.Write(PathTemp & "Cache\Custom.xaml", FileContent)
             '若内容变更则要求刷新
             If LoadedContentHash <> FileContent.GetHashCode() AndAlso ShouldRefresh Then Refresh()
         Catch ex As Exception
-            Log(ex, $"下载主页失败（{Address}）", If(ModeDebug, LogLevel.Msgbox, LogLevel.Hint))
+            Log(ex, $"下载主页失败（{Address}）", If(ModeDebug, NotifyLevel.MsgBox, NotifyLevel.AllUsers))
         End Try
     End Sub
 
@@ -230,7 +219,7 @@ Public Class PageLaunchRight
                 End If
                 Dim LoadStartTime As Date = Date.Now
                 '修改时应同时修改 PageOtherHelpDetail.Init
-                Content = ArgumentReplace(Content, AddressOf EscapeXML)
+                Content = ArgumentReplace(Content, AddressOf EscapeUtils.XmlEscape)
                 Do While Content.Contains("xmlns")
                     Content = Content.RegexReplace("xmlns[^""']*(""|')[^""']*(""|')", "").Replace("xmlns", "") '禁止声明命名空间
                 Loop
@@ -256,7 +245,7 @@ Public Class PageLaunchRight
             If MyMsgBox(If(TypeOf ex Is UnauthorizedAccessException, ex.Message, $"主页内容编写有误，请根据下列错误信息进行检查：{vbCrLf}{ex.GetBrief}"),
                         "加载主页失败", "重试", "取消") = 1 Then ForceRefresh()
         Else
-            Log(ex, "加载主页失败", LogLevel.Hint)
+            Log(ex, "加载主页失败", NotifyLevel.AllUsers)
         End If
     End Sub
     ''' <summary>

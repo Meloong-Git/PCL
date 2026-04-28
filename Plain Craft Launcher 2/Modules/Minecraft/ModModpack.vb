@@ -1,6 +1,4 @@
-﻿Imports System.IO.Compression
-
-Public Module ModModpack
+﻿Public Module ModModpack
 
     '触发整合包安装的外部接口
     ''' <summary>
@@ -15,7 +13,7 @@ Public Module ModModpack
                 ModpackInstall(File)
             Catch ex As CancelledException
             Catch ex As Exception
-                Log(ex, "手动安装整合包失败", LogLevel.Msgbox)
+                Log(ex, "手动安装整合包失败", NotifyLevel.MsgBox)
             End Try
         End Sub)
     End Sub
@@ -251,8 +249,35 @@ Retry:
             ModDownloadLoaders.Add(New LoaderTask(Of Integer, JArray)("获取 Mod 下载信息",
             Sub(Task As LoaderTask(Of Integer, JArray))
                 Task.Output = DlModRequest("https://api.curseforge.com/v1/mods/files", HttpMethod.Post, "{""fileIds"": [" & ModList.Join(",") & "]}", "application/json")("data")
-                '如果文件已被删除，则 API 会跳过那一项
-                If ModList.Count > Task.Output.Count Then Throw New Exception("整合包中的部分 Mod 版本已被 Mod 作者删除，所以没法继续安装了，请向整合包作者反馈该问题")
+                If ModList.Count = Task.Output.Count Then Return
+                '如果文件已被删除，则 API 会跳过那一项，导致返回的列表数量小于请求的数量。后面的都是对此的错误处理。
+                '获取缺失的 fileId 列表
+                Dim MissingIds = ModList.Except(Task.Output.Select(Function(j) j("id").ToObject(Of Integer))).ToList
+                Log("[Modpack] 缺失的 fileIds：" & MissingIds.Join("、"))
+                '将 fileId 映射到 projectId
+                Dim Missings = MissingIds.Select(Of (ProjectId As Integer, FileId As Integer))(
+                    Function(id) (CType(Json("files").AsEnumerable.First(Function(f) f("fileID").ToObject(Of Integer) = id), JObject)("projectID").ToObject(Of Integer), id)).ToList
+                Log("[Modpack] 缺失项：" & Missings.Join("、"))
+                '尝试获取对应的工程信息
+                Dim Projects As New List(Of ResourceProject)
+                Try
+                    Projects = ResourceProject.FromProjectIds(Missings.Select(Function(e) e.ProjectId.ToString), ResourcePlatforms.CurseForge).ToList
+                Catch ex As Exception
+                    Log(ex, "获取缺失的工程信息失败")
+                End Try
+                Dim MissingDesc As New List(Of String)
+                For Each Missing In Missings
+                    Dim Project = Projects.FirstOrDefault(Function(p) p.Id = Missing.ProjectId)
+                    If Project Is Nothing Then
+                        MissingDesc.Add($"未知 CurseForge 项目 (项目 ID {Missing.ProjectId}，文件 ID {Missing.FileId})")
+                    Else
+                        MissingDesc.Add($"{Project.TranslatedName} (文件 ID {Missing.FileId})")
+                    End If
+                Next
+                If MyMsgBox($"未找到该整合包所需的以下内容，它们可能已被原作者删除：{vbCrLf}- {MissingDesc.Join(vbCrLf & "- ")}{vbCrLf}{vbCrLf}是否继续安装？缺失这些内容可能导致整合包出现异常！",
+                    "整合包内容缺失", "继续", "取消", IsWarn:=True) = 2 Then
+                    Task.Interrupt()
+                End If
             End Sub) With {.ProgressWeight = ModList.Count / 10}) '每 10 Mod 需要 1s
             '构造 NetFile
             ModDownloadLoaders.Add(New LoaderTask(Of JArray, List(Of NetFile))("构造 Mod 下载信息",
@@ -269,23 +294,23 @@ Retry:
                         End If
                     End If
                     '根据 modules 和文件名后缀判断资源类型
-                    Dim TargetFolder As String, Type As CompType
+                    Dim TargetFolder As String, Type As ResourceTypes
                     If ModJson("modules").Any Then 'modules 可能返回 null（#1006）
                         Dim ModuleNames = CType(ModJson("modules"), JArray).Select(Function(l) l("name").ToString).ToList
                         If ModuleNames.Contains("META-INF") OrElse ModuleNames.Contains("mcmod.info") OrElse
                            ModJson?("FileName")?.ToString.EndsWithF(".jar", True) Then
-                            TargetFolder = "mods" : Type = CompType.Mod
+                            TargetFolder = "mods" : Type = ResourceTypes.Mod
                         ElseIf ModuleNames.Contains("pack.mcmeta") Then
-                            TargetFolder = "resourcepacks" : Type = CompType.ResourcePack
+                            TargetFolder = "resourcepacks" : Type = ResourceTypes.ResourcePack
                         Else
-                            TargetFolder = "shaderpacks" : Type = CompType.Shader
+                            TargetFolder = "shaderpacks" : Type = ResourceTypes.Shader
                         End If
                     Else
-                        TargetFolder = "mods" : Type = CompType.Mod
+                        TargetFolder = "mods" : Type = ResourceTypes.Mod
                     End If
                     '建立 CompFile
-                    Dim File As New CompFile(ModJson, Type)
-                    If Not File.Available Then Continue For
+                    Dim File = ResourceVersion.FromPlatformJson(ModJson, Type)
+                    If Not File.DownloadAvailable Then Continue For
                     '实际的添加
                     FileList.Add(Id, File.ToNetFile($"{McFolderSelected}versions\{InstanceName}\{TargetFolder}\"))
                     Task.Progress += 1 / (1 + ModList.Count)
@@ -330,7 +355,7 @@ Retry:
                     File.Delete(Target)
                 End If
             Next
-            If File.Exists(FileAddress) AndAlso IO.Path.GetFileNameWithoutExtension(FileAddress) = "modpack" Then
+            If File.Exists(FileAddress) AndAlso Path.GetFileNameWithoutExtension(FileAddress) = "modpack" Then
                 Log("[ModPack] 删除安装整合包文件：" & FileAddress)
                 File.Delete(FileAddress)
             End If
@@ -425,11 +450,11 @@ Retry:
                 End Select
             End If
             '添加下载文件
-            Dim Urls = File("downloads").SelectMany(Function(t) CompFile.HandleCurseForgeDownloadUrls(t.ToString)).ToList
+            Dim Urls = File("downloads").SelectMany(Function(t) ResourceVersion.ParseCurseForgeDownloadUrls(t.ToString)).ToList
             Urls.AddRange(Urls.Select(Function(u) DlSourceModGet(u)).ToList)
             Urls = Urls.Distinct.ToList()
             Dim TargetPath As String = $"{McFolderSelected}versions\{InstanceName}\{File("path")}"
-            If Not IO.Path.GetFullPath(TargetPath).StartsWithF($"{McFolderSelected}versions\{InstanceName}\", True) Then
+            If Not Path.GetFullPath(TargetPath).StartsWithF($"{McFolderSelected}versions\{InstanceName}\", True) Then
                 MyMsgBox($"整合包的文件路径超出了版本文件夹，请向整合包作者反馈此问题！" & vbCrLf & "错误的文件：" & TargetPath, "文件路径校验失败", IsWarn:=True)
                 Throw New CancelledException
             End If
@@ -471,7 +496,7 @@ Retry:
                     File.Delete(Target)
                 End If
             Next
-            If File.Exists(FileAddress) AndAlso IO.Path.GetFileNameWithoutExtension(FileAddress) = "modpack" Then
+            If File.Exists(FileAddress) AndAlso Path.GetFileNameWithoutExtension(FileAddress) = "modpack" Then
                 Log("[ModPack] 删除安装整合包文件：" & FileAddress)
                 File.Delete(FileAddress)
             End If
@@ -576,18 +601,18 @@ Retry:
                 Task, 0.4)
             '读取 MMC 设置文件（#2655）
             Try
-                Dim MMCSetupFile As String = InstallTemp & ArchiveBaseFolder & "instance.cfg"
-                If File.Exists(MMCSetupFile) Then
+                Dim MmcSetupFile As String = InstallTemp & ArchiveBaseFolder & "instance.cfg"
+                If File.Exists(MmcSetupFile) Then
                     '将其中的等号替换为冒号，以符合 ini 文件格式
                     Dim Lines As New List(Of String)
-                    For Each Line In ReadFile(MMCSetupFile).Split({vbCr, vbLf}, StringSplitOptions.RemoveEmptyEntries)
+                    For Each Line In ReadFile(MmcSetupFile).Split(vbCrLf.ToCharArray, StringSplitOptions.RemoveEmptyEntries)
                         If Not Line.Contains("=") Then Continue For
                         Lines.Add(Line.BeforeFirst("=") & ":" & Line.AfterFirst("="))
                     Next
-                    WriteFile(MMCSetupFile, Lines.Join(vbCrLf))
+                    FileUtils.Write(MmcSetupFile, Lines.Join(vbCrLf))
                     '读取文件
-                    If ReadIni(MMCSetupFile, "OverrideCommands", False) Then
-                        Dim PreLaunchCommand As String = ReadIni(MMCSetupFile, "PreLaunchCommand")
+                    If ReadIni(MmcSetupFile, "OverrideCommands", False) Then
+                        Dim PreLaunchCommand As String = ReadIni(MmcSetupFile, "PreLaunchCommand")
                         If PreLaunchCommand <> "" Then
                             PreLaunchCommand = PreLaunchCommand.Replace("\""", """").
                                 Replace("$INST_JAVA", "{java}javaw.exe").
@@ -598,16 +623,16 @@ Retry:
                             Log("[ModPack] 迁移 MultiMC 版本独立设置：启动前执行命令：" & PreLaunchCommand)
                         End If
                     End If
-                    If ReadIni(MMCSetupFile, "JoinServerOnLaunch", False) Then
-                        Dim ServerAddress As String = ReadIni(MMCSetupFile, "JoinServerOnLaunchAddress").Replace("\""", """")
+                    If ReadIni(MmcSetupFile, "JoinServerOnLaunch", False) Then
+                        Dim ServerAddress As String = ReadIni(MmcSetupFile, "JoinServerOnLaunchAddress").Replace("\""", """")
                         WriteIni(SetupFile, "VersionServerEnter", ServerAddress)
                         Log("[ModPack] 迁移 MultiMC 版本独立设置：自动进入服务器：" & ServerAddress)
                     End If
-                    If ReadIni(MMCSetupFile, "IgnoreJavaCompatibility", False) Then
+                    If ReadIni(MmcSetupFile, "IgnoreJavaCompatibility", False) Then
                         WriteIni(SetupFile, "VersionAdvanceJava", True)
                         Log("[ModPack] 迁移 MultiMC 版本独立设置：忽略 Java 兼容性警告")
                     End If
-                    Dim Logo As String = ReadIni(MMCSetupFile, "iconKey", "")
+                    Dim Logo As String = ReadIni(MmcSetupFile, "iconKey", "")
                     If Logo <> "" AndAlso File.Exists($"{InstallTemp}{ArchiveBaseFolder}{Logo}.png") Then
                         WriteIni(SetupFile, "LogoCustom", True)
                         WriteIni(SetupFile, "Logo", "PCL\Logo.png")
@@ -615,9 +640,9 @@ Retry:
                         Log($"[ModPack] 迁移 MultiMC 版本独立设置：版本图标（{Logo}.png）")
                     End If
                     'JVM 参数
-                    Dim JvmArgs As String = ReadIni(MMCSetupFile, "JvmArgs", "")
+                    Dim JvmArgs As String = ReadIni(MmcSetupFile, "JvmArgs", "")
                     If JvmArgs <> "" Then
-                        If ReadIni(MMCSetupFile, "OverrideJavaArgs", False) Then
+                        If ReadIni(MmcSetupFile, "OverrideJavaArgs", False) Then
                             WriteIni(SetupFile, "VersionAdvanceJvm", JvmArgs)
                             Log("[ModPack] 迁移 MultiMC 版本独立设置：JVM 参数（覆盖）：" & JvmArgs)
                         Else
@@ -770,6 +795,7 @@ Retry:
             New LoaderTask(Of String, Integer)("解压压缩包",
             Sub(Task As LoaderTask(Of String, Integer))
                 ExtractModpackFiles(TargetFolder, FileAddress, Task, 0.9)
+                OpenExplorer(TargetFolder)
                 Thread.Sleep(400) '避免文件争用
                 '查找解压后的 exe 文件
                 Dim Launcher As String = Nothing
@@ -779,7 +805,7 @@ Retry:
                     If Info.ProductName = "Plain Craft Launcher" Then
                         Launcher = ExeFile
                         Log($"[Modpack] 发现整合包附带的 PCL 启动器：{ExeFile}")
-                    ElseIf (Info.ProductName.ContainsF("Launcher", True) OrElse Info.ProductName.ContainsF("启动", True)) AndAlso
+                    ElseIf (Info.ProductName.ContainsIgnoreCase("Launcher") OrElse Info.ProductName.Contains("启动")) AndAlso
                         Not Info.ProductName = "Plain Craft Launcher Admin Manager" Then
                         If Launcher Is Nothing Then
                             Launcher = ExeFile
@@ -792,7 +818,6 @@ Retry:
                 If Launcher IsNot Nothing Then
                     Log("[Modpack] 找到压缩包中附带的启动器：" & Launcher)
                     If MyMsgBox($"整合包里似乎自带了启动器，是否换用它继续安装？{vbCrLf}即将打开：{Launcher}", "换用整合包启动器？", "换用", "不换用") = 1 Then
-                        OpenExplorer(TargetFolder)
                         StartProcess(Launcher, "--wait") '要求等待已有的 PCL 退出
                         Log("[Modpack] 为换用整合包中的启动器启动，强制结束程序")
                         FrmMain.EndProgram(False)
@@ -801,10 +826,9 @@ Retry:
                 Else
                     Log("[Modpack] 未找到压缩包中附带的启动器")
                 End If
-                OpenExplorer(TargetFolder)
                 '加入文件夹列表
                 Dim InstanceName As String = GetFolderNameFromPath(TargetFolder)
-                Directory.CreateDirectory(TargetFolder & ".minecraft\")
+                DirectoryUtils.Create(TargetFolder & ".minecraft\")
                 PageSelectLeft.AddFolder(
                     TargetFolder & ".minecraft\" & ArchiveBaseFolder.Replace("/", "\").TrimStart("\"), '格式例如：包裹文件夹\.minecraft\（最短为空字符串）
                     InstanceName, False)

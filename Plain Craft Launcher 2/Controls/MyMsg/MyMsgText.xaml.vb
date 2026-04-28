@@ -25,7 +25,7 @@
             ShapeLine.StrokeThickness = GetWPFSize(1)
 
         Catch ex As Exception
-            Log(ex, "普通弹窗初始化失败", LogLevel.Hint)
+            Log(ex, "普通弹窗初始化失败", NotifyLevel.AllUsers)
         End Try
     End Sub
 
@@ -47,7 +47,7 @@
             Log("[Control] 普通弹窗：" & LabTitle.Text & vbCrLf & LabCaption.Text)
 
         Catch ex As Exception
-            Log(ex, "普通弹窗加载失败", LogLevel.Hint)
+            Log(ex, "普通弹窗加载失败", NotifyLevel.AllUsers)
         End Try
     End Sub
     Private Sub Close()

@@ -163,6 +163,26 @@ Namespace My.Resources
         '''<summary>
         '''  查找 System.Byte[] 类型的本地化资源。
         '''</summary>
+        Friend ReadOnly Property MeloongCore() As Byte()
+            Get
+                Dim obj As Object = ResourceManager.GetObject("MeloongCore", resourceCulture)
+                Return CType(obj,Byte())
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  查找 System.Byte[] 类型的本地化资源。
+        '''</summary>
+        Friend ReadOnly Property MeloongCore_Wpf() As Byte()
+            Get
+                Dim obj As Object = ResourceManager.GetObject("MeloongCore.Wpf", resourceCulture)
+                Return CType(obj,Byte())
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  查找 System.Byte[] 类型的本地化资源。
+        '''</summary>
         Friend ReadOnly Property ModData() As Byte()
             Get
                 Dim obj As Object = ResourceManager.GetObject("ModData", resourceCulture)
@@ -196,6 +216,16 @@ Namespace My.Resources
         Friend ReadOnly Property Ookii_Dialogs_Wpf() As Byte()
             Get
                 Dim obj As Object = ResourceManager.GetObject("Ookii.Dialogs.Wpf", resourceCulture)
+                Return CType(obj,Byte())
+            End Get
+        End Property
+        
+        '''<summary>
+        '''  查找 System.Byte[] 类型的本地化资源。
+        '''</summary>
+        Friend ReadOnly Property PCLCS() As Byte()
+            Get
+                Dim obj As Object = ResourceManager.GetObject("PCLCS", resourceCulture)
                 Return CType(obj,Byte())
             End Get
         End Property

@@ -64,7 +64,7 @@
                                 </ContextMenu>
                         )
                 End Select
-                If (Folder.Type = McFolder.Types.Vanilla OrElse Folder.Type = McFolder.Types.RenamedVanilla) AndAlso Folder.Location = Path & ".minecraft\" AndAlso McFolderList.IsSingle Then CType(ContMenu.FindName("Delete"), MyMenuItem).Header = "清空"
+                If (Folder.Type = McFolder.Types.Vanilla OrElse Folder.Type = McFolder.Types.RenamedVanilla) AndAlso Folder.Location = PathExeFolder & ".minecraft\" AndAlso McFolderList.IsSingle Then CType(ContMenu.FindName("Delete"), MyMenuItem).Header = "清空"
                 '注册事件
                 If Not Folder.Type = McFolder.Types.Vanilla Then CType(ContMenu.FindName("Remove"), MyMenuItem).AddHandler(MyMenuItem.ClickEvent, New RoutedEventHandler(AddressOf FrmSelectLeft.Remove_Click))
                 CType(ContMenu.FindName("Open"), MyMenuItem).AddHandler(MyMenuItem.ClickEvent, New RoutedEventHandler(AddressOf FrmSelectLeft.Open_Click))
@@ -88,7 +88,7 @@
             FrmSelectLeft.PanList.Children.Add(New TextBlock With {.Text = "添加或导入", .Margin = New Thickness(13, 18, 5, 4), .Opacity = 0.6, .FontSize = 12})
 
             '确认创建按钮状态
-            If Not Directory.Exists(Path & ".minecraft\") Then
+            If Not Directory.Exists(PathExeFolder & ".minecraft\") Then
                 Dim ItemCreate As New MyListItem With {.IsScaleAnimationEnabled = False, .Type = MyListItem.CheckType.Clickable, .Title = "新建 .minecraft 文件夹", .Height = 34,
                     .ToolTip = "在 PCL 当前所在文件夹下创建新的 .minecraft 文件夹",
                     .LogoScale = 0.9,
@@ -138,7 +138,7 @@
             End If
 
         Catch ex As Exception
-            Log(ex, "构建 Minecraft 文件夹列表 UI 出错", LogLevel.Feedback)
+            Log(ex, "构建 Minecraft 文件夹列表 UI 出错", NotifyLevel.MsgBoxAndFeedback)
         Finally
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\") '刷新版本列表
         End Try
@@ -168,7 +168,7 @@
             '添加文件夹
             AddFolder(NewFolder, NewName, True)
         Catch ex As Exception
-            Log(ex, "添加文件夹失败（" & NewFolder & "）", LogLevel.Feedback)
+            Log(ex, "添加文件夹失败（" & NewFolder & "）", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     ''' <summary>
@@ -245,10 +245,10 @@
                     '满足以上全部条件则视为根目录整合包
                     Settings.Set("VersionArgumentIndie", 2, Instance:=Instance)
                     Settings.Set("VersionArgumentIndieV2", False, Instance:=Instance)
-                    Log("[Setup] 已自动关闭单版本隔离：" & Instance.Name, LogLevel.Debug)
+                    Log("[Setup] 已自动关闭单版本隔离：" & Instance.Name, NotifyLevel.DebugModeOnly)
                 Next
             Catch ex As Exception
-                Log(ex, "向文件夹列表中添加新文件夹失败", LogLevel.Feedback)
+                Log(ex, "向文件夹列表中添加新文件夹失败", NotifyLevel.MsgBoxAndFeedback)
             End Try
         End Sub)
     End Sub
@@ -264,13 +264,12 @@
         Hint("新建 .minecraft 文件夹成功！", HintType.Green)
     End Sub
     Public Shared Sub CreateMcFolderInCurrentPath()
-        McFolderSelected = Path & ".minecraft\"
+        McFolderSelected = PathExeFolder & ".minecraft\"
         If Not Directory.Exists(McFolderSelected) Then
-            Directory.CreateDirectory(McFolderSelected)
-            Directory.CreateDirectory(McFolderSelected & "versions\")
+            DirectoryUtils.Create(McFolderSelected & "versions\")
             McFolderLauncherProfilesJsonCreate(McFolderSelected)
         End If
-        AddFolder(McFolderSelected, GetFolderNameFromPath(Path), False)
+        AddFolder(McFolderSelected, GetFolderNameFromPath(PathExeFolder), False)
     End Sub
 
     '右键菜单
@@ -300,20 +299,20 @@
             Hint(If(Target.Type = McFolder.Types.Custom, "文件夹 " & DeletedName & " 已从列表中移除！", "文件夹名称已复原！"), HintType.Green)
             McFolderListLoader.Start(IsForceRestart:=True)
         Catch ex As Exception
-            Log(ex, "从列表中移除游戏文件夹失败", LogLevel.Feedback)
+            Log(ex, "从列表中移除游戏文件夹失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Public Sub Delete_Click(sender As Object, e As RoutedEventArgs)
         Dim Target As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
-        Dim DeleteText As String = If((Target.Type = McFolder.Types.Vanilla OrElse Target.Type = McFolder.Types.RenamedVanilla) AndAlso Target.Location = Path & ".minecraft\" AndAlso McFolderList.IsSingle, "清空", "删除")
+        Dim DeleteText As String = If((Target.Type = McFolder.Types.Vanilla OrElse Target.Type = McFolder.Types.RenamedVanilla) AndAlso Target.Location = PathExeFolder & ".minecraft\" AndAlso McFolderList.IsSingle, "清空", "删除")
         If MyMsgBox("你确定要" & DeleteText & "这个文件夹吗？" & vbCrLf &
                     "目标文件夹：" & Target.Location & vbCrLf & vbCrLf &
                     "该文件夹中的游戏存档、游戏版本，以及 MC 之外的其他文件，都会永久丢失，不可恢复！", "警告", "取消", "确认", "取消") <> 2 Then Return
         If MyMsgBoxInput("删除确认",
                          "该文件夹中的游戏存档、游戏版本，以及 MC 之外的其他文件，都会永久丢失，不可恢复！" & vbCrLf &
                          "目标文件夹：" & Target.Location & vbCrLf & vbCrLf &
-                         "如果确实要删除，请在下面输入【确认删除】以继续。",
-                         ValidateRules:=New ObjectModel.Collection(Of Validate) From {New ValidateSame("确认删除", $"请输入 {vbLQ}确认删除{vbRQ} 这四个字！")},
+                         "如果确实要删除，请在下面输入【Potato】以继续。",
+                         ValidateRules:=New ObjectModel.Collection(Of Validate) From {New ValidateSame("Potato", $"请输入 {vbLQ}Potato{vbRQ}", IgnoreCase:=True)},
                          Button1:="永久删除文件夹", Button2:="取消", IsWarn:=True) Is Nothing Then Return
         RemoveFolderFromSetup(Target)
         RunInNewThread(
@@ -322,10 +321,10 @@
             Try
                 Hint("正在" & DeleteText & "文件夹 " & Target.Name & "！", HintType.Blue)
                 DeleteDirectory(Target.Location)
-                If DeleteText = "清空" Then Directory.CreateDirectory(Target.Location)
+                If DeleteText = "清空" Then DirectoryUtils.Create(Target.Location)
                 Hint("已" & DeleteText & "文件夹 " & Target.Name & "！", HintType.Green)
             Catch ex As Exception
-                Log(ex, DeleteText & "文件夹 " & Target.Name & " 失败", LogLevel.Hint)
+                Log(ex, DeleteText & "文件夹 " & Target.Name & " 失败", NotifyLevel.AllUsers)
             Finally
                 '刷新列表
                 McFolderListLoader.Start(IsForceRestart:=True)
@@ -395,7 +394,7 @@
             Settings.Set("LaunchFolders", Folders.Join("|"))
             McFolderListLoader.Start(IsForceRestart:=True)
         Catch ex As Exception
-            Log(ex, "重命名文件夹失败", LogLevel.Feedback)
+            Log(ex, "重命名文件夹失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
 

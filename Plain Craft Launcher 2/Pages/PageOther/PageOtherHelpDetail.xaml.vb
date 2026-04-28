@@ -18,7 +18,7 @@
         If Content = "" Then Throw New Exception("帮助 xaml 文件为空")
         Try
             '修改时应同时修改 PageLaunchRight.LoadContent
-            Content = ArgumentReplace(Content, AddressOf EscapeXML)
+            Content = ArgumentReplace(Content, AddressOf EscapeUtils.XmlEscape)
             Do While Content.Contains("xmlns")
                 Content = Content.RegexReplace("xmlns[^""']*(""|')[^""']*(""|')", "").Replace("xmlns", "") '禁止声明命名空间
             Loop
@@ -29,7 +29,7 @@
             Return True
         Catch ex As Exception
             Log("[System] 自定义信息内容：" & vbCrLf & Content)
-            Log(ex, "加载帮助 XAML 文件失败", LogLevel.Msgbox)
+            Log(ex, "加载帮助 XAML 文件失败", NotifyLevel.MsgBox)
             Return False
         End Try
     End Function

@@ -27,10 +27,10 @@
             UpdateRamType()
             UpdateJavaComboBox()
         Catch ex As NullReferenceException
-            Log(ex, "启动设置项存在异常，已被自动重置", LogLevel.Msgbox)
+            Log(ex, "启动设置项存在异常，已被自动重置", NotifyLevel.MsgBox)
             Reset()
         Catch ex As Exception
-            Log(ex, "重载启动设置时出错", LogLevel.Feedback)
+            Log(ex, "重载启动设置时出错", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Public Sub Reset()
@@ -42,7 +42,7 @@
             JavaSearchLoader.Start(IsForceRestart:=True)
             Hint("已初始化启动设置！", HintType.Green)
         Catch ex As Exception
-            Log(ex, "初始化启动设置失败", LogLevel.Msgbox)
+            Log(ex, "初始化启动设置失败", NotifyLevel.MsgBox)
         End Try
         Refresh()
     End Sub
@@ -88,7 +88,7 @@
             Settings.Set("LaunchSkinSlim", SkinInfo.IsSlim)
             ChangeSkin = True
         Catch ex As Exception
-            Log(ex, "改变离线皮肤失败", LogLevel.Msgbox)
+            Log(ex, "改变离线皮肤失败", NotifyLevel.MsgBox)
             ChangeSkin = False
         Finally
             '设置当前显示
@@ -101,7 +101,7 @@
             RadioSkinType0.SetChecked(True, True)
             Hint("离线皮肤已清空！", HintType.Green)
         Catch ex As Exception
-            Log(ex, "清空离线皮肤失败", LogLevel.Msgbox)
+            Log(ex, "清空离线皮肤失败", NotifyLevel.MsgBox)
         End Try
     End Sub
     Private Sub BtnSkinSave_Click(sender As Object, e As EventArgs) Handles BtnSkinSave.Click
@@ -149,7 +149,7 @@
         Dim RamAvailable As Double = Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024, 1)
         Dim RamGameActual As Double = Math.Round(Math.Min(RamGame, RamAvailable), 5)
         Dim RamUsed As Double = Math.Round(RamTotal - RamAvailable, 5)
-        Dim RamEmpty As Double = Math.Round(MathClamp(RamTotal - RamUsed - RamGame, 0, 1000), 1)
+        Dim RamEmpty As Double = Math.Round((RamTotal - RamUsed - RamGame).Clamp(0, 1000), 1)
         '设置最大可用内存
         If RamTotal <= 1.5 Then
             SliderRamCustom.MaxValue = Math.Max(Math.Floor((RamTotal - 0.3) / 0.1), 1)
@@ -364,7 +364,7 @@ PreFin:
         Dim SelectedItem As MyComboBoxItem = Nothing
         Dim SelectedBySetup As String = Settings.Get("LaunchArgumentJavaSelect")
         Try
-            For Each Java In JavaList.Clone().OrderByDescending(Function(v) v.MajorVersion)
+            For Each Java In JavaList.ToList().OrderByDescending(Function(v) v.MajorVersion)
                 Dim ListItem = New MyComboBoxItem With {.Content = Java.ToString, .ToolTip = Java.PathFolder, .Tag = Java}
                 ToolTipService.SetHorizontalOffset(ListItem, 400)
                 ComboArgumentJava.Items.Add(ListItem)
@@ -374,7 +374,7 @@ PreFin:
             Next
         Catch ex As Exception
             Settings.Set("LaunchArgumentJavaSelect", "")
-            Log(ex, "更新设置 Java 下拉框失败", LogLevel.Feedback)
+            Log(ex, "更新设置 Java 下拉框失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
         '更新选择项
         If SelectedItem Is Nothing AndAlso JavaList.Any Then SelectedItem = ComboArgumentJava.Items(0) '选中 “自动选择”
@@ -438,7 +438,7 @@ PreFin:
             JavaSearchLoader.Start(IsForceRestart:=True)
             Hint("已将该 Java 加入 Java 列表！", HintType.Green)
         Catch ex As Exception
-            Log(ex, "该 Java 存在异常，无法使用", LogLevel.Msgbox, "异常的 Java")
+            Log(ex, "该 Java 存在异常，无法使用", NotifyLevel.MsgBox, "异常的 Java")
             Return
         End Try
     End Sub
@@ -519,7 +519,7 @@ PreFin:
 
     '去除参数中的回车
     Private Sub ReplaceEnter(sender As MyTextBox, e As TextChangedEventArgs) Handles TextAdvanceJvm.TextChanged, TextAdvanceGame.TextChanged
-        Dim NewText = sender.Text.Replace(vbCrLf, vbCr).Replace(vbLf, vbCr).Replace(vbCr, " ")
+        Dim NewText = sender.Text.ReplaceLineEndings(" ", mergeMultiple:=True)
         If NewText = sender.Text Then Return
         Dim CaretIndex = sender.CaretIndex
         sender.Text = NewText

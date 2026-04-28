@@ -1,4 +1,4 @@
-﻿Public Class MyCompItem
+﻿Public Class MyResourceItem
 
 #Region "基础属性"
     Public Uuid As Integer = GetUuid()
@@ -82,47 +82,47 @@
             Log("[Control] 按下资源工程列表项：" & LabTitle.Text)
         End If
     End Sub
-    Private Sub MyCompItem_Click(sender As MyCompItem, e As EventArgs) Handles Me.Click
+    Private Sub MyResourceItem_Click(sender As MyResourceItem, e As EventArgs) Handles Me.Click
         '记录当前展开的卡片标题（#2712）
         Dim Titles As New List(Of String)
-        If FrmMain.PageCurrent.Page = FormMain.PageType.CompDetail Then
-            For Each Card As MyCard In FrmDownloadCompDetail.PanResults.Children
+        If FrmMain.PageCurrent.Page = FormMain.PageType.ResourceDetail Then
+            For Each Card As MyCard In FrmDownloadResourceDetail.PanResults.Children
                 If Card.Title <> "" AndAlso Not Card.IsSwapped Then Titles.Add(Card.Title)
             Next
-            Log("[Comp] 记录当前已展开的卡片：" & String.Join("、", Titles))
+            Log("[Resource] 记录当前已展开的卡片：" & String.Join("、", Titles))
             FrmMain.PageCurrent.Additional(1) = Titles
         End If
         '打开详情页
-        Dim TargetType As CompType
+        Dim TargetType As ResourceTypes
         Dim TargetInstance As String = Nothing
-        Dim TargetLoader As CompModLoaderType = CompModLoaderType.Any
+        Dim TargetLoader As ModLoaderTypes = ModLoaderTypes.Any
         If FrmMain.PageCurrent.Page = FormMain.PageType.Download Then
             '从下载页进入
             Select Case FrmMain.PageCurrentSub
                 Case FormMain.PageSubType.DownloadMod
-                    TargetType = CompType.Mod
+                    TargetType = ResourceTypes.Mod
                     TargetInstance = FrmDownloadMod.Content.Loader.Input.GameVersion
                     TargetLoader = FrmDownloadMod.Content.Loader.Input.ModLoader
                 Case FormMain.PageSubType.DownloadPack
-                    TargetType = CompType.ModPack
+                    TargetType = ResourceTypes.ModPack
                     TargetInstance = FrmDownloadPack.Content.Loader.Input.GameVersion
                 Case FormMain.PageSubType.DownloadDataPack
-                    TargetType = CompType.DataPack
+                    TargetType = ResourceTypes.DataPack
                     TargetInstance = FrmDownloadDataPack.Content.Loader.Input.GameVersion
                 Case FormMain.PageSubType.DownloadResourcePack
-                    TargetType = CompType.ResourcePack
+                    TargetType = ResourceTypes.ResourcePack
                     TargetInstance = FrmDownloadResourcePack.Content.Loader.Input.GameVersion
                 Case FormMain.PageSubType.DownloadShader
-                    TargetType = CompType.Shader
+                    TargetType = ResourceTypes.Shader
                     TargetInstance = FrmDownloadShader.Content.Loader.Input.GameVersion
             End Select
         Else
             '从详情页进入（查看前置）
-            TargetType = CompType.Any '允许任意类别
+            TargetType = ResourceTypes.Any '允许任意类别
             TargetInstance = FrmMain.PageCurrent.Additional(2)
             TargetLoader = FrmMain.PageCurrent.Additional(3)
         End If
-        FrmMain.PageChange(New FormMain.PageStackData With {.Page = FormMain.PageType.CompDetail,
+        FrmMain.PageChange(New FormMain.PageStackData With {.Page = FormMain.PageType.ResourceDetail,
                            .Additional = {sender.Tag, New List(Of String), TargetInstance, TargetLoader, TargetType}})
     End Sub
 
@@ -171,7 +171,7 @@
 
     Private StateLast As String
     ''' <summary>
-    ''' 是否允许交互。目前仅用于 PageDownloadCompDetail 的顶部栏展示：若关闭碰撞检测，则无法展开 Tooltip。
+    ''' 是否允许交互。目前仅用于 PageDownloadResourceDetail 的顶部栏展示：若关闭碰撞检测，则无法展开 Tooltip。
     ''' </summary>
     Public Property CanInteraction As Boolean = True
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp
@@ -214,10 +214,10 @@
                     AaScaleTransform(RectBack, -0.196, 1,,, True)
                 })
             End If
-            AniStart(Ani, "CompItem Color " & Uuid)
+            AniStart(Ani, "MyResourceItem Color " & Uuid)
         Else
             '无动画
-            AniStop("CompItem Color " & Uuid)
+            AniStop("MyResourceItem Color " & Uuid)
             If _RectBack IsNot Nothing Then RectBack.Opacity = 0
         End If
     End Sub

@@ -41,12 +41,6 @@
     Private Sub BtnEdit_Click(sender As Object, e As EventArgs) Handles BtnEdit.Click
         BtnEdit.ContextMenu.IsOpen = True
     End Sub
-    Public Sub BtnEditPassword_Click(sender As Object, e As RoutedEventArgs)
-        OpenWebsite("https://account.live.com/password/Change")
-    End Sub
-    Public Sub BtnEditName_Click(sender As Object, e As RoutedEventArgs)
-        OpenWebsite("https://www.minecraft.net/zh-hans/msaprofile/mygames/editprofile")
-    End Sub
 
     '退出登录
     Private Sub BtnExit_Click() Handles BtnExit.Click
@@ -125,12 +119,12 @@ Retry:
             If TypeOf ex Is OperationCanceledException OrElse TypeOf ex Is TimeoutException Then
                 Hint("更改皮肤失败：连接皮肤服务器超时，请稍后再试，或使用 VPN 改善网络环境", HintType.Red)
             ElseIf TypeOf ex Is ResponsedWebException AndAlso CType(ex, ResponsedWebException).StatusCode = HttpStatusCode.Unauthorized Then
-                Log(ex, "更改皮肤时遭遇 401 错误", LogLevel.Developer)
+                Log(ex, "更改皮肤时遭遇 401 错误", NotifyLevel.DevelopOnly)
                 Hint("正在重新登录，将在登录后自动更改皮肤……")
                 McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
                 GoTo Retry
             Else
-                Log(ex, "更改皮肤失败", LogLevel.Hint)
+                Log(ex, "更改皮肤失败", NotifyLevel.AllUsers)
             End If
         Finally
             IsChanging = False

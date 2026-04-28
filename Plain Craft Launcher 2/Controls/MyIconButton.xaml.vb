@@ -1,4 +1,6 @@
-﻿Public Class MyIconButton
+﻿Imports System.Windows.Shapes
+
+Public Class MyIconButton
 
     '自定义事件
     Public Event Click(sender As Object, e As EventArgs)

@@ -64,7 +64,7 @@
                 Hint("皮肤保存成功！", HintType.Green)
             End If
         Catch ex As Exception
-            Log(ex, "保存皮肤失败", LogLevel.Hint)
+            Log(ex, "保存皮肤失败", NotifyLevel.AllUsers)
         End Try
     End Sub
     Private Sub BtnSkinSave_Checked(sender As MyMenuItem, e As RoutedEventArgs) Handles BtnSkinSave.Checked
@@ -85,7 +85,7 @@
             Try
                 Image = New MyBitmap(Address)
             Catch ex As Exception '#2272
-                Log(ex, $"皮肤文件已损坏：{Address}", LogLevel.Hint)
+                Log(ex, $"皮肤文件已损坏：{Address}", NotifyLevel.AllUsers)
                 File.Delete(Address)
                 Return
             End Try
@@ -115,7 +115,7 @@
             ImgBack.Source = Image.Clip(Scale * 8, Scale * 8, Scale * 8, Scale * 8)
             Log("[Skin] 载入头像成功：" & Loader.Name)
         Catch ex As Exception
-            Log(ex, "载入头像失败（" & If(Address, "null") & "," & Loader.Name & "）", LogLevel.Hint)
+            Log(ex, "载入头像失败（" & If(Address, "null") & "," & Loader.Name & "）", NotifyLevel.AllUsers)
         End Try
     End Sub
     ''' <summary>
@@ -163,7 +163,7 @@
                     Next
                     Hint("已刷新头像！", HintType.Green)
                 Catch ex As Exception
-                    Log(ex, "刷新皮肤缓存失败", LogLevel.Msgbox)
+                    Log(ex, "刷新皮肤缓存失败", NotifyLevel.MsgBox)
                 End Try
             End Sub)
         End If
@@ -186,7 +186,7 @@
                 '完成提示
                 Hint("更改皮肤成功！", HintType.Green)
             Catch ex As Exception
-                Log(ex, "更改正版皮肤后刷新皮肤失败", LogLevel.Feedback)
+                Log(ex, "更改正版皮肤后刷新皮肤失败", NotifyLevel.MsgBoxAndFeedback)
             End Try
         End Sub)
     End Sub
@@ -255,7 +255,7 @@ Retry:
                         Next
                         SelectedIndex = MyMsgBoxSelect(SelectionControl, "选择披风", "确定", "取消")
                     Catch ex As Exception
-                        Log(ex, "获取玩家皮肤列表失败", LogLevel.Feedback)
+                        Log(ex, "获取玩家皮肤列表失败", NotifyLevel.MsgBoxAndFeedback)
                     End Try
                 End Sub)
                 If SelectedIndex Is Nothing Then Return
@@ -278,7 +278,7 @@ Retry:
                     McLoginMsLoader.Output.ProfileJson = SkinData.ToString()
                 End If
             Catch ex As Exception
-                Log(ex, "更改披风失败", LogLevel.Hint)
+                Log(ex, "更改披风失败", NotifyLevel.AllUsers)
             Finally
                 IsChanging = False
             End Try

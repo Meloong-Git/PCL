@@ -1,4 +1,6 @@
-﻿Public Class MySlider
+﻿Imports System.Windows.Shapes
+
+Public Class MySlider
     Implements ISettingControl
 
     '基础
@@ -29,7 +31,7 @@
         Set(newValue As Integer)
             Try
 
-                newValue = MathClamp(newValue, 0, MaxValue)
+                newValue = newValue.Clamp(0, MaxValue)
                 If _Value = newValue Then Return
 
                 '触发 Preview 事件，修改新值
@@ -61,7 +63,7 @@
                 If AniControlEnabled = 0 Then RaiseEvent Change(Me, False)
 
             Catch ex As Exception
-                Log(ex, "滑动条进度改变出错", LogLevel.Hint)
+                Log(ex, "滑动条进度改变出错", NotifyLevel.AllUsers)
             End Try
         End Set
     End Property
@@ -71,7 +73,7 @@
         Dim NewWidth As Double = _Value / MaxValue * (ActualWidth - ShapeDot.Width)
         LineFore.Width = Math.Max(0, NewWidth + If(NewWidth < 0.5, 0, 0.5))
         LineBack.Width = Math.Max(0, ActualWidth - ShapeDot.Width - NewWidth + If(ActualWidth - ShapeDot.Width - NewWidth < 0.5, 0, 0.5))
-        SetLeft(ShapeDot, NewWidth)
+        ShapeDot.Margin = New Thickness(NewWidth, ShapeDot.Margin.Top, ShapeDot.Margin.Right, ShapeDot.Margin.Bottom)
     End Sub
 
     '拖动
@@ -89,7 +91,7 @@
         AniStop("MySlider KeyPopup " & Uuid)
     End Sub
     Public Sub DragDoing()
-        Dim Percent As Double = MathClamp((Mouse.GetPosition(PanMain).X - ShapeDot.Width / 2) / (ActualWidth - ShapeDot.Width), 0, 1)
+        Dim Percent As Double = ((Mouse.GetPosition(PanMain).X - ShapeDot.Width / 2) / (ActualWidth - ShapeDot.Width)).Clamp(0, 1)
         Dim NewValue As Integer = Percent * MaxValue
         If Not NewValue = Value Then
             Value = NewValue

@@ -143,11 +143,11 @@
                         Log(ex, $"下载图片失败，使用本地备用图片（{Source}）")
                         Return
                     Catch exx As Exception
-                        Log(ex, $"下载图片失败（{Source}）", LogLevel.Hint)
-                        Log(exx, $"加载备用图片失败（{FallbackSource}）", LogLevel.Hint)
+                        Log(ex, $"下载图片失败（{Source}）", NotifyLevel.AllUsers)
+                        Log(exx, $"加载备用图片失败（{FallbackSource}）", NotifyLevel.AllUsers)
                     End Try
                 Else
-                    Log(ex, $"下载图片失败（{Source}，备用：{FallbackSource}）", LogLevel.Hint)
+                    Log(ex, $"下载图片失败（{Source}，备用：{FallbackSource}）", NotifyLevel.AllUsers)
                 End If
             End Try
         End Sub, "MyImage PicLoader " & GetUuid() & "#", ThreadPriority.BelowNormal)

@@ -174,7 +174,7 @@ Public Class MyListItem
             Return GetValue(TitleProperty)
         End Get
         Set(value As String)
-            SetValue(TitleProperty, value.Replace(vbCr, "").Replace(vbLf, ""))
+            SetValue(TitleProperty, value.ReplaceLineEndings(""))
         End Set
     End Property
     Public Shared ReadOnly TitleProperty As DependencyProperty = DependencyProperty.Register("Title", GetType(String), GetType(MyListItem))
@@ -198,7 +198,7 @@ Public Class MyListItem
         End Get
         Set(value As String)
             If _Info = value Then Return
-            value = value.Replace(vbCr, "").Replace(vbLf, "")
+            value = value.ReplaceLineEndings("")
             _Info = value
             LabInfo.Text = value
             LabInfo.Visibility = If(value = "", Visibility.Collapsed, Visibility.Visible)
@@ -643,7 +643,7 @@ Public Class MyListItem
                 Dim Entry As New HelpEntry(CustomEvent.GetAbsoluteUrls(CustomEventService.GetEventData(Me), CustomEventService.GetEventType(Me))(0))
                 Entry.SetToListItem(Me)
             Catch ex As Exception
-                Log(ex, "设置帮助 MyListItem 失败", LogLevel.Msgbox)
+                Log(ex, "设置帮助 MyListItem 失败", NotifyLevel.MsgBox)
                 CustomEventService.SetEventType(Me, CustomEvent.EventType.None)
                 CustomEventService.SetEventData(Me, "")
             End Try

@@ -22,7 +22,7 @@
             End If
             If HintText.Length > 0 Then TextBox.HintText = HintText
         Catch ex As Exception
-            Log(ex, "初始化可编辑文本框失败（" & If(Name, "") & "）", LogLevel.Feedback)
+            Log(ex, "初始化可编辑文本框失败（" & If(Name, "") & "）", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Private _Text As String = SelectedItem
@@ -107,7 +107,7 @@
         Try
             CType(Template.FindName("PanPopup", Me), Grid).Opacity = FrmMain.Opacity
         Catch ex As Exception
-            Log(ex, "设置下拉框透明度失败", LogLevel.Feedback)
+            Log(ex, "设置下拉框透明度失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Private Sub MyComboBox_DropDownClosed(sender As Object, e As EventArgs) Handles Me.DropDownClosed
@@ -147,25 +147,16 @@
         ElseIf Items.Count > NewValue Then
             SelectedIndex = NewValue
         Else
-            Log($"[Setting] 尝试显示设置 {SettingService.GetKey(Me)}，但没有找到设置值 {NewValue} 的对应项", LogLevel.Debug)
+            Log($"[Setting] 尝试显示设置 {SettingService.GetKey(Me)}，但没有找到设置值 {NewValue} 的对应项", NotifyLevel.DebugModeOnly)
             SelectedIndex = -1
             SelectedItem = Nothing
-            'Dim Key As String = SettingService.GetKey(Me)
-            'Dim DefaultValue = Settings.GetDefault(Key)
-            'If DefaultValue = NewValue Then
-            '    Log($"[Setting] 尝试显示设置 {Key}，但没有找到设置值 {NewValue} 的对应项，这可能是因为程序版本太老了", LogLevel.Hint)
-            'Else
-            '    Log($"[Setting] 尝试显示设置 {Key}，但没有找到设置值 {NewValue} 的对应项，已重置该设置", LogLevel.Debug)
-            '    Settings.Reset(Key)
-            '    RefreshSetting(DefaultValue)
-            'End If
         End If
     End Sub
 
     Private Function GetCurrentSetting() As String Implements ISettingControl.GetCurrentSetting
         If SelectedItem Is Nothing Then Return Nothing
         If TypeOf SelectedItem Is DependencyObject Then
-            Return Val(If(SettingService.GetValue(SelectedItem), SelectedIndex))
+            Return If(SettingService.GetValue(SelectedItem), SelectedIndex)
         Else
             Return SelectedIndex
         End If

@@ -35,7 +35,7 @@
             Next
 
         Catch ex As Exception
-            Log(ex, "选择弹窗初始化失败", LogLevel.Hint)
+            Log(ex, "选择弹窗初始化失败", NotifyLevel.AllUsers)
         End Try
     End Sub
 
@@ -56,7 +56,7 @@
             Log("[Control] 选择弹窗：" & LabTitle.Text)
 
         Catch ex As Exception
-            Log(ex, "选择弹窗加载失败", LogLevel.Hint)
+            Log(ex, "选择弹窗加载失败", NotifyLevel.AllUsers)
         End Try
     End Sub
     Private Sub Close()

@@ -20,7 +20,7 @@
             Data = Converter.Content
             Init()
         Catch ex As Exception
-            Log(ex, "登录弹窗初始化失败", LogLevel.Hint)
+            Log(ex, "登录弹窗初始化失败", NotifyLevel.AllUsers)
         End Try
     End Sub
 
@@ -37,7 +37,7 @@
             '记录日志
             Log("[Control] 登录弹窗：" & LabTitle.Text & vbCrLf & LabCaption.Text)
         Catch ex As Exception
-            Log(ex, "登录弹窗加载失败", LogLevel.Hint)
+            Log(ex, "登录弹窗加载失败", NotifyLevel.AllUsers)
         End Try
     End Sub
     Private Sub Close()

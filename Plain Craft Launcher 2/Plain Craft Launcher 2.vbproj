@@ -30,6 +30,7 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -38,7 +39,7 @@
     <DefineDebug>false</DefineDebug>
     <DefineTrace>false</DefineTrace>
     <IncrementalBuild>true</IncrementalBuild>
-    <OutputPath>.\bin\</OutputPath>
+    <OutputPath>bin\</OutputPath>
     <DocumentationFile>Plain Craft Launcher 2.xml</DocumentationFile>
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036,42314</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
@@ -46,8 +47,9 @@
     <Optimize>false</Optimize>
     <WarningLevel>1</WarningLevel>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <DefineConstants>SNAPSHOT</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Snapshot|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
@@ -55,13 +57,13 @@
     <DefineTrace>false</DefineTrace>
     <IncrementalBuild>false</IncrementalBuild>
     <Optimize>true</Optimize>
-    <OutputPath>.\bin\</OutputPath>
+    <OutputPath>bin\</OutputPath>
     <DocumentationFile>Plain Craft Launcher 2.xml</DocumentationFile>
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036,42314</NoWarn>
     <Prefer32Bit>false</Prefer32Bit>
     <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
     <WarningLevel>1</WarningLevel>
-    <DefineConstants>RELEASE</DefineConstants>
+    <DefineConstants>SNAPSHOT</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <OptionExplicit>On</OptionExplicit>
@@ -99,26 +101,15 @@
   <PropertyGroup>
     <SignManifests>false</SignManifests>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Snapshot|AnyCPU'">
-    <OutputPath>.\bin\</OutputPath>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\</OutputPath>
     <DocumentationFile>Plain Craft Launcher 2.xml</DocumentationFile>
     <Optimize>true</Optimize>
     <WarningLevel>1</WarningLevel>
     <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036,42314</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
-    <DefineConstants>SNAPSHOT</DefineConstants>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'BETA|AnyCPU'">
-    <OutputPath>.\bin\</OutputPath>
-    <DocumentationFile>Plain Craft Launcher 2.xml</DocumentationFile>
-    <Optimize>true</Optimize>
-    <WarningLevel>1</WarningLevel>
-    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036,42314</NoWarn>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
-    <DefineConstants>BETA</DefineConstants>
+    <DefineConstants>RELEASE</DefineConstants>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
@@ -127,17 +118,6 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>
     </AssemblyOriginatorKeyFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseUpdate|AnyCPU'">
-    <OutputPath>.\bin\</OutputPath>
-    <DefineConstants>RELEASE,BY_UPDATE</DefineConstants>
-    <DocumentationFile>Plain Craft Launcher 2.xml</DocumentationFile>
-    <Optimize>true</Optimize>
-    <WarningLevel>1</WarningLevel>
-    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036,42314</NoWarn>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="CacheCow.Client, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
@@ -193,6 +173,7 @@
     <Reference Include="System.ValueTuple, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Resources\System.ValueTuple.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
@@ -229,11 +210,21 @@
 
 
     <Compile Include="Controls\MyVirtualizingElement.vb" />
-    <Compile Include="Modules\Minecraft\ModComp.vb" />
+    <Compile Include="Modules\Constants.vb" />
+    <Compile Include="Modules\Resource\ResourceFile.vb" />
+    <Compile Include="Modules\Resource\ResourceProject.vb" />
+    <Compile Include="Modules\Resource\ResourceVersion.vb" />
+    <Compile Include="Modules\Resource\WikiEntry.vb" />
+    <Compile Include="Modules\Resource\ResourceSearcher.vb" />
     <Compile Include="Modules\Minecraft\ModJava.vb" />
-    <Compile Include="Modules\Minecraft\ModMod.vb" />
+    <Compile Include="Modules\Resource\ResourceFileLoader.vb" />
     <Compile Include="Modules\Minecraft\ModModpack.vb" />
     <Compile Include="Modules\ThirdParty\DragHelper.vb" />
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Pages\PageInstance\MyLocalModItem.xaml.vb">
       <DependentUpon>MyLocalModItem.xaml</DependentUpon>
     </Compile>
@@ -267,32 +258,32 @@
     <Compile Include="Modules\ModDevelop.vb" />
     <Compile Include="Modules\Minecraft\ModWatcher.vb" />
     <Compile Include="Modules\ModSecret.vb" />
-    <Compile Include="Pages\PageDownload\Comp\PageComp.xaml.vb">
-      <DependentUpon>PageComp.xaml</DependentUpon>
+    <Compile Include="Pages\PageDownload\Resource\PageResource.xaml.vb">
+      <DependentUpon>PageResource.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageDownload\Comp\PageDownloadDataPack.xaml.vb">
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadDataPack.xaml.vb">
       <DependentUpon>PageDownloadDataPack.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageDownload\Comp\PageDownloadPack.xaml.vb">
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadPack.xaml.vb">
       <DependentUpon>PageDownloadPack.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageDownload\Comp\PageDownloadShader.xaml.vb">
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadShader.xaml.vb">
       <DependentUpon>PageDownloadShader.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageDownload\Comp\PageDownloadResourcePack.xaml.vb">
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadResourcePack.xaml.vb">
       <DependentUpon>PageDownloadResourcePack.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageDownload\ModDownloadLib.vb" />
-    <Compile Include="Pages\PageDownload\Comp\MyCompItem.xaml.vb">
-      <DependentUpon>MyCompItem.xaml</DependentUpon>
+    <Compile Include="Pages\PageDownload\Resource\MyResourceItem.xaml.vb">
+      <DependentUpon>MyResourceItem.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageDownload\Comp\PageDownloadMod.xaml.vb">
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadMod.xaml.vb">
       <DependentUpon>PageDownloadMod.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageDownload\PageDownloadInstall.xaml.vb">
       <DependentUpon>PageDownloadInstall.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\PageDownload\Comp\PageDownloadCompDetail.xaml.vb">
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadCompDetail.xaml.vb">
       <DependentUpon>PageDownloadCompDetail.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\PageLaunch\MyMsgLogin.xaml.vb">
@@ -509,31 +500,31 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Pages\PageDownload\Comp\MyCompItem.xaml">
+    <Page Include="Pages\PageDownload\Resource\MyResourceItem.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Pages\PageDownload\Comp\PageComp.xaml">
+    <Page Include="Pages\PageDownload\Resource\PageResource.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageDownload\Comp\PageDownloadDataPack.xaml">
+    <Page Include="Pages\PageDownload\Resource\PageDownloadDataPack.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Pages\PageDownload\Comp\PageDownloadPack.xaml">
+    <Page Include="Pages\PageDownload\Resource\PageDownloadPack.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Pages\PageDownload\Comp\PageDownloadShader.xaml">
+    <Page Include="Pages\PageDownload\Resource\PageDownloadShader.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Pages\PageDownload\Comp\PageDownloadResourcePack.xaml">
+    <Page Include="Pages\PageDownload\Resource\PageDownloadResourcePack.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\PageDownload\Comp\PageDownloadMod.xaml">
+    <Page Include="Pages\PageDownload\Resource\PageDownloadMod.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -541,7 +532,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Pages\PageDownload\Comp\PageDownloadCompDetail.xaml">
+    <Page Include="Pages\PageDownload\Resource\PageDownloadCompDetail.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -684,11 +675,18 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Import Include="MeloongCore" />
+    <Import Include="MeloongCore.Extensions" />
+    <Import Include="MeloongCore.Wpf" />
+    <Import Include="MeloongCore.Wpf.Extensions" />
     <Import Include="Microsoft.VisualBasic" />
     <Import Include="Newtonsoft.Json.Linq" />
+    <Import Include="PCLCS" />
     <Import Include="System" />
+    <Import Include="System.Collections.Concurrent" />
     <Import Include="System.Collections.Generic" />
     <Import Include="System.IO" />
+    <Import Include="System.IO.Compression" />
     <Import Include="System.Linq" />
     <Import Include="System.Net" />
     <Import Include="System.Net.Http" />
@@ -702,7 +700,6 @@
     <Import Include="System.Windows.Data" />
     <Import Include="System.Windows.Documents" />
     <Import Include="System.Windows.Input" />
-    <Import Include="System.Windows.Shapes" />
     <Import Include="System.Windows.Media" />
     <Import Include="System.Windows.Media.Imaging" />
   </ItemGroup>
@@ -718,11 +715,6 @@
       <VBMyExtensionTemplateID>Microsoft.VisualBasic.WPF.MyExtension</VBMyExtensionTemplateID>
       <VBMyExtensionTemplateVersion>1.0.0.0</VBMyExtensionTemplateVersion>
     </Compile>
-    <Compile Include="My Project\Resources.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="My Project\Settings.Designer.vb">
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
@@ -730,9 +722,9 @@
     </Compile>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
     </EmbeddedResource>
     <None Include="My Project\app.manifest" />
     <None Include="My Project\Settings.settings">
@@ -848,9 +840,9 @@
     <None Include="Resources\transformer.jar" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\Icons\A.png" />
-    <Resource Include="Images\Icons\B.png" />
-    <Resource Include="Images\Icons\R.png" />
+    <Resource Include="Images\ReleaseTypes\Alpha.png" />
+    <Resource Include="Images\ReleaseTypes\Beta.png" />
+    <Resource Include="Images\ReleaseTypes\Release.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Icons\NoIcon.png" />
@@ -866,9 +858,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Heads\wiki.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Blocks\OptiFabric.png" />
@@ -887,13 +876,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Icons\Disabled.png" />
-    <Resource Include="Images\Icons\Unavailable.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Heads\MCBBS.png" />
-  </ItemGroup>
-  <ItemGroup>
-
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Blocks\NeoForge.png" />
@@ -925,6 +910,38 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\lwjgl-unsafe-agent.jar" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MeloongCore\Shared\MeloongCore.csproj">
+      <Project>{d22bbf3c-2177-0208-4e29-8466aa41ac6f}</Project>
+      <Name>MeloongCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MeloongCore\Wpf\MeloongCoreWpf.csproj">
+      <Project>{2dffe2a0-1101-816b-d240-f644b2d74a68}</Project>
+      <Name>MeloongCore.Wpf</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PCLCS\PCLCS.csproj">
+      <Project>{32de4aaf-f4d6-42c5-9604-19236de96c69}</Project>
+      <Name>PCLCS</Name>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\PCLCS\bin\PCLCS.dll">
+      <LogicalName>PCLCS.dll</LogicalName>
+      <Link>Resources\PCLCS.dll</Link>
+    </None>
+    <None Include="..\PCLCS\bin\MeloongCore.dll">
+      <LogicalName>MeloongCore.dll</LogicalName>
+      <Link>Resources\MeloongCore.dll</Link>
+    </None>
+    <None Include="..\PCLCS\bin\MeloongCore.Wpf.dll">
+      <LogicalName>MeloongCore.Wpf.dll</LogicalName>
+      <Link>Resources\MeloongCore.Wpf.dll</Link>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

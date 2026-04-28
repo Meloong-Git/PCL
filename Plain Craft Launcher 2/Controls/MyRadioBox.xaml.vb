@@ -1,4 +1,5 @@
 ﻿Imports System.Windows.Markup
+Imports System.Windows.Shapes
 
 <ContentProperty("Inlines")>
 Public Class MyRadioBox
@@ -99,7 +100,7 @@ Public Class MyRadioBox
             End If
 
         Catch ex As Exception
-            Log(ex, "单选框勾选改变错误", LogLevel.Hint)
+            Log(ex, "单选框勾选改变错误", NotifyLevel.AllUsers)
         End Try
     End Sub
     Private Sub SyncUI()

@@ -99,7 +99,7 @@ Namespace Controls.Behaviors
                 Dim pasteText = Forms.Clipboard.GetText()
 
                 '将换行符替换为空格（#7825）
-                If Not tb.AcceptsReturn Then pasteText = pasteText.Replace(vbCrLf, " ").Replace(vbCr, " ").Replace(vbLf, " ")
+                If Not tb.AcceptsReturn Then pasteText = pasteText.ReplaceLineEndings(" ", mergeMultiple:=True)
 
                 Dim start = tb.SelectionStart
 

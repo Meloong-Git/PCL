@@ -75,7 +75,7 @@
                     Dim IndexFile = DlClientAssetIndexGet(Instance)
                     If IndexFile Is Nothing Then
                         Task.Output = New List(Of NetFile)
-                        Log("[Download] 未找到版本 " & Instance.Name & " 的合适的资源索引下载地址，游戏 assets 可能缺失", LogLevel.Debug)
+                        Log("[Download] 未找到版本 " & Instance.Name & " 的合适的资源索引下载地址，游戏 assets 可能缺失", NotifyLevel.DebugModeOnly)
                     ElseIf AssetsIndexBehaviour <> AssetsIndexExistsBehaviour.AlwaysDownload AndAlso IndexFile.Check.Check(IndexFile.LocalPath) Is Nothing Then
                         Task.Output = New List(Of NetFile)
                     Else
@@ -96,7 +96,7 @@
                 Sub(Task As LoaderTask(Of String, List(Of NetFile)))
                     Dim BackAssetsFile As NetFile = DlClientAssetIndexGet(Instance)
                     If BackAssetsFile Is Nothing Then
-                        Log("[Download] 未找到版本 " & Instance.Name & " 的合适的资源索引下载地址，游戏 assets 可能缺失", LogLevel.Debug)
+                        Log("[Download] 未找到版本 " & Instance.Name & " 的合适的资源索引下载地址，游戏 assets 可能缺失", NotifyLevel.DebugModeOnly)
                         Task.Interrupt()
                         Throw New ThreadInterruptedException
                     End If
@@ -313,7 +313,7 @@
             For Each Version As JObject In DlClientListLoader.Output.Value("versions")
                 If Version("id") = Id Then Return Version("url").ToString
             Next
-            Log($"未发现版本 {Id} 的 json 下载地址，版本列表返回为：{vbCrLf}{DlClientListLoader.Output.Value.ToString}", LogLevel.Debug)
+            Log($"未发现版本 {Id} 的 json 下载地址，版本列表返回为：{vbCrLf}{DlClientListLoader.Output.Value.ToString}", NotifyLevel.DebugModeOnly)
             Return Nothing
         Catch ex As Exception
             Log(ex, $"获取版本 {Id} 的 json 下载地址失败")
@@ -426,9 +426,9 @@
                 Dim Entry As New DlOptiFineListEntry With {
                     .DisplayName = Name(i).Replace("HD U ", "").Replace(".0 ", " "),
                     .ReleaseTime = {ReleaseTime(i).Split(".")(2), ReleaseTime(i).Split(".")(1), ReleaseTime(i).Split(".")(0)}.Join("/"c),
-                    .IsPreview = Name(i).ContainsF("pre", True),
+                    .IsPreview = Name(i).ContainsIgnoreCase("pre"),
                     .Inherit = Name(i).ToString.Split(" ")(0),
-                    .FileName = If(Name(i).ContainsF("pre", True), "preview_", "") & "OptiFine_" & Name(i).Replace(" ", "_") & ".jar",
+                    .FileName = If(Name(i).ContainsIgnoreCase("pre"), "preview_", "") & "OptiFine_" & Name(i).Replace(" ", "_") & ".jar",
                     .RequiredForgeVersion = Forge(i).Replace("Forge ", "").Replace("#", "")}
                 If Entry.RequiredForgeVersion.Contains("N/A") Then Entry.RequiredForgeVersion = Nothing
                 Entry.InstanceName = Entry.Inherit & "-OptiFine_" & Name(i).ToString.Replace(" ", "_").Replace(Entry.Inherit & "_", "")
@@ -452,7 +452,7 @@
                 Dim Entry As New DlOptiFineListEntry With {
                     .DisplayName = (Token("mcversion").ToString & Token("type").ToString.Replace("HD_U", "").Replace("_", " ") & " " & Token("patch").ToString).Replace(".0 ", " "),
                     .ReleaseTime = "",
-                    .IsPreview = Token("patch").ToString.ContainsF("pre", True),
+                    .IsPreview = Token("patch").ToString.ContainsIgnoreCase("pre"),
                     .Inherit = Token("mcversion").ToString,
                     .FileName = Token("filename").ToString,
                     .RequiredForgeVersion = If(Token("forge"), "").ToString.Replace("Forge ", "").Replace("#", "")
@@ -679,7 +679,7 @@
         Dim Versions As New List(Of DlForgeVersionEntry)
         Try
             '分割版本信息
-            Dim VersionCodes = Mid(Result, 1, Result.LastIndexOfF("</table>")).Split("<td class=""download-version")
+            Dim VersionCodes = Result.Substring(0, Result.LastIndexOfF("</table>")).Split("<td class=""download-version")
             '获取所有版本信息
             For i = 1 To VersionCodes.Count - 1
                 Dim VersionCode = VersionCodes(i)
@@ -720,7 +720,7 @@
                         Continue For
                     End If
                     '添加进列表
-                    Versions.Add(New DlForgeVersionEntry(Name, Branch, Inherit) With {.Category = Category, .IsRecommended = IsRecommended, .Hash = MD5.Trim(vbCr, vbLf), .ReleaseTime = ReleaseTime})
+                    Versions.Add(New DlForgeVersionEntry(Name, Branch, Inherit) With {.Category = Category, .IsRecommended = IsRecommended, .Hash = MD5.ReplaceLineEndings(""), .ReleaseTime = ReleaseTime})
                 Catch ex As Exception
                     Throw New Exception("Forge 官方源版本信息提取失败（" & VersionCode & "）", ex)
                 End Try
@@ -846,7 +846,7 @@
         Public Sub New(ApiName As String)
             IsNeoForge = True
             Me.ApiName = ApiName
-            IsBeta = ApiName.ContainsF("beta", True) OrElse ApiName.ContainsF("alpha", True)
+            IsBeta = ApiName.ContainsIgnoreCase("beta") OrElse ApiName.ContainsIgnoreCase("alpha")
             If ApiName.Contains("1.20.1") Then '1.20.1-47.1.99
                 VersionName = ApiName.Replace("1.20.1-", "")
                 Version = New Version("19." & VersionName)
@@ -1151,14 +1151,14 @@
     ''' <summary>
     ''' Fabric API 列表，官方源。
     ''' </summary>
-    Public DlFabricApiLoader As New LoaderTask(Of Integer, List(Of CompFile))("Fabric API List Loader",
-        Sub(Task As LoaderTask(Of Integer, List(Of CompFile))) Task.Output = CompFilesGet("fabric-api", False))
+    Public DlFabricApiLoader As New LoaderTask(Of Integer, List(Of ResourceVersion))("Fabric API List Loader",
+        Sub(Task As LoaderTask(Of Integer, List(Of ResourceVersion))) Task.Output = ResourceVersion.FromProjectId("fabric-api", ResourcePlatforms.Modrinth, LoadDependencies:=False))
 
     ''' <summary>
     ''' OptiFabric 列表，官方源。
     ''' </summary>
-    Public DlOptiFabricLoader As New LoaderTask(Of Integer, List(Of CompFile))("OptiFabric List Loader",
-        Sub(Task As LoaderTask(Of Integer, List(Of CompFile))) Task.Output = CompFilesGet("322385", True))
+    Public DlOptiFabricLoader As New LoaderTask(Of Integer, List(Of ResourceVersion))("OptiFabric List Loader",
+        Sub(Task As LoaderTask(Of Integer, List(Of ResourceVersion))) Task.Output = ResourceVersion.FromProjectId("322385", ResourcePlatforms.CurseForge, LoadDependencies:=False))
 
 #End Region
 

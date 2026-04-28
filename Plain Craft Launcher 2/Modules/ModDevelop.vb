@@ -1,8 +1,6 @@
-﻿Public Module ModDevelop
+﻿Public Class ModDevelop
 
-#If DEBUG Then
-    Public Sub Start()
+    Public Shared Sub Start()
     End Sub
-#End If
 
-End Module
+End Class

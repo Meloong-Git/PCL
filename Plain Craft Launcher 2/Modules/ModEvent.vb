@@ -186,7 +186,7 @@ Public Class CustomEvent
                         MyMsgBox("EventData 必须为一个网址。" & vbCrLf & "如果想要启动程序，请将 EventType 改为 打开文件。", "事件执行失败")
                         Return
                     End If
-                    Hint("正在开启中，请稍候：" & Arg)
+                    Hint("正在开启，请稍候：" & Arg)
                     RunInThread(Sub() OpenWebsite(Arg))
 
                 Case EventType.打开文件, EventType.打开帮助, EventType.执行命令
@@ -210,7 +210,7 @@ Public Class CustomEvent
                                 StartProcess(Info)
                             End If
                         Catch ex As Exception
-                            Log(ex, "执行打开类自定义事件失败", LogLevel.Msgbox)
+                            Log(ex, "执行打开类自定义事件失败", NotifyLevel.MsgBox)
                         End Try
                     End Sub)
 
@@ -267,12 +267,12 @@ Public Class CustomEvent
                     MyMsgBox(Args(1).Replace("\n", vbCrLf), Args(0).Replace("\n", vbCrLf), If(Args.Length > 2, Args(2), "确定"))
 
                 Case EventType.弹出提示
-                    Hint(Args(0).Replace("\n", vbCrLf), If(Args.Length = 1, HintType.Blue, Args(1).ParseToEnum(Of HintType)))
+                    Hint(Args(0).Replace("\n", vbCrLf), If(Args.Length = 1, HintType.Blue, Args(1).ToEnum(Of HintType)))
 
                 Case EventType.切换页面
                     RunInUi(Sub() FrmMain.PageChange(
-                                Args(0).ParseToEnum(Of FormMain.PageType),
-                                If(Args.Length = 1, FormMain.PageSubType.Default, Args(1).ParseToEnum(Of FormMain.PageSubType))))
+                                Args(0).ToEnum(Of FormMain.PageType),
+                                If(Args.Length = 1, FormMain.PageSubType.Default, Args(1).ToEnum(Of FormMain.PageSubType))))
 
                 Case EventType.导入整合包, EventType.安装整合包
                     RunInUi(Sub() ModpackInstall())
@@ -328,7 +328,7 @@ Public Class CustomEvent
                     MyMsgBox("未知的事件类型：" & Type & vbCrLf & "请检查事件类型填写是否正确，或者 PCL 是否为最新版本。", "事件执行失败")
             End Select
         Catch ex As Exception
-            Log(ex, $"事件执行失败（{Type}, {Arg}）", LogLevel.Msgbox)
+            Log(ex, $"事件执行失败（{Type}, {Arg}）", NotifyLevel.MsgBox)
         End Try
     End Sub
 
@@ -372,20 +372,20 @@ Public Class CustomEvent
         RelativeUrl = RelativeUrl.Replace("/", "\").Lower.TrimStart("\")
 
         '确认实际路径
-        Dim Location As String, WorkingDir As String = Path & "PCL"
+        Dim Location As String, WorkingDir As String = PathExeFolder & "PCL"
         HelpTryExtract()
         If RelativeUrl.Contains(":\") Then
             '绝对路径
             Location = RelativeUrl
             Log("[Control] 自定义事件中由绝对路径" & Type & "：" & Location)
-        ElseIf File.Exists(Path & "PCL\" & RelativeUrl) Then
+        ElseIf File.Exists(PathExeFolder & "PCL\" & RelativeUrl) Then
             '相对 PCL 文件夹的路径
-            Location = Path & "PCL\" & RelativeUrl
+            Location = PathExeFolder & "PCL\" & RelativeUrl
             Log("[Control] 自定义事件中由相对 PCL 文件夹的路径" & Type & "：" & Location)
-        ElseIf File.Exists(Path & "PCL\Help\" & RelativeUrl) Then
+        ElseIf File.Exists(PathExeFolder & "PCL\Help\" & RelativeUrl) Then
             '相对 PCL 本地帮助文件夹的路径
-            Location = Path & "PCL\Help\" & RelativeUrl
-            WorkingDir = Path & "PCL\Help\"
+            Location = PathExeFolder & "PCL\Help\" & RelativeUrl
+            WorkingDir = PathExeFolder & "PCL\Help\"
             Log("[Control] 自定义事件中由相对 PCL 本地帮助文件夹的路径" & Type & "：" & Location)
         ElseIf Type = EventType.打开帮助 AndAlso File.Exists(PathTemp & "Help\" & RelativeUrl) Then
             '相对 PCL 自带帮助文件夹的路径

@@ -13,12 +13,7 @@ Public Class MyLocalModItem
         End Get
         Set(value As String)
             Dim RawValue = value
-            Select Case Entry.State
-                Case McMod.McModState.Fine
-                    LabTitle.TextDecorations = Nothing
-                Case McMod.McModState.Disabled
-                    LabTitle.TextDecorations = TextDecorations.Strikethrough
-            End Select
+            LabTitle.TextDecorations = If(Entry.IsEnabled, Nothing, TextDecorations.Strikethrough)
             If LabTitle.Text = value Then Return
             LabTitle.Text = value
             _Title = RawValue
@@ -66,11 +61,11 @@ Public Class MyLocalModItem
     End Property
 
     '相关联的 Mod
-    Public Property Entry As McMod
+    Public Property Entry As ResourceFile
         Get
             Return Tag
         End Get
-        Set(value As McMod)
+        Set(value As ResourceFile)
             Tag = value
         End Set
     End Property
@@ -134,8 +129,8 @@ Public Class MyLocalModItem
         '计算滑动范围
         Dim Elements = CType(Parent, StackPanel).Children
         Dim Index As Integer = Elements.IndexOf(Me)
-        SwipeStart = MathClamp(Math.Min(SwipeStart, Index), 0, Elements.Count - 1)
-        SwipeEnd = MathClamp(Math.Max(SwipeEnd, Index), 0, Elements.Count - 1)
+        SwipeStart = Math.Min(SwipeStart, Index).Clamp(0, Elements.Count - 1)
+        SwipeEnd = Math.Max(SwipeEnd, Index).Clamp(0, Elements.Count - 1)
         '勾选所有范围中的项
         If SwipeStart = SwipeEnd Then Return
         For i = SwipeStart To SwipeEnd
@@ -183,7 +178,7 @@ Public Class MyLocalModItem
                         Anim.Add(AaOpacity(RectCheck, 1 - RectCheck.Opacity, 30))
                         RectCheck.VerticalAlignment = VerticalAlignment.Center
                         RectCheck.Margin = New Thickness(-3, 0, 0, 0)
-                        Anim.Add(AaColor(LabTitle, TextBlock.ForegroundProperty, If(Entry.State = McMod.McModState.Fine, "ColorBrush2", "ColorBrush5"), 200))
+                        Anim.Add(AaColor(LabTitle, TextBlock.ForegroundProperty, If(Entry.IsEnabled, "ColorBrush2", "ColorBrush5"), 200))
                     Else
                         '由有变无
                         Anim.Add(AaHeight(RectCheck, -RectCheck.ActualHeight, 120,, New AniEaseInFluent(AniEasePower.Weak)))
@@ -199,11 +194,11 @@ Public Class MyLocalModItem
                     If Checked Then
                         RectCheck.Height = 32
                         RectCheck.Opacity = 1
-                        LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.State = McMod.McModState.Fine, "ColorBrush2", "ColorBrush5"))
+                        LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.IsEnabled, "ColorBrush2", "ColorBrush5"))
                     Else
                         RectCheck.Height = 0
                         RectCheck.Opacity = 0
-                        LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.State = McMod.McModState.Fine, "ColorBrush1", "ColorBrushGray4"))
+                        LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.IsEnabled, "ColorBrush1", "ColorBrushGray4"))
                     End If
                     AniStop("MyLocalModItem Checked " & Uuid)
                 End If
@@ -300,8 +295,8 @@ Public Class MyLocalModItem
 #End Region
 
     Private Function GetUpdateCompareDescription() As String
-        Dim CurrentName = If(Entry.CompFile.Version, Entry.CompFile.DisplayName).Replace(".jar", "")
-        Dim NewestName = If(Entry.UpdateFile.Version, Entry.UpdateFile.DisplayName).Replace(".jar", "")
+        Dim CurrentName = If(Entry.ProjectVersion.Version, Entry.ProjectVersion.Display).Replace(".jar", "")
+        Dim NewestName = If(Entry.UpdateFile.Version, Entry.UpdateFile.Display).Replace(".jar", "")
         '简化名称对比
         Dim CurrentSegs = CurrentName.Split("-_+ ".ToCharArray).ToList()
         Dim NewestSegs = NewestName.Split("-_+ ".ToCharArray).ToList()
@@ -317,7 +312,7 @@ Public Class MyLocalModItem
             NewestName = NewestSegs.Join("-")
             Entry._Version = CurrentName '使用网络信息作为显示的版本号
         End If
-        Return $"当前版本：{CurrentName}（{GetTimeSpanString(Entry.CompFile.ReleaseDate - Date.Now, False)}）{vbCrLf}最新版本：{NewestName}（{GetTimeSpanString(Entry.UpdateFile.ReleaseDate - Date.Now, False)}）"
+        Return $"当前版本：{CurrentName}（{GetTimeSpanString(Entry.ProjectVersion.ReleaseDate - Date.Now, False)}）{vbCrLf}最新版本：{NewestName}（{GetTimeSpanString(Entry.UpdateFile.ReleaseDate - Date.Now, False)}）"
     End Function
 
     '懒加载
@@ -331,21 +326,16 @@ Public Class MyLocalModItem
         Refresh()
     End Sub
     Public Sub Refresh()
-        If Not HasEnteredViewport Then Return '避免在未显示时因为 Comp 更新而加载内容
+        If Not HasEnteredViewport Then Return '避免在未显示时因为资源更新而加载内容
         '更新
-        If Entry.CanUpdate Then
+        If Entry.HasUpdate Then
             BtnUpdate.Visibility = Visibility.Visible
             BtnUpdate.ToolTip = $"{GetUpdateCompareDescription()}{vbCrLf}点击以更新，右键查看更新日志。"
         Else
             BtnUpdate.Visibility = Visibility.Collapsed
         End If
         '标题与描述
-        Dim DescFileName As String
-        If Entry.State = McMod.McModState.Fine OrElse Entry.State = McMod.McModState.Disabled Then
-            DescFileName = IO.Path.GetFileNameWithoutExtension(Entry.Path)
-        Else
-            DescFileName = GetFileNameFromPath(Entry.Path)
-        End If
+        Dim DescFileName As String = Path.GetFileNameWithoutExtension(Entry.File.FullName)
         Dim NewDescription As String
         If Settings.Get("ToolModLocalNameStyle") = 1 Then
             '标题显示文件名，详情显示译名
@@ -353,10 +343,10 @@ Public Class MyLocalModItem
             Title = DescFileName
             SubTitle = ""
             '描述
-            If Entry.Comp Is Nothing Then
-                NewDescription = Entry.DisplayName
+            If Entry.Project Is Nothing Then
+                NewDescription = Entry.Display
             Else
-                Dim Titles = Entry.Comp.GetControlTitle(False)
+                Dim Titles = Entry.Project.GetControlTitle(False)
                 NewDescription = Titles.Title & Titles.SubTitle
             End If
             NewDescription = NewDescription.Replace("  |  ", " / ")
@@ -364,36 +354,36 @@ Public Class MyLocalModItem
         Else
             '标题显示译名，详情显示文件名
             '标题
-            If Entry.Comp Is Nothing Then
-                Title = Entry.DisplayName
+            If Entry.Project Is Nothing Then
+                Title = Entry.Display
                 SubTitle = If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
             Else
-                Dim Titles = Entry.Comp.GetControlTitle(False)
+                Dim Titles = Entry.Project.GetControlTitle(False)
                 Title = Titles.Title
                 SubTitle = Titles.SubTitle & If(Entry.Version Is Nothing, "", "  |  " & Entry.Version)
             End If
             '描述
             NewDescription = DescFileName
         End If
-        If Entry.Comp IsNot Nothing Then
-            NewDescription += ": " & Entry.Comp.Description.Replace(vbCr, "").Replace(vbLf, "")
+        If Entry.Project IsNot Nothing Then
+            NewDescription += ": " & Entry.Project.Description.ReplaceLineEndings("")
         ElseIf Entry.Description IsNot Nothing Then
-            NewDescription += ": " & Entry.Description.Replace(vbCr, "").Replace(vbLf, "")
+            NewDescription += ": " & Entry.Description.ReplaceLineEndings("")
         End If
         Description = NewDescription
         If Checked Then
-            LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.State = McMod.McModState.Fine, "ColorBrush2", "ColorBrush5"))
+            LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.IsEnabled, "ColorBrush2", "ColorBrush5"))
         Else
-            LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.State = McMod.McModState.Fine, "ColorBrush1", "ColorBrushGray4"))
+            LabTitle.SetResourceReference(TextBlock.ForegroundProperty, If(Entry.IsEnabled, "ColorBrush1", "ColorBrushGray4"))
         End If
         '主 Logo
-        If Entry.Comp IsNot Nothing Then
-            Entry.Comp.ApplyLogoToMyImage(PathLogo)
+        If Entry.Project IsNot Nothing Then
+            Entry.Project.ApplyLogoToMyImage(PathLogo)
         Else
             PathLogo.Source = PathImage & "Icons/NoIcon.png"
         End If
         '图标右下角的 Logo
-        If Entry.State = McMod.McModState.Fine Then
+        If Entry.IsEnabled Then
             If ImgState IsNot Nothing Then
                 Children.Remove(ImgState)
                 ImgState = Nothing
@@ -412,10 +402,10 @@ Public Class MyLocalModItem
                 '       HorizontalAlignment="Right" VerticalAlignment="Bottom"
                 '       Source="/Images/Icons/Unavailable.png" />
             End If
-            ImgState.Source = New MyBitmap(PathImage & $"Icons/{Entry.State}.png")
+            ImgState.Source = New MyBitmap(PathImage & $"Icons/Disabled.png")
         End If
         '标签
-        If Entry.Comp IsNot Nothing Then Tags = Entry.Comp.Tags
+        If Entry.Project IsNot Nothing Then Tags = Entry.Project.Tags
     End Sub
 
     Public Sub RefreshColor(sender As Object, e As EventArgs) Handles Me.MouseEnter, Me.MouseLeave, Me.MouseLeftButtonDown, Me.MouseLeftButtonUp, Me.Changed
@@ -486,7 +476,7 @@ Public Class MyLocalModItem
 
     '触发更新
     Private Sub BtnUpdate_Click(sender As Object, e As EventArgs) Handles BtnUpdate.Click
-        Select Case MyMsgBox($"是否要更新 {Entry.DisplayName}？{vbCrLf}{vbCrLf}{GetUpdateCompareDescription()}", "Mod 更新确认", "更新", "查看更新日志", "取消")
+        Select Case MyMsgBox($"是否要更新 {Entry.Display}？{vbCrLf}{vbCrLf}{GetUpdateCompareDescription()}", "Mod 更新确认", "更新", "查看更新日志", "取消")
             Case 1 '更新
                 FrmInstanceMod.UpdateMods({Entry})
             Case 2 '查看更新日志

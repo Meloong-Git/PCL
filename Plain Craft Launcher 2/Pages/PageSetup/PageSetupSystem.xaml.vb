@@ -1,20 +1,20 @@
 ﻿Class PageSetupSystem
 
-    Private Shadows IsLoaded As Boolean = False
 
     Private Sub PageSetupSystem_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
 
         '重复加载部分
         PanBack.ScrollToHome()
 
-#If BETA Then
-        PanDonate.Visibility = Visibility.Collapsed
-#Else
-        PanDonate.Visibility = Visibility.Visible
-        ItemSystemUpdateDownload.Content = "在有新版本时自动下载（更新快照版可能需要更新密钥）"
-#End If
+        If BuildType = BuildTypes.Release Then
+            PanDonate.Visibility = Visibility.Collapsed
+        Else
+            PanDonate.Visibility = Visibility.Visible
+            ItemSystemUpdateDownload.Content = "在有新版本时自动下载（更新快照版前需要先输入土豆码）"
+        End If
 
         '非重复加载部分
+        Static IsLoaded As Boolean = False
         If IsLoaded Then Return
         IsLoaded = True
 
@@ -25,86 +25,17 @@
 
     End Sub
     Public Sub Reload()
-
-        '下载
-        SliderDownloadThread.Value = Settings.Get("ToolDownloadThread")
-        SliderDownloadSpeed.Value = Settings.Get("ToolDownloadSpeed")
-        ComboDownloadSource.SelectedIndex = Settings.Get("ToolDownloadSource")
-        ComboDownloadVersion.SelectedIndex = Settings.Get("ToolDownloadVersion")
-        CheckDownloadCert.Checked = Settings.Get("ToolDownloadCert")
-
-        'Mod 与整合包
-        ComboDownloadTranslateV2.SelectedIndex = Settings.Get("ToolDownloadTranslateV2")
-        ComboDownloadMod.SelectedIndex = Settings.Get("ToolDownloadMod")
-        ComboModLocalNameStyle.SelectedIndex = Settings.Get("ToolModLocalNameStyle")
-        CheckDownloadIgnoreQuilt.Checked = Settings.Get("ToolDownloadIgnoreQuilt")
-
-        'Minecraft 更新提示
-        CheckUpdateRelease.Checked = Settings.Get("ToolUpdateRelease")
-        CheckUpdateSnapshot.Checked = Settings.Get("ToolUpdateSnapshot")
-
-        '辅助设置
-        CheckHelpChinese.Checked = Settings.Get("ToolHelpChinese")
-
-        '系统设置
-        ComboSystemUpdate.SelectedIndex = Settings.Get("SystemSystemUpdate")
-        ComboSystemActivity.SelectedIndex = Settings.Get("SystemSystemActivity")
-        TextSystemCache.Text = Settings.Get("SystemSystemCache")
-        CheckSystemTelemetry.Checked = Settings.Get("SystemSystemTelemetry")
-
-        '调试选项
-        CheckDebugMode.Checked = Settings.Get("SystemDebugMode")
-        SliderDebugAnim.Value = Settings.Get("SystemDebugAnim")
-        CheckDebugDelay.Checked = Settings.Get("SystemDebugDelay")
-        CheckDebugSkipCopy.Checked = Settings.Get("SystemDebugSkipCopy")
-
+        SettingService.RefreshSettings(Me)
     End Sub
-
-    '初始化
     Public Sub Reset()
         Try
-            Settings.Reset("ToolDownloadThread")
-            Settings.Reset("ToolDownloadSpeed")
-            Settings.Reset("ToolDownloadSource")
-            Settings.Reset("ToolDownloadVersion")
-            Settings.Reset("ToolDownloadTranslateV2")
-            Settings.Reset("ToolDownloadIgnoreQuilt")
-            Settings.Reset("ToolDownloadCert")
-            Settings.Reset("ToolDownloadMod")
-            Settings.Reset("ToolModLocalNameStyle")
-            Settings.Reset("ToolUpdateRelease")
-            Settings.Reset("ToolUpdateSnapshot")
-            Settings.Reset("ToolHelpChinese")
-            Settings.Reset("SystemDebugMode")
-            Settings.Reset("SystemDebugAnim")
-            Settings.Reset("SystemDebugDelay")
-            Settings.Reset("SystemDebugSkipCopy")
-            Settings.Reset("SystemSystemCache")
-            Settings.Reset("SystemSystemUpdate")
-            Settings.Reset("SystemSystemActivity")
-            Settings.Reset("SystemSystemTelemetry")
-
+            SettingService.ResetSettings(Me)
             Log("[Setup] 已初始化启动器页设置")
             Hint("已初始化启动器页设置！", HintType.Green, False)
         Catch ex As Exception
-            Log(ex, "初始化启动器页设置失败", LogLevel.Msgbox)
+            Log(ex, "初始化启动器页设置失败", NotifyLevel.MsgBox)
         End Try
-
         Reload()
-    End Sub
-
-    '将控件改变路由到设置改变
-    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckDebugMode.Change, CheckDebugDelay.Change, CheckDebugSkipCopy.Change, CheckUpdateRelease.Change, CheckUpdateSnapshot.Change, CheckHelpChinese.Change, CheckDownloadIgnoreQuilt.Change, CheckDownloadCert.Change, CheckSystemTelemetry.Change
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Checked)
-    End Sub
-    Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderDebugAnim.Change, SliderDownloadThread.Change, SliderDownloadSpeed.Change
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Value)
-    End Sub
-    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboDownloadVersion.SelectionChanged, ComboModLocalNameStyle.SelectionChanged, ComboDownloadTranslateV2.SelectionChanged, ComboSystemUpdate.SelectionChanged, ComboSystemActivity.SelectionChanged, ComboDownloadSource.SelectionChanged, ComboDownloadMod.SelectionChanged
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.SelectedIndex)
-    End Sub
-    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextSystemCache.ValidatedTextChanged
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Text)
     End Sub
 
     '滑动条
@@ -134,12 +65,12 @@
         End If
     End Sub
 
-    '识别码/解锁码替代入口
+    '识别码/土豆码替代入口
     Private Sub BtnSystemIdentify_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSystemIdentify.Click
         PageOtherAbout.CopyIdentify()
     End Sub
     Private Sub BtnSystemUnlock_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSystemUnlock.Click
-        DonateCodeInput()
+        InputPotatoCode(False)
     End Sub
 
     '调试模式
@@ -181,14 +112,9 @@
             Dim ServerContent As String = ReadFile(PathTemp & "Cache\Notice.cfg")
             If ServerContent.Split("|").Count < 3 Then Return Nothing
             '确认是否为最新
-#If BETA Then
-            Dim NewVersionCode As Integer = ServerContent.Split("|")(2)
-#Else
-            Dim NewVersionCode As Integer = ServerContent.Split("|")(1)
-#End If
-            Return NewVersionCode <= VersionCode
+            Return ServerContent.Split("|")(If(BuildType = BuildTypes.Release, 2, 1)) <= VersionCode
         Catch ex As Exception
-            Log(ex, "确认启动器更新失败", LogLevel.Feedback)
+            Log(ex, "确认启动器更新失败", NotifyLevel.MsgBoxAndFeedback)
             Return Nothing
         End Try
     End Function

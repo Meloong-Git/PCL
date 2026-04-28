@@ -105,7 +105,7 @@
                     Loop
                     WatcherLog("Minecraft 日志监控已退出")
                 Catch ex As Exception
-                    Log(ex, "Minecraft 日志监控主循环出错", LogLevel.Feedback)
+                    Log(ex, "Minecraft 日志监控主循环出错", NotifyLevel.MsgBoxAndFeedback)
                     State = MinecraftState.Ended
                 End Try
             End Sub, "Minecraft Watcher PID " & PID)
@@ -174,14 +174,14 @@
                     End If
                 End If
             Catch ex As Exception
-                Log(ex, "输出 Minecraft 日志失败", LogLevel.Feedback)
+                Log(ex, "输出 Minecraft 日志失败", NotifyLevel.MsgBoxAndFeedback)
             End Try
         End Sub
         Public LatestLog As New Queue(Of String)
         Private Sub GameLog(Text As String)
             '预处理
             If Text Is Nothing Then Return
-            Text = Text.Replace(vbCrLf, vbCr).Replace(vbLf, vbCr).Replace(vbCr, vbCrLf)
+            Text = Text.ReplaceLineEndings(vbCrLf)
             'If Text.Contains("�����") Then Hint("检测到错误的日志编码：" & Text)
             '加入预存储
             LatestLog.Enqueue(Text)
@@ -194,7 +194,7 @@
             If LogProgress < 2 AndAlso Text.Contains("Setting user:") Then
                 WatcherLog("日志 2/5：游戏用户已设置") '仅确保支持 Minecraft 1.7+
                 LogProgress = 2
-            ElseIf LogProgress < 3 AndAlso Text.ContainsF("lwjgl version", True) Then
+            ElseIf LogProgress < 3 AndAlso Text.ContainsIgnoreCase("lwjgl version") Then
                 WatcherLog("日志 3/5：LWJGL 版本已确认")
                 LogProgress = 3
             ElseIf LogProgress < 4 AndAlso (Text.Contains("OpenAL initialized") OrElse Text.Contains("Starting up SoundSystem")) Then
@@ -265,7 +265,7 @@
                     MinecraftWindow = TryGetMinecraftWindow()
                 Catch ex As ComponentModel.Win32Exception
                     '拒绝访问（#1062）
-                    Log(ex, "由于反作弊或安全软件拦截，PCL 无法操作游戏窗口", LogLevel.Hint)
+                    Log(ex, "由于反作弊或安全软件拦截，PCL 无法操作游戏窗口", NotifyLevel.AllUsers)
                     IsWindowFinished = True
                 End Try
                 If MinecraftWindow Is Nothing Then Return
@@ -297,7 +297,7 @@
                 End If
                 IsWindowAppeared = True
             Catch ex As Exception
-                Log(ex, "检查 Minecraft 窗口失败", LogLevel.Feedback)
+                Log(ex, "检查 Minecraft 窗口失败", NotifyLevel.MsgBoxAndFeedback)
             End Try
         End Sub
         ''' <summary>
@@ -361,9 +361,9 @@
                     Analyzer.Prepare()
                     Analyzer.Analyze()
                     Analyzer.Output(False, New List(Of String) From
-                        {Instance.PathVersion & Instance.Name & ".json", Path & "PCL\Log1.txt", Path & "PCL\LatestLaunch.bat"})
+                        {Instance.PathVersion & Instance.Name & ".json", PathExeFolder & "PCL\Log1.txt", PathExeFolder & "PCL\LatestLaunch.bat"})
                 Catch ex As Exception
-                    Log(ex, "崩溃分析失败", LogLevel.Feedback)
+                    Log(ex, "崩溃分析失败", NotifyLevel.MsgBoxAndFeedback)
                 End Try
             End Sub, "Crash Analyzer")
         End Sub
@@ -376,7 +376,7 @@
                 If Not GameProcess.HasExited Then GameProcess.Kill()
                 WatcherLog("已强制结束 Minecraft 进程")
             Catch ex As Exception
-                Log(ex, "强制结束 Minecraft 进程失败", LogLevel.Hint)
+                Log(ex, "强制结束 Minecraft 进程失败", NotifyLevel.AllUsers)
             End Try
         End Sub
 

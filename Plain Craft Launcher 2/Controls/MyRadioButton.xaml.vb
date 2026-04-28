@@ -104,7 +104,7 @@ Public Class MyRadioButton
             RaiseCustomEvent()
 
         Catch ex As Exception
-            Log(ex, "单选按钮勾选改变错误", LogLevel.Hint)
+            Log(ex, "单选按钮勾选改变错误", NotifyLevel.AllUsers)
         End Try
     End Sub
 

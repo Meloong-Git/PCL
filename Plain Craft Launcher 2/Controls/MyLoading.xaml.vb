@@ -79,7 +79,7 @@ Public Class MyLoading
                         Do While Ex.InnerException IsNot Nothing
                             Ex = Ex.InnerException
                         Loop
-                        LabText.Text = If(Ex.IsNetworkRelated(), "网络环境不佳，请稍后再试，或使用 VPN 改善网络环境", StrTrim(Ex.Message))
+                        LabText.Text = If(Ex.IsNetworkRelated(), "网络环境不佳，请稍后再试，或使用 VPN 改善网络环境", Ex.Message)
                     End If
                 Else
                     LabText.Text = TextError

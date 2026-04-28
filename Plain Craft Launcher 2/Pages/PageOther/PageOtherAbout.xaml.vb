@@ -10,11 +10,11 @@
         If IsLoaded Then Return
         IsLoaded = True
 
-        ItemAboutPcl.Info = ItemAboutPcl.Info.Replace("%VERSION%", VersionDisplayName).Replace("%VERSIONCODE%", VersionCode).Replace("%BRANCH%", VersionBranchCode)
-#If DEBUG Then
-        BtnDonateDonate.Visibility = Visibility.Collapsed
-        BtnDonateOutput.Visibility = Visibility.Visible
-#End If
+        ItemAboutPcl.Info = ItemAboutPcl.Info.Replace("%VERSION%", VersionDisplay).Replace("%VERSIONCODE%", VersionCode).Replace("%BRANCH%", CInt(BuildType))
+        If BuildType = BuildTypes.Debug Then
+            BtnDonateDonate.Visibility = Visibility.Collapsed
+            BtnDonateOutput.Visibility = Visibility.Visible
+        End If
 
     End Sub
 
@@ -22,13 +22,10 @@
         ClipboardSet(Identify)
     End Sub
     Private Sub BtnDonateCodeInput_Click() Handles BtnDonateInput.Click
-        DonateCodeInput()
+        InputPotatoCode(False)
     End Sub
-
-#If DEBUG Then
     Private Sub BtnDonateOutput_Click(sender As Object, e As EventArgs) Handles BtnDonateOutput.Click
-        DonateCodeGenerate()
+        GeneratePotatoCode()
     End Sub
-#End If
 
 End Class

@@ -45,17 +45,17 @@
             Else
                 '有任务，输出基本信息
                 Dim Tasks = LoaderTaskbar.Where(Function(l) l.Show).ToList() '筛选掉启动 MC 的任务（#6270）
-                Dim RawPercent As Double = If(Tasks.Any, MathClamp(Tasks.Select(Function(l) l.Progress).Average(), 0, 1), 1)
-                Dim PredictText As String = Math.Floor(RawPercent * 100) & "." & StrFill(Math.Floor((RawPercent * 100 - Math.Floor(RawPercent * 100)) * 100), "0", 2) & " %"
+                Dim RawPercent As Double = If(Tasks.Any, Tasks.Select(Function(l) l.Progress).Average().Clamp(0, 1), 1)
+                Dim PredictText As String = Math.Floor(RawPercent * 100) & "." & Math.Floor((RawPercent * 100 - Math.Floor(RawPercent * 100)) * 100).ToString.EnsureLength("0", 2) & " %"
                 LabProgress.Text = If(RawPercent > 0.999999, "100 %", PredictText)
-                LabSpeed.Text = GetString(NetManager.Speed) & "/s"
+                LabSpeed.Text = FormatFileSize(NetManager.Speed) & "/s"
                 LabFile.Text = If(NetManager.FileRemain < 0, "0*", NetManager.FileRemain)
                 LabThread.Text = NetTaskThreadCount & " / " & NetTaskThreadLimit
             End If
 #End Region
 
         Catch ex As Exception
-            Log(ex, "下载管理左栏监视出错", LogLevel.Feedback)
+            Log(ex, "下载管理左栏监视出错", NotifyLevel.MsgBoxAndFeedback)
         End Try
         If FrmSpeedRight Is Nothing OrElse FrmSpeedRight.PanMain Is Nothing Then Return
         Try
@@ -63,7 +63,7 @@
                 TaskRefresh(Loader)
             Next
         Catch ex As Exception
-            Log(ex, "下载管理右栏监视出错", LogLevel.Feedback)
+            Log(ex, "下载管理右栏监视出错", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Public Sub TaskRefresh(Loader As LoaderBase)
@@ -78,7 +78,7 @@
                 If Val(Card.Tag) = NewValue Then Return
                 Card.Tag = NewValue
                 If Card.Children.Count <= 3 Then
-                    Log("[Watcher] 元素不足的卡片：" & Loader.Name, LogLevel.Debug)
+                    Log("[Watcher] 元素不足的卡片：" & Loader.Name, NotifyLevel.DebugModeOnly)
                     Return
                 End If
                 Card = Card.Children(3)
@@ -98,15 +98,15 @@
                             End Sub
                             Card.Children.Add(Tb)
 #End Region
-                        Case LoadState.Finished
-#Region "完成，销毁卡片并返回"
+                        Case LoadState.Finished, LoadState.Interrupted
+#Region "完成或中断，销毁卡片并返回"
                             AniDispose(CType(Card.Parent, MyCard), True, AddressOf TryReturnToHome)
 #End Region
                         Case LoadState.Loading, LoadState.Waiting
 #Region "进度不同，更新卡片"
                             Try
                                 If Card.Children.Count < LoaderList.Count * 2 Then
-                                    Log($"[Watcher] 刷新下载管理卡片 {Loader.Name} 失败：卡片中仅有 {Card.Children.Count} 个子项，要求至少有 {LoaderList.Count * 2} 个子项", LogLevel.Debug)
+                                    Log($"[Watcher] 刷新下载管理卡片 {Loader.Name} 失败：卡片中仅有 {Card.Children.Count} 个子项，要求至少有 {LoaderList.Count * 2} 个子项", NotifyLevel.DebugModeOnly)
                                     Exit Try
                                 End If
                                 Dim Row As Integer = 0
@@ -133,19 +133,19 @@
                                     Row += 1
                                 Next
                             Catch ex As Exception
-                                Log(ex, $"刷新下载管理卡片 {Loader.Name} 失败", LogLevel.Feedback)
+                                Log(ex, $"刷新下载管理卡片 {Loader.Name} 失败", NotifyLevel.MsgBoxAndFeedback)
                             End Try
 #End Region
                     End Select
                 Catch ex As Exception
-                    Log(ex, "更新下载管理显示失败（" & Loader.State.ToString & "）", LogLevel.Feedback)
+                    Log(ex, "更新下载管理显示失败（" & Loader.State.ToString & "）", NotifyLevel.MsgBoxAndFeedback)
                 End Try
             ElseIf Not (Loader.State = LoadState.Interrupted OrElse Loader.State = LoadState.Finished) Then
                 Try
 #Region "没有卡片且未中断或完成，添加新的卡片"
                     Dim CardXAML As String = "
                         <local:MyCard xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"" xmlns:local=""clr-namespace:PCL;assembly=Plain Craft Launcher 2""
-                            Tag=""" & (Loader.Progress + Loader.State) & """ Title=""" & EscapeXML(Loader.Name) & """ Margin=""0,0,0,15"">
+                            Tag=""" & (Loader.Progress + Loader.State) & """ Title=""" & EscapeUtils.XmlEscape(Loader.Name) & """ Margin=""0,0,0,15"">
                             <Grid Margin=""14,40,15,10"">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width=""50""/>
@@ -168,7 +168,7 @@
                             Case Else
                                 CardXAML += "<Path Stretch=""Uniform"" Tag=""Failed"" Data=""F1 M2.5,0 L0,2.5 7.5,10 0,17.5 2.5,20 10,12.5 17.5,20 20,17.5 12.5,10 20,2.5 17.5,0 10,7.5 2.5,0Z"" Height=""15"" Width=""15"" HorizontalAlignment=""Center"" Grid.Column=""0"" Grid.Row=""" & Row & """ Fill=""{DynamicResource ColorBrush3}"" Margin=""0,1,0,0"" VerticalAlignment=""Top""/>"
                         End Select
-                        CardXAML += "<TextBlock Text=""" & EscapeXML(SubTask.Name) & """ HorizontalAlignment=""Left"" Grid.Column=""1"" Grid.Row=""" & Row & """/>"
+                        CardXAML += "<TextBlock Text=""" & EscapeUtils.XmlEscape(SubTask.Name) & """ HorizontalAlignment=""Left"" Grid.Column=""1"" Grid.Row=""" & Row & """/>"
                         Row += 1
                     Next
                     CardXAML += "</Grid></local:MyCard>"
@@ -203,11 +203,11 @@
                     End If
 #End Region
                 Catch ex As Exception
-                    Log(ex, "添加下载管理卡片失败", LogLevel.Feedback)
+                    Log(ex, "添加下载管理卡片失败", NotifyLevel.MsgBoxAndFeedback)
                 End Try
             End If
         Catch ex As Exception
-            Log(ex, "刷新下载管理显示失败", LogLevel.Feedback)
+            Log(ex, "刷新下载管理显示失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Public Sub TaskRemove(Loader As Object)

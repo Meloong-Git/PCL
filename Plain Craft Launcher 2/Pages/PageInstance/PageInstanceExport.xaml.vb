@@ -1,6 +1,4 @@
-﻿Imports System.IO.Compression
-
-Public Class ExportOption
+﻿Public Class ExportOption
     Public Property Title As String
     Public Property Description As String
     Public Property Rules As String
@@ -23,7 +21,7 @@ Public Class PageInstanceExport
         AniControlEnabled += 1
         If CurrentInstance <> PageInstanceLeft.Instance.PathVersion Then RefreshAll() '切换到了另一个版本，重置页面
         CustomEventService.SetEventData(BtnAdvancedHelp,
-            If(VersionBranchCode = 50, "指南/整合包制作 - Public.json", "指南/整合包制作 - Snapshot.json"))
+            If(BuildType = BuildTypes.Release, "指南/整合包制作 - Public.json", "指南/整合包制作 - Snapshot.json"))
         AniControlEnabled -= 1
     End Sub
     Public Sub RefreshAll() Implements IRefreshable.Refresh
@@ -63,17 +61,17 @@ Public Class PageInstanceExport
             '查找文件夹下的对应项
             If AcceptCompressedFile Then
                 For Each File In TargetFolder.EnumerateFiles("*.zip").Concat(TargetFolder.EnumerateFiles("*.rar"))
-                    If SubOptionBlackList.Any(Function(b) File.Name.ContainsF(b)) Then Continue For
+                    If SubOptionBlackList.Any(Function(b) File.Name.Contains(b)) Then Continue For
                     Panel.Children.Add(New MyCheckBox With {. _
-                        Tag = New ExportOption With {.Title = File.Name, .DefaultChecked = True, .Rules = EscapeLikePattern($"{Folder}/{File.Name}")}})
+                        Tag = New ExportOption With {.Title = File.Name, .DefaultChecked = True, .Rules = EscapeUtils.LikePatternEscape($"{Folder}/{File.Name}")}})
                 Next
             End If
             If AcceptFolder Then
                 For Each SubFolder In TargetFolder.EnumerateDirectories().OrderByDescending(Function(f) f.LastWriteTime)
-                    If SubOptionBlackList.Any(Function(b) SubFolder.Name.ContainsF(b)) Then Continue For
+                    If SubOptionBlackList.Any(Function(b) SubFolder.Name.Contains(b)) Then Continue For
                     If Not SubFolder.EnumerateFileSystemInfos().Any() Then Continue For
                     Dim NewCheckBox As New MyCheckBox With {. _
-                        Tag = New ExportOption With {.Title = SubFolder.Name, .DefaultChecked = True, .Rules = EscapeLikePattern($"{Folder}/{SubFolder.Name}/")}}
+                        Tag = New ExportOption With {.Title = SubFolder.Name, .DefaultChecked = True, .Rules = EscapeUtils.LikePatternEscape($"{Folder}/{SubFolder.Name}/")}}
                     If Panel Is PanOptionsSaves Then GetExportOption(NewCheckBox).Description = SubFolder.LastWriteTime.ToString("yyyy'/'MM'/'dd HH':'mm")
                     Panel.Children.Add(NewCheckBox)
                 Next
@@ -95,7 +93,7 @@ Public Class PageInstanceExport
         Function(Folder As DirectoryInfo) As Boolean
             Try
                 Return Folder.Exists AndAlso
-                    Folder.EnumerateFileSystemInfos().Any(Function(i) Not SubOptionBlackList.Any(Function(b) i.Name.ContainsF(b)))
+                    Folder.EnumerateFileSystemInfos().Any(Function(i) Not SubOptionBlackList.Any(Function(b) i.Name.Contains(b)))
             Catch '一般是由于无法访问，或是一个指向已不存在的文件夹的链接（例如使用 mklink 创造的 resource 文件夹链接）
                 Return False
             End Try
@@ -123,7 +121,7 @@ Public Class PageInstanceExport
                 Try
                     If AllEntries.Any(Function(Entry) Entry Like Rule) Then Return True
                 Catch ex As Exception
-                    Log(ex, $"错误的规则：{Rule}", LogLevel.Hint)
+                    Log(ex, $"错误的规则：{Rule}", NotifyLevel.AllUsers)
                     Return False
                 End Try
                 '粗略检查所有级
@@ -341,11 +339,11 @@ Public Class PageInstanceExport
             ConfigLines.Add(Sperator)
             ConfigLines.AddRange(GetExtraFileLines())
             '结束
-            WriteFile(ConfigPath, ConfigLines.Join(vbCrLf))
+            FileUtils.Write(ConfigPath, ConfigLines.Join(vbCrLf))
             Hint("已保存配置文件：" & ConfigPath, HintType.Green)
             OpenExplorer(ConfigPath)
         Catch ex As Exception
-            Log(ex, "保存配置失败", LogLevel.Msgbox)
+            Log(ex, "保存配置失败", NotifyLevel.MsgBox)
         End Try
     End Sub
     '读取配置文件
@@ -371,17 +369,17 @@ Public Class PageInstanceExport
             If Not CheckAdvancedInclude.Checked Then CheckAdvancedModrinth.Checked = Ini.GetOrDefault("ModrinthUploadMode", False) '#7979，加个特判
             ConfigPackPath = Ini.GetOrDefault("PackPath", Nothing)
             '导出内容段
-            RulesOverrides = Segments(1).Replace(vbCr, vbLf).Replace(vbLf & vbLf, vbLf).Split(vbLf).ToList
+            RulesOverrides = Segments(1).ReplaceLineEndings(vbLf, mergeMultiple:=True).Split(vbLf).ToList
             '追加内容段
             If Segments.Length > 2 Then
-                ExtraFiles = Segments(2).Replace(vbCr, vbLf).Replace(vbLf & vbLf, vbLf).Split(vbLf).ToList
+                ExtraFiles = Segments(2).ReplaceLineEndings(vbLf, mergeMultiple:=True).Split(vbLf).ToList
             Else
                 ExtraFiles = Nothing
             End If
             '结束
             Hint("已读取配置文件：" & ConfigPath, HintType.Green)
         Catch ex As Exception
-            Log(ex, "读取配置失败", LogLevel.Msgbox)
+            Log(ex, "读取配置失败", NotifyLevel.MsgBox)
         End Try
     End Sub
 
@@ -414,11 +412,11 @@ Public Class PageInstanceExport
         If Not String.IsNullOrWhiteSpace(ConfigPackPath) AndAlso
            (Not ConfigPackPath.EndsWithF("\") AndAlso Not ConfigPackPath.EndsWithF("/")) Then
             Try
-                Directory.CreateDirectory(GetPathFromFullPath(ConfigPackPath))
+                DirectoryUtils.Create(ConfigPackPath, isFilePath:=True)
                 PackPath = ConfigPackPath
                 Log($"[Export] 使用配置文件中指定的导出路径：{ConfigPackPath}")
             Catch ex As Exception
-                Log(ex, $"无法使用配置文件中指定的导出路径（{ConfigPackPath}）", LogLevel.Debug)
+                Log(ex, $"无法使用配置文件中指定的导出路径（{ConfigPackPath}）", NotifyLevel.DebugModeOnly)
                 If MyMsgBox($"指定的路径：{ConfigPackPath}{vbCrLf}{vbCrLf}{ex.GetDetail}", "无法使用配置文件中指定的导出路径", "确定", "取消") = 2 Then Return
             End Try
         End If
@@ -450,23 +448,21 @@ Public Class PageInstanceExport
 
 #Region "准备 PCL 文件"
 
-#If Not BETA Then
-        If IncludePCL Then
+        If BuildType <> BuildTypes.Release AndAlso IncludePCL Then
             Loaders.Add(New LoaderTask(Of Integer, Integer)("下载 PCL 正式版",
             Sub(Loader As LoaderTask(Of Integer, Integer))
                 DownloadLatestPCL(Loader)
                 CopyFile(PathTemp & "Latest.exe", CacheFolder & "Plain Craft Launcher.exe")
             End Sub) With {.ProgressWeight = 0.5, .Block = False})
         End If
-#End If
 
 #End Region
 
 #Region "复制文件"
 
-        Loaders.Add(New LoaderTask(Of Integer, List(Of McMod))("复制导出内容",
-        Sub(Loader As LoaderTask(Of Integer, List(Of McMod)))
-            Loader.Output = New List(Of McMod)
+        Loaders.Add(New LoaderTask(Of Integer, List(Of ResourceFile))("复制导出内容",
+        Sub(Loader As LoaderTask(Of Integer, List(Of ResourceFile)))
+            Loader.Output = New List(Of ResourceFile)
             '复制版本文件
             Dim Progress As Integer = 0
             Dim SearchFolder As Action(Of DirectoryInfo)
@@ -495,7 +491,7 @@ Public Class PageInstanceExport
                     If CheckHostedAssets AndAlso
                        {".zip", ".rar", ".jar", ".disabled", ".old"}.Contains(Entry.Extension.Lower) AndAlso
                        {"mods", "packs", "openloader", "resource"}.Any(Function(s) RelativePath.Contains(s)) Then
-                        Dim ModFile As New McMod(TargetPath)
+                        Dim ModFile As New ResourceFile(TargetPath)
                         Dim Unused = ModFile.ModrinthHash '提前计算 Hash
                         Unused = ModFile.CurseForgeHash
                         Loader.Output.Add(ModFile)
@@ -532,19 +528,17 @@ Public Class PageInstanceExport
             '复制 PCL 版本设置
             CopyDirectory(McVersion.PathVersion & "PCL\", OverridesFolder & "PCL\")
             WriteIni(OverridesFolder & "PCL\Setup.ini", "IsStar", False)
-#If BETA Then
-            '复制 PCL 本体
-            If IncludePCL Then CopyFile(PathWithName, CacheFolder & "Plain Craft Launcher.exe")
-#End If
+            '复制 PCL 本体（正式版）
+            If BuildType = BuildTypes.Release AndAlso IncludePCL Then CopyFile(PathExe, CacheFolder & "Plain Craft Launcher.exe")
             '复制 PCL 个性化内容
             If IncludePCLCustom Then
-                If Directory.Exists(Path & "PCL\Pictures\") Then CopyDirectory(Path & "PCL\Pictures\", CacheFolder & "PCL\Pictures\")
-                If Directory.Exists(Path & "PCL\Musics\") Then CopyDirectory(Path & "PCL\Musics\", CacheFolder & "PCL\Musics\")
-                If Directory.Exists(Path & "PCL\Help\") Then CopyDirectory(Path & "PCL\Help\", CacheFolder & "PCL\Help\")
-                If File.Exists(Path & "PCL\Custom.xaml") Then CopyFile(Path & "PCL\Custom.xaml", CacheFolder & "PCL\Custom.xaml")
-                If File.Exists(Path & "PCL\Setup.ini") Then CopyFile(Path & "PCL\Setup.ini", CacheFolder & "PCL\Setup.ini")
-                If File.Exists(Path & "PCL\hints.txt") Then CopyFile(Path & "PCL\hints.txt", CacheFolder & "PCL\hints.txt")
-                If File.Exists(Path & "PCL\Logo.png") Then CopyFile(Path & "PCL\Logo.png", CacheFolder & "PCL\Logo.png")
+                If Directory.Exists(PathExeFolder & "PCL\Pictures\") Then CopyDirectory(PathExeFolder & "PCL\Pictures\", CacheFolder & "PCL\Pictures\")
+                If Directory.Exists(PathExeFolder & "PCL\Musics\") Then CopyDirectory(PathExeFolder & "PCL\Musics\", CacheFolder & "PCL\Musics\")
+                If Directory.Exists(PathExeFolder & "PCL\Help\") Then CopyDirectory(PathExeFolder & "PCL\Help\", CacheFolder & "PCL\Help\")
+                If File.Exists(PathExeFolder & "PCL\Custom.xaml") Then CopyFile(PathExeFolder & "PCL\Custom.xaml", CacheFolder & "PCL\Custom.xaml")
+                If File.Exists(PathExeFolder & "PCL\Setup.ini") Then CopyFile(PathExeFolder & "PCL\Setup.ini", CacheFolder & "PCL\Setup.ini")
+                If File.Exists(PathExeFolder & "PCL\hints.txt") Then CopyFile(PathExeFolder & "PCL\hints.txt", CacheFolder & "PCL\hints.txt")
+                If File.Exists(PathExeFolder & "PCL\Logo.png") Then CopyFile(PathExeFolder & "PCL\Logo.png", CacheFolder & "PCL\Logo.png")
             End If
         End Sub) With {.ProgressWeight = 5})
 
@@ -552,9 +546,9 @@ Public Class PageInstanceExport
 
 #Region "联网检查"
 
-        Loaders.Add(New LoaderTask(Of List(Of McMod), Dictionary(Of McMod, List(Of String)))("联网获取文件信息",
-        Sub(Loader As LoaderTask(Of List(Of McMod), Dictionary(Of McMod, List(Of String))))
-            Loader.Output = New Dictionary(Of McMod, List(Of String))
+        Loaders.Add(New LoaderTask(Of List(Of ResourceFile), Dictionary(Of ResourceFile, List(Of String)))("联网获取文件信息",
+        Sub(Loader As LoaderTask(Of List(Of ResourceFile), Dictionary(Of ResourceFile, List(Of String))))
+            Loader.Output = New Dictionary(Of ResourceFile, List(Of String))
             If Not CheckHostedAssets Then Log($"[Export] 要求跳过联网获取步骤") : Return
             If Not Loader.Input.Any Then Log($"[Export] 没有需要联网检查的文件，跳过联网获取步骤") : Return
 
@@ -573,7 +567,7 @@ Public Class PageInstanceExport
                         If Not ModrinthRaw.ContainsKey(ModFile.ModrinthHash) Then Continue For
                         If ModrinthRaw(ModFile.ModrinthHash)?("files")?(0)("hashes")?("sha1") <> ModFile.ModrinthHash Then Continue For
                         '写入下载地址
-                        Loader.Output.AddToList(ModFile, ModrinthRaw(ModFile.ModrinthHash)("files")(0)("url"))
+                        Loader.Output.AddIntoValueCollection(ModFile, ModrinthRaw(ModFile.ModrinthHash)("files")(0)("url"))
                     Next
                     Log($"[Export] 从 Modrinth 获取到 {ModrinthRaw.Count} 个本地资源项的对应信息")
                 Catch ex As Exception
@@ -598,11 +592,11 @@ Public Class PageInstanceExport
                         Dim File As JObject = ResultJson("file")
                         If String.IsNullOrEmpty(File("downloadUrl")) Then Continue For
                         '查找对应的文件
-                        Dim ModFile As McMod = Loader.Input.FirstOrDefault(Function(m) m.CurseForgeHash = File("fileFingerprint").ToObject(Of UInteger))
+                        Dim ModFile As ResourceFile = Loader.Input.FirstOrDefault(Function(m) m.CurseForgeHash = File("fileFingerprint").ToObject(Of UInteger))
                         If ModFile Is Nothing Then Continue For
                         '写入下载地址
-                        For Each Address In CompFile.HandleCurseForgeDownloadUrls(File("downloadUrl").ToString)
-                            Loader.Output.AddToList(ModFile, Address)
+                        For Each Address In ResourceVersion.ParseCurseForgeDownloadUrls(File("downloadUrl").ToString)
+                            Loader.Output.AddIntoValueCollection(ModFile, Address)
                         Next
                     Next
                     Log($"[Export] 从 CurseForge 获取到 {CurseForgeRaw.Count} 个本地资源项的对应信息")
@@ -639,19 +633,19 @@ Public Class PageInstanceExport
 
 #Region "生成压缩包"
 
-        Loaders.Add(New LoaderTask(Of Dictionary(Of McMod, List(Of String)), Integer)("生成压缩包",
-        Sub(Loader As LoaderTask(Of Dictionary(Of McMod, List(Of String)), Integer))
+        Loaders.Add(New LoaderTask(Of Dictionary(Of ResourceFile, List(Of String)), Integer)("生成压缩包",
+        Sub(Loader As LoaderTask(Of Dictionary(Of ResourceFile, List(Of String)), Integer))
             '整理文件列表
             Dim Files As New JArray
             For Each Pair In Loader.Input
-                Dim ModFile As McMod = Pair.Key
+                Dim ModFile As ResourceFile = Pair.Key
                 Files.Add(New JObject From {
-                    {"path", ModFile.Path.AfterFirst(OverridesFolder).Replace("\", "/")},
-                    {"hashes", New JObject From {{"sha1", ModFile.ModrinthHash}, {"sha512", GetFileSHA512(ModFile.Path)}}},
+                    {"path", ModFile.File.FullName.AfterFirst(OverridesFolder).Replace("\", "/")},
+                    {"hashes", New JObject From {{"sha1", ModFile.ModrinthHash}, {"sha512", GetFileSHA512(ModFile.File.FullName)}}},
                     {"downloads", New JArray(Pair.Value.OrderBy(Function(u) u.Contains("modrinth.com")))}, '不优先选择 Modrinth
-                    {"fileSize", New FileInfo(ModFile.Path).Length}
+                    {"fileSize", New FileInfo(ModFile.File.FullName).Length}
                 })
-                File.Delete(ModFile.Path)
+                ModFile.File.Delete()
             Next
             Loader.Progress = 0.2
             '导出最终 JSON 文件
@@ -670,7 +664,7 @@ Public Class PageInstanceExport
             }
             File.WriteAllText(CacheFolder & "modpack\modrinth.index.json", ResultJson.ToString(Newtonsoft.Json.Formatting.Indented))
             '打包
-            Directory.CreateDirectory(GetPathFromFullPath(PackPath))
+            DirectoryUtils.Create(PackPath, isFilePath:=True)
             If File.Exists(PackPath) Then File.Delete(PackPath)
             If IncludePCL Then
                 '首次压缩整合包

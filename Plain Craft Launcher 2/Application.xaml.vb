@@ -3,26 +3,45 @@ Imports System.Windows.Threading
 
 Public Class Application
 
-#If DEBUG Then
-    ''' <summary>
-    ''' 用于开始程序时的一些测试。
-    ''' </summary>
-    Private Sub Test()
-        Try
-            ModDevelop.Start()
-        Catch ex As Exception
-            Log(ex, "开发者模式测试出错", LogLevel.Msgbox)
-        End Try
-    End Sub
-#End If
-
     '开始
     Private Sub Application_Startup(sender As Object, e As StartupEventArgs) Handles Me.Startup
         Try
-            '动态 DLL 调用（必须尽量在前面，否则模块加载 CacheCow 等 DLL 就可能导致崩溃）
-            AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf AssemblyResolve
-            '开始
-            SecretOnApplicationStart()
+            '执行开发版测试
+            If BuildType = BuildTypes.Debug Then
+                Try
+                    ModDevelop.Start()
+                Catch ex As Exception
+                    Log(ex, "开发者模式测试出错", NotifyLevel.MsgBox)
+                End Try
+            End If
+            '提升主线程优先级
+            Thread.CurrentThread.Priority = ThreadPriority.Highest
+            '确保 .NET Framework 版本
+            Try
+                Dim VersionTest As New FormattedText("", Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Fonts.SystemTypefaces.First, 96, New MyColor, DPI)
+            Catch ex As UriFormatException '修复 #3555
+                Environment.SetEnvironmentVariable("windir", Environment.GetEnvironmentVariable("SystemRoot"), EnvironmentVariableTarget.User)
+                Dim VersionTest As New FormattedText("", Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Fonts.SystemTypefaces.First, 96, New MyColor, DPI)
+            End Try
+            '检测当前文件夹权限
+            Try
+                DirectoryUtils.Create(PathExeFolder & "PCL\")
+            Catch ex As Exception
+                MsgBox($"PCL 无法创建 PCL 文件夹（{PathExeFolder & "PCL"}），请尝试：" & vbCrLf &
+                  "1. 将 PCL 移动到其他文件夹" & If(PathExeFolder.StartsWithF("C:", True), "，例如 C 盘和桌面以外的其他位置。", "。") & vbCrLf &
+                  "2. 删除当前目录中的 PCL 文件夹，然后再试。" & vbCrLf &
+                  "3. 右键 PCL 选择属性，打开 兼容性 中的 以管理员身份运行此程序。",
+                MsgBoxStyle.Critical, "运行环境错误")
+                Environment.[Exit](ProcessReturnValues.Cancel)
+            End Try
+            If Not CheckPermission(PathExeFolder & "PCL") Then
+                MsgBox("PCL 没有对当前文件夹的写入权限，请尝试：" & vbCrLf &
+                  "1. 将 PCL 移动到其他文件夹" & If(PathExeFolder.StartsWithF("C:", True), "，例如 C 盘和桌面以外的其他位置。", "。") & vbCrLf &
+                  "2. 删除当前目录中的 PCL 文件夹，然后再试。" & vbCrLf &
+                  "3. 右键 PCL 选择属性，打开 兼容性 中的 以管理员身份运行此程序。",
+                MsgBoxStyle.Critical, "运行环境错误")
+                Environment.[Exit](ProcessReturnValues.Cancel)
+            End If
             '检查参数调用
             If e.Args.Length > 0 Then
                 If e.Args(0) = "--update" Then
@@ -54,42 +73,42 @@ Public Class Application
                 End If
             End If
             '初始化文件结构
-            Directory.CreateDirectory(Path & "PCL\Pictures")
-            Directory.CreateDirectory(Path & "PCL\Musics")
+            DirectoryUtils.Create(PathExeFolder & "PCL\Pictures\")
+            DirectoryUtils.Create(PathExeFolder & "PCL\Musics\")
             Try
-                Directory.CreateDirectory(PathTemp)
+                DirectoryUtils.Create(PathTemp)
                 If Not CheckPermission(PathTemp) Then Throw New Exception("PCL 没有对 " & PathTemp & " 的访问权限")
             Catch ex As Exception
-                If PathTemp = IO.Path.GetTempPath() & "PCL\" Then
+                If PathTemp = Path.GetTempPath() & "PCL\" Then
                     MyMsgBox("PCL 无法访问缓存文件夹，可能导致程序出错或无法正常使用！" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDetail(), "缓存文件夹不可用")
                 Else
                     MyMsgBox("手动设置的缓存文件夹不可用，PCL 将使用默认缓存文件夹。" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDetail(), "缓存文件夹不可用")
                     Settings.Set("SystemSystemCache", "")
-                    PathTemp = IO.Path.GetTempPath() & "PCL\"
+                    PathTemp = Path.GetTempPath() & "PCL\"
                 End If
             End Try
-            Directory.CreateDirectory(PathTemp & "Cache")
-            Directory.CreateDirectory(PathAppdata)
-            '检测单例
-#If Not DEBUG Then
-            Dim ShouldWaitForExit As Boolean = e.Args.Length > 0 AndAlso e.Args(0) = "--wait" '要求等待已有的 PCL 退出
-            Dim WaitRetryCount As Integer = 0
+            DirectoryUtils.Create(PathTemp & "Cache\")
+            DirectoryUtils.Create(PathAppdata)
+            '要求单例
+            If BuildType <> BuildTypes.Debug Then
+                Dim ShouldWaitForExit As Boolean = e.Args.Length > 0 AndAlso e.Args(0) = "--wait" '要求等待已有的 PCL 退出
+                Dim WaitRetryCount As Integer = 0
 WaitRetry:
-            Dim WindowHwnd As IntPtr = FindWindow(Nothing, "Plain Craft Launcher　")
-            If WindowHwnd = IntPtr.Zero Then FindWindow(Nothing, "Plain Craft Launcher 2　")
-            If WindowHwnd <> IntPtr.Zero Then
-                If ShouldWaitForExit AndAlso WaitRetryCount < 20 Then '至多等待 10 秒
-                    WaitRetryCount += 1
-                    Thread.Sleep(500)
-                    GoTo WaitRetry
+                Dim WindowHwnd As IntPtr = FindWindow(Nothing, "Plain Craft Launcher　")
+                If WindowHwnd = IntPtr.Zero Then FindWindow(Nothing, "Plain Craft Launcher 2　")
+                If WindowHwnd <> IntPtr.Zero Then
+                    If ShouldWaitForExit AndAlso WaitRetryCount < 20 Then '至多等待 10 秒
+                        WaitRetryCount += 1
+                        Thread.Sleep(500)
+                        GoTo WaitRetry
+                    End If
+                    '将已有的 PCL 窗口拖出来
+                    ShowWindowToTop(WindowHwnd)
+                    '播放提示音并退出
+                    Beep()
+                    Environment.[Exit](ProcessReturnValues.Cancel)
                 End If
-                '将已有的 PCL 窗口拖出来
-                ShowWindowToTop(WindowHwnd)
-                '播放提示音并退出
-                Beep()
-                Environment.[Exit](ProcessReturnValues.Cancel)
             End If
-#End If
             '设置 ToolTipService 默认值
             ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(300))
             ToolTipService.BetweenShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(400))
@@ -112,17 +131,17 @@ WaitRetry:
             '日志初始化
             LogStart()
             '添加日志
-            Log($"[Start] 程序版本：{VersionDisplayName} ({VersionCode}{If(CommitHash = "", "", $"，#{CommitHash}")})")
-#If RELEASE Then
-            Log($"[Start] 识别码：{Identify}{If(ThemeCheckOne(9), "，正式版", "")}")
-#Else
-            Log($"[Start] 识别码：{Identify}{If(ThemeCheckOne(9), "，已解锁反馈主题", "")}")
-#End If
-            Log($"[Start] 程序路径：{PathWithName}")
+            Log($"[Start] 程序版本：{VersionDisplay} ({VersionCode}{If(CommitHash = "", "", $"，#{CommitHash}")})")
+            If BuildType = BuildTypes.Snapshot Then
+                Log($"[Start] 识别码：{Identify}{If(ThemeCheckOne(9), "，已解锁反馈主题", "，未解锁反馈主题")}")
+            Else
+                Log($"[Start] 识别码：{Identify}")
+            End If
+            Log($"[Start] 程序路径：{PathExe}")
             Log($"[Start] 系统编码：{Encoding.Default.HeaderName} ({Encoding.Default.CodePage}, GBK={IsGBKEncoding})")
             Log($"[Start] 管理员权限：{IsAdmin()}")
             '检测异常环境
-            If Path.Contains(IO.Path.GetTempPath()) OrElse Path.Contains("AppData\Local\Temp\") Then
+            If PathExeFolder.Contains(Path.GetTempPath()) OrElse PathExeFolder.Contains("AppData\Local\Temp\") Then
                 MyMsgBox("请将 PCL 从压缩包中解压后再使用！" & vbCrLf & "如果不会解压，可以在网上寻找教程。", "需要解压！", "我知道了", IsWarn:=True, ForceWait:=True)
                 FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
@@ -132,15 +151,11 @@ WaitRetry:
             '计时
             Log("[Start] 第一阶段加载用时：" & GetTimeMs() - ApplicationStartTick & " ms")
             ApplicationStartTick = GetTimeMs()
-            '执行测试
-#If DEBUG Then
-            Test()
-#End If
             AniControlEnabled += 1
         Catch ex As Exception
             Dim FilePath As String = Nothing
             Try
-                FilePath = PathWithName
+                FilePath = PathExe
             Catch
             End Try
             MsgBox(ex.GetDetail(True) & vbCrLf & "PCL 所在路径：" & If(String.IsNullOrEmpty(FilePath), "获取失败", FilePath), MsgBoxStyle.Critical, "PCL 初始化错误")
@@ -173,41 +188,40 @@ WaitRetry:
         If Detail.Contains("System.Windows.Threading.Dispatcher.Invoke") OrElse Detail.Contains("MS.Internal.AppModel.ITaskbarList.HrInit") OrElse Detail.Contains("未能加载文件或程序集") OrElse
            Detail.Contains(".NET Framework") Then ' “自动错误判断” 的结果分析
             OpenWebsite("https://dotnet.microsoft.com/zh-cn/download/dotnet-framework/thank-you/net462-offline-installer")
-            Log(e.Exception, "你的 .NET Framework 版本过低或损坏，请下载并重新安装 .NET Framework 4.6.2！" & vbCrLf & "若无法安装，可在卸载高版本的 .NET Framework 后再试。", LogLevel.Critical, "运行环境错误")
+            Log(e.Exception, "你的 .NET Framework 版本过低或损坏，请下载并重新安装 .NET Framework 4.6.2！" & vbCrLf & "若无法安装，可在卸载高版本的 .NET Framework 后再试。", NotifyLevel.Critical, "运行环境错误")
         Else
-            Log(e.Exception, "程序出现未知错误", LogLevel.Critical, "锟斤拷烫烫烫")
+            Log(e.Exception, "程序出现未知错误", NotifyLevel.Critical, "锟斤拷烫烫烫")
         End If
     End Sub
 
-    '动态 DLL 调用
-    Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
-    Public Shared Function AssemblyResolve(sender As Object, Args As ResolveEventArgs) As Assembly
-        '缓存
-        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "System.Net.Http.Formatting", "System.ValueTuple"}
+    '动态 DLL 加载
+    Private Sub New() '这里必须尽早调用，且不能使用任何库，否则加载 MeloongCore 就会导致崩溃
+        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "System.Net.Http.Formatting", "System.ValueTuple", "PCLCS", "MeloongCore.Wpf", "MeloongCore"}
         Static Locks As New Dictionary(Of String, Object)(StringComparer.Ordinal)
-        Static LoadedAssembly As New Dictionary(Of String, Assembly)(StringComparer.Ordinal)
-        '查找对应的 DLL
-        Dim Prefix As String = Prefixes.FirstOrDefault(Function(p) Args.Name.StartsWithF(p))
-        If Prefix Is Nothing Then Return Nothing
-        '加载 DLL
-        If Not Locks.ContainsKey(Prefix) Then Locks(Prefix) = New Object()
-        SyncLock Locks(Prefix)
-            If Not LoadedAssembly.ContainsKey(Prefix) Then
-                Log($"[Start] 加载 DLL：{Prefix}")
-                LoadedAssembly(Prefix) = Assembly.Load(GetResources(Prefix))
-                'WebP 特判
-                If Prefix = "Imazen.WebP" Then
-                    SetDllDirectory(PathPure.TrimEnd("\"c))
-                    Try
-                        WriteFile(PathPure & "libwebp.dll", GetResources("libwebp64"))
-                    Catch ex As Exception
-                        Log(ex, "写入 libwebp.dll 失败") '防止同时加载多个图片时，同时写入文件导致文件占用，进而导致崩溃
-                    End Try
+        Static LoadedAssembly As New Dictionary(Of String, Assembly)(StringComparer.Ordinal) '缓存
+        AddHandler AppDomain.CurrentDomain.AssemblyResolve,
+        Function(sender As Object, Args As ResolveEventArgs) As Assembly
+            Dim Prefix As String = Prefixes.FirstOrDefault(Function(p) Args.Name.StartsWith(p, StringComparison.Ordinal))
+            If Prefix Is Nothing Then Return Nothing
+            If Not Locks.ContainsKey(Prefix) Then Locks(Prefix) = New Object()
+            SyncLock Locks(Prefix)
+                If Not LoadedAssembly.ContainsKey(Prefix) Then
+                    LoadedAssembly(Prefix) = Assembly.Load(My.Resources.ResourceManager.GetObject(Prefix))
+                    If Prefix = "Imazen.WebP" Then ExtractLibwebp() 'WebP 特判
                 End If
-            End If
-            Return LoadedAssembly(Prefix)
-        End SyncLock
-    End Function
+                Return LoadedAssembly(Prefix)
+            End SyncLock
+        End Function
+    End Sub
+    Private Shared Sub ExtractLibwebp() '这个方法会调用 ModBase，进而调用 MeloongCore，所以不能放在 New 里
+        SetDllDirectory(PathPure.TrimEnd("\"c))
+        Try
+            FileUtils.Write(PathPure & "libwebp.dll", GetResources("libwebp64"))
+        Catch ex As Exception
+            Log(ex, "写入 libwebp.dll 失败") '防止同时加载多个图片时，同时写入文件导致文件占用，进而导致崩溃
+        End Try
+    End Sub
+    Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
 
     '切换窗口
 

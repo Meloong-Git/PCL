@@ -46,7 +46,7 @@
 
     Private Sub BtnEdit_Click(sender As Object, e As EventArgs) Handles BtnEdit.Click
         If McLoginLoader.State = LoadState.Loading Then
-            Log("[Launch] 要求更换角色，但登录加载器繁忙", LogLevel.Debug)
+            Log("[Launch] 要求更换角色，但登录加载器繁忙", NotifyLevel.DebugModeOnly)
             If TypeOf McLoginLoader.Input Is McLoginServer AndAlso CType(McLoginLoader.Input, McLoginServer).ForceReselectProfile Then
                 Hint("正在尝试更换，请稍候！")
             Else
@@ -65,7 +65,7 @@
                 McLoginLoader.WaitForExit(Data, IsForceRestart:=True)
                 RunInUi(Sub() Reload(True))
             Catch ex As Exception
-                Log(ex, "更换角色失败", LogLevel.Hint)
+                Log(ex, "更换角色失败", NotifyLevel.AllUsers)
             End Try
         End Sub)
     End Sub

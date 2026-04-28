@@ -7,8 +7,8 @@
         Me.TargetInstance = TargetInstance
         '构建文件结构
         TempFolder = RequestTaskTempFolder()
-        Directory.CreateDirectory(TempFolder & "Temp\")
-        Directory.CreateDirectory(TempFolder & "Report\")
+        DirectoryUtils.Create(TempFolder & "Temp\")
+        DirectoryUtils.Create(TempFolder & "Report\")
         Log("[Crash] 崩溃分析暂存文件夹：" & TempFolder)
     End Sub
 
@@ -81,7 +81,7 @@
         If LatestLog IsNot Nothing AndAlso LatestLog.Any Then
             Dim RawOutput As String = LatestLog.Join(vbCrLf)
             Log("[Crash] 以下为游戏输出的最后一段内容：" & vbCrLf & RawOutput)
-            WriteFile(TempFolder & "RawOutput.log", RawOutput)
+            FileUtils.Write(TempFolder & "RawOutput.log", RawOutput)
             AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(TempFolder & "RawOutput.log", LatestLog.ToArray))
             LatestLog.Clear()
         End If
@@ -573,7 +573,7 @@ Done:
             'Mod 导致的崩溃
             If LogCrash.Contains("-- MOD ") Then
                 Dim LogCrashMod As String = LogCrash.Between("-- MOD ", "Failure message:")
-                If LogCrashMod.ContainsF(".jar", True) Then
+                If LogCrashMod.ContainsIgnoreCase(".jar") Then
                     AppendReason(CrashReason.确定Mod导致游戏崩溃, If(RegexSeek(LogCrashMod, "(?<=Mod File: ).+"), "").TrimEnd((vbCrLf & " ").ToCharArray))
                 Else
                     AppendReason(CrashReason.Mod加载器报错, If(RegexSeek(LogCrash, "(?<=Failure message: )[\w\W]+?(?=\tMod)"), "").Replace(vbTab, " ").TrimEnd((vbCrLf & " ").ToCharArray))
@@ -764,7 +764,7 @@ NextStack:
             '[Fabric] 获取所有包含 Mod 信息的行
             Dim ModNameLines As New List(Of String)
             For Each Line In Details.Split(vbLf)
-                If (Line.ContainsF(".jar", True) AndAlso Line.Length - Line.Replace(".jar", "").Length = 4) OrElse '只有一个 .jar
+                If (Line.ContainsIgnoreCase(".jar") AndAlso Line.Length - Line.Replace(".jar", "").Length = 4) OrElse '只有一个 .jar
                    (IsFabricDetail AndAlso Line.StartsWithF(vbTab & vbTab) AndAlso Not RegexCheck(Line, "\t\tfabric[\w-]*: Fabric")) Then ModNameLines.Add(Line)
             Next
             Log("[Crash] 崩溃报告中找到 " & ModNameLines.Count & " 个可能的 Mod 项目行")
@@ -874,7 +874,7 @@ NextStack:
                     StartProcess(DirectFile.Value.Key)
                 Else
                     Dim FilePath As String = PathTemp & "Crash.txt"
-                    WriteFile(FilePath, DirectFile.Value.Value.Join(vbCrLf))
+                    FileUtils.Write(FilePath, DirectFile.Value.Value.Join(vbCrLf))
                     StartProcess(FilePath)
                 End If
             End Sub))
@@ -885,8 +885,8 @@ NextStack:
                     '获取文件路径
                     RunInUiWait(Sub() FileAddress = SelectSaveFile("选择保存位置", "错误报告-" & Date.Now.ToString("G").Replace("/", "-").Replace(":", ".").Replace(" ", "_") & ".zip", "Minecraft 错误报告(*.zip)|*.zip"))
                     If String.IsNullOrEmpty(FileAddress) Then Return
-                    Directory.CreateDirectory(GetPathFromFullPath(FileAddress))
                     If File.Exists(FileAddress) Then File.Delete(FileAddress)
+                    DirectoryUtils.Create(FileAddress, isFilePath:=True)
                     '输出诊断信息
                     FeedbackInfo()
                     LogFlush()
@@ -909,7 +909,7 @@ NextStack:
                             If FileEncoding Is Nothing Then FileEncoding = GetEncoding(ReadFileBytes(OutputFile))
                             Dim FileContent As String = ReadFile(OutputFile, FileEncoding)
                             FileContent = FilterUserName(FilterAccessToken(FileContent, If(FileName = "启动脚本.bat", "F", "*")), "*")
-                            WriteFile(TempFolder & "Report\" & FileName, FileContent, Encoding:=FileEncoding)
+                            FileUtils.Write(TempFolder & "Report\" & FileName, FileContent, Encoding:=FileEncoding)
                             Log($"[Crash] 导出文件：{FileName}，编码：{FileEncoding.HeaderName}")
                         End If
                     Next
@@ -918,7 +918,7 @@ NextStack:
                     DeleteDirectory(TempFolder & "Report\")
                     Hint("错误报告已导出！", HintType.Green)
                 Catch ex As Exception
-                    Log(ex, "导出错误报告失败", LogLevel.Feedback)
+                    Log(ex, "导出错误报告失败", NotifyLevel.MsgBoxAndFeedback)
                     Return
                 End Try
                 OpenExplorer(FileAddress)
@@ -1117,7 +1117,7 @@ NextStack:
                     Replace("\n", vbCrLf).
                     Replace("\h", "").
                     Replace("\e", If(IsHandAnalyze, "", vbCrLf & "你可以查看错误报告了解错误具体是如何发生的。")).
-                    Replace(vbCrLf, vbCr).Replace(vbLf, vbCr).Replace(vbCr, vbCrLf).
+                    ReplaceLineEndings(vbCrLf).
                     Trim(vbCrLf.ToCharArray) &
                 If(Not Results.Any(Function(r) r.EndsWithF("\h")) OrElse IsHandAnalyze, "",
                     vbCrLf & "如果要寻求帮助，请把错误报告文件发给对方，而不是发送这个窗口的照片或者截图。" &

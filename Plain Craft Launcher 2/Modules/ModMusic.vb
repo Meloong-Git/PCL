@@ -1,4 +1,6 @@
-﻿Public Module ModMusic
+﻿Imports NAudio.Wave
+
+Public Module ModMusic
 
 #Region "播放列表"
 
@@ -21,8 +23,8 @@
             '初始化全部可用音乐列表
             If MusicAllList Is Nothing Then
                 MusicAllList = New List(Of String)
-                Directory.CreateDirectory(Path & "PCL\Musics\")
-                For Each File In EnumerateFiles(Path & "PCL\Musics\")
+                DirectoryUtils.Create(PathExeFolder & "PCL\Musics\")
+                For Each File In EnumerateFiles(PathExeFolder & "PCL\Musics\")
                     '文件夹可能会被加入 .ini 文件夹配置文件、一些乱七八糟的 .jpg 文件啥的
                     Dim Ext As String = File.Extension.Lower
                     If {".ini", ".jpg", ".txt", ".cfg", ".lrc", ".db", ".png"}.Contains(Ext) Then Continue For
@@ -37,7 +39,7 @@
                 MusicWaitingList.Add(PreventFirst)
             End If
         Catch ex As Exception
-            Log(ex, "初始化音乐列表失败", LogLevel.Feedback)
+            Log(ex, "初始化音乐列表失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     ''' <summary>
@@ -79,7 +81,7 @@
                     If MusicState = MusicStates.Pause Then
                         FrmMain.BtnExtraMusic.Logo = Logo.IconPlay
                         FrmMain.BtnExtraMusic.LogoScale = 0.8
-                        ToolTipText = "已暂停：" & IO.Path.GetFileNameWithoutExtension(MusicCurrent)
+                        ToolTipText = "已暂停：" & Path.GetFileNameWithoutExtension(MusicCurrent)
                         If MusicAllList.Count > 1 Then
                             ToolTipText += vbCrLf & "左键恢复播放，右键播放下一曲。"
                         Else
@@ -88,7 +90,7 @@
                     Else
                         FrmMain.BtnExtraMusic.Logo = Logo.IconMusic
                         FrmMain.BtnExtraMusic.LogoScale = 1
-                        ToolTipText = "正在播放：" & IO.Path.GetFileNameWithoutExtension(MusicCurrent)
+                        ToolTipText = "正在播放：" & Path.GetFileNameWithoutExtension(MusicCurrent)
                         If MusicAllList.Count > 1 Then
                             ToolTipText += vbCrLf & "左键暂停，右键播放下一曲。"
                         Else
@@ -101,7 +103,7 @@
                 If FrmSetupUI IsNot Nothing Then FrmSetupUI.MusicRefreshUI()
 
             Catch ex As Exception
-                Log(ex, "刷新背景音乐 UI 失败", LogLevel.Feedback)
+                Log(ex, "刷新背景音乐 UI 失败", NotifyLevel.MsgBoxAndFeedback)
             End Try
         End Sub)
     End Sub
@@ -119,7 +121,7 @@
                 Case MusicStates.Play
                     MusicPause()
                 Case Else
-                    Log("[Music] 音乐目前为停止状态，已强制尝试开始播放", LogLevel.Debug)
+                    Log("[Music] 音乐目前为停止状态，已强制尝试开始播放", NotifyLevel.DebugModeOnly)
                     MusicRefreshPlay(False)
             End Select
         End If
@@ -155,9 +157,9 @@
         Get
             If MusicNAudio Is Nothing Then Return MusicStates.Stop
             Select Case MusicNAudio.PlaybackState
-                Case 0 'NAudio.Wave.PlaybackState.Stopped
+                Case 0 'PlaybackState.Stopped
                     Return MusicStates.Stop
-                Case 2 'NAudio.Wave.PlaybackState.Paused
+                Case 2 'PlaybackState.Paused
                     Return MusicStates.Pause
                 Case Else
                     Return MusicStates.Play
@@ -202,7 +204,7 @@
             MusicRefreshUI()
 
         Catch ex As Exception
-            Log(ex, "刷新背景音乐播放失败", LogLevel.Feedback)
+            Log(ex, "刷新背景音乐播放失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     ''' <summary>
@@ -260,7 +262,7 @@
 #End Region
 
     ''' <summary>
-    ''' 当前正在播放的 NAudio.Wave.WaveOutEvent。
+    ''' 当前正在播放的 WaveOutEvent。
     ''' 如果为它赋了类别，则会没有必要地加载 NAudio.dll。
     ''' </summary>
     Public MusicNAudio = Nothing
@@ -273,18 +275,18 @@
     ''' 在 MusicUuid 不变的前提下，持续播放某地址的音乐，且在播放结束后随机播放下一曲。
     ''' </summary>
     Private Sub MusicLoop(Optional IsFirstLoad As Boolean = False)
-        Dim CurrentWave As NAudio.Wave.WaveOutEvent = Nothing
-        Dim Reader As NAudio.Wave.WaveStream = Nothing
+        Dim CurrentWave As WaveOutEvent = Nothing
+        Dim Reader As WaveStream = Nothing
         Try
             '开始播放
-            CurrentWave = New NAudio.Wave.WaveOutEvent()
+            CurrentWave = New WaveOutEvent()
             MusicNAudio = CurrentWave
             CurrentWave.DeviceNumber = -1
             Try
-                Reader = New NAudio.Wave.AudioFileReader(MusicCurrent)
+                Reader = New AudioFileReader(MusicCurrent)
             Catch ex As Exception
-                Log(ex, "使用 AudioFileReader 加载音频文件失败，换用 MediaFoundationReader 重试", LogLevel.Developer)
-                Reader = New NAudio.Wave.MediaFoundationReader(MusicCurrent)
+                Log(ex, "使用 AudioFileReader 加载音频文件失败，换用 MediaFoundationReader 重试", NotifyLevel.DevelopOnly)
+                Reader = New MediaFoundationReader(MusicCurrent)
             End Try
             CurrentWave.Init(Reader)
             CurrentWave.Play()
@@ -293,11 +295,13 @@
             MusicRefreshUI()
             '停止条件：播放完毕或变化
             Dim PreviousVolume = 0
-            While CurrentWave.Equals(MusicNAudio) AndAlso Not CurrentWave.PlaybackState = NAudio.Wave.PlaybackState.Stopped
+            While CurrentWave.Equals(MusicNAudio) AndAlso Not CurrentWave.PlaybackState = PlaybackState.Stopped
                 If Settings.Get("UiMusicVolume") <> PreviousVolume Then
                     '更新音量
                     PreviousVolume = Settings.Get("UiMusicVolume")
+#Disable Warning BC40008 '类型或成员已过时
                     CurrentWave.Volume = PreviousVolume / 1000
+#Enable Warning BC40008 '类型或成员已过时
                 End If
                 '更新进度条
                 Dim Percent = Reader.CurrentTime.TotalMilliseconds / Reader.TotalTime.TotalMilliseconds
@@ -305,9 +309,9 @@
                 Thread.Sleep(100)
             End While
             '当前音乐已播放结束，继续下一曲
-            If CurrentWave.PlaybackState = NAudio.Wave.PlaybackState.Stopped AndAlso MusicAllList.Any Then MusicStartPlay(DequeueNextMusicAddress)
+            If CurrentWave.PlaybackState = PlaybackState.Stopped AndAlso MusicAllList.Any Then MusicStartPlay(DequeueNextMusicAddress)
         Catch ex As Exception
-            Log(ex, "播放音乐出现内部错误（" & MusicCurrent & "）", LogLevel.Developer)
+            Log(ex, "播放音乐出现内部错误（" & MusicCurrent & "）", NotifyLevel.DevelopOnly)
             If TypeOf ex Is NAudio.MmException AndAlso ex.Message.Contains("AlreadyAllocated") Then
                 Hint("你的音频设备正被其他程序占用。请在关闭占用的程序后重启 PCL，才能恢复音乐播放功能！", HintType.Red)
                 Thread.Sleep(1000000000)
@@ -320,7 +324,7 @@
                 ex.Message.Contains("0xC00D36C4") Then '#5096：不支持给定的 URL 的字节流类型。 (异常来自 HRESULT:0xC00D36C4)
                 Hint("播放音乐失败（" & GetFileNameFromPath(MusicCurrent) & "）：PCL 可能不支持此音乐格式，请将格式转换为 .wav、.mp3 或 .flac 后再试", HintType.Red)
             Else
-                Log(ex, "播放音乐失败（" & GetFileNameFromPath(MusicCurrent) & "）", LogLevel.Hint)
+                Log(ex, "播放音乐失败（" & GetFileNameFromPath(MusicCurrent) & "）", NotifyLevel.AllUsers)
             End If
             '将播放错误的音乐从列表中移除
             MusicAllList.Remove(MusicCurrent)

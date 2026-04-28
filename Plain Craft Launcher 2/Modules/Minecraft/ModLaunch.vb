@@ -1,6 +1,4 @@
-﻿Imports System.IO.Compression
-
-Public Module ModLaunch
+﻿Public Module ModLaunch
 
 #Region "开始"
 
@@ -186,7 +184,7 @@ NextInner:
                 '没有特殊处理过的错误信息
                 McLaunchLog("错误：" & ex.GetDetail())
                 Log(ex,
-                    If(IsSavingBatch, "导出启动脚本失败", "Minecraft 启动失败"), LogLevel.Msgbox,
+                    If(IsSavingBatch, "导出启动脚本失败", "Minecraft 启动失败"), NotifyLevel.MsgBox,
                     If(IsSavingBatch, "导出启动脚本失败", "启动失败"))
                 '上报
                 If Not IsSavingBatch Then
@@ -239,9 +237,8 @@ NextInner:
         Dim CheckResult As String = ""
         RunInUiWait(Sub() CheckResult = McLoginAble(McLoginInput()))
         If CheckResult <> "" Then Throw New ArgumentException(CheckResult)
-#If BETA Then
         '求赞助
-        If CurrentLaunchOptions?.SaveBatch Is Nothing Then '保存脚本时不提示
+        If BuildType = BuildTypes.Release AndAlso CurrentLaunchOptions?.SaveBatch Is Nothing Then '保存脚本时不提示
             RunInNewThread(
             Sub()
                 Select Case Settings.Get("SystemLaunchCount")
@@ -255,7 +252,6 @@ NextInner:
                 End Select
             End Sub, "Donate")
         End If
-#End If
         '正版购买提示
         If CurrentLaunchOptions?.SaveBatch Is Nothing AndAlso '保存脚本时不提示
            Not Settings.Get("HintBuy") AndAlso Settings.Get("LoginType") <> McLoginType.Ms Then
@@ -496,7 +492,7 @@ NextInner:
                     End If
             End Select
         Catch ex As Exception
-            Log(ex, "获取登录输入信息失败（" & GetStringFromEnum(LoginType) & "）", LogLevel.Feedback)
+            Log(ex, "获取登录输入信息失败（" & GetStringFromEnum(LoginType) & "）", NotifyLevel.MsgBoxAndFeedback)
         End Try
         Return LoginData
     End Function
@@ -665,7 +661,7 @@ LoginFinish:
             Settings.Set("Login" & Input.Token & "Email", Emails.Join("¨"c))
             Settings.Set("Login" & Input.Token & "Pass", Passwords.Join("¨"c))
         Catch ex As Exception
-            Log(ex, "保存启动记录失败", LogLevel.Hint)
+            Log(ex, "保存启动记录失败", NotifyLevel.AllUsers)
             Settings.Set("Login" & Input.Token & "Email", "")
             Settings.Set("Login" & Input.Token & "Pass", "")
         End Try
@@ -817,17 +813,17 @@ LoginFinish:
             Return NeedRefresh
         Catch ex As Exception
             Dim AllMessage As String = ex.GetBrief()
-            Log(ex, "登录失败原始错误信息", LogLevel.Normal)
+            Log(ex, "登录失败原始错误信息", NotifyLevel.Silent)
             '读取服务器返回的错误
             If TypeOf ex Is ResponsedWebException Then
                 Dim ErrorMessage As String = Nothing
                 Try
                     Dim Response = DirectCast(ex, ResponsedWebException).Response
-                    If Response.ContainsF("errorMessage", True) Then ErrorMessage = GetJson(Response)("errorMessage").ToString()
+                    If Response.ContainsIgnoreCase("errorMessage") Then ErrorMessage = GetJson(Response)("errorMessage").ToString()
                 Catch
                 End Try
                 If Not String.IsNullOrWhiteSpace(ErrorMessage) Then
-                    If ErrorMessage.Contains("密码错误") OrElse ErrorMessage.ContainsF("Incorrect username or password", True) Then
+                    If ErrorMessage.Contains("密码错误") OrElse ErrorMessage.ContainsIgnoreCase("Incorrect username or password") Then
                         '密码错误，退出登录 (#5090)
                         McLaunchLog("密码错误，退出登录")
                         Select Case Data.Input.Type
@@ -905,15 +901,15 @@ Retry:
         Dim Result As String
         Try
             Result = NetRequestByClientMultiple("https://login.live.com/oauth20_token.srf", HttpMethod.Post,
-                Content:=$"client_id={OAuthClientId}&refresh_token={Uri.EscapeDataString(Code)}&grant_type=refresh_token&scope=XboxLive.signin%20offline_access",
+                Content:=$"client_id={OAuthClientId}&refresh_token={EscapeUtils.FormUrlEscape(Code)}&grant_type=refresh_token&scope=XboxLive.signin%20offline_access",
                 ContentType:="application/x-www-form-urlencoded",
                 Headers:={{"Accept-Language", "en-US,en;q=0.5"}, {"X-Requested-With", "XMLHttpRequest"}},
                 ThreadCount:=2)
         Catch ex As ResponsedWebException
             '修改错误列表时，同时检查 MyMsgLogin.xaml.vb 中的对应代码
             Dim Response = ex.Response
-            If Response.ContainsF("must sign in again", True) OrElse Response.ContainsF("password expired", True) OrElse
-               (Response.Contains("refresh_token") AndAlso Response.Contains("is not valid")) Then '#269
+            If Response.ContainsIgnoreCase("must sign in again") OrElse Response.ContainsIgnoreCase("password expired") OrElse
+               (Response.Contains("refresh_token") AndAlso Response.ContainsIgnoreCase("is not valid")) Then '#269
                 Return {"Relogin", ""}
             ElseIf Response.Contains("Account security interrupt") Then
                 MyMsgBox("该账号由于安全问题无法登陆，请前往微软账户页获取更多信息。", "登录失败", "我知道了", IsWarn:=True)
@@ -1105,7 +1101,7 @@ Retry:
                         Uuid = McLoginMojangUuid(SkinName, False)
                     End If
                 Catch ex As Exception
-                    Log(ex, "皮肤信息获取失败，游戏将以无皮肤的方式启动", LogLevel.Hint)
+                    Log(ex, "皮肤信息获取失败，游戏将以无皮肤的方式启动", NotifyLevel.AllUsers)
                 End Try
             Case 4
                 '自定义
@@ -1118,7 +1114,7 @@ Retry:
     End Function
     '根据用户名返回对应 UUID，需要多线程
     Public Function McLoginMojangUuid(Name As String, ThrowOnNotFound As Boolean)
-        If Name.Trim.Length = 0 Then Return StrFill("", "0", 32)
+        If Name.Trim.Length = 0 Then Return New String("0"c, 32)
         '从缓存获取
         Dim Uuid As String = ReadIni(PathTemp & "Cache\Uuid\Mojang.ini", Name, "")
         If Len(Uuid) = 32 Then Return Uuid
@@ -1141,7 +1137,7 @@ Retry:
         Return Uuid
     End Function
     Public Function McLoginLegacyUuid(Name As String)
-        Dim FullUuid As String = StrFill(Name.Length.ToString("X"), "0", 16) & StrFill(GetHash(Name).ToString("X"), "0", 16)
+        Dim FullUuid As String = Name.Length.ToString("X").EnsureLength("0", 16) & GetHash(Name).ToString("X").EnsureLength("0", 16)
         Return FullUuid.Substring(0, 12) & "3" & FullUuid.Substring(13, 3) & "9" & FullUuid.Substring(17, 15)
     End Function
 
@@ -1583,7 +1579,7 @@ NextInstance:
                 McLaunchLog("发现错误的 OptiFineForge TweakClass，目前的游戏参数：" & Arg)
                 Arg = Arg.Replace(" --tweakClass optifine.OptiFineTweaker", "") & " --tweakClass optifine.OptiFineForgeTweaker"
                 Try
-                    WriteFile(McInstanceSelected.PathVersion & McInstanceSelected.Name & ".json", ReadFile(McInstanceSelected.PathVersion & McInstanceSelected.Name & ".json").Replace("optifine.OptiFineTweaker", "optifine.OptiFineForgeTweaker"))
+                    FileUtils.Write(McInstanceSelected.PathVersion & McInstanceSelected.Name & ".json", ReadFile(McInstanceSelected.PathVersion & McInstanceSelected.Name & ".json").Replace("optifine.OptiFineTweaker", "optifine.OptiFineForgeTweaker"))
                 Catch ex As Exception
                     Log(ex, "替换 OptiFineForge TweakClass 失败")
                 End Try
@@ -1627,15 +1623,15 @@ NextInstance:
     Private Iterator Function McLaunchArgumentsReplace(Arguments As List(Of String)) As IEnumerable(Of (Key As String, Value As String))
         '基础参数
         Yield ("${classpath_separator}", ";")
-        Yield ("${natives_directory}", ShortenPath(GetNativesFolder()))
-        Yield ("${library_directory}", ShortenPath(McFolderSelected & "libraries"))
-        Yield ("${libraries_directory}", ShortenPath(McFolderSelected & "libraries"))
+        Yield ("${natives_directory}", GetNativesFolder().TrimEnd("\"c))
+        Yield ("${library_directory}", FileUtils.ShortenPath(McFolderSelected & "libraries"))
+        Yield ("${libraries_directory}", FileUtils.ShortenPath(McFolderSelected & "libraries"))
         Yield ("${pure_directory}", PathPure.TrimEnd("\"c)) '由 PCL 添加，这会允许在分割参数并去重后再替换路径，防止路径中的特殊字符影响参数分割和去重
         Yield ("${launcher_name}", "PCL")
         Yield ("${launcher_version}", VersionCode)
         Yield ("${version_name}", McInstanceSelected.Name)
-        Yield ("${game_directory}", ShortenPath(Left(McInstanceSelected.PathIndie, McInstanceSelected.PathIndie.Count - 1)))
-        Yield ("${assets_root}", ShortenPath(McFolderSelected & "assets"))
+        Yield ("${game_directory}", FileUtils.ShortenPath(Left(McInstanceSelected.PathIndie, McInstanceSelected.PathIndie.Count - 1)))
+        Yield ("${assets_root}", FileUtils.ShortenPath(McFolderSelected & "assets"))
         Yield ("${user_properties}", "{}")
         Yield ("${auth_player_name}", McLoginLoader.Output.Name)
         Yield ("${auth_uuid}", McLoginLoader.Output.Uuid)
@@ -1643,8 +1639,8 @@ NextInstance:
         Yield ("${access_token}", McLoginLoader.Output.AccessToken)
         Yield ("${auth_session}", McLoginLoader.Output.AccessToken)
         Yield ("${user_type}", "msa") '#1221
-        Yield ("${primary_jar}", ShortenPath(McInstanceSelected.PathVersion & McInstanceSelected.Name & ".jar")) '#6942
-        Yield ("${game_assets}", ShortenPath(McFolderSelected & "assets\virtual\legacy")) '1.5.2 的 pre-1.6 资源索引应与 legacy 合并
+        Yield ("${primary_jar}", FileUtils.ShortenPath(McInstanceSelected.PathVersion & McInstanceSelected.Name & ".jar")) '#6942
+        Yield ("${game_assets}", FileUtils.ShortenPath(McFolderSelected & "assets\virtual\legacy")) '1.5.2 的 pre-1.6 资源索引应与 legacy 合并
         Yield ("${assets_index_name}", McAssetsGetIndexName(McInstanceSelected))
 
         '自定义信息
@@ -1697,14 +1693,14 @@ NextInstance:
             End If
         Next
         If OptiFineCp IsNot Nothing Then Cps.Insert(Cps.Count - 2, OptiFineCp) 'OptiFine 的总是需要放到倒数第二位
-        Yield ("${classpath}", Cps.Select(Function(c) ShortenPath(c)).Join(";"c))
+        Yield ("${classpath}", Cps.Select(Function(c) FileUtils.ShortenPath(c)).Join(";"c))
     End Function
 
     ''' <summary>
     ''' 分割 Java 参数字符串。
     ''' </summary>
     Private Iterator Function SplitJavaArguments(Arg As String) As IEnumerable(Of String)
-        Arg = Arg.Replace(vbLf, " ").Replace(vbCr, " ").Trim '预处理换行符
+        Arg = Arg.ReplaceLineEndings(" ", mergeMultiple:=True).Trim '预处理换行符
         If String.IsNullOrWhiteSpace(Arg) Then Return
         Dim Current As New StringBuilder
         Dim InQuotes As Boolean = False
@@ -1783,8 +1779,8 @@ NextInstance:
     Private Sub McLaunchNatives(Loader As LoaderTask(Of Integer, Integer))
 
         '创建文件夹
-        Dim Target As String = GetNativesFolder() & "\"
-        Directory.CreateDirectory(Target)
+        Dim Target As String = GetNativesFolder()
+        DirectoryUtils.Create(Target)
 
         '解压文件
         McLaunchLog("正在解压 Natives 文件")
@@ -1821,7 +1817,7 @@ NextInstance:
                         End Try
                     End If
                     '解压新文件
-                    WriteFile(FilePath, Entry.Open)
+                    FileUtils.Write(FilePath, Entry.Open)
                     McLaunchLog("已解压：" & FilePath)
                 End If
             Next
@@ -1843,18 +1839,18 @@ NextInstance:
 
     End Sub
     ''' <summary>
-    ''' 获取 Natives 文件夹路径，不以 \ 结尾。
+    ''' 获取 Natives 文件夹路径，以 \ 结尾。
     ''' </summary>
     Private Function GetNativesFolder() As String
-        Dim Result As String = ShortenPath(McInstanceSelected.PathVersion) & McInstanceSelected.Name & "-natives"
-        If Not (IsGBKEncoding OrElse Result.IsASCII()) Then
-            Result = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\bin\natives"
-            If Not Result.IsASCII() Then
-                Result = OsDrive & "ProgramData\PCL\natives"
+        Dim Result As String = FileUtils.ShortenPath(McInstanceSelected.PathVersion) & McInstanceSelected.Name & "-natives\"
+        If Not (IsGBKEncoding OrElse Result.IsAsciiOnly()) Then
+            Result = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\bin\natives\"
+            If Not Result.IsAsciiOnly() Then
+                Result = OsDrive & "ProgramData\PCL\natives\"
             End If
         End If
-        Directory.CreateDirectory(Result) '提前创建，这样 ShortenPath 才有结果（否则在长路径下首次启动 Forge 会崩溃）
-        Return ShortenPath(Result)
+        DirectoryUtils.Create(Result) '提前创建，这样 DirectoryUtils.Shorten 才有结果（否则在长路径下首次启动 Forge 会崩溃）
+        Return FileUtils.ShortenPath(Result)
     End Function
 
 #End Region
@@ -1867,7 +1863,7 @@ NextInstance:
         If Settings.Get("LaunchAdvanceGraphicCard") Then
             Try
                 SetGPUPreference(McLaunchJavaSelected.PathJava)
-                SetGPUPreference(PathWithName)
+                SetGPUPreference(PathExe)
             Catch ex As Exception
                 If IsAdmin() Then
                     Log(ex, "直接调整显卡设置失败")
@@ -1880,7 +1876,7 @@ NextInstance:
                             Throw New Exception("调整过程中出现异常")
                         End If
                     Catch exx As Exception
-                        Log(exx, "调整显卡设置失败，Minecraft 可能会使用默认显卡运行", LogLevel.Hint)
+                        Log(exx, "调整显卡设置失败，Minecraft 可能会使用默认显卡运行", NotifyLevel.AllUsers)
                     End Try
                 End If
             End Try
@@ -1914,7 +1910,7 @@ NextInstance:
             '更新文件
             Dim Profiles As JObject = GetJson(ReadFile(McFolderSelected & "launcher_profiles.json"))
             Profiles.Merge(ReplaceJson)
-            WriteFile(McFolderSelected & "launcher_profiles.json", Profiles.ToString, Encoding:=Encoding.GetEncoding("GB18030"))
+            FileUtils.Write(McFolderSelected & "launcher_profiles.json", Profiles.ToString, Encoding:=Encoding.GetEncoding("GB18030"))
             McLaunchLog("已更新 launcher_profiles.json")
         Catch ex As Exception
             Log(ex, "更新 launcher_profiles.json 失败，将在删除文件后重试")
@@ -1944,10 +1940,10 @@ NextInstance:
                 '更新文件
                 Dim Profiles As JObject = GetJson(ReadFile(McFolderSelected & "launcher_profiles.json"))
                 Profiles.Merge(ReplaceJson)
-                WriteFile(McFolderSelected & "launcher_profiles.json", Profiles.ToString, Encoding:=Encoding.GetEncoding("GB18030"))
+                FileUtils.Write(McFolderSelected & "launcher_profiles.json", Profiles.ToString, Encoding:=Encoding.GetEncoding("GB18030"))
                 McLaunchLog("已在删除后更新 launcher_profiles.json")
             Catch exx As Exception
-                Log(exx, "更新 launcher_profiles.json 失败", LogLevel.Feedback)
+                Log(exx, "更新 launcher_profiles.json 失败", NotifyLevel.MsgBoxAndFeedback)
             End Try
         End Try
 
@@ -1997,7 +1993,7 @@ NextInstance:
                     WriteIni(SetupFileAddress, "fullscreen", "false")
             End Select
         Catch ex As Exception
-            Log(ex, "更新 options.txt 失败", LogLevel.Hint)
+            Log(ex, "更新 options.txt 失败", NotifyLevel.AllUsers)
         End Try
 
         '离线皮肤 Alex 警告
@@ -2010,11 +2006,11 @@ NextInstance:
 
         '离线皮肤资源包
         Try
-            Directory.CreateDirectory(McInstanceSelected.PathIndie & "resourcepacks\")
             Dim ZipFileAddress As String = McInstanceSelected.PathIndie & "resourcepacks\PCL2 Skin.zip"
+            DirectoryUtils.Create(ZipFileAddress, isFilePath:=True)
             Dim NewTypeSetup As Boolean = McInstanceSelected.Version.Vanilla.Major >= 13 OrElse McInstanceSelected.Version.Vanilla.Major < 6
             If McLoginLoader.Input.Type = McLoginType.Legacy AndAlso Settings.Get("LaunchSkinType") = 4 AndAlso File.Exists(PathAppdata & "CustomSkin.png") Then
-                Directory.CreateDirectory(PathTemp)
+                DirectoryUtils.Create(PathTemp)
                 Dim MetaFileAddress As String = PathTemp & "pack.mcmeta"
                 Dim PackPicAddress As String = PathTemp & "pack.png"
                 Dim PackFormat As Integer
@@ -2063,13 +2059,13 @@ NextInstance:
                 '准备文件
                 Dim Bit As New MyBitmap(PathImage & "Heads/Logo.png")
                 Bit.Save(PackPicAddress)
-                WriteFile(MetaFileAddress, "{""pack"":{""pack_format"":" & PackFormat & ",""description"":""PCL 自定义离线皮肤资源包""}}")
+                FileUtils.Write(MetaFileAddress, "{""pack"":{""pack_format"":" & PackFormat & ",""description"":""PCL 自定义离线皮肤资源包""}}")
                 Dim Skin As New MyBitmap(PathAppdata & "CustomSkin.png")
                 If (McInstanceSelected.Version.Vanilla.Major = 6 OrElse McInstanceSelected.Version.Vanilla.Major = 7) AndAlso Skin.Pic.Height = 64 Then
                     McLaunchLog("该 Minecraft 版本不支持双层皮肤，已进行裁剪")
                     Skin = Skin.Clip(0, 0, 64, 32)
                 End If
-                Skin.Save(Path & "PCL\CustomSkin_Cliped.png")
+                Skin.Save(PathExeFolder & "PCL\CustomSkin_Cliped.png")
                 '构建压缩文件
                 Using ZipFile As New FileStream(ZipFileAddress, FileMode.Create)
                     Using ZipAr As New ZipArchive(ZipFile, ZipArchiveMode.Create)
@@ -2078,15 +2074,15 @@ NextInstance:
                         '1.19.3+ 使用复杂版本的替换
                         If McInstanceSelected.Version.Vanilla >= New Version(19, 0, 3) Then
                             For Each SkinName In {"alex", "ari", "efe", "kai", "makena", "noor", "steve", "sunny", "zuri"}
-                                ZipAr.CreateEntryFromFile(Path & "PCL\CustomSkin_Cliped.png",
+                                ZipAr.CreateEntryFromFile(PathExeFolder & "PCL\CustomSkin_Cliped.png",
                                     $"assets/minecraft/textures/entity/player/{If(Settings.Get("LaunchSkinSlim"), "slim", "wide")}/{SkinName}.png")
                             Next
                         Else
-                            ZipAr.CreateEntryFromFile(Path & "PCL\CustomSkin_Cliped.png", "assets/minecraft/textures/entity/" & If(Settings.Get("LaunchSkinSlim"), "alex.png", "steve.png"))
+                            ZipAr.CreateEntryFromFile(PathExeFolder & "PCL\CustomSkin_Cliped.png", "assets/minecraft/textures/entity/" & If(Settings.Get("LaunchSkinSlim"), "alex.png", "steve.png"))
                         End If
                     End Using
                 End Using
-                File.Delete(Path & "PCL\CustomSkin_Cliped.png")
+                File.Delete(PathExeFolder & "PCL\CustomSkin_Cliped.png")
                 '更改设置文件
                 IniClearCache(SetupFileAddress)
                 Dim EnabledResourcePack As String = ReadIni(SetupFileAddress, "resourcePacks", "[]").TrimStart("[").TrimEnd("]")
@@ -2132,7 +2128,7 @@ IgnoreCustomSkin:
                 End If
             End If
         Catch ex As Exception
-            Log(ex, "离线皮肤资源包设置失败", LogLevel.Hint)
+            Log(ex, "离线皮肤资源包设置失败", NotifyLevel.AllUsers)
         End Try
 
     End Sub
@@ -2151,13 +2147,13 @@ IgnoreCustomSkin:
                 "@echo off" & vbCrLf &
                 $"title 启动 - {McInstanceSelected.Name}" & vbCrLf &
                 "echo 游戏正在启动，请稍候。" & vbCrLf &
-                $"cd /D ""{ShortenPath(McInstanceSelected.PathIndie)}""" & vbCrLf &
+                $"cd /D ""{FileUtils.ShortenPath(McInstanceSelected.PathIndie)}""" & vbCrLf &
                 CustomCommandGlobal & vbCrLf &
                 CustomCommandVersion & vbCrLf &
                 $"""{McLaunchJavaSelected.PathJava}"" {McLaunchArgument}" & vbCrLf &
                 "echo 游戏已退出。" & vbCrLf &
                 "pause"
-            WriteFile(If(CurrentLaunchOptions.SaveBatch, Path & "PCL\LatestLaunch.bat"), FilterAccessToken(CmdString, "F"),
+            FileUtils.Write(If(CurrentLaunchOptions.SaveBatch, PathExeFolder & "PCL\LatestLaunch.bat"), FilterAccessToken(CmdString, "F"),
                       Encoding:=If(McLaunchJavaSelected.MajorVersion > 8, Encoding.UTF8, Encoding.Default))
             If CurrentLaunchOptions.SaveBatch IsNot Nothing Then
                 McLaunchLog("导出启动脚本完成，强制结束启动过程")
@@ -2189,7 +2185,7 @@ IgnoreCustomSkin:
                     Loop
                 End If
             Catch ex As Exception
-                Log(ex, "执行全局自定义命令失败", LogLevel.Hint)
+                Log(ex, "执行全局自定义命令失败", NotifyLevel.AllUsers)
             Finally
                 If CustomProcess IsNot Nothing AndAlso Not CustomProcess.HasExited AndAlso Loader.IsInterrupted Then
                     McLaunchLog("由于取消启动，已强制结束自定义命令 CMD 进程") '#1183
@@ -2214,7 +2210,7 @@ IgnoreCustomSkin:
                     Loop
                 End If
             Catch ex As Exception
-                Log(ex, "执行版本自定义命令失败", LogLevel.Hint)
+                Log(ex, "执行版本自定义命令失败", NotifyLevel.AllUsers)
             Finally
                 If CustomProcess IsNot Nothing AndAlso Not CustomProcess.HasExited AndAlso Loader.IsInterrupted Then
                     McLaunchLog("由于取消启动，已强制结束自定义命令 CMD 进程") '#1183
@@ -2233,9 +2229,9 @@ IgnoreCustomSkin:
         Dim PathEnv As String = StartInfo.EnvironmentVariables("Path")
         Dim Paths As New List(Of String)
         If Not String.IsNullOrEmpty(PathEnv) Then Paths.AddRange(PathEnv.Split(";"))
-        Paths.Add(ShortenPath(McLaunchJavaSelected.PathFolder))
+        Paths.Add(FileUtils.ShortenPath(McLaunchJavaSelected.PathFolder))
         StartInfo.EnvironmentVariables("Path") = Paths.Distinct.Join(";"c)
-        StartInfo.EnvironmentVariables("appdata") = ShortenPath(McFolderSelected)
+        StartInfo.EnvironmentVariables("appdata") = FileUtils.ShortenPath(McFolderSelected)
 
         '设置其他参数
         StartInfo.WorkingDirectory = McInstanceSelected.PathIndie
@@ -2267,7 +2263,7 @@ IgnoreCustomSkin:
                 Case Else '中
             End Select
         Catch ex As Exception
-            Log(ex, "设置进程优先级失败", LogLevel.Feedback)
+            Log(ex, "设置进程优先级失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
 
     End Sub
@@ -2276,7 +2272,7 @@ IgnoreCustomSkin:
         '输出信息
         McLaunchLog("")
         McLaunchLog("~ 基础参数 ~")
-        McLaunchLog("PCL 版本：" & VersionDisplayName & " (" & VersionCode & ")")
+        McLaunchLog("PCL 版本：" & VersionDisplay & " (" & VersionCode & ")")
         McLaunchLog($"游戏版本：{McInstanceSelected.VersionDisplayName}（{McInstanceSelected.Version.Vanilla}，Drop {McInstanceSelected.Version.Drop}{If(McInstanceSelected.Version.Reliable, "", "，无法完全确定")}）")
         McLaunchLog("资源版本：" & McAssetsGetIndexName(McInstanceSelected))
         McLaunchLog("版本继承：" & If(McInstanceSelected.InheritName = "", "无", McInstanceSelected.InheritName))

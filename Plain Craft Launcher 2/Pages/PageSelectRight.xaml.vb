@@ -110,7 +110,7 @@
             End If
 
         Catch ex As Exception
-            Log(ex, "将版本列表转换显示时失败", LogLevel.Feedback)
+            Log(ex, "将版本列表转换显示时失败", NotifyLevel.MsgBoxAndFeedback)
         End Try
     End Sub
     Public Shared Sub McInstanceListContent(sender As MyListItem, e As EventArgs)
@@ -240,7 +240,7 @@
         Catch ex As OperationCanceledException
             Log(ex, "删除版本 " & Instance.Name & " 被主动取消")
         Catch ex As Exception
-            Log(ex, "删除版本 " & Instance.Name & " 失败", LogLevel.Msgbox)
+            Log(ex, "删除版本 " & Instance.Name & " 失败", NotifyLevel.MsgBox)
         End Try
     End Sub
 
