@@ -828,7 +828,7 @@ NextFile:
     ''' 对替换标记进行处理。会对替换内容使用 EscapeHandler 进行转义。
     ''' </summary>
     Public Function ArgumentReplace(Text As String, Optional EscapeHandler As Func(Of String, String) = Nothing, Optional ReplaceTime As Boolean = True) As String
-        If Text Is Nothing OrElse Not Text.Contains("{") Then Return Nothing
+        If Text Is Nothing OrElse Not Text.Contains("{") Then Return Text
         '预处理
         Static Replacer As Func(Of String, String) =
         Function(s As String) As String
