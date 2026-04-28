@@ -11,6 +11,11 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 394 Then 'Release 2.12.7.1
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：下载游戏、整合包的稳定性"))
+                FeatureCount += 1
+                BugCount += 5
+            End If
             If LastVersion < 391 Then 'Release 2.12.6.2
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：会为部分 Forge / NeoForge 选择不支持的 Java"))
                 BugCount += 4
@@ -110,7 +115,7 @@ Public Class FormMain
             '3：BUG+ IMP* FEAT-
             '2：BUG* IMP-
             '1：BUG-
-            If LastVersion < 392 Then 'Snapshot 2.12.7.0
+            If LastVersion < 393 Then 'Snapshot 2.12.7.1
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：允许永久关闭启动页面的快照版提示"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：下载游戏、整合包的稳定性"))
                 FeatureCount += 1
