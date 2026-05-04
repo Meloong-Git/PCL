@@ -426,6 +426,10 @@ Public Class PageInstanceExport
             If Not CheckOptionsPcl.Checked Then Extensions.Add("Modrinth 整合包文件(*.mrpack)|*.mrpack")
             PackPath = SelectSaveFile("选择导出位置",
                 PackName & If(String.IsNullOrEmpty(TextExportVersion.Text), "", " " & TextExportVersion.Text), Extensions.Join("|"))
+            ' 强制确保文件扩展名正确（修复 Windows 将版本号中的 .数字 识别为扩展名的问题）
+            If Not String.IsNullOrEmpty(PackPath) Then
+                If Not PackPath.EndsWithF(".zip") AndAlso Not PackPath.EndsWithF(".mrpack") Then PackPath &= ".zip"
+            End If
             Log($"[Export] 手动指定的导出路径：{PackPath}")
         End If
         If String.IsNullOrEmpty(PackPath) Then Return
