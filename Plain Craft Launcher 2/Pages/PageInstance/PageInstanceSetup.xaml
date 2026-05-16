@@ -157,7 +157,7 @@
                         <TextBlock Name="LabServerAuthServer" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left" Text="认证服务器（必填）" Margin="0,8,25,0" Visibility="Collapsed" />
                         <local:MyTextBox x:Name="TextServerAuthServer" Grid.Row="1" Grid.ColumnSpan="2" ShowValidateResult="False" local:SettingService.Key="VersionServerAuthServer" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="Yggdrasil API 认证服务器的完整地址">
                             <local:MyTextBox.ValidateRules>
-                                <local:ValidateHttp />
+                                <local:ValidateNullable/>
                             </local:MyTextBox.ValidateRules>
                         </local:MyTextBox>
                         <TextBlock Name="LabServerAuthRegister" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="注册链接" Margin="0,8,25,0" Visibility="Collapsed" />
@@ -190,7 +190,14 @@
                         <local:MyButton Grid.Column="0" MinWidth="140" Text="服主后台" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight"
                                         local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://login.mc-user.com:233/server/intro" />
                     </Grid>
-                    <local:MyButton x:Name="BtnServerAuthLittle" Height="35" MinWidth="150" Margin="0,12,0,0" Text="设置为 LittleSkin" HorizontalAlignment="Left" ColorType="Highlight" />
+                    <Grid Height="Auto">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button"/>
+                        </Grid.ColumnDefinitions>
+                        <local:MyButton Grid.Column="0" x:Name="BtnServerAuthLittle" Height="35" MinWidth="150" Margin="0,12,0,0" Text="设置为 LittleSkin" HorizontalAlignment="Left" ColorType="Highlight" />
+                        <local:MyButton Grid.Column="1" x:Name="BtnServerAuthApiLocator" Click="BtnServerAuthApiLocator_Click" Height="35" MinWidth="180" Margin="0,12,0,0" Text="检查 Yggdrasil API 地址" HorizontalAlignment="Left"/>
+                    </Grid>
                 </StackPanel>
             </local:MyCard>
             <local:MyCard x:Name="CardAdvance" Margin="0,0,0,15" Title="高级选项" IsSwapped="True" CanSwap="True">
