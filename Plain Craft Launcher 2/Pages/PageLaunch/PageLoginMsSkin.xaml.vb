@@ -18,8 +18,8 @@
     ''' <summary>
     ''' 获取当前页面的登录信息。
     ''' </summary>
-    Public Shared Function GetLoginData() As McLoginMs
-        If McLoginMsLoader.State = LoadState.Finished Then
+    Public Shared Function GetLoginData(Optional IgnoreState As Boolean = False) As McLoginMs
+        If IgnoreState OrElse McLoginMsLoader.State = LoadState.Finished Then
             Return New McLoginMs With {.OAuthRefreshToken = Settings.Get(Of String)("CacheMsV2OAuthRefresh"), .UserName = Settings.Get(Of String)("CacheMsV2Name"), .AccessToken = Settings.Get(Of String)("CacheMsV2Access"), .Uuid = Settings.Get(Of String)("CacheMsV2Uuid"), .ProfileJson = Settings.Get(Of String)("CacheMsV2ProfileJson")}
         Else
             Return New McLoginMs With {.OAuthRefreshToken = Settings.Get(Of String)("CacheMsV2OAuthRefresh"), .UserName = Settings.Get(Of String)("CacheMsV2Name")}

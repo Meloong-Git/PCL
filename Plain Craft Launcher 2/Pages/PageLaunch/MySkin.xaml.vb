@@ -256,7 +256,7 @@ Retry:
                         Next
                         SelectedIndex = MyMsgBoxSelect(SelectionControl, "选择披风", "确定", "取消")
                     Catch ex As Exception
-                        Logger.Error(ex, "获取玩家皮肤列表失败")
+                        Logger.Error(ex, "获取玩家披风列表失败")
                     End Try
                 End Sub)
                 If SelectedIndex Is Nothing Then Return

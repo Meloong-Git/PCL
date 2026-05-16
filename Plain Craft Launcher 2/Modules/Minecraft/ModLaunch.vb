@@ -535,10 +535,22 @@ NextInner:
         Data.Progress = 0.05
         '检查是否已经登录完成
         Dim ExpiresAt = Settings.Get(Of Long)("CacheMsV2Expires")
+
         If Not Data.IsForceRestarting AndAlso '不要求强行重启
            ExpiresAt > 0 AndAlso ExpiresAt > GetUnixTimestampUtc() Then 'AccessToken 尚未过期
-            Data.Output = New McLoginResult With
-                {.AccessToken = Input.AccessToken, .Name = Input.UserName, .Uuid = Input.Uuid, .Type = "Microsoft", .ClientToken = Input.Uuid, .ProfileJson = Input.ProfileJson}
+            'https://github.com/Meloong-Git/PCL/issues/8638
+            '如果是程序刚启动时调用的登录，此时加载器的状态为 Waiting，GetLoginData 函数会返回不带 ProfileJson 的数据作为输入
+            If String.IsNullOrEmpty(Input.ProfileJson) Then
+                Input = PageLoginMsSkin.GetLoginData(True)
+            End If
+            Data.Output = New McLoginResult With {
+                .AccessToken = Input.AccessToken,
+                .Name = Input.UserName,
+                .Uuid = Input.Uuid,
+                .Type = "Microsoft",
+                .ClientToken = Input.Uuid,
+                .ProfileJson = Input.ProfileJson
+            }
             McLaunchLog("无需登录，AccessToken 尚未过期")
             GoTo SkipLogin
         End If
