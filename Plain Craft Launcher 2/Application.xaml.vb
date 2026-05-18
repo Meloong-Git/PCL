@@ -91,24 +91,35 @@ RetryCacheCheck:
             End Try
             DirectoryUtils.Create(PathTemp & "Cache\")
             DirectoryUtils.Create(PathAppdata)
+
+#If DEBUG Then
+            Dim FileLockPath = Path.Combine(PathAppdata.TrimEnd("\"), "PCL.dev.Lock")
+#Else
+            Dim FileLockPath = Path.Combine(PathAppdata.TrimEnd("\"), "PCL.Lock")
+#End If
+
             '要求单例
             If BuildType <> BuildTypes.Debug Then
-                Dim ShouldWaitForExit As Boolean = e.Args.Length > 0 AndAlso e.Args(0) = "--wait" '要求等待已有的 PCL 退出
-                Dim WaitRetryCount As Integer = 0
-WaitRetry:
-                Dim WindowHwnd As IntPtr = FindWindow(Nothing, "Plain Craft Launcher　")
-                If WindowHwnd = IntPtr.Zero Then FindWindow(Nothing, "Plain Craft Launcher 2　")
-                If WindowHwnd <> IntPtr.Zero Then
-                    If ShouldWaitForExit AndAlso WaitRetryCount < 20 Then '至多等待 10 秒
-                        WaitRetryCount += 1
-                        Thread.Sleep(500)
-                        GoTo WaitRetry
+                If Not GetProgramLock(FileLockPath) Then
+                    Dim IsLocked = False
+                    Dim ShouldWaitForExit As Boolean = e.Args.Length > 0 AndAlso e.Args(0) = "--wait" '要求等待已有的 PCL 退出
+                    If Not ShouldWaitForExit Then
+                        DropToTopByLock(FileLockPath)
+                        Beep()
+                        Environment.Exit(ProcessReturnValues.Cancel)
                     End If
-                    '将已有的 PCL 窗口拖出来
-                    ShowWindowToTop(WindowHwnd)
-                    '播放提示音并退出
-                    Beep()
-                    Environment.[Exit](ProcessReturnValues.Cancel)
+                    For i = 0 To 10
+                        If GetProgramLock(FileLockPath) Then
+                            IsLocked = True
+                            Exit For
+                        End If
+                        Thread.Sleep(500)
+                    Next
+                    If Not IsLocked Then 
+                        DropToTopByLock(FileLockPath)
+                        Beep()
+                        Environment.Exit(ProcessReturnValues.Cancel)
+                    End If
                 End If
             End If
             '设置 ToolTipService 默认值
@@ -161,6 +172,38 @@ WaitRetry:
             MsgBox(ex.GetDisplay(True) & vbCrLf & "PCL 所在路径：" & If(String.IsNullOrEmpty(FilePath), "获取失败", FilePath), MsgBoxStyle.Critical, "PCL 初始化错误")
             FormMain.EndProgramForce(ProcessReturnValues.Exception)
         End Try
+    End Sub
+    
+    Private Shared KernelLock As Mutex
+
+    ''' <summary>
+    ''' 尝试获取单例锁
+    ''' </summary>
+    ''' <param name="LockPath">文件锁位置</param>
+    ''' <returns>一个值用于指示是否获得文件锁</returns>
+    Private Function GetProgramLock(LockPath As String) As Boolean
+        Try
+            Dim IsLocked = False
+            KernelLock = New Mutex(True, "Local\Plain Craft Launcher", IsLocked)
+            If Not IsLocked Then Return False
+            Logger.Info("获取单例锁成功")
+            File.WriteAllText(LockPath, Process.GetCurrentProcess().Id.ToString())
+            Return IsLocked
+        Catch ex As Exception
+
+        End Try
+
+        Return False
+    End Function
+
+    ''' <summary>
+    ''' 从文件锁中尝试拖出进程
+    ''' </summary>
+    Public Sub DropToTopByLock(LockPath As String)
+        Dim Pid As Integer
+        If Not Integer.TryParse(File.ReadAllText(LockPath), Pid) Then Return
+        Dim Handle = Process.GetProcessById(Pid)?.MainWindowHandle
+        If Handle <> Intptr.Zero Then ShowWindowToTop(Handle)
     End Sub
 
     '结束
