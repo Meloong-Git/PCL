@@ -360,13 +360,13 @@ PreFin:
         .Timeout = TimeSpan.FromSeconds(10)
     }
     Private Sub BtnServerAuthApiLocator_Click(sender As Object, e As MouseButtonEventArgs)
+        If String.IsNullOrWhiteSpace(TextServerAuthServer.Text) Then Return
         Dispatcher.BeginInvoke(
             Async Sub()
-                If String.IsNullOrWhiteSpace(TextServerAuthServer.Text) Then Return
                 Hint("正在检查 Yggdrasil 服务器地址")
                 Try
                     Dim OriginAddress = TextServerAuthServer.Text
-                    OriginAddress = If(OriginAddress.StartsWith(“http”), OriginAddress, "https://" & OriginAddress)
+                    OriginAddress = If(OriginAddress.StartsWith("http"), OriginAddress, "https://" & OriginAddress)
                     Using Request As New HttpRequestMessage(HttpMethod.Head, OriginAddress)
                         SecretHeadersSign(OriginAddress, Request)
                         Using Response = Await RequestClient.SendAsync(Request)
