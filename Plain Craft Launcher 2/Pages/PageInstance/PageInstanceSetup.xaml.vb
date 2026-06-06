@@ -450,7 +450,7 @@ PreFin:
                     "如果你不会迁移存档，不建议修改这项设置！",
                     "警告", "我知道我在做什么", "取消", IsWarn:=True) = 2 Then
             IsReverting = True
-            ComboArgumentIndieV2.SelectedItem = e.RemovedItems(0)
+            If e.RemovedItems.Count > 0 Then ComboArgumentIndieV2.SelectedItem = e.RemovedItems(0)
             IsReverting = False
         End If
         '实际应用设置
