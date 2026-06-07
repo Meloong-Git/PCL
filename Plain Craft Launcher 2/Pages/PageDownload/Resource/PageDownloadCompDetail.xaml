@@ -1,4 +1,4 @@
-﻿<local:MyPageRight
+<local:MyPageRight
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -16,7 +16,9 @@
                         <local:MyButton x:Name="BtnIntroWeb"   MinWidth="140" Text="转到 CurseForge" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
                         <local:MyButton x:Name="BtnIntroWiki"  MinWidth="140" Text="转到 MC 百科" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
                         <local:MyButton x:Name="BtnIntroCopy"  MinWidth="140" Text="复制名称" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnTranslate" MinWidth="140" Text="翻译介绍" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
                     </StackPanel>
+                    <TextBlock x:Name="TbTranslatedDescription" Margin="0,15,0,0" TextWrapping="Wrap" Foreground="{StaticResource ColorBrushGray3}" Visibility="Collapsed" />
                 </StackPanel>
             </local:MyCard>
             <StackPanel Grid.Row="1" Grid.RowSpan="2" Name="PanMain" Grid.IsSharedSizeScope="True">

@@ -1,4 +1,4 @@
-﻿<local:MyScrollViewer x:Class="PageResource"
+<local:MyScrollViewer x:Class="PageResource"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -73,7 +73,7 @@
         <StackPanel x:Name="PanContent">
             <local:MyHint x:Name="HintError" HasBorder="True" Text="无法连接到 Modrinth，所以目前仅显示了来自 CurseForge 的内容，搜索结果可能不全。&#xa;请稍后再试，或使用 VPN 改善网络环境。" Theme="Yellow" Margin="0,0,0,15" />
             <local:MyCard x:Name="CardProjects" UseAnimation="False">
-                <StackPanel x:Name="PanProjects" Margin="12" />
+                <WrapPanel x:Name="PanProjects" Margin="12" Orientation="Horizontal"/>
             </local:MyCard>
             <local:MyCard Margin="0,15,0,0" x:Name="CardPages" HorizontalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Height="23" Margin="10,7">

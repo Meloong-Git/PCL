@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Markup
+Imports System.Windows.Markup
 
 <ContentProperty("SearchTags")>
 Public Class PageResource
@@ -149,9 +149,7 @@ Public Class PageResource
             PanProjects.Children.Clear()
             Dim Index As Integer = Math.Min(Page * PAGE_SIZE, Storage.Results.Count - 1)
             For Each Result In Storage.Results.GetRange(Index, Math.Min(Storage.Results.Count - Index, PAGE_SIZE))
-                PanProjects.Children.Add(Result.ToResourceItem(
-                    ShowMcVersionDesc:=Loader.Input.GameVersion Is Nothing,
-                    ShowLoaderDesc:=Loader.Input.ModLoaders = ModLoaders.None AndAlso (PageType = ResourceTypes.Mod OrElse PageType = ResourceTypes.ModPack)))
+                PanProjects.Children.Add(Result.ToResourceGridItem())
             Next
             '页码
             CardPages.Visibility = If(Storage.Results.Count > 40 OrElse

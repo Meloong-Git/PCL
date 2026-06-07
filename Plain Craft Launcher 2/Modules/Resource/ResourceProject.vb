@@ -1,4 +1,7 @@
-﻿''' <summary>
+Imports System.Threading.Tasks
+Imports System.Text
+
+''' <summary>
 ''' 社区资源的项目信息。
 ''' </summary>
 Public Class ResourceProject
@@ -114,6 +117,50 @@ Public Class ResourceProject
             Return If(WikiEntry Is Nothing OrElse WikiEntry.ChineseName = "", RawName, WikiEntry.ChineseName)
         End Get
     End Property
+
+    ''' <summary>
+    ''' 中文描述。若为 Nothing 则没有。
+    ''' </summary>
+    Public ReadOnly Property ChineseDescription As Task(Of String)
+        Get
+            Return GetChineseDescriptionAsync()
+        End Get
+    End Property
+
+    Private Async Function GetChineseDescriptionAsync() As Task(Of String)
+        Dim from = If(Platform = ResourcePlatforms.CurseForge, "curseforge", "modrinth")
+        Dim para = If(Platform = ResourcePlatforms.CurseForge, "modId", "project_id")
+        Dim result As String = Nothing
+
+        Dim descHash = $"{Id}{GetStringMD5(Description)}"
+        Dim cacheFilePath = $"{PathTemp}Cache\CompTranslation.ini"
+        Dim cacheTranslation = ReadIni(cacheFilePath, descHash)
+        If Not String.IsNullOrWhiteSpace(cacheTranslation) Then
+            result = Base64Decode(cacheTranslation)
+            Return result
+        End If
+
+        Try
+            Dim jsonString = Await Task.Run(Function() NetRequestByClient($"https://mod.mcimirror.top/translate/{from}/{Id}"))
+            If Not String.IsNullOrEmpty(jsonString) Then
+                Dim jsonObject = JObject.Parse(jsonString)
+                If jsonObject.ContainsKey("translated") Then
+                    result = jsonObject("translated").ToString()
+                    WriteIni(cacheFilePath, descHash, Base64Encode(result))
+                End If
+            End If
+        Catch ex As WebException
+            If ex.Message.Contains("404") Then
+                MyMsgBox("该资源暂无可翻译的介绍。", "翻译失败", "知道了")
+                Return Nothing
+            End If
+            Logger.Warn(ex, "获取中文描述时出现错误")
+        Catch ex As Exception
+            Logger.Warn(ex, "获取中文描述时出现错误")
+        End Try
+
+        Return result
+    End Function
 
     '实例化
 
@@ -568,6 +615,30 @@ Public Class ResourceProject
             Return NewItem
         End Function) With {.Height = 64}
     End Function
+
+    ''' <summary>
+    ''' 将当前工程信息实例化为网格风格的控件。
+    ''' </summary>
+    Public Function ToResourceGridItem() As MyResourceGridItem
+        Dim NewItem As New MyResourceGridItem With {.Tag = Me}
+        ApplyLogoToMyImage(NewItem.PathLogo)
+        Dim Titles = GetControlTitle(True)
+        NewItem.Title = Titles.Title
+        If Titles.SubTitle = "" Then
+            NewItem.LabTitleRaw.Visibility = Visibility.Collapsed
+        Else
+            NewItem.SubTitle = Titles.SubTitle
+        End If
+        NewItem.Tags = Tags
+        NewItem.Description = Description.ReplaceLineEndings("")
+        NewItem.LabSource.Text = Platform.ToString
+        NewItem.LabTime.Text = GetTimeSpanString(LastUpdate - Date.Now, True)
+        NewItem.LabDownload.Text =
+            If(DownloadCount > 100000000, Math.Round(DownloadCount / 100000000, 2) & " 亿",
+            If(DownloadCount > 100000, Math.Floor(DownloadCount / 10000) & " 万", DownloadCount))
+        Return NewItem
+    End Function
+
     Public Sub ApplyLogoToMyImage(Img As MyImage)
         If String.IsNullOrEmpty(LogoUrl) Then
             Img.Source = PathImage & "Icons/NoIcon.png"
@@ -709,5 +780,34 @@ NoSubtitle:
     Public Shared Operator <>(left As ResourceProject, right As ResourceProject) As Boolean
         Return Not left = right
     End Operator
+
+    Private Shared Function GetStringMD5(str As String) As String
+        Using md5 As System.Security.Cryptography.MD5 = System.Security.Cryptography.MD5.Create()
+            Dim bytes = System.Text.Encoding.UTF8.GetBytes(str)
+            Dim hash = md5.ComputeHash(bytes)
+            Return GetHexString(hash)
+        End Using
+    End Function
+
+    Private Shared Function GetHexString(bytes As Byte()) As String
+        Dim sb As New Text.StringBuilder()
+        For Each b As Byte In bytes
+            sb.Append(b.ToString("x2"))
+        Next
+        Return sb.ToString()
+    End Function
+
+    Private Shared Function Base64Decode(text As String) As String
+        If String.IsNullOrWhiteSpace(text) Then
+            Return ""
+        End If
+        Dim decodedBytes = Convert.FromBase64String(text)
+        Return System.Text.Encoding.UTF8.GetString(decodedBytes)
+    End Function
+
+    Private Shared Function Base64Encode(text As String) As String
+        Dim bytes = System.Text.Encoding.UTF8.GetBytes(text)
+        Return Convert.ToBase64String(bytes)
+    End Function
 
 End Class

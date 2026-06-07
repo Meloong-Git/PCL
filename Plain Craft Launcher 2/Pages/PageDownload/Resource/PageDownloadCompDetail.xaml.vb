@@ -1,4 +1,4 @@
-﻿Public Class PageDownloadResourceDetail
+Public Class PageDownloadResourceDetail
     Private ResourceItem As MyResourceItem = Nothing
 
     ''' <summary>
@@ -283,6 +283,23 @@ GroupDone:
         BtnIntroWeb.Text = $"转到 {Project.Platform}"
         BtnIntroWiki.Visibility = If(Project.WikiId = 0, Visibility.Collapsed, Visibility.Visible)
 
+        '自动加载翻译后的中文描述
+        RunInNewThread(
+            Async Sub()
+                Try
+                    Dim chineseDescription = Await Project.ChineseDescription
+                    If Not String.IsNullOrWhiteSpace(chineseDescription) Then
+                        RunInUi(
+                            Sub()
+                                TbTranslatedDescription.Text = chineseDescription
+                                TbTranslatedDescription.Visibility = Visibility.Visible
+                            End Sub)
+                    End If
+                Catch ex As Exception
+                    Logger.Warn(ex, "自动加载翻译描述时出现错误")
+                End Try
+            End Sub, "Load Translation")
+
         AniControlEnabled -= 1
     End Sub
 
@@ -502,6 +519,15 @@ GroupDone:
     End Sub
     Private Sub BtnIntroCopy_Click(sender As Object, e As EventArgs) Handles BtnIntroCopy.Click
         ClipboardSet(ResourceItem.LabTitle.Text & ResourceItem.LabTitleRaw.Text)
+    End Sub
+
+    '翻译介绍
+    Private Async Sub BtnTranslate_Click(sender As Object, e As EventArgs) Handles BtnTranslate.Click
+        Hint($"正在翻译 {Project.TranslatedName} 的介绍...")
+        Dim chineseDescription = Await Project.ChineseDescription
+        If chineseDescription IsNot Nothing Then
+            MyMsgBox($"原文：{Project.Description.ReplaceLineEndings(" ")}" & vbCrLf & vbCrLf & $"中文翻译：{chineseDescription.ReplaceLineEndings(" ")}", "翻译结果")
+        End If
     End Sub
 
     'Mod / 数据包 互相跳转
