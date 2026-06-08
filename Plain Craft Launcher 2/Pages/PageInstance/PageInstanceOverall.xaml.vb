@@ -112,6 +112,13 @@
                 New ValidateFolderName(McFolderSelected & "versions", IgnoreCase:=False)})
             If String.IsNullOrWhiteSpace(NewName) Then Return
             Dim NewPath As String = McFolderSelected & "versions\" & NewName & "\"
+            '防止重命名为与现有其他版本仅大小写不同的名称：Windows 文件夹名不区分大小写，
+            '否则下方 DirectoryUtils.Move 会冲突，使版本被损坏为 xxx_temp（#6083）。
+            '仅大小写不同地等于原名称时（修改自身名称的大小写）不拦截。
+            If Not NewName.Equals(OldName, StringComparison.OrdinalIgnoreCase) AndAlso DirectoryUtils.Exists(NewPath) Then
+                Hint("已存在同名版本（不区分大小写）！", HintType.Red)
+                Return
+            End If
             '重新读取版本 JSON 信息，避免 JsonObject 中已被合并的项被重新存储
             Dim JsonObject As JObject
             Dim OldJsonPath As String = PageInstanceLeft.Instance.GetJsonPath()
