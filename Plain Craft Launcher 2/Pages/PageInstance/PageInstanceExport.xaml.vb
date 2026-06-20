@@ -794,78 +794,82 @@ Public Class ModSideDetector
 
     ' 线程安全的缓存字典，防并发访问冲突
     Private Shared ReadOnly Cache As New System.Collections.Concurrent.ConcurrentDictionary(Of String, ModSide)()
-
-    ''' <summary>
-    ''' 批量分析 mods 目录下的环境归属
+''' <summary>
+    ''' 批量分析 mods 目录下的环境归属（多线程本地并行计算优化版）
     ''' </summary>
     Public Shared Sub PreScanModsOnline(jarPaths As List(Of String), isLegacy As Boolean)
-        ' 收集需要在线查询环境的 Mod 哈希值与路径映射
-        Dim undecidedHashes As New Dictionary(Of String, String)() ' sha1 -> jarPath
+        ' 使用线程安全的 ConcurrentDictionary，在多线程下并发进行本地解包和哈希计算
+        Dim undecidedHashes As New System.Collections.Concurrent.ConcurrentDictionary(Of String, String)()
         
-        For Each jarPath In jarPaths
-            Dim side As ModSide = ModSide.Both
-            If Cache.TryGetValue(jarPath, side) Then Continue For
-            
-            Dim localDetected As Boolean = False
-            Try
-                Using archive As System.IO.Compression.ZipArchive = System.IO.Compression.ZipFile.OpenRead(jarPath)
-                    ' 1.1 尝试通过 Fabric/Quilt 元数据官方环境字段进行判定
-                    Dim fabricEntry As System.IO.Compression.ZipArchiveEntry = archive.GetEntry("fabric.mod.json")
-                    If fabricEntry IsNot Nothing Then
-                        Using reader As New System.IO.StreamReader(fabricEntry.Open())
-                            Dim text As String = reader.ReadToEnd()
-                            Dim match = System.Text.RegularExpressions.Regex.Match(text, """environment""\s*:\s*""([^""]+)""")
-                            If match.Success Then
-                                Dim env = match.Groups(1).Value.ToLower()
-                                If env = "client" Then
-                                    side = ModSide.ClientOnly
-                                    localDetected = True
-                                ElseIf env = "server" Then
-                                    side = ModSide.ServerOnly
-                                    localDetected = True
-                                ElseIf env = "*" Then
-                                    side = ModSide.Both
-                                    localDetected = True
-                                End If
-                            End If
-                        End Using
-                    End If
-
-                    ' 1.2 判定 Forge / NeoForge 官方环境字段 (mods.toml)
-                    If Not localDetected Then
-                        Dim modsTomlEntry As System.IO.Compression.ZipArchiveEntry = archive.GetEntry("META-INF/mods.toml")
-                        If modsTomlEntry Is Nothing Then modsTomlEntry = archive.GetEntry("META-INF/neoforge.mods.toml")
-                        
-                        If modsTomlEntry IsNot Nothing Then
-                            Using reader As New System.IO.StreamReader(modsTomlEntry.Open())
+        Dim ParallelOptions As New System.Threading.Tasks.ParallelOptions With {
+            .MaxDegreeOfParallelism = 8
+        }
+        
+        System.Threading.Tasks.Parallel.ForEach(jarPaths, ParallelOptions,
+            Sub(jarPath)
+                Dim side As ModSide = ModSide.Both
+                If Cache.TryGetValue(jarPath, side) Then Exit Sub
+                
+                Dim localDetected As Boolean = False
+                Try
+                    Using archive As System.IO.Compression.ZipArchive = System.IO.Compression.ZipFile.OpenRead(jarPath)
+                        ' 1.1 尝试通过 Fabric/Quilt 元数据官方环境字段进行判定
+                        Dim fabricEntry As System.IO.Compression.ZipArchiveEntry = archive.GetEntry("fabric.mod.json")
+                        If fabricEntry IsNot Nothing Then
+                            Using reader As New System.IO.StreamReader(fabricEntry.Open())
                                 Dim text As String = reader.ReadToEnd()
-                                If System.Text.RegularExpressions.Regex.IsMatch(text, "clientSideOnly\s*=\s*(?:true|""true"")", System.Text.RegularExpressions.RegexOptions.IgnoreCase) Then
-                                    side = ModSide.ClientOnly
-                                    localDetected = True
-                                ElseIf System.Text.RegularExpressions.Regex.IsMatch(text, "serverSideOnly\s*=\s*(?:true|""true"")", System.Text.RegularExpressions.RegexOptions.IgnoreCase) Then
-                                    side = ModSide.ServerOnly
-                                    localDetected = True
+                                Dim match = System.Text.RegularExpressions.Regex.Match(text, """environment""\s*:\s*""([^""]+)""")
+                                If match.Success Then
+                                    Dim env = match.Groups(1).Value.ToLower()
+                                    If env = "client" Then
+                                        side = ModSide.ClientOnly
+                                        localDetected = True
+                                    ElseIf env = "server" Then
+                                        side = ModSide.ServerOnly
+                                        localDetected = True
+                                    ElseIf env = "*" Then
+                                        side = ModSide.Both
+                                        localDetected = True
+                                    End If
                                 End If
                             End Using
                         End If
-                    End If
-                End Using
-            Catch ex As Exception
-                ' 忽略读取异常
-            End Try
 
-            ' 如果本地明确判定了，直接存入 Cache
-            If localDetected Then
-                Cache(jarPath) = side
-            Else
-                ' 本地无法判定时放入未决定队列，准备后续进行批量哈希 API 查询
-                Try
-                    Dim sha1 As String = GetFileSha1(jarPath)
-                    undecidedHashes(sha1) = jarPath
+                        ' 1.2 判定 Forge / NeoForge 官方环境字段 (mods.toml)
+                        If Not localDetected Then
+                            Dim modsTomlEntry As System.IO.Compression.ZipArchiveEntry = archive.GetEntry("META-INF/mods.toml")
+                            If modsTomlEntry Is Nothing Then modsTomlEntry = archive.GetEntry("META-INF/neoforge.mods.toml")
+                            
+                            If modsTomlEntry IsNot Nothing Then
+                                Using reader As New System.IO.StreamReader(modsTomlEntry.Open())
+                                    Dim text As String = reader.ReadToEnd()
+                                    If System.Text.RegularExpressions.Regex.IsMatch(text, "clientSideOnly\s*=\s*(?:true|""true"")", System.Text.RegularExpressions.RegexOptions.IgnoreCase) Then
+                                        side = ModSide.ClientOnly
+                                        localDetected = True
+                                    ElseIf System.Text.RegularExpressions.Regex.IsMatch(text, "serverSideOnly\s*=\s*(?:true|""true"")", System.Text.RegularExpressions.RegexOptions.IgnoreCase) Then
+                                        side = ModSide.ServerOnly
+                                        localDetected = True
+                                    End If
+                                End Using
+                            End If
+                        End If
+                    End Using
                 Catch ex As Exception
+                    ' 忽略读取异常
                 End Try
-            End If
-        Next
+
+                ' 如果本地明确判定了，直接存入 Cache
+                If localDetected Then
+                    Cache(jarPath) = side
+                Else
+                    ' 本地无法判定时，并发计算并收集 SHA-1 哈希值
+                    Try
+                        Dim sha1 As String = GetFileSha1(jarPath)
+                        undecidedHashes(sha1) = jarPath
+                    Catch ex As Exception
+                    End Try
+                End If
+            End Sub)
 
         ' 如果本地已全部分析完成，直接返回
         If undecidedHashes.Count = 0 Then Return
@@ -891,7 +895,7 @@ Public Class ModSideDetector
                     contentTask.Wait()
                     Dim jsonText As String = contentTask.Result
                     
-                    ' 解析哈希对应的 Project_ID，建立映射关系
+                    ' 解析哈希对应的 Project_ID，创建映射关系
                     Dim ProjectIdToHashes As New Dictionary(Of String, List(Of String))()
                     For Each hash In ModrinthHashes
                         ' 从响应体中匹配每个 hash 对应的 project_id
@@ -918,7 +922,7 @@ Public Class ModSideDetector
                             projectsContentTask.Wait()
                             Dim projectsJsonText As String = projectsContentTask.Result
 
-                            ' 逐个解析项目区块获取环境配置，避免引入额外库，在此使用正则分割处理
+                            ' 逐个解析项目区块获取环境配置
                             Dim projectBlocks = projectsJsonText.Split(New String() {"},{", "}, {"}, StringSplitOptions.None)
                             For Each block In projectBlocks
                                 Dim idMatch = System.Text.RegularExpressions.Regex.Match(block, """id""\s*:\s*""([^""]+)""")
