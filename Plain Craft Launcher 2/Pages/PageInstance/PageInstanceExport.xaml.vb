@@ -109,10 +109,16 @@ Public Class PageInstanceExport
         '确认选项是否应该被显示
         Dim IsVisible =
         Function(TargetOption As ExportOption) As Boolean
-            '检查需要 OptiFine 或 Mod 加载器
-            If TargetOption.RequireOptiFine AndAlso Not PageInstanceLeft.Instance.Version.HasOptiFine Then Return False
-            If TargetOption.RequireModLoader AndAlso Not PageInstanceLeft.Instance.Modable Then Return False
-            If TargetOption.RequireModLoaderOrOptiFine AndAlso Not PageInstanceLeft.Instance.Version.HasOptiFine AndAlso Not PageInstanceLeft.Instance.Modable Then Return False
+            '检查需要 OptiFine 或 Mod 加载器 (改写为显式 End If 块，防止折行导致编译报错)
+            If TargetOption.RequireOptiFine AndAlso Not PageInstanceLeft.Instance.Version.HasOptiFine Then
+                Return False
+            End If
+            If TargetOption.RequireModLoader AndAlso Not PageInstanceLeft.Instance.Modable Then
+                Return False
+            End If
+            If TargetOption.RequireModLoaderOrOptiFine AndAlso Not PageInstanceLeft.Instance.Version.HasOptiFine AndAlso Not PageInstanceLeft.Instance.Modable Then
+                Return False
+            End If
             '粗略检查是否可能有符合规则的文件/文件夹
             Return StandardizeLines(If(TargetOption.Rules, TargetOption.ShowRules).Split("|"c), True).Any(
             Function(Rule As String)
@@ -430,7 +436,7 @@ Public Class PageInstanceExport
         End If
         If PackPath Is Nothing Then Return
 
-        '缓存所需参数
+        '缓存所需参数（主线程缓存，避免跨线程访问 UI 崩溃）
         Dim CacheFolder = RequestTaskTempFolder()
         Dim OverridesFolder = CacheFolder & "modpack\overrides\"
         Dim McVersion = PageInstanceLeft.Instance
@@ -441,6 +447,20 @@ Public Class PageInstanceExport
         Dim IncludePCLCustom As Boolean = IncludePCL AndAlso CheckOptionsPclCustom.Checked
         Dim AllRules = StandardizeLines(GetAllRules(), True).ToList()
         Dim AllExtraFiles = StandardizeLines(GetExtraFileLines(), False).ToList()
+        
+        ' 缓存 CheckBox 状态变量，避免异步线程访问 UI 崩溃
+        Dim ExcludeClientOnly As Boolean = CheckExcludeClientOnly.Checked
+        Dim ExcludeServerOnly As Boolean = CheckExcludeServerOnly.Checked
+        
+        ' 判定是否为 1.12.2 及以下版本（老版本不含 data/ 目录）
+        Dim IsLegacy As Boolean = False
+        Try
+            Dim versionParts = McVersion.Version.VanillaName.Split("."c)
+            If versionParts.Length >= 2 AndAlso Val(versionParts(1)) <= 12 Then IsLegacy = True
+        Catch ex As Exception
+        End Try
+        ' ========================================================
+
         Logger.Info($"准备导出整合包，共有 {AllRules.Count} 条规则，{AllExtraFiles.Count} 条追加内容行")
 
         '构造步骤加载器
@@ -451,8 +471,20 @@ Public Class PageInstanceExport
         If BuildType <> BuildTypes.Release AndAlso IncludePCL Then
             Loaders.Add(New LoaderTask(Of Integer, Integer)("下载 PCL 正式版",
             Sub(Loader As LoaderTask(Of Integer, Integer))
-                DownloadLatestPCL(Loader)
-                FileUtils.Copy(PathTemp & "Latest.exe", CacheFolder & "Plain Craft Launcher.exe")
+                Try
+                    DownloadLatestPCL(Loader)
+                Catch ex As Exception
+                    Logger.Warn(ex, "下载 PCL 正式版失败，将使用当前运行的程序作为备用")
+                End Try
+                
+                ' 如果下载失败（未在 PathTemp 下找到 Latest.exe），则使用当前运行的程序作为备用
+                Dim SourceExePath As String = PathTemp & "Latest.exe"
+                If Not FileUtils.Exists(SourceExePath) Then
+                    SourceExePath = PathExe
+                    Logger.Info($"[Export] 下载最新 PCL 失败，已使用当前运行的程序进行备用: {PathExe}")
+                End If
+                
+                FileUtils.Copy(SourceExePath, CacheFolder & "Plain Craft Launcher.exe")
             End Sub) With {.ProgressWeight = 0.5, .Block = False})
         End If
 
@@ -463,6 +495,23 @@ Public Class PageInstanceExport
         Loaders.Add(New LoaderTask(Of Integer, List(Of LocalResourceFile))("复制导出内容",
         Sub(Loader As LoaderTask(Of Integer, List(Of LocalResourceFile)))
             Loader.Output = New List(Of LocalResourceFile)
+            
+            ' ========================================================
+            ' 动态排除：批量联网分析 mods 目录下的环境归属
+            ' ========================================================
+            If ExcludeClientOnly OrElse ExcludeServerOnly Then
+                Dim ModsDir As String = Path.Combine(PathIndie, "mods")
+                If Directory.Exists(ModsDir) Then
+                    Dim JarFiles = Directory.GetFiles(ModsDir, "*.jar", SearchOption.TopDirectoryOnly).ToList()
+                    If JarFiles.Count > 0 Then
+                        Logger.Info($"[Export] 开始分析 {JarFiles.Count} 个 Mod 的环境归属...")
+                        ModSideDetector.PreScanModsOnline(JarFiles, IsLegacy)
+                        Logger.Info("[Export] 模组归属分析判定完毕。")
+                    End If
+                End If
+            End If
+            ' ========================================================
+
             '复制版本文件
             Dim Progress As Integer = 0
             Dim SearchFolder As Action(Of DirectoryInfo)
@@ -485,6 +534,29 @@ Public Class PageInstanceExport
                         If RelativePath.Lower Like Rule.TrimStart("!").Lower Then ShouldKeep = Not Revert
                     Next
                     If Not ShouldKeep Then Continue For
+
+                    ' ==========================================
+                    ' 过滤仅客户端/仅服务端 Mod
+                    ' ==========================================
+                    If RelativePath.StartsWithF("mods\") AndAlso RelativePath.EndsWithF(".jar") Then
+                        ' 排除仅客户端 Mod
+                        If ExcludeClientOnly Then
+                            If ModSideDetector.GetModSide(Entry.FullName, IsLegacy) = ModSideDetector.ModSide.ClientOnly Then
+                                Logger.Info($"[Export] 已过滤仅客户端 Mod: {RelativePath}")
+                                Continue For
+                            End If
+                        End If
+
+                        ' 排除仅服务端 Mod
+                        If ExcludeServerOnly Then
+                            If ModSideDetector.GetModSide(Entry.FullName, IsLegacy) = ModSideDetector.ModSide.ServerOnly Then
+                                Logger.Info($"[Export] 已过滤仅服务端 Mod: {RelativePath}")
+                                Continue For
+                            End If
+                        End If
+                    End If
+                    ' ==========================================
+
                     Dim TargetPath As String = OverridesFolder & RelativePath
                     FileUtils.Copy(Entry.FullName, TargetPath)
                     '若为压缩包，考虑联网获取路径
@@ -589,7 +661,7 @@ Public Class PageInstanceExport
                         $"{{""fingerprints"": [{CurseForgeHashes.Join(",")}]}}", "application/json")("data")("exactMatches")
                     For Each ResultJson As JObject In CurseForgeRaw
                         If Not ResultJson.ContainsKey("file") Then Continue For
-                        Dim File As JObject = ResultJson("file")
+                        Dim File = ResultJson("file")
                         If String.IsNullOrEmpty(File("downloadUrl")) Then Continue For
                         '查找对应的文件
                         Dim ModFile As LocalResourceFile = Loader.Input.FirstOrDefault(Function(m) m.CurseForgeHash = File("fileFingerprint").ToObject(Of UInteger))
@@ -649,10 +721,12 @@ Public Class PageInstanceExport
             Next
             Loader.Progress = 0.2
             '导出最终 JSON 文件
-            Dim Dependencies As New JObject From {{"minecraft", McVersion.Version.VanillaName}}
-            If McVersion.Version.HasForge Then Dependencies.Add("forge", McVersion.Version.Forge)
-            If McVersion.Version.HasFabric Then Dependencies.Add("fabric-loader", McVersion.Version.Fabric)
-            If McVersion.Version.HasNeoForge Then Dependencies.Add("neoforge", McVersion.Version.NeoForge)
+            Dim Dependencies As New JArray
+            Dim McVersionStr As String = McVersion.Version.VanillaName
+            Dependencies.Add(New JObject From {{"id", "minecraft"}, {"version", McVersionStr}})
+            If McVersion.Version.HasForge Then Dependencies.Add(New JObject From {{"id", "forge"}, {"version", McVersion.Version.Forge}})
+            If McVersion.Version.HasFabric Then Dependencies.Add(New JObject From {{"id", "fabric-loader"}, {"version", McVersion.Version.Fabric}})
+            If McVersion.Version.HasNeoForge Then Dependencies.Add(New JObject From {{"id", "neoforge"}, {"version", McVersion.Version.NeoForge}})
             Dim ResultJson As New JObject From {
                 {"game", "minecraft"},
                 {"formatVersion", 1},
@@ -708,4 +782,200 @@ Public Class PageInstanceExport
         CheckAdvancedModrinth.IsEnabled = Not CheckAdvancedInclude.Checked
     End Sub
 
+End Class
+
+Public Class ModSideDetector
+
+    Public Enum ModSide
+        Both        ' 双端通用 / 核心
+        ClientOnly  ' 仅客户端
+        ServerOnly  ' 仅服务端
+    End Enum
+
+    ' 线程安全的缓存字典，防并发访问冲突
+    Private Shared ReadOnly Cache As New System.Collections.Concurrent.ConcurrentDictionary(Of String, ModSide)()
+
+    ''' <summary>
+    ''' 批量分析 mods 目录下的环境归属
+    ''' </summary>
+    Public Shared Sub PreScanModsOnline(jarPaths As List(Of String), isLegacy As Boolean)
+        ' 收集需要在线查询环境的 Mod 哈希值与路径映射
+        Dim undecidedHashes As New Dictionary(Of String, String)() ' sha1 -> jarPath
+        
+        For Each jarPath In jarPaths
+            Dim side As ModSide = ModSide.Both
+            If Cache.TryGetValue(jarPath, side) Then Continue For
+            
+            Dim localDetected As Boolean = False
+            Try
+                Using archive As System.IO.Compression.ZipArchive = System.IO.Compression.ZipFile.OpenRead(jarPath)
+                    ' 1.1 尝试通过 Fabric/Quilt 元数据官方环境字段进行判定
+                    Dim fabricEntry As System.IO.Compression.ZipArchiveEntry = archive.GetEntry("fabric.mod.json")
+                    If fabricEntry IsNot Nothing Then
+                        Using reader As New System.IO.StreamReader(fabricEntry.Open())
+                            Dim text As String = reader.ReadToEnd()
+                            Dim match = System.Text.RegularExpressions.Regex.Match(text, """environment""\s*:\s*""([^""]+)""")
+                            If match.Success Then
+                                Dim env = match.Groups(1).Value.ToLower()
+                                If env = "client" Then
+                                    side = ModSide.ClientOnly
+                                    localDetected = True
+                                ElseIf env = "server" Then
+                                    side = ModSide.ServerOnly
+                                    localDetected = True
+                                ElseIf env = "*" Then
+                                    side = ModSide.Both
+                                    localDetected = True
+                                End If
+                            End If
+                        End Using
+                    End If
+
+                    ' 1.2 判定 Forge / NeoForge 官方环境字段 (mods.toml)
+                    If Not localDetected Then
+                        Dim modsTomlEntry As System.IO.Compression.ZipArchiveEntry = archive.GetEntry("META-INF/mods.toml")
+                        If modsTomlEntry Is Nothing Then modsTomlEntry = archive.GetEntry("META-INF/neoforge.mods.toml")
+                        
+                        If modsTomlEntry IsNot Nothing Then
+                            Using reader As New System.IO.StreamReader(modsTomlEntry.Open())
+                                Dim text As String = reader.ReadToEnd()
+                                If System.Text.RegularExpressions.Regex.IsMatch(text, "clientSideOnly\s*=\s*(?:true|""true"")", System.Text.RegularExpressions.RegexOptions.IgnoreCase) Then
+                                    side = ModSide.ClientOnly
+                                    localDetected = True
+                                ElseIf System.Text.RegularExpressions.Regex.IsMatch(text, "serverSideOnly\s*=\s*(?:true|""true"")", System.Text.RegularExpressions.RegexOptions.IgnoreCase) Then
+                                    side = ModSide.ServerOnly
+                                    localDetected = True
+                                End If
+                            End Using
+                        End If
+                    End If
+                End Using
+            Catch ex As Exception
+                ' 忽略读取异常
+            End Try
+
+            ' 如果本地明确判定了，直接存入 Cache
+            If localDetected Then
+                Cache(jarPath) = side
+            Else
+                ' 本地无法判定时放入未决定队列，准备后续进行批量哈希 API 查询
+                Try
+                    Dim sha1 As String = GetFileSha1(jarPath)
+                    undecidedHashes(sha1) = jarPath
+                Catch ex As Exception
+                End Try
+            End If
+        Next
+
+        ' 如果本地已全部分析完成，直接返回
+        If undecidedHashes.Count = 0 Then Return
+
+        ' 2. 联网查询：批量查询 Modrinth API 获取项目的环境属性
+        Try
+            Using client As New System.Net.Http.HttpClient()
+                ' 携带 User-Agent 避免 API 请求被拦截
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("PCL2-CustomExporter/1.0")
+                client.Timeout = System.TimeSpan.FromSeconds(10)
+
+                Dim ModrinthHashes = undecidedHashes.Select(Function(kv) kv.Key).ToList()
+                
+                ' 2.1 步骤 1：批量映射 Project_id
+                Dim reqJson As String = "{""hashes"": [""" & String.Join(""",""", ModrinthHashes) & """], ""algorithm"": ""sha1""}"
+                Dim responseTask = client.PostAsync("https://api.modrinth.com/v2/version_files", 
+                    New System.Net.Http.StringContent(reqJson, System.Text.Encoding.UTF8, "application/json"))
+                responseTask.Wait()
+                Dim response = responseTask.Result
+                
+                If response.IsSuccessStatusCode Then
+                    Dim contentTask = response.Content.ReadAsStringAsync()
+                    contentTask.Wait()
+                    Dim jsonText As String = contentTask.Result
+                    
+                    ' 解析哈希对应的 Project_ID，建立映射关系
+                    Dim ProjectIdToHashes As New Dictionary(Of String, List(Of String))()
+                    For Each hash In ModrinthHashes
+                        ' 从响应体中匹配每个 hash 对应的 project_id
+                        Dim projectPattern As String = $"""{hash}""[\s\S]*?""project_id""\s*:\s*""([^""]+)"""
+                        Dim projMatch = System.Text.RegularExpressions.Regex.Match(jsonText, projectPattern)
+                        If projMatch.Success Then
+                            Dim pid As String = projMatch.Groups(1).Value
+                            If Not ProjectIdToHashes.ContainsKey(pid) Then ProjectIdToHashes(pid) = New List(Of String)()
+                            ProjectIdToHashes(pid).Add(hash)
+                        End If
+                    Next
+
+                    If ProjectIdToHashes.Count > 0 Then
+                        ' 2.2 步骤 2：批量获取这些 Project 的 client_side 和 server_side 字段
+                        Dim projectIds As New List(Of String)(ProjectIdToHashes.Keys)
+                        Dim idsParam As String = "[""" & String.Join(""",""", projectIds) & """]"
+                        
+                        Dim projectsResponseTask = client.GetAsync("https://api.modrinth.com/v2/projects?ids=" & System.Uri.EscapeDataString(idsParam))
+                        projectsResponseTask.Wait()
+                        Dim projectsResponse = projectsResponseTask.Result
+                        
+                        If projectsResponse.IsSuccessStatusCode Then
+                            Dim projectsContentTask = projectsResponse.Content.ReadAsStringAsync()
+                            projectsContentTask.Wait()
+                            Dim projectsJsonText As String = projectsContentTask.Result
+
+                            ' 逐个解析项目区块获取环境配置，避免引入额外库，在此使用正则分割处理
+                            Dim projectBlocks = projectsJsonText.Split(New String() {"},{", "}, {"}, StringSplitOptions.None)
+                            For Each block In projectBlocks
+                                Dim idMatch = System.Text.RegularExpressions.Regex.Match(block, """id""\s*:\s*""([^""]+)""")
+                                If idMatch.Success Then
+                                    Dim pid As String = idMatch.Groups(1).Value
+                                    Dim clientSide As String = System.Text.RegularExpressions.Regex.Match(block, """client_side""\s*:\s*""([^""]+)""").Groups(1).Value
+                                    Dim serverSide As String = System.Text.RegularExpressions.Regex.Match(block, """server_side""\s*:\s*""([^""]+)""").Groups(1).Value
+
+                                    ' 根据环境属性进行判定。如果两侧均为必需或可选，则默认双端保留 (Both)
+                                    Dim determinedSide As ModSide = ModSide.Both
+                                    If clientSide = "unsupported" Then
+                                        determinedSide = ModSide.ServerOnly
+                                    ElseIf serverSide = "unsupported" Then
+                                        determinedSide = ModSide.ClientOnly
+                                    End If
+
+                                    ' 将判定结果写入对应下属 jar 包的缓存
+                                    If ProjectIdToHashes.ContainsKey(pid) Then
+                                        For Each hash In ProjectIdToHashes(pid)
+                                            Dim jarPath As String = undecidedHashes(hash)
+                                            Cache(jarPath) = determinedSide
+                                        Next
+                                    End If
+                                End If
+                            Next
+                        End If
+                    End If
+                End If
+            End Using
+        Catch ex As Exception
+            ' 忽略异常
+        End Try
+
+        ' 3. 兜底处理：网络查询失败或未匹配到时，默认作为双端保留 (Both)
+        For Each jarPath In undecidedHashes.Values
+            If Not Cache.ContainsKey(jarPath) Then
+                Cache(jarPath) = ModSide.Both
+            End If
+        Next
+    End Sub
+
+    ''' <summary>
+    ''' 获取已经决定完毕的 Mod 环境运行侧类型
+    ''' </summary>
+    Public Shared Function GetModSide(jarPath As String, isLegacy As Boolean) As ModSide
+        Dim side As ModSide = ModSide.Both
+        If Cache.TryGetValue(jarPath, side) Then Return side
+        Return ModSide.Both
+    End Function
+
+    ' 计算 SHA-1 校验和
+    Private Shared Function GetFileSha1(filePath As String) As String
+        Using sha1 As System.Security.Cryptography.SHA1 = System.Security.Cryptography.SHA1.Create()
+            Using stream As System.IO.FileStream = System.IO.File.OpenRead(filePath)
+                Dim hashBytes() As Byte = sha1.ComputeHash(stream)
+                Return BitConverter.ToString(hashBytes).Replace("-", "").ToLower()
+            End Using
+        End Using
+    End Function
 End Class

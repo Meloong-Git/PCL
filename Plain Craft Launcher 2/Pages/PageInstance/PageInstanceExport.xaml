@@ -89,6 +89,25 @@
                                 Rules="mods/*.disabled|mods/*.old" />
                                 </local:MyCheckBox.Tag>
                             </local:MyCheckBox>
+                            <local:MyCheckBox x:Name="CheckExcludeClientOnly">
+                                <local:MyCheckBox.Tag>
+                                    <local:ExportOption 
+                                        Title="排除仅客户端运行的 Mod"
+                                        Description="剔除优化、小地图、JEI 等纯客户端 Mod(不包含前置)"
+                                        Rules=""
+                                        DefaultChecked="False" />
+                                </local:MyCheckBox.Tag>
+                            </local:MyCheckBox>
+                                              
+                            <local:MyCheckBox x:Name="CheckExcludeServerOnly">
+                                <local:MyCheckBox.Tag>
+                                    <local:ExportOption 
+                                        Title="排除仅服务端运行的 Mod"
+                                        Description="剔除 spark、Chunky、备份等纯服务端 Mod(不包含前置)"
+                                        Rules=""
+                                        DefaultChecked="False" />
+                                </local:MyCheckBox.Tag>
+                            </local:MyCheckBox>
                             <local:MyCheckBox>
                                 <local:MyCheckBox.Tag>
                                     <local:ExportOption 
@@ -286,7 +305,7 @@
             </StackPanel>
         </local:MyScrollViewer>
         <local:MyExtraTextButton HorizontalAlignment="Center" VerticalAlignment="Bottom"
-            x:Name="BtnExport" Text="开始导出"
-            LogoScale="1.1" Logo="M511 995a128 128 0 0 1-57-13L70 791a126 126 0 0 1-70-113V311a126 126 0 0 1 15-60V248c1-2 3-5 5-8a127 127 0 0 1 49-42L454 13a128 128 0 0 1 112 0l383 190a126 126 0 0 1 72 113v360a126 126 0 0 1-70 115L568 984c-17 7-37 11-57 11z m42-470v370l360-178c14-7 23-21 23-38v-335L554 524zM85 330v347a42 42 0 0 0 23 38l360 178V523L85 330zM135 260l375 189 137-65L286 188 135 260z m245-118l363 197 150-71-365-180a42 42 0 0 0-37 0l-111 53z" />
+                                 x:Name="BtnExport" Text="开始导出"
+                                 LogoScale="1.1" Logo="M511 995a128 128 0 0 1-57-13L70 791a126 126 0 0 1-70-113V311a126 126 0 0 1 15-60V248c1-2 3-5 5-8a127 127 0 0 1 49-42L454 13a128 128 0 0 1 112 0l383 190a126 126 0 0 1 72 113v360a126 126 0 0 1-70 115L568 984c-17 7-37 11-57 11z m42-470v370l360-178c14-7 23-21 23-38v-335L554 524zM85 330v347a42 42 0 0 0 23 38l360 178V523L85 330zM135 260l375 189 137-65L286 188 135 260z m245-118l363 197 150-71-365-180a42 42 0 0 0-37 0l-111 53z" />
     </Grid>
 </local:MyPageRight>
