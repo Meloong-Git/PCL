@@ -296,7 +296,7 @@ Public Class PageSelectLeft
         Dim DeleteText As String = If((Target.Type = McFolder.Types.Vanilla OrElse Target.Type = McFolder.Types.RenamedVanilla) AndAlso Target.Location = Paths.Base & ".minecraft\" AndAlso McFolderList.IsSingle, "清空", "删除")
         If MyMsgBox("你确定要" & DeleteText & "这个文件夹吗？" & vbCrLf &
                     "目标文件夹：" & Target.Location & vbCrLf & vbCrLf &
-                    "该文件夹中的游戏存档、游戏版本，以及 MC 之外的其他文件，都会永久丢失，不可恢复！", "警告", "取消", "确认", "取消") <> 2 Then Return
+                    "该文件夹中的游戏存档、游戏版本，以及 MC 之外的其他文件，都会永久丢失，不可恢复！", "警告", "确认", "取消") <> 1 Then Return
         If MyMsgBoxInput("删除确认",
                          "该文件夹中的游戏存档、游戏版本，以及 MC 之外的其他文件，都会永久丢失，不可恢复！" & vbCrLf &
                          "目标文件夹：" & Target.Location & vbCrLf & vbCrLf &
