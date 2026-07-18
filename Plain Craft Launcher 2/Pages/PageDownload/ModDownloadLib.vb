@@ -1793,7 +1793,8 @@ Retry:
     Public Sub McInstallState(Loader As LoaderBase)
         Select Case Loader.State
             Case LoadState.Finished
-                WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '清空缓存（合并安装会先生成文件夹，这会在刷新时误判为可以使用缓存）
+                WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '持久化缓存失效，确保重启 PCL 后也会重新扫描
+                McInstanceListForceRefreshRequest() '防止旧扫描在新加载开始前重新写回有效缓存
                 Hint(Loader.Name & "成功！", HintType.Green)
                 'TODO: 自动选择安装成功的版本
             Case LoadState.Failed

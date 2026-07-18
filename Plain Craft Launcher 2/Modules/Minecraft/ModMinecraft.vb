@@ -1250,14 +1250,19 @@ ExitDataLoad:
 #Region "版本列表加载"
 
     ''' <summary>
-    ''' 是否要求本次加载强制刷新版本列表。
+    ''' 请求下一次版本列表加载跳过缓存；请求仅在完整重载成功后才会被标记为已处理。
     ''' </summary>
-    Public McInstanceListForceRefresh As Boolean = False
+    Private McInstanceListForceRefreshGeneration As Integer = 0
+    Private McInstanceListLastRefreshGeneration As Integer = 0
+    Public Sub McInstanceListForceRefreshRequest()
+        Interlocked.Increment(McInstanceListForceRefreshGeneration)
+    End Sub
     ''' <summary>
     ''' 是否为本次打开 PCL 后第一次加载版本列表。
     ''' 这会清理所有 .pclignore 文件，而非跳过这些对应版本。
     ''' </summary>
     Private IsFirstMcInstanceListLoad As Boolean = True
+    Private ReadOnly McInstanceListCommitLock As New Object
 
     ''' <summary>
     ''' 加载 Minecraft 文件夹的版本列表。
@@ -1266,10 +1271,15 @@ ExitDataLoad:
     Private Sub InitMcInstanceList(Loader As LoaderTask(Of String, Integer))
         '开始加载
         Dim PathMc As String = Loader.Input
+        Dim NewInstanceList As New Dictionary(Of McInstanceCardType, List(Of McInstance))
+        Dim FolderListCheck As Integer = 0
+        Dim ShouldClearInstanceCache As Boolean = False
+        Dim ShouldSaveInstanceCache As Boolean = False
+        Dim ForceRefreshGeneration As Integer = Volatile.Read(McInstanceListForceRefreshGeneration)
+        Dim ForceRefresh As Boolean = ForceRefreshGeneration <> Volatile.Read(McInstanceListLastRefreshGeneration)
+        Dim IsFirstLoad As Boolean = Volatile.Read(IsFirstMcInstanceListLoad)
+        Dim HasVersions As Boolean = False
         Try
-            '初始化
-            McInstanceList = New Dictionary(Of McInstanceCardType, List(Of McInstance))
-
             '检测缓存是否需要更新
             Dim FolderList As New List(Of String)
             If DirectoryUtils.Exists(PathMc & "versions") Then '不要使用 CheckPermission，会导致写入时间改变，从而使得文件夹被强制刷新
@@ -1281,82 +1291,124 @@ ExitDataLoad:
                     Throw New Exception("无法读取版本文件夹，可能是由于没有权限（" & PathMc & "versions）", ex)
                 End Try
             End If
+            HasVersions = FolderList.Any()
             '不可用
-            If Not FolderList.Any() Then
-                WriteIni(PathMc & "PCL.ini", "InstanceCache", "") '清空缓存
+            If Not HasVersions Then
+                ShouldClearInstanceCache = True
                 GoTo OnLoaded
             End If
             '有可用版本
-            Dim FolderListCheck As Integer = (Versions.McInstanceCacheVersion & "#" & FolderList.Join("#"c)).GetStableHashCode() Mod (Integer.MaxValue - 1) '根据文件夹名列表生成辨识码
-            If Not McInstanceListForceRefresh AndAlso Val(ReadIni(PathMc & "PCL.ini", "InstanceCache")) = FolderListCheck Then
-                '可以使用缓存
-                Dim Result = InitMcInstanceListWithCache(PathMc)
-                If Result Is Nothing Then
-                    GoTo Reload
-                Else
-                    McInstanceList = Result
+            FolderListCheck = (Versions.McInstanceCacheVersion & "#" & FolderList.Join("#"c)).GetStableHashCode() Mod (Integer.MaxValue - 1) '根据文件夹名列表生成辨识码
+            If Not ForceRefresh Then
+                Dim CacheEntries As List(Of McInstanceListCacheEntry) = Nothing
+                SyncLock McInstanceListCommitLock
+                    If Loader.IsCanceled Then Return
+                    If Val(ReadIni(PathMc & "PCL.ini", "InstanceCache")) = FolderListCheck Then
+                        CacheEntries = ReadMcInstanceListCache(PathMc)
+                    End If
+                End SyncLock
+                If CacheEntries IsNot Nothing Then
+                    Dim CachedResult = InitMcInstanceListWithCache(PathMc, IsFirstLoad, CacheEntries)
+                    If CachedResult IsNot Nothing Then
+                        NewInstanceList = CachedResult
+                        GoTo OnLoaded
+                    End If
                 End If
-            Else
-                '文件夹列表不符
-Reload:
-                McInstanceListForceRefresh = False
-                Logger.Info("文件夹列表变更，重载所有版本")
-                WriteIni(PathMc & "PCL.ini", "InstanceCache", FolderListCheck)
-                McInstanceList = InitMcInstanceListWithoutCache(PathMc)
             End If
-            IsFirstMcInstanceListLoad = False
+            '文件夹列表不符或要求强制刷新
+            Logger.Info("文件夹列表变更，重载所有版本")
+            NewInstanceList = InitMcInstanceListWithoutCache(PathMc, IsFirstLoad)
+            ShouldSaveInstanceCache = True
 
             '改变当前选择的版本
 OnLoaded:
-            If Loader.IsCanceled Then Return
-            If McInstanceList.Any(Function(v) v.Key <> McInstanceCardType.Error) Then
-                '尝试读取已储存的选择
-                Dim SavedSelection As String = ReadIni(PathMc & "PCL.ini", "Version")
-                If SavedSelection <> "" Then
-                    For Each Card As KeyValuePair(Of McInstanceCardType, List(Of McInstance)) In McInstanceList
-                        For Each Instance As McInstance In Card.Value
-                            If Instance.Name = SavedSelection AndAlso Not Instance.State = McInstanceState.Error Then
-                                '使用已储存的选择
-                                McInstanceSelected = Instance
-                                Logger.Info($"选择该文件夹储存的 Minecraft 版本：{McInstanceSelected.PathVersion}")
-                                Return
-                            End If
-                        Next
-                    Next
-                End If
-                If Not McInstanceList.First.Value(0).State = McInstanceState.Error Then
-                    '自动选择第一项
-                    McInstanceSelected = McInstanceList.First.Value(0)
-                    Logger.Info($"自动选择 Minecraft 版本：{McInstanceSelected.PathVersion}")
-                End If
-            Else
-                McInstanceSelected = Nothing
-                Logger.Info("未找到可用 Minecraft 版本")
-            End If
             If Settings.Get(Of Boolean)("SystemDebugDelay") Then Thread.Sleep(RandomInteger(200, 3000))
+            SyncLock McInstanceListCommitLock
+                If Loader.IsCanceled OrElse PathMc <> McFolderSelected Then Return
+                '先让缓存失效，避免其他加载线程读取到尚未完整写入的卡片缓存
+                If ShouldSaveInstanceCache Then
+                    WriteIni(PathMc & "PCL.ini", "InstanceCache", "")
+                    SaveMcInstanceListCache(PathMc, NewInstanceList)
+                ElseIf ShouldClearInstanceCache Then
+                    WriteIni(PathMc & "PCL.ini", "InstanceCache", "")
+                End If
+                McInstanceList = NewInstanceList
+                If HasVersions Then Volatile.Write(IsFirstMcInstanceListLoad, False)
+                If NewInstanceList.Any(Function(v) v.Key <> McInstanceCardType.Error) Then
+                    '尝试读取已储存的选择
+                    Dim IsSavedSelectionLoaded As Boolean = False
+                    Dim SavedSelection As String = ReadIni(PathMc & "PCL.ini", "Version")
+                    If SavedSelection <> "" Then
+                        For Each Card As KeyValuePair(Of McInstanceCardType, List(Of McInstance)) In NewInstanceList
+                            For Each Instance As McInstance In Card.Value
+                                If Instance.Name = SavedSelection AndAlso Not Instance.State = McInstanceState.Error Then
+                                    '使用已储存的选择
+                                    McInstanceSelected = Instance
+                                    Logger.Info($"选择该文件夹储存的 Minecraft 版本：{McInstanceSelected.PathVersion}")
+                                    IsSavedSelectionLoaded = True
+                                    Exit For
+                                End If
+                            Next
+                            If IsSavedSelectionLoaded Then Exit For
+                        Next
+                    End If
+                    If Not IsSavedSelectionLoaded AndAlso Not NewInstanceList.First.Value(0).State = McInstanceState.Error Then
+                        '自动选择第一项
+                        McInstanceSelected = NewInstanceList.First.Value(0)
+                        Logger.Info($"自动选择 Minecraft 版本：{McInstanceSelected.PathVersion}")
+                    End If
+                Else
+                    McInstanceSelected = Nothing
+                    Logger.Info("未找到可用 Minecraft 版本")
+                End If
+                If ShouldSaveInstanceCache Then
+                    WriteIni(PathMc & "PCL.ini", "InstanceCache", FolderListCheck)
+                    Volatile.Write(McInstanceListLastRefreshGeneration, ForceRefreshGeneration)
+                End If
+            End SyncLock
         Catch ex As Exception
             If Loader.IsCanceled OrElse ex.IsCanceled Then Return '#5617
-            WriteIni(PathMc & "PCL.ini", "InstanceCache", "") '要求下次重新加载
+            SyncLock McInstanceListCommitLock
+                If Loader.IsCanceled Then Return
+                WriteIni(PathMc & "PCL.ini", "InstanceCache", "") '要求下次重新加载
+            End SyncLock
             Logger.Error(ex, "加载 .minecraft 版本列表失败")
         End Try
     End Sub
 
     '获取版本列表
-    Private Function InitMcInstanceListWithCache(Folder As String) As Dictionary(Of McInstanceCardType, List(Of McInstance))
-        Dim Results As New Dictionary(Of McInstanceCardType, List(Of McInstance))
+    Private Class McInstanceListCacheEntry
+        Public CardType As McInstanceCardType
+        Public VersionNames As String()
+    End Class
+    Private Function ReadMcInstanceListCache(Folder As String) As List(Of McInstanceListCacheEntry)
         Try
             Dim CardCount As Integer = ReadIni(Folder & "PCL.ini", "CardCount", -1)
             If CardCount = -1 Then Return Nothing
+            Dim CacheEntries As New List(Of McInstanceListCacheEntry)
             For i = 0 To CardCount - 1
-                Dim CardType As McInstanceCardType = ReadIni(Folder & "PCL.ini", "CardKey" & (i + 1), ":")
+                CacheEntries.Add(New McInstanceListCacheEntry With {
+                    .CardType = ReadIni(Folder & "PCL.ini", "CardKey" & (i + 1), ":"),
+                    .VersionNames = ReadIni(Folder & "PCL.ini", "CardValue" & (i + 1), ":").Split(":")})
+            Next
+            Return CacheEntries
+        Catch ex As Exception
+            Logger.Warn(ex, "读取版本缓存清单失败")
+            Return Nothing
+        End Try
+    End Function
+    Private Function InitMcInstanceListWithCache(Folder As String, IsFirstLoad As Boolean, CacheEntries As List(Of McInstanceListCacheEntry)) As Dictionary(Of McInstanceCardType, List(Of McInstance))
+        Dim Results As New Dictionary(Of McInstanceCardType, List(Of McInstance))
+        Try
+            For Each CacheEntry In CacheEntries
                 Dim InstanceList As New List(Of McInstance)
 
                 '循环读取版本
-                For Each VersionName As String In ReadIni(Folder & "PCL.ini", "CardValue" & (i + 1), ":").Split(":")
+                For Each VersionName As String In CacheEntry.VersionNames
                     If VersionName = "" Then Continue For
                     Dim FolderVersions As String = $"{Folder}versions\{VersionName}\"
                     If FileUtils.Exists(FolderVersions & ".pclignore") Then
-                        If IsFirstMcInstanceListLoad Then
+                        If IsFirstLoad Then
                             Logger.Info($"清理残留的忽略项目：{FolderVersions}") '#2781
                             FileUtils.Delete(FolderVersions & ".pclignore")
                         Else
@@ -1418,7 +1470,7 @@ OnLoaded:
                     End Try
                 Next
 
-                If InstanceList.Any Then Results.Add(CardType, InstanceList)
+                If InstanceList.Any Then Results.Add(CacheEntry.CardType, InstanceList)
             Next
             Return Results
         Catch ex As Exception
@@ -1426,7 +1478,7 @@ OnLoaded:
             Return Nothing
         End Try
     End Function
-    Private Function InitMcInstanceListWithoutCache(Folder As String) As Dictionary(Of McInstanceCardType, List(Of McInstance))
+    Private Function InitMcInstanceListWithoutCache(Folder As String, IsFirstLoad As Boolean) As Dictionary(Of McInstanceCardType, List(Of McInstance))
         Dim InstanceList As New List(Of McInstance)
 
 #Region "循环加载每个版本的信息"
@@ -1442,7 +1494,7 @@ OnLoaded:
             End If
             Dim VersionFolder As String = VersionFolderInfo.FullName & "\"
             If FileUtils.Exists(VersionFolder & ".pclignore") Then
-                If IsFirstMcInstanceListLoad Then
+                If IsFirstLoad Then
                     Logger.Info($"清理残留的忽略项目：{VersionFolder}") '#2781
                     FileUtils.Delete(VersionFolder & ".pclignore")
                 Else
@@ -1596,8 +1648,9 @@ OnLoaded:
         Next
 
 #End Region
-#Region "保存卡片缓存"
-        WriteIni(Folder & "PCL.ini", "CardCount", Results.Count)
+        Return Results
+    End Function
+    Private Sub SaveMcInstanceListCache(Folder As String, Results As Dictionary(Of McInstanceCardType, List(Of McInstance)))
         For i = 0 To Results.Count - 1
             WriteIni(Folder & "PCL.ini", "CardKey" & (i + 1), Results.Keys(i))
             Dim Value As String = ""
@@ -1606,9 +1659,8 @@ OnLoaded:
             Next
             WriteIni(Folder & "PCL.ini", "CardValue" & (i + 1), Value)
         Next
-#End Region
-        Return Results
-    End Function
+        WriteIni(Folder & "PCL.ini", "CardCount", Results.Count)
+    End Sub
     ''' <summary>
     ''' 筛选特定种类的版本，并直接添加为卡片。
     ''' </summary>

@@ -328,6 +328,7 @@ PreFin:
     Public Shared Sub OnVersionServerLoginChanged(Type As Integer)
         If FrmInstanceSetup Is Nothing Then Return
         WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "")
+        McInstanceListForceRefreshRequest()
         If PageInstanceLeft.Instance Is Nothing Then Return
         PageInstanceLeft.Instance = New McInstance(PageInstanceLeft.Instance.Name).Load()
         LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")

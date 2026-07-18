@@ -130,7 +130,8 @@ Public Class PageSelectRight
         End If
         AddHandler BtnStar.Click, Sub()
                                       WriteIni(Instance.PathVersion & "PCL\Setup.ini", "IsStar", Not Instance.IsStar)
-                                      McInstanceListForceRefresh = True
+                                      WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "")
+                                      McInstanceListForceRefreshRequest()
                                       LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
                                   End Sub
         Dim BtnDel As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonDelete}

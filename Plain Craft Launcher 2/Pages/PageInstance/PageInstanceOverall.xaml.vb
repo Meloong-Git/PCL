@@ -63,6 +63,7 @@ Public Class PageInstanceOverall
                 FrmInstanceLeft.RefreshModDisabled()
 
                 WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '要求刷新缓存
+                McInstanceListForceRefreshRequest()
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             Catch ex As Exception
                 Logger.Error(ex, $"修改版本分类失败（{PageInstanceLeft.Instance.Name}）")
@@ -80,6 +81,7 @@ Public Class PageInstanceOverall
                 End If
                 WriteIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "DisplayType", McInstanceCardType.Hidden)
                 WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '要求刷新缓存
+                McInstanceListForceRefreshRequest()
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             Catch ex As Exception
                 Logger.Error(ex, $"隐藏版本 {PageInstanceLeft.Instance.Name} 失败")
@@ -181,6 +183,7 @@ Public Class PageInstanceOverall
             WriteIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "LogoCustom", Not NewLogo = "")
             '刷新显示
             WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '要求刷新缓存
+            McInstanceListForceRefreshRequest()
             PageInstanceLeft.Instance = New McInstance(PageInstanceLeft.Instance.Name).Load()
             Reload()
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
@@ -195,7 +198,8 @@ Public Class PageInstanceOverall
             WriteIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "IsStar", Not PageInstanceLeft.Instance.IsStar)
             PageInstanceLeft.Instance = New McInstance(PageInstanceLeft.Instance.Name).Load()
             Reload()
-            McInstanceListForceRefresh = True
+            WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "")
+            McInstanceListForceRefreshRequest()
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
         Catch ex As Exception
             Logger.Error(ex, $"版本 {PageInstanceLeft.Instance.Name} 收藏状态更改失败", LogBehavior.Alert)
