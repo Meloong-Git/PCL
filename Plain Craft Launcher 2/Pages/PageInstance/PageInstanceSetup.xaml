@@ -265,6 +265,9 @@
                                           ToolTip="是否使用 Java Launch Wrapper 修复 Java 18- 在中文路径下可能无法正常启动的问题。&#xa;详见：https://github.com/00ll00/java_launch_wrapper" />
                         <local:MyCheckBox Height="28" Text="禁用 LWJGL Unsafe Agent" local:SettingService.Key="VersionAdvanceDisableLUA"
                                           ToolTip="是否使用 LWJGL Unsafe Agent 修复 LWJGL 3.4.1 的一个性能问题。&#xa;详见：https://github.com/HMCL-dev/lwjgl-unsafe-agent" />
+                        <local:MyCheckBox Height="28" Text="使用代理" local:SettingService.Key="VersionAdvanceUseProxy"
+                                          ToolTipService.Placement="Right"
+                                          ToolTip="PCL 会使用 设置 → 其他 → 下载 → HTTP 代理 中填写的代理来启动游戏。" />
                     </StackPanel>
                 </Grid>
             </local:MyCard>
