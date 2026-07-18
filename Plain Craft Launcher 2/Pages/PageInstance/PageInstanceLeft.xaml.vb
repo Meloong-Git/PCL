@@ -1,4 +1,4 @@
-﻿Public Class PageInstanceLeft
+Public Class PageInstanceLeft
     Implements IRefreshable
 
     ''' <summary>
@@ -65,7 +65,7 @@
             PageChangeRun(PageGet(ID))
             PageID = ID
         Catch ex As Exception
-            Log(ex, "切换分页面失败（ID " & ID & "）", LogLevel.Feedback)
+            Logger.Error(ex, $"切换分页面失败（ID {ID}）")
         Finally
             AniControlEnabled -= 1
         End Try
@@ -91,7 +91,7 @@
 
 #End Region
 
-    Public Sub Refresh(sender As Object, e As EventArgs) '由边栏按钮匿名调用
+    Public Sub Refresh_Click(sender As Object, e As EventArgs) '由边栏按钮匿名调用
         Refresh(Val(sender.Tag))
     End Sub
     Public Sub Refresh() Implements IRefreshable.Refresh
@@ -114,6 +114,14 @@
             FrmInstanceSetup.Reset()
             ItemSetup.Checked = True
         End If
+    End Sub
+
+    '加载当前版本将要选择的 Java
+    Public Shared CurrentJavaWorker As New RedoableWorker(Of Java)(Function(c, p) SelectOrDownloadJava(PageInstanceLeft.Instance, False, c, p))
+    Public Shared Sub ReloadCurrentJava() Handles Me.Loaded
+        If AniControlEnabled <> 0 Then Return
+        If PageInstanceLeft.Instance Is Nothing Then Return
+        CurrentJavaWorker.Start()
     End Sub
 
 End Class

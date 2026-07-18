@@ -1,4 +1,4 @@
-﻿'一个万能的自动图片类型转换工具类
+'一个万能的自动图片类型转换工具类
 
 Imports System.Drawing.Imaging
 
@@ -72,7 +72,7 @@ Public Class MyBitmap
                 End If
             Else
                 '使用这种自己接管 FileStream 的方法加载才能解除文件占用
-                Using InputStream As New FileStream(FilePathOrResourceName, FileMode.Open, FileAccess.Read, FileShare.Read)
+                Using InputStream = FileUtils.ReadAsStream(FilePathOrResourceName)
                     '判断是否为 WebP 文件头
                     Dim Header(1) As Byte
                     InputStream.Read(Header, 0, 2)
@@ -97,7 +97,7 @@ Public Class MyBitmap
                     Throw New Exception($"加载 MyBitmap 意外失败（{FilePathOrResourceName}）", ex)
                 End If
             Else
-                Log(ex, $"指定类型有误的 MyBitmap 加载（{FilePathOrResourceName}）", LogLevel.Developer)
+                Logger.Warn(ex, $"指定类型有误的 MyBitmap 加载（{FilePathOrResourceName}）")
                 Exit Try
             End If
         End Try
@@ -126,9 +126,7 @@ Public Class MyBitmap
     End Sub
     Private Class WebPDecoder '将代码隔离在另外一个类中，这样只要不调用这个方法就不会加载 Imazen.WebP.dll
         Public Shared Function DecodeFromBytes(Bytes As Byte()) As System.Drawing.Bitmap
-            If Is32BitSystem Then Throw New Exception("不支持在 32 位系统下加载 WebP 图片。")
-            Dim Decoder As New Imazen.WebP.SimpleDecoder()
-            Return Decoder.DecodeFromBytes(Bytes, Bytes.Length)
+            Return New Imazen.WebP.SimpleDecoder().DecodeFromBytes(Bytes, Bytes.Length)
         End Function
     End Class
 
@@ -162,7 +160,7 @@ Public Class MyBitmap
     Public Sub Save(FilePath As String)
         Dim encoder As BitmapEncoder = New PngBitmapEncoder()
         encoder.Frames.Add(BitmapFrame.Create(Me))
-        Using fileStream As New FileStream(FilePath, FileMode.Create)
+        Using fileStream = FileUtils.CreateAsStream(FilePath)
             encoder.Save(fileStream)
         End Using
     End Sub

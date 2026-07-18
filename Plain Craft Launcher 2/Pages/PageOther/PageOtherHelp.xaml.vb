@@ -1,4 +1,4 @@
-﻿Public Class PageOtherHelp
+Public Class PageOtherHelp
     Implements IRefreshable
 
 #Region "初始化"
@@ -27,8 +27,8 @@
             '获取全部分类
             Dim Types As New List(Of String)
             For Each Item As HelpEntry In HelpItems
-                If Val(VersionBranchCode) = 50 AndAlso Not Item.ShowInPublic Then Continue For
-                If Val(VersionBranchCode) <> 50 AndAlso Not Item.ShowInSnapshot Then Continue For
+                If BuildType = BuildTypes.Release AndAlso Not Item.ShowInPublic Then Continue For
+                If BuildType <> BuildTypes.Release AndAlso Not Item.ShowInSnapshot Then Continue For
                 For Each Type In Item.Types
                     If Not Types.Contains(Type) Then Types.Add(Type)
                 Next
@@ -43,8 +43,8 @@
                 '确认所属该分类的项目
                 Dim TypeItems As New List(Of HelpEntry)
                 For Each Item In HelpItems
-                    If Val(VersionBranchCode) = 50 AndAlso Not Item.ShowInPublic Then Continue For
-                    If Val(VersionBranchCode) <> 50 AndAlso Not Item.ShowInSnapshot Then Continue For
+                    If BuildType = BuildTypes.Release AndAlso Not Item.ShowInPublic Then Continue For
+                    If BuildType <> BuildTypes.Release AndAlso Not Item.ShowInSnapshot Then Continue For
                     If Item.Types.Contains(Type) Then TypeItems.Add(Item)
                 Next
                 '增加卡片
@@ -61,7 +61,7 @@
             Next
 
         Catch ex As Exception
-            Log(ex, "加载帮助列表 UI 失败", LogLevel.Feedback)
+            Logger.Error(ex, "加载帮助列表 UI 失败")
         End Try
     End Sub
 
@@ -76,7 +76,7 @@
                 EnterHelpPage(Entry)
             End If
         Catch ex As Exception
-            Log(ex, "处理帮助项目点击时发生意外错误", LogLevel.Feedback)
+            Logger.Error(ex, "处理帮助项目点击时发生意外错误")
         End Try
     End Sub
     Public Shared Sub EnterHelpPage(Location As String)
@@ -90,7 +90,7 @@
                 If FrmHelpDetail.Init(Entry) Then
                     FrmMain.PageChange(New FormMain.PageStackData With {.Page = FormMain.PageType.HelpDetail, .Additional = {Entry, FrmHelpDetail}})
                 Else
-                    Log("[Help] 已取消进入帮助项目，这一般是由于 xaml 初始化失败，且用户在弹窗中手动放弃", LogLevel.Debug)
+                    Logger.Warn("已取消进入帮助项目，这一般是由于 xaml 初始化失败，且用户在弹窗中手动放弃")
                 End If
             End Sub)
         End Sub)
@@ -105,20 +105,11 @@
                 If FrmHelpDetail.Init(Entry) Then
                     FrmMain.PageChange(New FormMain.PageStackData With {.Page = FormMain.PageType.HelpDetail, .Additional = {Entry, FrmHelpDetail}})
                 Else
-                    Log("[Help] 已取消进入帮助项目，这一般是由于 xaml 初始化失败，且用户在弹窗中手动放弃", LogLevel.Debug)
+                    Logger.Warn("已取消进入帮助项目，这一般是由于 xaml 初始化失败，且用户在弹窗中手动放弃")
                 End If
             End Sub)
         End Sub)
     End Sub
-    Public Shared Function GetHelpPage(Location As String) As PageOtherHelpDetail
-        If Not HelpLoader.State = LoadState.Finished Then HelpLoader.WaitForExit(GetUuid)
-        Dim FrmHelpDetail As New PageOtherHelpDetail
-        If FrmHelpDetail.Init(New HelpEntry(Location)) Then
-            Return FrmHelpDetail
-        Else
-            Throw New Exception("已取消进入帮助项目，这一般是由于 xaml 初始化失败，且用户在弹窗中手动放弃")
-        End If
-    End Function
 
     ''' <summary>
     ''' 搜索帮助。
@@ -140,8 +131,8 @@
             '构造请求
             Dim QueryList As New List(Of SearchEntry(Of HelpEntry))
             For Each Entry As HelpEntry In HelpLoader.Output
-                If Not Entry.ShowInSearch OrElse (Val(VersionBranchCode) = 50 AndAlso Not Entry.ShowInPublic) Then Continue For
-                If Not Entry.ShowInSearch OrElse (Val(VersionBranchCode) <> 50 AndAlso Not Entry.ShowInSnapshot) Then Continue For
+                If Not Entry.ShowInSearch OrElse (BuildType = BuildTypes.Release AndAlso Not Entry.ShowInPublic) Then Continue For
+                If Not Entry.ShowInSearch OrElse (BuildType <> BuildTypes.Release AndAlso Not Entry.ShowInSnapshot) Then Continue For
                 QueryList.Add(New SearchEntry(Of HelpEntry) With {
                     .Item = Entry,
                     .SearchSource = New List(Of SearchSource) From {

@@ -1,4 +1,4 @@
-﻿Public Class PageSelectLeft
+Public Class PageSelectLeft
     Implements IRefreshable
 
     Private Sub PageSelectLeft_Initialized(sender As Object, e As EventArgs) Handles Me.Initialized
@@ -64,7 +64,7 @@
                                 </ContextMenu>
                         )
                 End Select
-                If (Folder.Type = McFolder.Types.Vanilla OrElse Folder.Type = McFolder.Types.RenamedVanilla) AndAlso Folder.Location = Path & ".minecraft\" AndAlso McFolderList.IsSingle Then CType(ContMenu.FindName("Delete"), MyMenuItem).Header = "清空"
+                If (Folder.Type = McFolder.Types.Vanilla OrElse Folder.Type = McFolder.Types.RenamedVanilla) AndAlso Folder.Location = Paths.Base & ".minecraft\" AndAlso McFolderList.IsSingle Then CType(ContMenu.FindName("Delete"), MyMenuItem).Header = "清空"
                 '注册事件
                 If Not Folder.Type = McFolder.Types.Vanilla Then CType(ContMenu.FindName("Remove"), MyMenuItem).AddHandler(MyMenuItem.ClickEvent, New RoutedEventHandler(AddressOf FrmSelectLeft.Remove_Click))
                 CType(ContMenu.FindName("Open"), MyMenuItem).AddHandler(MyMenuItem.ClickEvent, New RoutedEventHandler(AddressOf FrmSelectLeft.Open_Click))
@@ -81,21 +81,18 @@
                                                 End Sub
                 NewItem.Buttons = {NewIconButton}
                 FrmSelectLeft.PanList.Children.Add(NewItem)
-                Log("[Minecraft] 有效的 Minecraft 文件夹：" & Folder.Name & " > " & Folder.Location)
+                Logger.Info($"有效的 Minecraft 文件夹：{Folder.Name} > {Folder.Location}")
             Next
 
             '标题文本
             FrmSelectLeft.PanList.Children.Add(New TextBlock With {.Text = "添加或导入", .Margin = New Thickness(13, 18, 5, 4), .Opacity = 0.6, .FontSize = 12})
 
             '确认创建按钮状态
-            If Not Directory.Exists(Path & ".minecraft\") Then
+            If Not DirectoryUtils.Exists(Paths.Base & ".minecraft\") Then
                 Dim ItemCreate As New MyListItem With {.IsScaleAnimationEnabled = False, .Type = MyListItem.CheckType.Clickable, .Title = "新建 .minecraft 文件夹", .Height = 34,
                     .ToolTip = "在 PCL 当前所在文件夹下创建新的 .minecraft 文件夹",
                     .LogoScale = 0.9,
                     .Logo = "M103.331925 384.978025l25.805736 0L129.137661 161.847132c0-18.313088 14.905478-33.718963 33.718963-33.718963l0.969071 0 253.006318 0c10.82044 0 20.218484 4.797259 26.500561 12.257162l117.579929 126.753869 297.819966 0c18.297738 0 33.736359 15.179724 33.736359 33.977859l0 0.952698 0 82.909292 25.547863 0c18.538215 0 34.187637 15.179724 34.187637 33.977859 0 2.163269-0.469698 3.617387-0.469698 5.539156l-54.437843 432.971086c-1.210571 10.382465-7.007601 19.056008-14.968923 24.352641-6.249331 5.765307-14.680351 9.624195-23.595394 9.624195l-0.969071 0-694.906773 0c-9.155521 0-17.344017-3.858888-23.626094-9.155521-8.67252-5.765307-14.453177-14.939247-15.389502-25.758664L69.597613 423.040922c-2.165316-18.313088 10.868535-35.414581 29.665647-38.062897L103.331925 384.978025 103.331925 384.978025zM196.576609 384.978025 196.576609 384.978025l627.938546 0 0-49.625234L546.461371 335.352791l0 0c-9.400091 0-18.329461-4.117784-25.048489-11.110035L402.363486 196.067514 196.576609 196.067514 196.576609 384.978025 196.576609 384.978025zM879.469767 452.916347 879.469767 452.916347l-20.267603 0-0.469698 0-0.969071 0-694.906773 0-0.984421 0-20.218484 0 45.781696 366.728382 646.218888 0L879.469767 452.916347 879.469767 452.916347z"}
-                ToolTipService.SetPlacement(ItemCreate, Primitives.PlacementMode.Right)
-                ToolTipService.SetHorizontalOffset(ItemCreate, -50)
-                ToolTipService.SetVerticalOffset(ItemCreate, 2.5)
                 FrmSelectLeft.PanList.Children.Add(ItemCreate)
                 AddHandler ItemCreate.Click, AddressOf FrmSelectLeft.Create_Click
             End If
@@ -104,9 +101,6 @@
             Dim ItemAdd As New MyListItem With {.IsScaleAnimationEnabled = False, .Type = MyListItem.CheckType.Clickable, .Title = "添加已有文件夹", .Height = 34,
                 .ToolTip = "将一个已有的 Minecraft 文件夹添加到列表",
                 .Logo = "M512.277 954.412c-118.89 0-230.659-46.078-314.73-129.73S67.12 629.666 67.12 511.222s46.327-229.744 130.398-313.427 195.82-129.73 314.73-129.73 230.659 46.078 314.72 129.73S957.397 392.81 957.397 511.183 911.078 740.96 826.97 824.642s-195.8 129.77-314.692 129.77z m0-822.784c-101.972 0-197.809 39.494-269.865 111.222s-111.7 166.997-111.7 268.373 39.653 196.695 111.67 268.335S410.246 890.78 512.248 890.78s197.809-39.484 269.865-111.222 111.7-166.998 111.67-268.374c-0.03-101.375-39.654-196.665-111.67-268.303S614.22 131.628 512.277 131.628z m222.585 347.8H544.073V288.64c-0.76-17.561-15.613-31.18-33.173-30.419-16.495 0.714-29.704 13.924-30.419 30.419v190.787H289.703c-17.56 0.761-31.179 15.614-30.419 33.174 0.715 16.494 13.924 29.703 30.42 30.418H480.48v190.788c0.761 17.56 15.614 31.179 33.174 30.419 16.494-0.715 29.703-13.925 30.418-30.42V543.02h190.788c17.56 0.762 32.413-12.857 33.173-30.418 0.762-17.561-12.858-32.414-30.419-33.174a31.683 31.683 0 0 0-2.753 0z"}
-            ToolTipService.SetPlacement(ItemAdd, Primitives.PlacementMode.Right)
-            ToolTipService.SetHorizontalOffset(ItemAdd, -50)
-            ToolTipService.SetVerticalOffset(ItemAdd, 2.5)
             FrmSelectLeft.PanList.Children.Add(ItemAdd)
             AddHandler ItemAdd.Click, AddressOf FrmSelectLeft.Add_Click
 
@@ -114,9 +108,6 @@
             Dim ItemInstall As New MyListItem With {.IsScaleAnimationEnabled = False, .Type = MyListItem.CheckType.Clickable, .Title = "导入整合包", .Height = 34,
                 .ToolTip = "在当前选择的 Minecraft 文件夹下安装整合包",
                 .Logo = "M512 40.96C249.344 40.96 35.84 252.416 35.84 512s213.504 471.04 476.16 471.04c103.424 0 202.752-33.28 286.72-96.256l1.536-1.536c5.12-5.632 7.68-12.8 7.68-19.968 0-16.896-13.824-30.208-30.72-30.208-7.68 0-15.36 2.56-20.992 7.68h-0.512c-71.68 52.224-155.648 79.36-243.712 79.36-227.328 0-412.16-182.784-412.16-407.552 0-224.768 184.832-407.552 412.16-407.552s412.16 182.784 412.16 407.552c0 68.608-15.872 132.608-46.592 190.464-0.512 1.024-1.024 2.048-1.024 3.072-0.512 2.048-1.536 4.608-1.536 8.192 0 16.896 13.824 30.208 30.72 30.208 12.288 0 23.04-7.168 28.16-18.432 35.84-68.608 53.76-141.312 53.76-216.064 0.512-259.584-212.992-471.04-475.648-471.04z M812.032 483.328c-31.744-20.992-71.68 1.536-78.848 6.144-1.024 0.512-104.448 61.44-128 74.752-8.192 4.608-22.528-0.512-27.136-4.096-31.232-36.352-54.272-70.656-68.608-102.4-13.312-29.184 0.512-41.472 3.072-43.52 7.168-4.608 114.688-68.608 143.36-83.456 24.064-12.288 40.96-25.088 46.08-45.056 3.072-13.312 0-27.136-9.216-39.936-22.016-31.744-172.544-84.992-311.296-3.584-157.184 91.648-152.064 242.688-150.528 292.352v9.216c0 18.944-12.8 37.376-14.848 40.448l-20.992 21.504c-6.144 6.144-9.216 13.824-9.216 22.528 0 8.704 3.584 16.384 9.728 22.528 12.8 12.288 32.768 11.776 45.056-0.512l22.528-23.552 0.512-0.512c3.072-3.584 30.208-38.4 30.208-81.92l-0.512-11.264c-1.536-44.544-5.632-162.816 119.296-235.52 88.064-51.2 173.056-32.256 208.896-19.968-36.864 19.456-143.36 83.456-144.896 84.48-22.016 14.336-55.808 58.88-26.112 122.88 17.408 37.376 43.52 76.8 80.896 120.32 14.336 17.408 62.976 37.376 103.424 15.36 24.576-13.312 125.44-73.216 130.048-75.776 2.048-1.024 4.608-2.56 7.68-3.584 0 2.56-0.512 6.144-1.024 10.752-5.632 35.84-35.328 155.136-191.488 181.76-49.664 8.704-89.6 3.584-121.856-0.512h-0.512c-37.888-4.608-73.216-9.216-101.888 14.336-31.232 26.112-40.96 34.304-35.84 54.272 3.584 14.336 16.384 24.064 30.72 24.064 2.56 0 5.12-0.512 7.68-1.024 6.656-1.536 12.8-5.632 16.896-10.752 2.048-2.048 7.68-6.656 20.992-18.432 6.656-5.632 25.088-3.584 52.736 0 34.816 4.608 81.92 10.24 141.312 0.512 157.184-26.624 228.864-138.752 243.2-234.496 7.68-38.912 0-64.512-21.504-78.336z"}
-            ToolTipService.SetPlacement(ItemInstall, Primitives.PlacementMode.Right)
-            ToolTipService.SetHorizontalOffset(ItemInstall, -50)
-            ToolTipService.SetVerticalOffset(ItemInstall, 2.5)
             FrmSelectLeft.PanList.Children.Add(ItemInstall)
             AddHandler ItemInstall.Click, AddressOf ModpackInstall
 
@@ -138,7 +129,7 @@
             End If
 
         Catch ex As Exception
-            Log(ex, "构建 Minecraft 文件夹列表 UI 出错", LogLevel.Feedback)
+            Logger.Error(ex, "构建 Minecraft 文件夹列表 UI 出错")
         Finally
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\") '刷新版本列表
         End Try
@@ -155,8 +146,8 @@
         End If
         Try
             '获取输入
-            NewFolder = SelectFolder()
-            If NewFolder = "" Then Return
+            NewFolder = Dialogs.SelectFolder("选择 Minecraft 文件夹", False).FirstOrDefault
+            If NewFolder Is Nothing Then Return
             If NewFolder.Contains("!") OrElse NewFolder.Contains(";") Then Hint("Minecraft 文件夹路径中不能含有感叹号或分号！", HintType.Red) : Return
             '要求输入显示名称
             Dim SplitedNames As String() = NewFolder.TrimEnd("\").Split("\")
@@ -168,7 +159,7 @@
             '添加文件夹
             AddFolder(NewFolder, NewName, True)
         Catch ex As Exception
-            Log(ex, "添加文件夹失败（" & NewFolder & "）", LogLevel.Feedback)
+            Logger.Error(ex, $"添加文件夹失败（{NewFolder}）")
         End Try
     End Sub
     ''' <summary>
@@ -190,15 +181,15 @@
                 End If
                 '检查实际的 Minecraft 文件夹位置（没有问题，或是在子文件夹中）
                 If Not CheckPermission(FolderPath & "versions\") Then
-                    For Each Folder As DirectoryInfo In New DirectoryInfo(FolderPath).GetDirectories
-                        If CheckPermission(Folder.FullName & "\versions\") Then
-                            FolderPath = Folder.FullName & "\"
+                    For Each Folder In DirectoryUtils.EnumerateDirectories(FolderPath, True)
+                        If CheckPermission(Folder & "\versions\") Then
+                            FolderPath = Folder & "\"
                             Exit For
                         End If
                     Next
                 End If
                 '判断是否已经添加过，若添加过则直接修改自定义名
-                Dim Folders As New List(Of String)(Settings.Get("LaunchFolders").ToString.Split("|"))
+                Dim Folders As New List(Of String)(Settings.Get(Of String)("LaunchFolders").Split("|"))
                 Dim IsAdded As Boolean = False
                 Dim IsReplace As Boolean = False
                 For i = 0 To Folders.Count - 1
@@ -229,10 +220,10 @@
                 If ShowHint Then Hint("文件夹 " & DisplayName & " 已添加！", HintType.Green)
                 '检查是否为根目录整合包，自动关闭版本隔离
                 '1. 根目录中存在数个 Mod
-                Dim ModFolder As New DirectoryInfo(FolderPath & "mods\")
+                Dim ModFolder = DirectoryUtils.GetInfo(FolderPath & "mods\")
                 If Not (ModFolder.Exists AndAlso ModFolder.EnumerateFiles.Count >= 3) Then Return
                 '2. 版本数较少，可能为整合包
-                Dim VersionFolderInfo As New DirectoryInfo(FolderPath & "versions\")
+                Dim VersionFolderInfo = DirectoryUtils.GetInfo(FolderPath & "versions\")
                 If Not (VersionFolderInfo.Exists AndAlso VersionFolderInfo.EnumerateDirectories.Count <= 3) Then Return
                 '3. 能够找到可安装 Mod 的版本
                 For Each VersionFolder In VersionFolderInfo.EnumerateDirectories
@@ -240,15 +231,15 @@
                     Instance.Load()
                     If Not Instance.Modable Then Continue For
                     '4. 该版本的隔离文件夹下不存在 mods
-                    Dim ModIndieFolder As New DirectoryInfo(Instance.PathVersion & "mods\")
+                    Dim ModIndieFolder = DirectoryUtils.GetInfo(Instance.PathVersion & "mods\")
                     If ModIndieFolder.Exists AndAlso ModIndieFolder.EnumerateFiles.Any Then Return
                     '满足以上全部条件则视为根目录整合包
                     Settings.Set("VersionArgumentIndie", 2, Instance:=Instance)
                     Settings.Set("VersionArgumentIndieV2", False, Instance:=Instance)
-                    Log("[Setup] 已自动关闭单版本隔离：" & Instance.Name, LogLevel.Debug)
+                    Logger.Warn($"已自动关闭单版本隔离：{Instance.Name}")
                 Next
             Catch ex As Exception
-                Log(ex, "向文件夹列表中添加新文件夹失败", LogLevel.Feedback)
+                Logger.Error(ex, "向文件夹列表中添加新文件夹失败")
             End Try
         End Sub)
     End Sub
@@ -264,13 +255,12 @@
         Hint("新建 .minecraft 文件夹成功！", HintType.Green)
     End Sub
     Public Shared Sub CreateMcFolderInCurrentPath()
-        McFolderSelected = Path & ".minecraft\"
-        If Not Directory.Exists(McFolderSelected) Then
-            Directory.CreateDirectory(McFolderSelected)
-            Directory.CreateDirectory(McFolderSelected & "versions\")
+        McFolderSelected = Paths.Base & ".minecraft\"
+        If Not DirectoryUtils.Exists(McFolderSelected) Then
+            DirectoryUtils.Create(McFolderSelected & "versions\")
             McFolderLauncherProfilesJsonCreate(McFolderSelected)
         End If
-        AddFolder(McFolderSelected, GetFolderNameFromPath(Path), False)
+        AddFolder(McFolderSelected, PathUtils.GetLastPart(Paths.Base), False)
     End Sub
 
     '右键菜单
@@ -283,12 +273,10 @@
                 Select Case MyMsgBox("是否需要清理 PCL 在该文件夹中的配置文件？" & vbCrLf & "这包括各个版本的独立设置（如自定义图标、第三方登录配置）等，对游戏本身没有影响。", "配置文件清理", "删除", "保留", "取消")
                     Case 1
                         '删除配置文件
-                        If File.Exists(Target.Location & "PCL.ini") Then File.Delete(Target.Location & "PCL.ini")
-                        If Directory.Exists(Target.Location & "versions\") Then
-                            For Each InstanceInfo In New DirectoryInfo(Target.Location & "versions\").EnumerateDirectories
-                                If Directory.Exists(InstanceInfo.FullName & "\PCL\") Then DeleteDirectory(InstanceInfo.FullName & "\PCL\", True)
-                            Next
-                        End If
+                        FileUtils.Delete(Target.Location & "PCL.ini")
+                        For Each Instance In DirectoryUtils.EnumerateDirectories(Target.Location & "versions\")
+                            DirectoryUtils.Delete(Path.Combine(Instance, "PCL"), True)
+                        Next
                     Case 2
                         '不删除
                     Case 3
@@ -300,20 +288,20 @@
             Hint(If(Target.Type = McFolder.Types.Custom, "文件夹 " & DeletedName & " 已从列表中移除！", "文件夹名称已复原！"), HintType.Green)
             McFolderListLoader.Start(IsForceRestart:=True)
         Catch ex As Exception
-            Log(ex, "从列表中移除游戏文件夹失败", LogLevel.Feedback)
+            Logger.Error(ex, "从列表中移除游戏文件夹失败")
         End Try
     End Sub
     Public Sub Delete_Click(sender As Object, e As RoutedEventArgs)
         Dim Target As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
-        Dim DeleteText As String = If((Target.Type = McFolder.Types.Vanilla OrElse Target.Type = McFolder.Types.RenamedVanilla) AndAlso Target.Location = Path & ".minecraft\" AndAlso McFolderList.IsSingle, "清空", "删除")
+        Dim DeleteText As String = If((Target.Type = McFolder.Types.Vanilla OrElse Target.Type = McFolder.Types.RenamedVanilla) AndAlso Target.Location = Paths.Base & ".minecraft\" AndAlso McFolderList.IsSingle, "清空", "删除")
         If MyMsgBox("你确定要" & DeleteText & "这个文件夹吗？" & vbCrLf &
                     "目标文件夹：" & Target.Location & vbCrLf & vbCrLf &
                     "该文件夹中的游戏存档、游戏版本，以及 MC 之外的其他文件，都会永久丢失，不可恢复！", "警告", "取消", "确认", "取消") <> 2 Then Return
         If MyMsgBoxInput("删除确认",
                          "该文件夹中的游戏存档、游戏版本，以及 MC 之外的其他文件，都会永久丢失，不可恢复！" & vbCrLf &
                          "目标文件夹：" & Target.Location & vbCrLf & vbCrLf &
-                         "如果确实要删除，请在下面输入【确认删除】以继续。",
-                         ValidateRules:=New ObjectModel.Collection(Of Validate) From {New ValidateSame("确认删除", $"请输入 {vbLQ}确认删除{vbRQ} 这四个字！")},
+                         "如果确实要删除，请在下面输入【Potato】这个单词以继续。",
+                         ValidateRules:=New ObjectModel.Collection(Of Validate) From {New ValidateSame("Potato", $"请输入 {vbLQ}Potato{vbRQ}", IgnoreCase:=True)},
                          Button1:="永久删除文件夹", Button2:="取消", IsWarn:=True) Is Nothing Then Return
         RemoveFolderFromSetup(Target)
         RunInNewThread(
@@ -321,11 +309,11 @@
             '删除文件夹
             Try
                 Hint("正在" & DeleteText & "文件夹 " & Target.Name & "！", HintType.Blue)
-                DeleteDirectory(Target.Location)
-                If DeleteText = "清空" Then Directory.CreateDirectory(Target.Location)
+                DirectoryUtils.Delete(Target.Location)
+                If DeleteText = "清空" Then DirectoryUtils.Create(Target.Location)
                 Hint("已" & DeleteText & "文件夹 " & Target.Name & "！", HintType.Green)
             Catch ex As Exception
-                Log(ex, DeleteText & "文件夹 " & Target.Name & " 失败", LogLevel.Hint)
+                Logger.Error(ex, $"{DeleteText}文件夹 {Target.Name} 失败", LogBehavior.Toast)
             Finally
                 '刷新列表
                 McFolderListLoader.Start(IsForceRestart:=True)
@@ -338,7 +326,7 @@
     ''' </summary>
     Private Shared Function RemoveFolderFromSetup(Target As McFolder) As String
         Dim DeletedName As String = Nothing
-        Dim Folders = Settings.Get("LaunchFolders").ToString.Split({"|"c}, StringSplitOptions.RemoveEmptyEntries).ToList
+        Dim Folders = Settings.Get(Of String)("LaunchFolders").Split("|"c, True).ToList
         For Each Folder In Folders.ToList
             If Not Folder.EndsWithF(Target.Location) Then Continue For
             DeletedName = Folder.BeforeFirst(">")
@@ -372,7 +360,7 @@
                               New ObjectModel.Collection(Of Validate) From {New ValidateNullOrWhiteSpace, New ValidateLength(1, 30), New ValidateExcept({">", "|"})})
             If String.IsNullOrWhiteSpace(NewName) Then Return
             '修改自定义名
-            Dim Folders As New List(Of String)(Settings.Get("LaunchFolders").ToString.Split("|"))
+            Dim Folders As New List(Of String)(Settings.Get(Of String)("LaunchFolders").Split("|"))
             Dim IsAdded As Boolean = False
             For i = 0 To Folders.Count - 1
                 Dim FolderCurrent As String = Folders(i)
@@ -395,7 +383,7 @@
             Settings.Set("LaunchFolders", Folders.Join("|"))
             McFolderListLoader.Start(IsForceRestart:=True)
         Catch ex As Exception
-            Log(ex, "重命名文件夹失败", LogLevel.Feedback)
+            Logger.Error(ex, "重命名文件夹失败")
         End Try
     End Sub
 

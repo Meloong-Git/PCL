@@ -1,9 +1,13 @@
-﻿Public Class Settings
-    Private Shared ReadOnly Entries As Dictionary(Of String, Setting) = (New List(Of Setting) From {
+Imports System.Security.Cryptography
+
+Public Class Settings
+
+    Public Shared ReadOnly Entries As Dictionary(Of String, Setting) = (New List(Of Setting) From {
         New Setting("Identify", "", Source:=Sources.Registry),
         New Setting("WindowHeight", 550),
         New Setting("WindowWidth", 900),
-        New Setting("AprilDoneYear", 0, Source:=Sources.Registry),
+        New Setting("AprilYear", 0, Source:=Sources.Registry, Encrypted:=True),
+        New Setting("Potatoes", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("HintDownloadThread", False, Source:=Sources.Registry),
         New Setting("HintNotice", 0, Source:=Sources.Registry),
         New Setting("HintDownload", 0, Source:=Sources.Registry),
@@ -17,6 +21,7 @@
         New Setting("HintMoreAdvancedSetup", False, Source:=Sources.Registry),
         New Setting("HintIndieSetup", False, Source:=Sources.Registry),
         New Setting("HintExportConfig", False, Source:=Sources.Registry),
+        New Setting("HintSnapshot", False, Source:=Sources.Registry),
         New Setting("SystemEulaVersion", 0, Source:=Sources.Registry),
         New Setting("SystemCount", 0, Source:=Sources.Registry, Encrypted:=True),
         New Setting("SystemLaunchCount", 0, Source:=Sources.Registry, Encrypted:=True),
@@ -25,7 +30,7 @@
         New Setting("SystemHighestBetaVersionReg", 0, Source:=Sources.Registry, Encrypted:=True),
         New Setting("SystemHighestAlphaVersionReg", 0, Source:=Sources.Registry, Encrypted:=True),
         New Setting("SystemHelpVersion", 0, Source:=Sources.Registry),
-        New Setting("SystemDebugMode", False, Source:=Sources.Registry),
+        New Setting("SystemDebugMode", False, Source:=Sources.Registry, OnChanged:=Sub() Logger.Instance.MinLevel = If(ModeDebug, LogLevel.Trace, LogLevel.Info)),
         New Setting("SystemDebugAnim", 9, Source:=Sources.Registry),
         New Setting("SystemDebugDelay", False, Source:=Sources.Registry),
         New Setting("SystemDebugSkipCopy", False, Source:=Sources.Registry),
@@ -49,6 +54,7 @@
         New Setting("CacheMsV2ProfileJson", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("CacheMsV2Uuid", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("CacheMsV2Name", "", Source:=Sources.Registry, Encrypted:=True),
+        New Setting("CacheMsV2Expires", 0L, Source:=Sources.Registry, Encrypted:=True),
         New Setting("CacheNideAccess", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("CacheNideClient", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("CacheNideUuid", "", Source:=Sources.Registry, Encrypted:=True),
@@ -129,7 +135,6 @@
         New Setting("UiLauncherDelta", 90),
         New Setting("UiLauncherLight", 20),
         New Setting("UiLauncherTheme", 0, OnChanged:=AddressOf ThemeRefresh),
-        New Setting("UiLauncherThemeGold", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("UiLauncherThemeHide", "0|1|2|3|4", Source:=Sources.Registry, Encrypted:=True),
         New Setting("UiLauncherThemeHide2", "0|1|2|3|4", Source:=Sources.Registry, Encrypted:=True),
         New Setting("UiLauncherLogo", True),
@@ -138,7 +143,7 @@
         New Setting("UiBackgroundOpacity", 1000, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiBackgroundBlur", 0, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
         New Setting("UiBackgroundSuit", 0, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
-        New Setting("UiCustomType", 0, OnChanged:=AddressOf PageSetupUI.OnUiCustomTypeChanged),
+        New Setting("UiCustomType", 0, OnChanged:=AddressOf PageSetupUI.OnMainPageTypeChanged),
         New Setting("UiCustomPreset", 0),
         New Setting("UiCustomNet", ""),
         New Setting("UiLogoType", 1, OnChanged:=AddressOf FormMain.UpdateBackgroundAndTitleBar),
@@ -169,7 +174,6 @@
         New Setting("VersionAdvanceGame", "", Source:=Sources.Instance),
         New Setting("VersionAdvanceAssets", 0, Source:=Sources.Instance),
         New Setting("VersionAdvanceAssetsV2", False, Source:=Sources.Instance),
-        New Setting("VersionAdvanceJava", False, Source:=Sources.Instance),
         New Setting("VersionAdvanceRun", "", Source:=Sources.Instance),
         New Setting("VersionAdvanceRunWait", True, Source:=Sources.Instance),
         New Setting("VersionAdvanceDisableJLW", False, Source:=Sources.Instance),
@@ -185,6 +189,8 @@
         New Setting("VersionArgumentIndie", -1, Source:=Sources.Instance),
         New Setting("VersionArgumentIndieV2", False, Source:=Sources.Instance),
         New Setting("VersionArgumentJavaSelect", "使用全局设置", Source:=Sources.Instance),
+        New Setting("VersionArgumentJavaV2", 0, Source:=Sources.Instance),
+        New Setting("VersionArgumentJavaRange", "", Source:=Sources.Instance),
         New Setting("VersionServerEnter", "", Source:=Sources.Instance),
         New Setting("VersionServerLogin", 0, Source:=Sources.Instance, OnChanged:=AddressOf PageInstanceSetup.OnVersionServerLoginChanged),
         New Setting("VersionServerNide", "", Source:=Sources.Instance),
@@ -193,19 +199,15 @@
         New Setting("VersionServerAuthServer", "", Source:=Sources.Instance)
     }).ToDictionary(Function(e) e.Key)
 
-    Private Enum Sources
+    Public Enum Sources
         Normal
         Registry
         Instance
     End Enum
-    Private Class Setting
+    Public Class Setting
         Public Key As String
-        ''' <summary>
-        ''' 若已调用过 Get 方法，则为当前值；否则为 Nothing。
-        ''' </summary>
-        Public Value = Nothing
         Public Encrypted As Boolean
-        Public DefaultValue
+        Public DefaultValue As Object
         Public Source As Sources
         ''' <summary>
         ''' 当设置项的值实际被改变时触发，参数为新值。
@@ -224,21 +226,37 @@
                 Me.Type = If(Value, "").GetType
                 Me.OnChanged = OnChanged
             Catch ex As Exception
-                Log(ex, "初始化设置项失败", LogLevel.Feedback) '#5095 的 fallback
+                Logger.Error(ex, "初始化设置项失败") '#5095 的 fallback
             End Try
+        End Sub
+
+        ''' <summary>
+        ''' 读取过的设置的缓存，若从未读取过则为 Nothing。
+        ''' 若为版本独立设置，键为版本路径；否则，键为空字符串。
+        ''' </summary>
+        Public ValueCache As New ConcurrentDictionary(Of String, Object)
+        Public Function GetCache(Instance As McInstance)
+            Dim Key As String = If(Source = Sources.Instance, Instance.PathVersion, "")
+            Dim Result = Nothing
+            Return If(ValueCache.TryGetValue(Key, Result), Result, Nothing)
+        End Function
+        Public Sub [Set](Value As Object, Instance As McInstance)
+            Dim Key As String = If(Source = Sources.Instance, Instance.PathVersion, "")
+            ValueCache(Key) = Value
         End Sub
 
         ''' <summary>
         ''' 立即将当前的 Value 写入对应的注册表或文件。
         ''' </summary>
         Public Sub Save(Optional Instance As McInstance = Nothing)
-            Dim Value As String = Me.Value
+            Dim Value As String = GetCache(Instance)
+            Logger.Trace($"保存设置：{Key} {If(Encrypted, "", "= " & Value)}{If(Instance Is Nothing, "", $"（实例：{Instance?.PathVersion}）")}")
             If Encrypted Then
                 Try
                     If Value Is Nothing Then Value = ""
-                    Value = SecretEncrypt(Value, "PCL" & Identify)
+                    Value = DesEncrypt(Value, "PCL" & Identify)
                 Catch ex As Exception
-                    Log(ex, "加密设置失败：" & Key, LogLevel.Developer)
+                    Logger.Warn(ex, $"加密设置失败：{Key}")
                 End Try
             End If
             Select Case Source
@@ -251,6 +269,7 @@
                     WriteIni(Instance.PathVersion & "PCL\Setup.ini", Key, Value)
             End Select
         End Sub
+
     End Class
 
     ''' <summary>
@@ -261,16 +280,16 @@
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         Try
             '判断是否一致
-            If Entry.Value Is Nothing Then [Get](Key, Instance)
             Value = CTypeDynamic(Value, Entry.Type)
-            If Entry.Value = Value Then Return
+            If Entry.GetCache(Instance) Is Nothing Then [Get](Key, Instance)
+            If Entry.GetCache(Instance) = Value Then Return
             '设置新值
-            Entry.Value = Value
+            Entry.Set(Value, Instance)
             Entry.Save(Instance)
             '触发改变事件（必须在保存之后，以保证 VersionServerLogin 之类的在事件中读取到的是最新的值）
-            If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Entry.Value)
+            If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Value)
         Catch ex As Exception
-            Log(ex, "设置设置项时出错（" & Key & ", " & Value & "）", LogLevel.Feedback)
+            Logger.Error(ex, $"设置设置项时出错（{Key}, {Value}）")
         End Try
     End Sub
     ''' <summary>
@@ -281,7 +300,7 @@
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         If Entry.Encrypted Then Throw New InvalidOperationException("禁止写入加密设置项：" & Key)
-        [Set](Key, Instance, Instance)
+        [Set](Key, Value, Instance)
     End Sub
 
     ''' <summary>
@@ -290,7 +309,8 @@
     Public Shared Function [Get](Key As String, Optional Instance As McInstance = Nothing)
         Dim Entry As Setting = Nothing
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
-        If Entry.Value IsNot Nothing Then Return Entry.Value
+        Dim Value = Entry.GetCache(Instance)
+        If Value IsNot Nothing Then Return Value
         '对部分设置强制赋值
         Static ForcedSettings As New Dictionary(Of String, Object) From {
             {"UiHiddenPageLink", True},
@@ -298,13 +318,13 @@
         }
         Dim ForcedSetting As Object = Nothing
         If ForcedSettings.TryGetValue(Key, ForcedSetting) Then
-            Entry.Value = ForcedSetting
-            Return Entry.Value
+            Entry.Set(ForcedSetting, Instance)
+            Return ForcedSetting
         End If
         '正常读取
         Try
             Dim GotValue As String = Nothing '先用 String 储存，避免类型转换
-            Dim DefaultValue As String = If(Entry.Encrypted, SecretEncrypt(Entry.DefaultValue, "PCL" & Identify), Entry.DefaultValue)
+            Dim DefaultValue As String = If(Entry.Encrypted, DesEncrypt(Entry.DefaultValue, "PCL" & Identify), Entry.DefaultValue)
             Select Case Entry.Source
                 Case Sources.Normal
                     GotValue = ReadIni("Setup", Key, DefaultValue)
@@ -322,21 +342,24 @@
                     GotValue = Entry.DefaultValue
                 Else
                     Try
-                        GotValue = SecretDecrypt(GotValue, "PCL" & Identify)
+                        GotValue = DesDecrypt(GotValue, "PCL" & Identify)
                     Catch ex As Exception
-                        Log(ex, "解密设置失败：" & Key, LogLevel.Developer)
+                        Logger.Warn(ex, $"解密设置失败：{Key}")
                         GotValue = Entry.DefaultValue
-                        Entry.Value = Entry.DefaultValue
+                        Entry.Set(Entry.DefaultValue, Instance)
                         Entry.Save(Instance)
                     End Try
                 End If
             End If
-            Entry.Value = CTypeDynamic(GotValue, Entry.Type)
+            Entry.Set(CTypeDynamic(GotValue, Entry.Type), Instance)
         Catch ex As Exception
-            Log(ex, "读取设置失败：" & Key, LogLevel.Hint)
-            Entry.Value = CTypeDynamic(Entry.DefaultValue, Entry.Type)
+            Logger.Error(ex, $"读取设置失败：{Key}", LogBehavior.Toast)
+            Entry.Set(CTypeDynamic(Entry.DefaultValue, Entry.Type), Instance)
         End Try
-        Return Entry.Value
+        Return Entry.GetCache(Instance)
+    End Function
+    Public Shared Function [Get](Of T)(Key As String, Optional Instance As McInstance = Nothing) As T
+        Return [Get](Key, Instance)
     End Function
     ''' <summary>
     ''' 获取某个未经加密的设置项的值。
@@ -357,10 +380,10 @@
         If Not Entries.TryGetValue(Key, Entry) Then Throw New KeyNotFoundException("未找到设置项：" & Key)
         Try
             '判断是否一致
-            If Entry.Value Is Nothing Then [Get](Key, Instance)
-            If Entry.Value = Entry.DefaultValue Then Return
+            If Entry.GetCache(Instance) Is Nothing Then [Get](Key, Instance)
+            If Entry.GetCache(Instance) = Entry.DefaultValue Then Return
             '设置新值
-            Entry.Value = Entry.DefaultValue
+            Entry.Set(Entry.DefaultValue, Instance)
             Select Case Entry.Source
                 Case Sources.Normal
                     DeleteIniKey("Setup", Key)
@@ -371,9 +394,9 @@
                     DeleteIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
             End Select
             '触发改变事件
-            If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Entry.Value)
+            If Entry.OnChanged IsNot Nothing Then Entry.OnChanged.Invoke(Entry.DefaultValue)
         Catch ex As Exception
-            Log(ex, "重置设置项时出错（" & Key & "）", LogLevel.Feedback)
+            Logger.Error(ex, $"重置设置项时出错（{Key}）")
         End Try
     End Sub
 
@@ -400,13 +423,46 @@
         End Select
     End Function
 
+#Region "DES 加密"
+
+    Private Shared ReadOnly desInitialVector As Byte() = Encoding.UTF8.GetBytes("95168702")
+
     ''' <summary>
-    ''' 当前版本改变时，要求所有版本独立设置需要重新读取。
+    ''' 使用 DES 对称加密算法加密字符串。
     ''' </summary>
-    Public Shared Sub MakeInstanceDirty()
-        For Each Entry In Entries.Values
-            If Entry.Source = Sources.Instance Then Entry.Value = Nothing
-        Next
-    End Sub
+    Private Shared Function DesEncrypt(sourceString As String, Optional key As String = Nothing) As String
+        key = If(key Is Nothing, "@;$ Abv2", key.GetStableHashCode().ToString().EnsureLength("X"c, 8).Substring(0, 8))
+        Dim btKey As Byte() = Encoding.UTF8.GetBytes(key)
+        Using des As New DESCryptoServiceProvider()
+            Using ms As New MemoryStream()
+                Using cs As New CryptoStream(ms, des.CreateEncryptor(btKey, desInitialVector), CryptoStreamMode.Write)
+                    Dim inData As Byte() = Encoding.UTF8.GetBytes(sourceString)
+                    cs.Write(inData, 0, inData.Length)
+                    cs.FlushFinalBlock()
+                    Return Convert.ToBase64String(ms.ToArray())
+                End Using
+            End Using
+        End Using
+    End Function
+
+    ''' <summary>
+    ''' 使用 DES 对称加密算法解密字符串。
+    ''' </summary>
+    Private Shared Function DesDecrypt(encryptedString As String, Optional key As String = Nothing) As String
+        key = If(key Is Nothing, "@;$ Abv2", key.GetStableHashCode().ToString().EnsureLength("X"c, 8).Substring(0, 8))
+        Dim btKey As Byte() = Encoding.UTF8.GetBytes(key)
+        Using des As New DESCryptoServiceProvider()
+            Using ms As New MemoryStream()
+                Using cs As New CryptoStream(ms, des.CreateDecryptor(btKey, desInitialVector), CryptoStreamMode.Write)
+                    Dim inData As Byte() = Convert.FromBase64String(encryptedString)
+                    cs.Write(inData, 0, inData.Length)
+                    cs.FlushFinalBlock()
+                    Return Encoding.UTF8.GetString(ms.ToArray())
+                End Using
+            End Using
+        End Using
+    End Function
+
+#End Region
 
 End Class

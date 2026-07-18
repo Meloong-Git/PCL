@@ -1,8 +1,7 @@
-﻿Public Class MyScrollViewer
+Public Class MyScrollViewer
     Inherits ScrollViewer
 
     Public Property DeltaMult As Double = 1
-
 
     Private RealOffset As Double
     Private Sub MyScrollViewer_PreviewMouseWheel(sender As Object, e As MouseWheelEventArgs) Handles Me.PreviewMouseWheel
@@ -12,22 +11,22 @@
                 (GetType(ComboBox).IsAssignableFrom(SourceType) AndAlso CType(e.Source, ComboBox).IsDropDownOpen) OrElse
                 (GetType(TextBox).IsAssignableFrom(SourceType) AndAlso CType(e.Source, TextBox).AcceptsReturn) OrElse
                 GetType(ComboBoxItem).IsAssignableFrom(SourceType) OrElse
-                TypeOf e.Source Is CheckBox) Then
+                (TypeOf e.Source Is Visual AndAlso
+                    PresentationSource.FromVisual(e.Source)?.RootVisual?.GetType().FullName = "System.Windows.Controls.Primitives.PopupRoot")) Then
             '如果当前是在对有滚动条的下拉框或文本框执行，则不接管操作
             Return
         End If
         e.Handled = True
         PerformVerticalOffsetDelta(-e.Delta)
         '关闭 Tooltip (#2552)
-        For Each TooltipBorder In Application.ShowingTooltips
-            AniStart(AaOpacity(TooltipBorder, -1, 100), $"Hide Tooltip {GetUuid()}")
-        Next
+        '通过 IsOpen 关闭 Tooltip 而不是降低 Border 不透明度 (#5744)
+        Application.ShowingTooltips.ForEach(Sub(tooltip) tooltip.IsOpen = False)
     End Sub
     Public Sub PerformVerticalOffsetDelta(Delta As Double)
         AniStart(
             AaDouble(
             Sub(AnimDelta As Double)
-                RealOffset = MathClamp(RealOffset + AnimDelta, 0, ExtentHeight - ActualHeight)
+                RealOffset = (RealOffset + AnimDelta).Clamp(0, ExtentHeight - ActualHeight)
                 ScrollToVerticalOffset(RealOffset)
             End Sub, Delta * DeltaMult, 300,, New AniEaseOutFluent(6)))
     End Sub

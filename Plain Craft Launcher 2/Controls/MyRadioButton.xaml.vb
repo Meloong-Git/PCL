@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Markup
+Imports System.Windows.Markup
 
 <ContentProperty("Inlines")>
 Public Class MyRadioButton
@@ -104,7 +104,7 @@ Public Class MyRadioButton
             RaiseCustomEvent()
 
         Catch ex As Exception
-            Log(ex, "单选按钮勾选改变错误", LogLevel.Hint)
+            Logger.Error(ex, "单选按钮勾选改变错误", LogBehavior.Toast)
         End Try
     End Sub
 
@@ -145,7 +145,7 @@ Public Class MyRadioButton
     Private Sub Radiobox_MouseUp() Handles Me.MouseLeftButtonUp
         If Checked Then Return
         If Not IsMouseDown Then Return
-        Log("[Control] 按下单选按钮：" & Text)
+        Logger.Info($"按下单选按钮：{Text}")
         IsMouseDown = False
         Dim e As New RouteEventArgs(True)
         RaiseEvent PreviewClick(Me, e)
@@ -255,7 +255,7 @@ Public Class MyRadioButton
 
             End If
         Catch ex As Exception
-            Log(ex, "刷新单选按钮颜色出错")
+            Logger.Warn(ex, "刷新单选按钮颜色出错")
         End Try
     End Sub
 

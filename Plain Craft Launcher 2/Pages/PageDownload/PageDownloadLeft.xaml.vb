@@ -1,4 +1,4 @@
-﻿Public Class PageDownloadLeft
+Public Class PageDownloadLeft
     Implements IRefreshable
 
 #Region "页面切换"
@@ -53,7 +53,7 @@
             PageChangeRun(PageGet(ID))
             PageID = ID
         Catch ex As Exception
-            Log(ex, "切换分页面失败（ID " & ID & "）", LogLevel.Feedback)
+            Logger.Error(ex, $"切换分页面失败（ID {ID}）")
         Finally
             AniControlEnabled -= 1
         End Try
@@ -82,13 +82,15 @@
 #End Region
 
     '强制刷新
-    Public Sub Refresh(sender As Object, e As EventArgs) '由边栏按钮匿名调用
+    Public Sub Refresh_Click(sender As Object, e As EventArgs) '由边栏按钮匿名调用
         Refresh(Val(sender.Tag))
     End Sub
     Public Sub Refresh() Implements IRefreshable.Refresh
         Refresh(FrmMain.PageCurrentSub)
     End Sub
     Public Sub Refresh(SubType As FormMain.PageSubType)
+        ResourceProject.Cache.Clear()
+        ResourceVersion.ProjectFilesCache.Clear()
         Select Case SubType
             Case FormMain.PageSubType.DownloadInstall
                 DlClientListLoader.Start(IsForceRestart:=True)
@@ -101,46 +103,36 @@
                 DlOptiFabricLoader.Start(IsForceRestart:=True)
                 ItemInstall.Checked = True
             Case FormMain.PageSubType.DownloadMod
-                CompProjectCache.Clear()
-                CompFilesCache.Clear()
                 If FrmDownloadMod IsNot Nothing Then
-                    FrmDownloadMod.Content.Storage = New CompProjectStorage
+                    FrmDownloadMod.Content.Storage = New ResourceSearcher.SearchResult
                     FrmDownloadMod.Content.Page = 0
                     FrmDownloadMod.PageLoaderRestart()
                 End If
                 ItemMod.Checked = True
             Case FormMain.PageSubType.DownloadPack
-                CompProjectCache.Clear()
-                CompFilesCache.Clear()
                 If FrmDownloadPack IsNot Nothing Then
-                    FrmDownloadPack.Content.Storage = New CompProjectStorage
+                    FrmDownloadPack.Content.Storage = New ResourceSearcher.SearchResult
                     FrmDownloadPack.Content.Page = 0
                     FrmDownloadPack.PageLoaderRestart()
                 End If
                 ItemPack.Checked = True
             Case FormMain.PageSubType.DownloadResourcePack
-                CompProjectCache.Clear()
-                CompFilesCache.Clear()
                 If FrmDownloadResourcePack IsNot Nothing Then
-                    FrmDownloadResourcePack.Content.Storage = New CompProjectStorage
+                    FrmDownloadResourcePack.Content.Storage = New ResourceSearcher.SearchResult
                     FrmDownloadResourcePack.Content.Page = 0
                     FrmDownloadResourcePack.PageLoaderRestart()
                 End If
                 ItemResourcePack.Checked = True
             Case FormMain.PageSubType.DownloadShader
-                CompProjectCache.Clear()
-                CompFilesCache.Clear()
                 If FrmDownloadShader IsNot Nothing Then
-                    FrmDownloadShader.Content.Storage = New CompProjectStorage
+                    FrmDownloadShader.Content.Storage = New ResourceSearcher.SearchResult
                     FrmDownloadShader.Content.Page = 0
                     FrmDownloadShader.PageLoaderRestart()
                 End If
                 ItemShader.Checked = True
             Case FormMain.PageSubType.DownloadDataPack
-                CompProjectCache.Clear()
-                CompFilesCache.Clear()
                 If FrmDownloadDataPack IsNot Nothing Then
-                    FrmDownloadDataPack.Content.Storage = New CompProjectStorage
+                    FrmDownloadDataPack.Content.Storage = New ResourceSearcher.SearchResult
                     FrmDownloadDataPack.Content.Page = 0
                     FrmDownloadDataPack.PageLoaderRestart()
                 End If

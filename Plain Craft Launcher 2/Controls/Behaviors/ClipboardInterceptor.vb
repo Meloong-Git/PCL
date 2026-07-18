@@ -1,4 +1,4 @@
-﻿' Author: uye (owner of the MaaAssistantArknights team)
+' Author: uye (owner of the MaaAssistantArknights team)
 ' Original Source: MaaAssistantArknights project - https://github.com/MaaAssistantArknights/MaaAssistantArknights
 ' License: Apache License 2.0 (this file only)
 '
@@ -14,12 +14,6 @@
 ' in TextBox, RichTextBox, and DataGrid under Windows focus issues or clipboard hooks.
 '
 ' Date: 2025-07-03
-
-Imports System.Windows
-Imports System.Windows.Controls
-Imports System.Windows.Input
-Imports System.Windows.Documents
-Imports System.Linq
 
 Namespace Controls.Behaviors
     Public NotInheritable Class ClipboardInterceptor
@@ -71,7 +65,8 @@ Namespace Controls.Behaviors
             Try
                 Forms.Clipboard.Clear()
                 Forms.Clipboard.SetDataObject(tb.SelectedText, True)
-            Catch
+            Catch ex As Exception
+                Logger.Warn(ex, "复制失败，请稍后再试", LogBehavior.Toast)
             End Try
 
             e.Handled = True
@@ -84,7 +79,8 @@ Namespace Controls.Behaviors
             Try
                 Forms.Clipboard.Clear()
                 Forms.Clipboard.SetDataObject(tb.SelectedText, True)
-            Catch
+            Catch ex As Exception
+                Logger.Warn(ex, "剪切失败，请稍后再试", LogBehavior.Toast)
             End Try
 
             tb.SelectedText = String.Empty
@@ -95,18 +91,22 @@ Namespace Controls.Behaviors
             Dim tb = TryCast(sender, TextBox)
             If tb Is Nothing Then Return
 
-            If Forms.Clipboard.ContainsText() Then
-                Dim pasteText = Forms.Clipboard.GetText()
+            Try
+                If Forms.Clipboard.ContainsText() Then
+                    Dim pasteText = Forms.Clipboard.GetText()
 
-                '将换行符替换为空格（#7825）
-                If Not tb.AcceptsReturn Then pasteText = pasteText.Replace(vbCrLf, " ").Replace(vbCr, " ").Replace(vbLf, " ")
+                    '将换行符替换为空格（#7825）
+                    If Not tb.AcceptsReturn Then pasteText = pasteText.ReplaceLineEndings(" ", mergeMultiple:=True)
 
-                Dim start = tb.SelectionStart
+                    Dim start = tb.SelectionStart
 
-                tb.SelectedText = pasteText
-                tb.CaretIndex = start + pasteText.Length
-                tb.SelectionLength = 0
-            End If
+                    tb.SelectedText = pasteText
+                    tb.CaretIndex = start + pasteText.Length
+                    tb.SelectionLength = 0
+                End If
+            Catch ex As Exception
+                Logger.Warn(ex, "粘贴失败，请稍后再试", LogBehavior.Toast)
+            End Try
 
             e.Handled = True
         End Sub
@@ -121,7 +121,8 @@ Namespace Controls.Behaviors
             Try
                 Forms.Clipboard.Clear()
                 Forms.Clipboard.SetDataObject(textRange.Text, True)
-            Catch
+            Catch ex As Exception
+                Logger.Warn(ex, "复制失败，请稍后再试", LogBehavior.Toast)
             End Try
 
             e.Handled = True
@@ -137,7 +138,8 @@ Namespace Controls.Behaviors
             Try
                 Forms.Clipboard.Clear()
                 Forms.Clipboard.SetDataObject(selection.Text, True)
-            Catch
+            Catch ex As Exception
+                Logger.Warn(ex, "剪切失败，请稍后再试", LogBehavior.Toast)
             End Try
 
             selection.Text = String.Empty
@@ -148,16 +150,20 @@ Namespace Controls.Behaviors
             Dim rtb = TryCast(sender, RichTextBox)
             If rtb Is Nothing Then Return
 
-            If Not Forms.Clipboard.ContainsText() Then Return
+            Try
+                If Not Forms.Clipboard.ContainsText() Then Return
 
-            Dim pasteText = Forms.Clipboard.GetText()
-            Dim selection = rtb.Selection
+                Dim pasteText = Forms.Clipboard.GetText()
+                Dim selection = rtb.Selection
 
-            selection.Text = pasteText
+                selection.Text = pasteText
 
-            Dim caretPos = selection.End
-            rtb.CaretPosition = caretPos
-            rtb.Selection.Select(caretPos, caretPos)
+                Dim caretPos = selection.End
+                rtb.CaretPosition = caretPos
+                rtb.Selection.Select(caretPos, caretPos)
+            Catch ex As Exception
+                Logger.Warn(ex, "粘贴失败，请稍后再试", LogBehavior.Toast)
+            End Try
 
             e.Handled = True
         End Sub
@@ -183,7 +189,8 @@ Namespace Controls.Behaviors
             Try
                 Forms.Clipboard.Clear()
                 Forms.Clipboard.SetDataObject(sbStr, True)
-            Catch
+            Catch ex As Exception
+                Logger.Warn(ex, "复制失败，请稍后再试", LogBehavior.Toast)
             End Try
 
             e.Handled = True

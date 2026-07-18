@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Markup
+Imports System.Windows.Markup
 
 <ContentProperty("Inlines")>
 Public Class MyCheckBox
@@ -59,7 +59,7 @@ Public Class MyCheckBox
             SyncUI()
             RaiseCustomEvent()
         Catch ex As Exception
-            Log(ex, "设置 Checked 失败")
+            Logger.Warn(ex, "设置 Checked 失败")
         End Try
     End Sub
     Private Sub SyncUI()
@@ -133,7 +133,7 @@ Public Class MyCheckBox
     Private AllowMouseDown As Boolean = True
     Private Sub Checkbox_MouseUp() Handles Me.MouseLeftButtonUp
         If Not MouseDowned Then Return
-        Log("[Control] 按下复选框（" & (Not Checked).ToString & "）：" & Text)
+        Logger.Info($"按下复选框（{(Not Checked)}）：{Text}")
         MouseDowned = False
         SetChecked(Not Checked, True)
         AniStart(AaColor(ShapeBorder, Border.BackgroundProperty, "ColorBrushHalfWhite", 100), "MyCheckBox Background " & Uuid)

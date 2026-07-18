@@ -1,4 +1,4 @@
-﻿<local:MyPageRight
+<local:MyPageRight
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -14,6 +14,7 @@
         <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
             <StackPanel Margin="25,10,25,65">
                 <local:MyHint Margin="0,15,0,0" Text="受 Modrinth 整合包规范限制，导出的整合包中不会包含 OptiFine。" Theme="Yellow" x:Name="HintOptiFine" />
+                <local:MyHint Margin="0,15,0,0" Theme="Yellow" x:Name="HintJava" />
                 <local:MyCard Margin="0,15">
                     <Grid Margin="22,15,25,15">
                         <Grid.ColumnDefinitions>
@@ -225,9 +226,25 @@
                         <local:MyCheckBox>
                             <local:MyCheckBox.Tag>
                                 <local:ExportOption 
+                                Title="协议"
+                                Description="Licence 文件"
+                                Rules="LICEN*"
+                                DefaultChecked="True" />
+                            </local:MyCheckBox.Tag>
+                        </local:MyCheckBox>
+                        <local:MyCheckBox>
+                            <local:MyCheckBox.Tag>
+                                <local:ExportOption 
                                 Title="多人游戏服务器列表"
                                 Rules="servers.dat"
                                 DefaultChecked="False" />
+                            </local:MyCheckBox.Tag>
+                        </local:MyCheckBox>
+                        <local:MyCheckBox x:Name="CheckOptionsJava">
+                            <local:MyCheckBox.Tag>
+                                <local:ExportOption 
+                                Title="版本文件夹中的 Java"
+                                DefaultChecked="True" />
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <local:MyCheckBox x:Name="CheckOptionsPcl">
@@ -259,6 +276,8 @@
                                           ToolTip="将 Mod、资源包、光影包的文件直接放入整合包中，这样在导入时就无需联网下载它们。&#xa;建议仅在无法稳定连接 CurseForge 或 Modrinth 时才考虑勾选。" />
                         <local:MyCheckBox Text="仅从 Modrinth 下载资源文件" x:Name="CheckAdvancedModrinth"
                                           ToolTip="若资源未在 Modrinth 上托管，则将其原始文件直接放入整合包中。&#xa;如果你想将整合包上传到 Modrinth，这能帮助你分辨哪些文件未在 Modrinth 上托管。" />
+                        <local:MyHint Theme="Yellow" x:Name="HintModrinthFormat" Margin="26,2,0,2"
+                                      Text="若不勾选 “PCL 启动器程序”，导出时才能在 “保存类型” 中选择 .mrpack 格式！" />
                         <local:MyHint Theme="Blue" RelativeSetup="HintExportConfig" CanClose="True" Margin="0,20,0,2"
                                       Text="配置文件中含有更多高级选项，例如精准控制导出的文件、设置整合包存放位置等。&#xa;要修改这些选项，请先点击 “保存配置”，在编辑配置文件后再导入。" />
                         <Grid Height="35" Margin="0,12,0,0">

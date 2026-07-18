@@ -1,4 +1,4 @@
-﻿<local:MyPageRight
+<local:MyPageRight
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -25,18 +25,19 @@
                             <RowDefinition Height="28" />
                             <RowDefinition Height="9" />
                             <RowDefinition Height="28" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="版本隔离" Margin="0,0,25,0" />
-                        <local:MyComboBox x:Name="ComboArgumentIndieV2" Grid.Row="0" Grid.ColumnSpan="2" Tag="VersionArgumentIndieV2" Grid.Column="1">
-                            <local:MyComboBoxItem Content="开启" ToolTipService.InitialShowDelay="0" ToolTipService.BetweenShowDelay="0"
-                                                  ToolTip="与其他版本的存档、Mod 等文件相互独立，互不干涉。&#xa;这会使你无法跨版本共享存档，但可以规避 Mod 冲突问题。" ToolTipService.HorizontalOffset="100"/>
-                            <local:MyComboBoxItem Content="关闭" ToolTipService.InitialShowDelay="0" ToolTipService.BetweenShowDelay="0"
-                                                  ToolTip="与其余关闭隔离的版本共享存档、Mod 等文件。&#xa;若存在多个安装了 Mod 的版本，可能会由于 Mod 冲突而导致崩溃。" ToolTipService.HorizontalOffset="100"/>
+                        <local:MyComboBox x:Name="ComboArgumentIndieV2" Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="1">
+                            <local:MyComboBoxItem Content="开启" ToolTipService.InitialShowDelay="0"
+                                                  ToolTip="与其他版本的存档、Mod 等文件相互独立，互不干涉。&#xa;这会使你无法跨版本共享存档，但可以规避 Mod 冲突问题。"/>
+                            <local:MyComboBoxItem Content="关闭" ToolTipService.InitialShowDelay="0"
+                                                  ToolTip="与其余关闭隔离的版本共享存档、Mod 等文件。&#xa;若存在多个安装了 Mod 的版本，可能会由于 Mod 冲突而导致崩溃。"/>
                         </local:MyComboBox>
                         <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="游戏窗口标题" Margin="0,0,25,0" />
-                        <local:MyTextBox x:Name="TextArgumentTitle" Grid.Row="2" Grid.ColumnSpan="2" Tag="VersionArgumentTitle" Grid.Column="1" ToolTip="自定义游戏窗口的标题，若留空则跟随全局设置的值。&#xa;你可以用替换标记来动态改变其内容，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。" HintText="跟随全局设置" MaxLength="100" />
+                        <local:MyTextBox x:Name="TextArgumentTitle" Grid.Row="2" Grid.ColumnSpan="2" local:SettingService.Key="VersionArgumentTitle" Grid.Column="1" ToolTip="自定义游戏窗口的标题，若留空则跟随全局设置的值。&#xa;你可以用替换标记来动态改变其内容，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。" HintText="跟随全局设置" MaxLength="100" />
                         <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="自定义信息" Margin="0,0,25,0" />
-                        <local:MyTextBox x:Name="TextArgumentInfo" Grid.Row="4" Grid.ColumnSpan="2" Tag="VersionArgumentInfo" Grid.Column="1" HintText="跟随全局设置" ToolTip="该信息会显示在游戏主界面的左下角，与 F3 调试页面的左上角。&#xa;若留空，则跟随全局设置的值。&#xa;&#xa;你可以用替换标记来动态改变其内容，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。">
+                        <local:MyTextBox x:Name="TextArgumentInfo" Grid.Row="4" Grid.ColumnSpan="2" local:SettingService.Key="VersionArgumentInfo" Grid.Column="1" HintText="跟随全局设置" ToolTip="注意：Mojang 于 Minecraft 26.1 移除了该设置，因此该设置在新版本中无效。&#xa;&#xa;该信息会显示在游戏主界面的左下角，与 F3 调试页面的左上角。&#xa;若留空，则跟随全局设置的值。&#xa;&#xa;你可以用替换标记来动态改变其内容，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。">
                             <local:MyTextBox.ValidateRules>
                                 <local:ValidateExcept>
                                     <local:ValidateExcept.Excepts>
@@ -47,18 +48,43 @@
                                 </local:ValidateExcept>
                             </local:MyTextBox.ValidateRules>
                         </local:MyTextBox>
-                        <TextBlock VerticalAlignment="Center" Grid.Row="6" HorizontalAlignment="Left" Text="游戏 Java" Margin="0,0,25,0" />
-                        <local:MyComboBox x:Name="ComboArgumentJava" Grid.ColumnSpan="2" Grid.Row="6" Grid.Column="1"
-                                          ToolTip="若将 Java 放在游戏文件夹或 PCL 文件夹，在进行自动选择时 PCL 会尽量优先选择它">
-                            <ComboBoxItem Content="加载中……" IsSelected="True" />
-                            <!--<local:MyComboBoxItem Content="Java 8 (1.8.0_171)，64 位：C:\Program Files (x86)\Common Files\Oracle\Java\javapath\javaw.exe" ToolTipService.Placement="Right" ToolTipService.HorizontalOffset="5" IsSelected="True" ToolTip="C:\Program Files (x86)\Common Files\Oracle\Java\javapath\javaw.exe" />-->
-                        </local:MyComboBox>
+                        <TextBlock VerticalAlignment="Center" Grid.Row="6" HorizontalAlignment="Left" Text="Java" Margin="0,0,25,0" />
+                        <Grid Grid.ColumnSpan="2" Grid.Row="6" Grid.Column="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <local:MyComboBox x:Name="ComboArgumentJava" local:SettingService.Key="VersionArgumentJavaV2">
+                                <local:MyComboBoxItem Content="自动选择"
+                                                  ToolTip="由 PCL 自动分析需要的 Java 版本，如果没有合适的 Java 则自动下载。" />
+                                <local:MyComboBoxItem Content="自动选择指定版本的 Java" 
+                                                  ToolTip="手动输入一个 Java 版本范围，PCL 将选择符合该范围的 Java，如果没有合适的 Java 则自动下载。&#xa;适合部分 Mod 需要特定 Java 版本才能启动的情况。" />
+                                <local:MyComboBoxItem Content="使用版本文件夹中的 Java"
+                                                  ToolTip="手动在当前版本的文件夹中放置 Java 后，PCL 将自动搜索并使用该 Java。&#xa;适合整合包自带 Java 的情况。" />
+                                <local:MyComboBoxItem Content="使用指定的 Java"
+                                                  ToolTip="手动指定所使用的 Java 的绝对路径。&#xa;若将该版本打包到其他电脑，此设置可能会失效。" />
+                            </local:MyComboBox>
+                            <local:MyTextBox x:Name="TextArgumentJavaRange" local:SettingService.Key="VersionArgumentJavaRange"
+                                             Grid.Column="1" Margin="7,0,0,0" Width="200"
+                                             ToolTip="输入允许的 Java 版本区间，例如 [17.0.1, 25.0)。&#xa;方括号代表包含，圆括号代表不包含。不写其中一侧代表不限制。&#xa;&#xa;例如：&#xa;[21.0, ) 代表至少需要 Java 21。&#xa;(, 18.0) 代表允许 Java 17-，但不允许 Java 18+（圆括号代表不包含）。&#xa;[8.0.81, 8.0.141] 则代表仅允许 Java 8u81 ~ 8u141。&#xa;&#xa;你可以在左侧选择 “使用指定的 Java” 来查看你电脑中已有的 Java 的版本号。" HintText="版本区间…" MaxLength="100" />
+                        </Grid>
+                        <local:MyHint Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" x:Name="HintArgumentJava" Margin="0,8,0,0" Visibility="Collapsed" />
+                        <Grid x:Name="PanArgumentJavaSelect" Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Visibility="Collapsed"
+                              Height="28" Margin="0,9,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <local:MyComboBox x:Name="ComboArgumentJavaSelect" Grid.Column="0" />
+                            <TextBlock x:Name="LabArgumentJava" Grid.Column="0" Margin="8.5,0,21.5,0" IsHitTestVisible="False" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            <local:MyIconButton Margin="5,2,0,2" Grid.Column="1" x:Name="BtnArgumentJavaSearch"
+                                Logo="M512.0 838.3c-80.2 0-153.4-29.3-210.2-77.4l75.5-75.5c11.5-11.5 25.8-22.0 25.8-37.0a27.2 27.2 0 0 0-27.1-27.1H104.0c-27.1 0-27.1 23.9-27.1 27.1v271.9a27.1 27.1 0 0 0 27.1 27.1c15.0 0 27.8-16.6 42.5-31.2l77.9-77.9c76.6 67.7 177.1 108.9 287.4 108.9 221.7 0 404.5-166.0 431.2-380.6h-109.8c-25.9 154.2-159.7 271.9-321.3 271.9zM919.9 76.6c-15.0 0-27.8 16.6-42.5 31.3L799.5 185.8c-76.5-67.7-177.1-108.9-287.4-108.9-221.8 0-404.5 166.1-431.3 380.6H190.6c25.9-154.2 159.7-271.9 321.4-271.9 80.2 0 153.4 29.3 210.1 77.4l-75.5 75.5c-11.6 11.5-25.8 22.0-25.8 37.1a27.2 27.2 0 0 0 27.1 27.1h271.9c27.1 0 27.1-23.9 27.1-27.1V103.8a27.1 27.1 0 0 0-27.1-27.1z" />
+                        </Grid>
                     </Grid>
                 </StackPanel>
             </local:MyCard>
             <local:MyCard Margin="0,0,0,15" Title="内存分配">
                 <StackPanel Margin="25,40,25,15">
-                    <local:MyHint x:Name="LabRamWarn" Text="32 位 Java 只能分配最多 1 GB 的内存。强烈建议换用 64 位的 Java！" Theme="Yellow" Margin="0,0,0,12" />
                     <Grid Margin="0,0,0,3">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -70,11 +96,11 @@
                             <RowDefinition Height="9" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <local:MyRadioBox Text="跟随全局设置" Width="110" Checked="True" x:Name="RadioRamType2" Tag="VersionRamType/2" Margin="0,0,20,9" />
-                        <local:MyRadioBox Grid.Row="1" Text="自动配置" Width="110" x:Name="RadioRamType0" Tag="VersionRamType/0" Margin="0,0,20,0"
-                                          ToolTip="根据安装的 Mod 量与电脑剩余内存动态调整为游戏分配的内存" ToolTipService.Placement="Right" ToolTipService.HorizontalOffset="-10" ToolTipService.VerticalOffset="-3" />
-                        <local:MyRadioBox Grid.Row="3" Text="自定义" x:Name="RadioRamType1" Tag="VersionRamType/1" Margin="0,0,20,0" />
-                        <local:MySlider Grid.Row="3" Grid.Column="1" IsEnabled="False" x:Name="SliderRamCustom" Tag="VersionRamCustom" MaxValue="49" Value="13" />
+                        <local:MyRadioBox Text="跟随全局设置" Width="110" Checked="True" x:Name="RadioRamType2" local:SettingService.Key="VersionRamType" local:SettingService.Value="2" Margin="0,0,20,9" />
+                        <local:MyRadioBox Grid.Row="1" Text="自动配置" Width="110" x:Name="RadioRamType0" local:SettingService.Key="VersionRamType" local:SettingService.Value="0" Margin="0,0,20,0"
+                                          ToolTip="根据安装的 Mod 量与电脑剩余内存动态调整为游戏分配的内存" />
+                        <local:MyRadioBox Grid.Row="3" Text="自定义" x:Name="RadioRamType1" local:SettingService.Key="VersionRamType" local:SettingService.Value="1" Margin="0,0,20,0" />
+                        <local:MySlider Grid.Row="3" Grid.Column="1" IsEnabled="False" x:Name="SliderRamCustom" local:SettingService.Key="VersionRamCustom" MaxValue="49" Value="13" />
                         <!--<local:MyTextBox Grid.Row="2" Grid.Column="3" Width="100" VerticalAlignment="Center" Margin="30,0,0,0" Text="2048 MB" />-->
                     </Grid>
                     <Grid Margin="0,5,0,0">
@@ -87,7 +113,7 @@
                             <RowDefinition Height="28" />
                         </Grid.RowDefinitions>
                         <TextBlock Margin="0,6,30,0" Text="启动游戏前进行内存优化" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Left" />
-                        <local:MyComboBox x:Name="ComboRamOptimize" Margin="10,0,0,0" Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="2" Tag="VersionRamOptimize">
+                        <local:MyComboBox x:Name="ComboRamOptimize" Margin="10,0,0,0" Grid.Row="1" Grid.ColumnSpan="2" Grid.Column="2" local:SettingService.Key="VersionRamOptimize">
                             <local:MyComboBoxItem Content="跟随全局设置" IsSelected="True" />
                             <local:MyComboBoxItem Content="开启" />
                             <local:MyComboBoxItem Content="关闭" />
@@ -141,7 +167,7 @@
                             <RowDefinition Height="3" />
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="登录方式" Margin="0,0,25,0" />
-                        <local:MyComboBox x:Name="ComboServerLogin" Grid.Row="0" Grid.ColumnSpan="2" Tag="VersionServerLogin" Grid.Column="1">
+                        <local:MyComboBox x:Name="ComboServerLogin" Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="1">
                             <local:MyComboBoxItem Content="正版登录或离线登录" IsSelected="True" />
                             <local:MyComboBoxItem Content="仅正版登录" />
                             <local:MyComboBoxItem Content="仅离线登录" />
@@ -149,27 +175,27 @@
                             <local:MyComboBoxItem Content="第三方登录：Authlib Injector 或 LittleSkin" />
                         </local:MyComboBox>
                         <TextBlock Name="LabServerNide" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left" Text="服务器 ID（必填）" Margin="0,8,25,0" Visibility="Collapsed" />
-                        <local:MyTextBox x:Name="TextServerNide" Grid.Row="1" Grid.ColumnSpan="2" ShowValidateResult="False" Tag="VersionServerNide" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="服主后台 → 集成说明 中提供的服务器 ID">
+                        <local:MyTextBox x:Name="TextServerNide" Grid.Row="1" Grid.ColumnSpan="2" ShowValidateResult="False" local:SettingService.Key="VersionServerNide" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="服主后台 → 集成说明 中提供的服务器 ID">
                             <local:MyTextBox.ValidateRules>
                                 <local:ValidateLength Min="32" Max="32" />
                             </local:MyTextBox.ValidateRules>
                         </local:MyTextBox>
                         <TextBlock Name="LabServerAuthServer" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left" Text="认证服务器（必填）" Margin="0,8,25,0" Visibility="Collapsed" />
-                        <local:MyTextBox x:Name="TextServerAuthServer" Grid.Row="1" Grid.ColumnSpan="2" ShowValidateResult="False" Tag="VersionServerAuthServer" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="Yggdrasil API 认证服务器的完整地址">
+                        <local:MyTextBox x:Name="TextServerAuthServer" Grid.Row="1" Grid.ColumnSpan="2" ShowValidateResult="False" local:SettingService.Key="VersionServerAuthServer" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="Yggdrasil API 认证服务器的完整地址">
                             <local:MyTextBox.ValidateRules>
                                 <local:ValidateHttp />
                             </local:MyTextBox.ValidateRules>
                         </local:MyTextBox>
                         <TextBlock Name="LabServerAuthRegister" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="注册链接" Margin="0,8,25,0" Visibility="Collapsed" />
-                        <local:MyTextBox x:Name="TextServerAuthRegister" Grid.Row="2" Grid.ColumnSpan="2" ShowValidateResult="False" Tag="VersionServerAuthRegister" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="注册账号的网页地址，如 https://xxxxx.xxx/auth/register">
+                        <local:MyTextBox x:Name="TextServerAuthRegister" Grid.Row="2" Grid.ColumnSpan="2" ShowValidateResult="False" local:SettingService.Key="VersionServerAuthRegister" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="注册账号的网页地址，如 https://xxxxx.xxx/auth/register">
                             <local:MyTextBox.ValidateRules>
                                 <local:ValidateHttp />
                             </local:MyTextBox.ValidateRules>
                         </local:MyTextBox>
                         <TextBlock Name="LabServerAuthName" Grid.Row="3" VerticalAlignment="Center" HorizontalAlignment="Left" Text="服务器名称" Margin="0,8,25,0" Visibility="Collapsed" />
-                        <local:MyTextBox x:Name="TextServerAuthName" Grid.Row="3" Grid.ColumnSpan="2" ShowValidateResult="False" Tag="VersionServerAuthName" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="显示在登录页面的服务器名称" />
+                        <local:MyTextBox x:Name="TextServerAuthName" Grid.Row="3" Grid.ColumnSpan="2" ShowValidateResult="False" local:SettingService.Key="VersionServerAuthName" Grid.Column="1" Margin="0,8,0,0" Visibility="Collapsed" HintText="显示在登录页面的服务器名称" />
                         <TextBlock VerticalAlignment="Center" Grid.Row="5" HorizontalAlignment="Left" Text="自动进入服务器" Margin="0,0,25,0" />
-                        <local:MyTextBox x:Name="TextServerEnter" Grid.ColumnSpan="2" Grid.Row="5" Tag="VersionServerEnter" Grid.Column="1" ToolTip="在打开 Minecraft 后自动进入某服务器。&#xa;用英文冒号间隔 IP 与端口，例如 233.233.233.233:12345。">
+                        <local:MyTextBox x:Name="TextServerEnter" Grid.ColumnSpan="2" Grid.Row="5" local:SettingService.Key="VersionServerEnter" Grid.Column="1" ToolTip="在打开 Minecraft 后自动进入某服务器。&#xa;用英文冒号间隔 IP 与端口，例如 233.233.233.233:12345。">
                             <local:MyTextBox.ValidateRules>
                                 <local:ValidateExcept>
                                     <local:ValidateExcept.Excepts>
@@ -187,7 +213,8 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnServerNideWeb" Grid.Column="0" MinWidth="140" Text="服主后台" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
+                        <local:MyButton Grid.Column="0" MinWidth="140" Text="服主后台" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight"
+                                        local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://login.mc-user.com:233/server/intro" />
                     </Grid>
                     <local:MyButton x:Name="BtnServerAuthLittle" Height="35" MinWidth="150" Margin="0,12,0,0" Text="设置为 LittleSkin" HorizontalAlignment="Left" ColorType="Highlight" />
                 </StackPanel>
@@ -211,45 +238,33 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="Java 虚拟机参数" Margin="0,0,25,0" />
-                    <local:MyTextBox x:Name="TextAdvanceJvm" Grid.Row="0" Grid.ColumnSpan="2" Tag="VersionAdvanceJvm" Grid.Column="1" MaxLength="4000" ToolTip="启动 Minecraft 时使用的额外 JVM 参数，在没有确定把握的情况下请不要尝试修改。&#xa;&#xa;支持 Minecraft 版本 JSON 中的字符串替换标记，例如 ${library_directory}。&#xa;也支持使用 PCL 的替换标记，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。&#xa;&#xa;若留空，则跟随全局设置的值。" HintText="跟随全局设置"
+                    <local:MyTextBox x:Name="TextAdvanceJvm" Grid.Row="0" Grid.ColumnSpan="2" local:SettingService.Key="VersionAdvanceJvm" Grid.Column="1" MaxLength="4000" ToolTip="启动 Minecraft 时使用的额外 JVM 参数，在没有确定把握的情况下请不要尝试修改。&#xa;&#xa;支持 Minecraft 版本 JSON 中的字符串替换标记，例如 ${library_directory}。&#xa;也支持使用 PCL 的替换标记，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。&#xa;&#xa;若留空，则跟随全局设置的值。" HintText="跟随全局设置"
                                      Height="100" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" Padding="0,5" VerticalScrollBarVisibility="Auto" />
                     <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="游戏参数" Margin="0,0,25,0" />
-                    <local:MyTextBox x:Name="TextAdvanceGame" Grid.Row="2" Grid.ColumnSpan="2" Tag="VersionAdvanceGame" Grid.Column="1" ToolTip="文本框中的内容将会被直接拼合在启动参数的末尾。&#xa;例如，输入 --demo 则会以试玩模式启动游戏。&#xa;&#xa;支持 Minecraft 版本 JSON 中的字符串替换标记，例如 ${library_directory}。&#xa;也支持使用 PCL 的替换标记，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。&#xa;&#xa;若留空，则跟随全局设置的值。" HintText="跟随全局设置" />
+                    <local:MyTextBox x:Name="TextAdvanceGame" Grid.Row="2" Grid.ColumnSpan="2" local:SettingService.Key="VersionAdvanceGame" Grid.Column="1" ToolTip="文本框中的内容将会被直接拼合在启动参数的末尾。&#xa;例如，输入 --demo 则会以试玩模式启动游戏。&#xa;&#xa;支持 Minecraft 版本 JSON 中的字符串替换标记，例如 ${library_directory}。&#xa;也支持使用 PCL 的替换标记，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。&#xa;&#xa;若留空，则跟随全局设置的值。" HintText="跟随全局设置" />
                     <TextBlock VerticalAlignment="Center" Grid.Row="4" HorizontalAlignment="Left" Text="内存管理" Margin="0,0,25,0" />
                     <local:MyComboBox local:SettingService.Key="VersionAdvanceGC" Grid.Row="4" Grid.ColumnSpan="2" Grid.Column="1">
                         <local:MyComboBoxItem Content="跟随全局设置" />
-                        <local:MyComboBoxItem Content="尽量使用 ZGC"
-                          ToolTipService.BetweenShowDelay="0" ToolTip="在 Java 21+ 使用分代 ZGC，20~15 使用非分代的 ZGC，14- 使用 G1GC。&#xa;ZGC 的内存占用比 G1GC 更高，不过在回收内存时不会导致卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
-                        <local:MyComboBoxItem Content="尽量使用分代 ZGC"
-                          ToolTipService.BetweenShowDelay="0" ToolTip="在 Java 21+ 使用分代 ZGC，20- 使用 G1GC。&#xa;ZGC 的内存占用比 G1GC 更高，不过在回收内存时不会导致卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
-                        <local:MyComboBoxItem Content="标准 G1GC"
-                          ToolTipService.BetweenShowDelay="0" ToolTip="总是使用 G1GC，附带 Mojang 官方的优化参数。&#xa;G1GC 的内存占用比 ZGC 更低，但在回收内存时会导致突然的卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
-                        <local:MyComboBoxItem Content="调优 G1GC" local:SettingService.Value="5"
-                          ToolTipService.BetweenShowDelay="0" ToolTip="总是使用 G1GC，附带 PCL 调优过的优化参数。&#xa;G1GC 的内存占用比 ZGC 更低，但在回收内存时会导致突然的卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
-                        <local:MyComboBoxItem Content="不指定（可自定义）" local:SettingService.Value="4"
-                          ToolTipService.BetweenShowDelay="0" ToolTip="不自动添加 GC 参数。&#xa;仅当选择此项时，你可以在 “Java 虚拟机参数” 设置中手动添加 GC 参数。" />
+                        <local:MyComboBoxItem Content="尽量使用 ZGC" ToolTip="在 Java 21+ 使用分代 ZGC，20~15 使用非分代的 ZGC，14- 使用 G1GC。&#xa;ZGC 的内存占用比 G1GC 更高，不过在回收内存时不会导致卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
+                        <local:MyComboBoxItem Content="尽量使用分代 ZGC" ToolTip="在 Java 21+ 使用分代 ZGC，20- 使用 G1GC。&#xa;ZGC 的内存占用比 G1GC 更高，不过在回收内存时不会导致卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
+                        <local:MyComboBoxItem Content="标准 G1GC" ToolTip="总是使用 G1GC，附带 Mojang 官方的优化参数。&#xa;G1GC 的内存占用比 ZGC 更低，但在回收内存时会导致突然的卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
+                        <local:MyComboBoxItem Content="调优 G1GC" local:SettingService.Value="5" ToolTip="总是使用 G1GC，附带 PCL 调优过的优化参数。&#xa;G1GC 的内存占用比 ZGC 更低，但在回收内存时会导致突然的卡顿。&#xa;覆盖 “Java 虚拟机参数” 设置中的 GC 相关参数。" />
+                        <local:MyComboBoxItem Content="不指定（可自定义）" local:SettingService.Value="4" ToolTip="不自动添加 GC 参数。&#xa;仅当选择此项时，你可以在 “Java 虚拟机参数” 设置中手动添加 GC 参数。" />
                     </local:MyComboBox>
                     <TextBlock Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Left" Text="启动前执行命令" Margin="0,0,25,3" />
-                    <local:MyTextBox x:Name="TextAdvanceRun" Grid.Row="6" Grid.ColumnSpan="2" Tag="VersionAdvanceRun" Grid.Column="1" HintText="" Margin="0,0,0,3"
+                    <local:MyTextBox x:Name="TextAdvanceRun" Grid.Row="6" Grid.ColumnSpan="2" local:SettingService.Key="VersionAdvanceRun" Grid.Column="1" HintText="" Margin="0,0,0,3"
                                      ToolTip="该项不会覆盖全局设置：启动时会先执行全局设置的命令，再执行版本设置的命令。&#xa;&#xa;在 MC 启动前执行特定命令或程序，语法与 Windows 的命令提示符一致。&#xa;&#xa;你可以用替换标记来动态改变其内容或实现相对路径，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。例如：&#xa; · &quot;{verpath}test.exe&quot; ：运行版本文件夹下的 test.exe 程序&#xa; · &quot;{java}java.exe&quot; -jar &quot;{verpath}test.jar&quot; ：用 Java 运行版本文件夹下的 test.jar&#xa; · notepad &quot;{verindie}options.txt&quot; ：使用记事本打开该版本的设置文件&#xa;&#xa;涉及路径的操作最好都打上双引号，以避免路径中的空格导致运行失败。&#xa;执行命令时，命令行所在的目录是当前的 .minecraft 文件夹。" />
-                    <local:MyCheckBox Grid.Row="7" Grid.Column="1" x:Name="CheckAdvanceRunWait" Tag="VersionAdvanceRunWait" Visibility="Collapsed"
+                    <local:MyCheckBox Grid.Row="7" Grid.Column="1" x:Name="CheckAdvanceRunWait" local:SettingService.Key="VersionAdvanceRunWait" Visibility="Collapsed"
                                       Text="等待命令执行完成后再继续启动" Margin="0,5,0,0" />
                     <StackPanel Margin="0,12,0,4" Grid.Row="8" Grid.ColumnSpan="2" HorizontalAlignment="Left">
-                        <local:MyCheckBox Height="28" Text="禁止更新 Mod" x:Name="CheckAdvanceDisableModUpdate" Tag="VersionAdvanceDisableModUpdate"
-                                          ToolTip="禁止为此版本更新 Mod，以防止整合包玩家误操作"
-                                          ToolTipService.Placement="Right" />
-                        <local:MyCheckBox Height="28" Text="忽略 Java 兼容性警告" x:Name="CheckAdvanceJava" Tag="VersionAdvanceJava"
-                                          ToolTipService.Placement="Right"
-                                          ToolTip="如果手动选择了与当前版本不兼容的 Java，则自动跳过兼容性警告弹窗，强制使用手动选择的 Java。" />
-                        <local:MyCheckBox Height="28" Text="关闭文件校验" x:Name="CheckAdvanceAssetsV2" Tag="VersionAdvanceAssetsV2"
-                                          ToolTipService.Placement="Right"
+                        <local:MyCheckBox Height="28" Text="禁止更新 Mod" x:Name="CheckAdvanceDisableModUpdate" local:SettingService.Key="VersionAdvanceDisableModUpdate"
+                                          ToolTip="禁止为此版本更新 Mod，以防止整合包玩家误操作" />
+                        <local:MyCheckBox Height="28" Text="关闭文件校验" x:Name="CheckAdvanceAssetsV2" local:SettingService.Key="VersionAdvanceAssetsV2"
                                           ToolTip="完全不更改 assets；不校验 libraries、第三方登录库与版本主 jar 文件是否被修改。&#xa;如果你没有修改相关文件，请勿勾选此项。" />
-                        <local:MyCheckBox Height="28" Text="禁用 Java Launch Wrapper" x:Name="CheckAdvanceDisableJLW" Tag="VersionAdvanceDisableJLW"
-                                          ToolTipService.Placement="Right"
+                        <local:MyCheckBox Height="28" Text="禁用 Java Launch Wrapper" x:Name="CheckAdvanceDisableJLW" local:SettingService.Key="VersionAdvanceDisableJLW"
                                           ToolTip="是否使用 Java Launch Wrapper 修复 Java 18- 在中文路径下可能无法正常启动的问题。&#xa;详见：https://github.com/00ll00/java_launch_wrapper" />
                         <local:MyCheckBox Height="28" Text="禁用 LWJGL Unsafe Agent" local:SettingService.Key="VersionAdvanceDisableLUA"
-                                          ToolTipService.Placement="Right" 
-                                          ToolTip="是否使用 LWJGL Unsafe Agent 修复 Java 25+ 的一个性能问题。&#xa;详见：https://github.com/HMCL-dev/lwjgl-unsafe-agent" />
+                                          ToolTip="是否使用 LWJGL Unsafe Agent 修复 LWJGL 3.4.1 的一个性能问题。&#xa;详见：https://github.com/HMCL-dev/lwjgl-unsafe-agent" />
                         <local:MyCheckBox Height="28" Text="使用代理" local:SettingService.Key="VersionAdvanceUseProxy"
                                           ToolTipService.Placement="Right"
                                           ToolTip="PCL 会使用 设置 → 其他 → 下载 → HTTP 代理 中填写的代理来启动游戏。" />

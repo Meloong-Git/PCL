@@ -1,4 +1,4 @@
-﻿Public Class LazyLoadBehavior
+Public Class LazyLoadBehavior
 
     ''' <summary>
     ''' 指定首次进入 ScrollViewer 的可视范围时执行的操作。

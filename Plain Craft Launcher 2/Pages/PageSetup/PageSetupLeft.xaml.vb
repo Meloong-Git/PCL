@@ -1,14 +1,14 @@
-﻿Public Class PageSetupLeft
+Public Class PageSetupLeft
 
     Private IsLoad As Boolean = False
     Private IsPageSwitched As Boolean = False '如果在 Loaded 前切换到其他页面，会导致触发 Loaded 时再次切换一次
     Private Sub PageSetupLeft_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
         '是否处于隐藏的子页面
         Dim IsHiddenPage As Boolean = False
-        If ItemLaunch.Checked AndAlso Settings.Get("UiHiddenSetupLaunch") Then IsHiddenPage = True
-        If ItemUI.Checked AndAlso Settings.Get("UiHiddenSetupUi") Then IsHiddenPage = True
-        If ItemSystem.Checked AndAlso Settings.Get("UiHiddenSetupSystem") Then IsHiddenPage = True
-        If ItemLink.Checked AndAlso Settings.Get("UiHiddenSetupLink") Then IsHiddenPage = True
+        If ItemLaunch.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupLaunch") Then IsHiddenPage = True
+        If ItemUI.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupUi") Then IsHiddenPage = True
+        If ItemSystem.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupSystem") Then IsHiddenPage = True
+        If ItemLink.Checked AndAlso Settings.Get(Of Boolean)("UiHiddenSetupLink") Then IsHiddenPage = True
         If PageSetupUI.HiddenForceShow Then IsHiddenPage = False
         '若页面错误，或尚未加载，则继续
         If IsLoad AndAlso Not IsHiddenPage Then Return
@@ -17,13 +17,13 @@
         PageSetupUI.HiddenRefresh()
         '选择第一个未被禁用的子页面
         If IsPageSwitched Then Return
-        If Not Settings.Get("UiHiddenSetupLaunch") Then
+        If Not Settings.Get(Of Boolean)("UiHiddenSetupLaunch") Then
             ItemLaunch.SetChecked(True, False, False)
-        ElseIf Not Settings.Get("UiHiddenSetupUi") Then
+        ElseIf Not Settings.Get(Of Boolean)("UiHiddenSetupUi") Then
             ItemUI.SetChecked(True, False, False)
-        ElseIf Not Settings.Get("UiHiddenSetupSystem") Then
+        ElseIf Not Settings.Get(Of Boolean)("UiHiddenSetupSystem") Then
             ItemSystem.SetChecked(True, False, False)
-        ElseIf Not Settings.Get("UiHiddenSetupLink") Then
+        ElseIf Not Settings.Get(Of Boolean)("UiHiddenSetupLink") Then
             ItemLink.SetChecked(True, False, False)
         Else
             ItemLaunch.SetChecked(True, False, False)
@@ -42,13 +42,13 @@
     Public Sub New()
         InitializeComponent()
         '选择第一个未被禁用的子页面
-        If Not Settings.Get("UiHiddenSetupLaunch") Then
+        If Not Settings.Get(Of Boolean)("UiHiddenSetupLaunch") Then
             PageID = FormMain.PageSubType.SetupLaunch
-        ElseIf Not Settings.Get("UiHiddenSetupUi") Then
+        ElseIf Not Settings.Get(Of Boolean)("UiHiddenSetupUi") Then
             PageID = FormMain.PageSubType.SetupUI
-        ElseIf Not Settings.Get("UiHiddenSetupSystem") Then
+        ElseIf Not Settings.Get(Of Boolean)("UiHiddenSetupSystem") Then
             PageID = FormMain.PageSubType.SetupSystem
-        ElseIf Not Settings.Get("UiHiddenSetupLink") Then
+        ElseIf Not Settings.Get(Of Boolean)("UiHiddenSetupLink") Then
             PageID = FormMain.PageSubType.SetupLink
         Else
             PageID = FormMain.PageSubType.SetupLaunch
@@ -115,7 +115,7 @@
 
             PageID = ID
         Catch ex As Exception
-            Log(ex, "切换分页面失败（ID " & ID & "）", LogLevel.Feedback)
+            Logger.Error(ex, $"切换分页面失败（ID {ID}）")
         Finally
             AniControlEnabled -= 1
         End Try

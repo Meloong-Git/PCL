@@ -1,4 +1,4 @@
-﻿Public Class MySliderDot
+Public Class MySliderDot
 
     '基础
 
@@ -59,7 +59,7 @@
                 If AniControlEnabled = 0 Then RaiseEvent Change(Me, False)
 
             Catch ex As Exception
-                Log(ex, "滑动条进度改变出错", LogLevel.Hint)
+                Logger.Warning(ex, "滑动条进度改变出错", LogLevel.Hint)
             End Try
         End Set
     End Property

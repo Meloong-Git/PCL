@@ -1,20 +1,20 @@
-﻿Class PageSetupSystem
+Public Class PageSetupSystem
 
-    Private Shadows IsLoaded As Boolean = False
 
     Private Sub PageSetupSystem_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
 
         '重复加载部分
         PanBack.ScrollToHome()
 
-#If BETA Then
-        PanDonate.Visibility = Visibility.Collapsed
-#Else
-        PanDonate.Visibility = Visibility.Visible
-        ItemSystemUpdateDownload.Content = "在有新版本时自动下载（更新快照版可能需要更新密钥）"
-#End If
+        If BuildType = BuildTypes.Release Then
+            PanDonate.Visibility = Visibility.Collapsed
+        Else
+            PanDonate.Visibility = Visibility.Visible
+            ItemSystemUpdateDownload.Content = "在有新版本时自动下载（更新快照版前需要先输入土豆码）"
+        End If
 
         '非重复加载部分
+        Static IsLoaded As Boolean = False
         If IsLoaded Then Return
         IsLoaded = True
 
@@ -25,88 +25,17 @@
 
     End Sub
     Public Sub Reload()
-
-        '下载
-        SliderDownloadThread.Value = Settings.Get("ToolDownloadThread")
-        SliderDownloadSpeed.Value = Settings.Get("ToolDownloadSpeed")
-        ComboDownloadSource.SelectedIndex = Settings.Get("ToolDownloadSource")
-        ComboDownloadVersion.SelectedIndex = Settings.Get("ToolDownloadVersion")
-        CheckDownloadCert.Checked = Settings.Get("ToolDownloadCert")
-        TextToolDownloadProxy.Text = Settings.Get("ToolDownloadProxy")
-
-        'Mod 与整合包
-        ComboDownloadTranslateV2.SelectedIndex = Settings.Get("ToolDownloadTranslateV2")
-        ComboDownloadMod.SelectedIndex = Settings.Get("ToolDownloadMod")
-        ComboModLocalNameStyle.SelectedIndex = Settings.Get("ToolModLocalNameStyle")
-        CheckDownloadIgnoreQuilt.Checked = Settings.Get("ToolDownloadIgnoreQuilt")
-
-        'Minecraft 更新提示
-        CheckUpdateRelease.Checked = Settings.Get("ToolUpdateRelease")
-        CheckUpdateSnapshot.Checked = Settings.Get("ToolUpdateSnapshot")
-
-        '辅助设置
-        CheckHelpChinese.Checked = Settings.Get("ToolHelpChinese")
-
-        '系统设置
-        ComboSystemUpdate.SelectedIndex = Settings.Get("SystemSystemUpdate")
-        ComboSystemActivity.SelectedIndex = Settings.Get("SystemSystemActivity")
-        TextSystemCache.Text = Settings.Get("SystemSystemCache")
-        CheckSystemTelemetry.Checked = Settings.Get("SystemSystemTelemetry")
-
-        '调试选项
-        CheckDebugMode.Checked = Settings.Get("SystemDebugMode")
-        SliderDebugAnim.Value = Settings.Get("SystemDebugAnim")
-        CheckDebugDelay.Checked = Settings.Get("SystemDebugDelay")
-        CheckDebugSkipCopy.Checked = Settings.Get("SystemDebugSkipCopy")
-
+        SettingService.RefreshSettings(Me)
     End Sub
-
-    '初始化
     Public Sub Reset()
         Try
-            Settings.Reset("ToolDownloadThread")
-            Settings.Reset("ToolDownloadSpeed")
-            Settings.Reset("ToolDownloadSource")
-            Settings.Reset("ToolDownloadVersion")
-            Settings.Reset("ToolDownloadTranslateV2")
-            Settings.Reset("ToolDownloadIgnoreQuilt")
-            Settings.Reset("ToolDownloadCert")
-            Settings.Reset("ToolDownloadProxy")
-            Settings.Reset("ToolDownloadMod")
-            Settings.Reset("ToolModLocalNameStyle")
-            Settings.Reset("ToolUpdateRelease")
-            Settings.Reset("ToolUpdateSnapshot")
-            Settings.Reset("ToolHelpChinese")
-            Settings.Reset("SystemDebugMode")
-            Settings.Reset("SystemDebugAnim")
-            Settings.Reset("SystemDebugDelay")
-            Settings.Reset("SystemDebugSkipCopy")
-            Settings.Reset("SystemSystemCache")
-            Settings.Reset("SystemSystemUpdate")
-            Settings.Reset("SystemSystemActivity")
-            Settings.Reset("SystemSystemTelemetry")
-
-            Log("[Setup] 已初始化启动器页设置")
+            SettingService.ResetSettings(Me)
+            Logger.Info("已初始化启动器页设置")
             Hint("已初始化启动器页设置！", HintType.Green, False)
         Catch ex As Exception
-            Log(ex, "初始化启动器页设置失败", LogLevel.Msgbox)
+            Logger.Error(ex, "初始化启动器页设置失败", LogBehavior.Alert)
         End Try
-
         Reload()
-    End Sub
-
-    '将控件改变路由到设置改变
-    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckDebugMode.Change, CheckDebugDelay.Change, CheckDebugSkipCopy.Change, CheckUpdateRelease.Change, CheckUpdateSnapshot.Change, CheckHelpChinese.Change, CheckDownloadIgnoreQuilt.Change, CheckDownloadCert.Change, CheckSystemTelemetry.Change
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Checked)
-    End Sub
-    Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderDebugAnim.Change, SliderDownloadThread.Change, SliderDownloadSpeed.Change
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Value)
-    End Sub
-    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboDownloadVersion.SelectionChanged, ComboModLocalNameStyle.SelectionChanged, ComboDownloadTranslateV2.SelectionChanged, ComboSystemUpdate.SelectionChanged, ComboSystemActivity.SelectionChanged, ComboDownloadSource.SelectionChanged, ComboDownloadMod.SelectionChanged
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.SelectedIndex)
-    End Sub
-    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextSystemCache.ValidatedTextChanged, TextToolDownloadProxy.TextChanged
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Text)
     End Sub
 
     '滑动条
@@ -129,19 +58,19 @@
     End Sub
     Private Sub SliderDownloadThread_PreviewChange(sender As Object, e As RouteEventArgs) Handles SliderDownloadThread.PreviewChange
         If SliderDownloadThread.Value < 100 Then Return
-        If Not Settings.Get("HintDownloadThread") Then
+        If Not Settings.Get(Of Boolean)("HintDownloadThread") Then
             Settings.Set("HintDownloadThread", True)
             MyMsgBox("如果设置过多的下载线程，可能会导致下载时出现非常严重的卡顿。" & vbCrLf &
                      "一般设置 64 线程即可满足大多数下载需求，除非你知道你在干什么，否则不建议设置更多的线程数！", "警告", "我知道了", IsWarn:=True)
         End If
     End Sub
 
-    '识别码/解锁码替代入口
+    '识别码/土豆码替代入口
     Private Sub BtnSystemIdentify_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSystemIdentify.Click
         PageOtherAbout.CopyIdentify()
     End Sub
     Private Sub BtnSystemUnlock_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSystemUnlock.Click
-        DonateCodeInput()
+        InputPotatoCode(False)
     End Sub
 
     '调试模式
@@ -157,7 +86,7 @@
                     "例如，如果发现某个版本游戏存在严重 Bug，你可能就会因为无法得到通知而导致无法预知的后果。" & vbCrLf & vbCrLf &
                     "一般选择 仅在有重要通知时显示公告 就可以让你尽量不受打扰了。" & vbCrLf &
                     "除非你在制作服务器整合包，或时常手动更新启动器，否则极度不推荐选择此项！", "警告", "我知道我在做什么", "取消", IsWarn:=True) = 2 Then
-            ComboSystemActivity.SelectedItem = e.RemovedItems(0)
+            If e.RemovedItems.Count > 0 Then ComboSystemActivity.SelectedItem = e.RemovedItems(0)
         End If
     End Sub
     Private Sub ComboSystemUpdate_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboSystemUpdate.SelectionChanged
@@ -167,7 +96,7 @@
                     "例如，如果官方修改了登录方式，从而导致现有启动器无法登录，你可能就会因为无法更新而无法开始游戏。" & vbCrLf & vbCrLf &
                     "一般选择 仅在有重大漏洞更新时显示提示 就可以让你尽量不受打扰了。" & vbCrLf &
                     "除非你在制作服务器整合包，或时常手动更新启动器，否则极度不推荐选择此项！", "警告", "我知道我在做什么", "取消", IsWarn:=True) = 2 Then
-            ComboSystemUpdate.SelectedItem = e.RemovedItems(0)
+            If e.RemovedItems.Count > 0 Then ComboSystemUpdate.SelectedItem = e.RemovedItems(0)
         End If
     End Sub
     Private Sub BtnSystemUpdate_Click(sender As Object, e As EventArgs) Handles BtnSystemUpdate.Click
@@ -180,17 +109,12 @@
     Public Shared Function IsLauncherNewest() As Boolean?
         Try
             '确认服务器公告是否正常
-            Dim ServerContent As String = ReadFile(PathTemp & "Cache\Notice.cfg")
+            Dim ServerContent As String = If(FileUtils.TryReadAsString(PathTemp & "Cache\Notice.cfg"), "")
             If ServerContent.Split("|").Count < 3 Then Return Nothing
             '确认是否为最新
-#If BETA Then
-            Dim NewVersionCode As Integer = ServerContent.Split("|")(2)
-#Else
-            Dim NewVersionCode As Integer = ServerContent.Split("|")(1)
-#End If
-            Return NewVersionCode <= VersionCode
+            Return ServerContent.Split("|")(If(BuildType = BuildTypes.Release, 2, 1)) <= VersionCode
         Catch ex As Exception
-            Log(ex, "确认启动器更新失败", LogLevel.Feedback)
+            Logger.Error(ex, "确认启动器更新失败")
             Return Nothing
         End Try
     End Function

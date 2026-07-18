@@ -1,4 +1,4 @@
-﻿#If _MyType <> "Empty" Then
+#If _MyType <> "Empty" Then
 
 Namespace My
     ''' <summary>

@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net48</TargetFramework>
+		<OutputType>Library</OutputType>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<OutDir>bin\</OutDir>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+		<Configurations>Debug;Release;Snapshot</Configurations>
+		<Deterministic>true</Deterministic>
+		<LangVersion>13.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="PolySharp" Version="1.15.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="System.Diagnostics.CodeAnalysis" />
+		<Using Include="System.Collections" />
+		<Using Include="System.Collections.Generic" />
+		<Using Include="System.Collections.Concurrent" />
+		<Using Include="System.Text" />
+		<Using Include="System.Net" />
+		<Using Include="System.Runtime.CompilerServices" />
+		<Using Include="System.Runtime.InteropServices" />
+		<Using Include="Newtonsoft.Json" />
+		<Using Include="Newtonsoft.Json.Linq" />
+		<Using Include="MeloongCore" />
+		<Using Include="MeloongCore.Extensions" />
+		<Using Include="MeloongCore.Wpf" />
+		<Using Include="MeloongCore.Wpf.Extensions" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\MeloongCore\Shared\MeloongCore.csproj" />
+	  <ProjectReference Include="..\MeloongCore\Wpf\MeloongCore.Wpf.csproj" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>$(DefineConstants);SNAPSHOT</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'" />
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Snapshot|AnyCPU'">
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+
+	<!-- 内嵌的资源 -->
+	<ItemGroup>
+		<None Remove="Resource\WikiEntries.txt" />
+		<EmbeddedResource Include="Resource\WikiEntries.txt" LogicalName="Resource\WikiEntries.txt" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="Microsoft.VisualBasic" />
+	  <Reference Include="Newtonsoft.Json">
+	    <HintPath>..\Plain Craft Launcher 2\Resources\Newtonsoft.Json.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+
+</Project>

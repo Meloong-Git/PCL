@@ -1,4 +1,4 @@
-﻿Public Class MyImage
+Public Class MyImage
     Inherits Image
 
 #Region "公开属性"
@@ -88,9 +88,9 @@
                 Dim Bitmap As ImageSource = If(value Is Nothing, Nothing, New MyBitmap(value)) '在这里先触发可能的文件读取，尽量避免在 UI 线程中读取文件
                 RunInUi(Sub() MyBase.Source = Bitmap)
             Catch ex As Exception
-                Log(ex, $"加载图片失败（{value}）")
+                Logger.Warn(ex, $"加载图片失败（{value}）")
                 Try
-                    If value.StartsWithF(PathTemp) AndAlso File.Exists(value) Then File.Delete(value)
+                    If value.StartsWithF(PathTemp) Then FileUtils.Delete(value)
                 Catch
                 End Try
             End Try
@@ -112,8 +112,8 @@
         End If
         '从缓存加载网络图片
         Dim EnableCache As Boolean = Me.EnableCache
-        Dim TempPath As String = $"{PathTemp}MyImage\{GetHash(Source)}.png{If(EnableCache, "", GetUuid())}" '不启用缓存时在末尾加上随机字符串，避免冲突
-        Dim TempFile As New FileInfo(TempPath)
+        Dim TempPath As String = $"{PathTemp}MyImage\{Source.GetStableHashCode()}.png{If(EnableCache, "", GetUuid())}" '不启用缓存时在末尾加上随机字符串，避免冲突
+        Dim TempFile = FileUtils.GetInfo(TempPath)
         If EnableCache AndAlso TempFile.Exists Then
             ActualSource = TempPath '显示缓存的图片
             If (Date.Now - TempFile.LastWriteTime) < FileCacheExpiredTime Then Return '无需刷新缓存
@@ -130,24 +130,24 @@
                         {Source, FallbackSource}, {Source}),
                     TempPath, SimulateBrowserHeaders:=True)
                 ActualSource = TempPath
-                If Not EnableCache Then File.Delete(TempPath)
+                If Not EnableCache Then FileUtils.Delete(TempPath)
             Catch ex As Exception
                 Try
-                    If TempPath IsNot Nothing Then File.Delete(TempPath)
+                    If TempPath IsNot Nothing Then FileUtils.Delete(TempPath)
                 Catch
                 End Try
                 '加载本地备用图片
                 If IsLocalFallback Then
                     Try
                         ActualSource = FallbackSource
-                        Log(ex, $"下载图片失败，使用本地备用图片（{Source}）")
+                        Logger.Warn(ex, $"下载图片失败，使用本地备用图片（{Source}）")
                         Return
                     Catch exx As Exception
-                        Log(ex, $"下载图片失败（{Source}）", LogLevel.Hint)
-                        Log(exx, $"加载备用图片失败（{FallbackSource}）", LogLevel.Hint)
+                        Logger.Error(ex, $"下载图片失败（{Source}）", LogBehavior.Toast)
+                        Logger.Error(exx, $"加载备用图片失败（{FallbackSource}）", LogBehavior.Toast)
                     End Try
                 Else
-                    Log(ex, $"下载图片失败（{Source}，备用：{FallbackSource}）", LogLevel.Hint)
+                    Logger.Error(ex, $"下载图片失败（{Source}，备用：{FallbackSource}）", LogBehavior.Toast)
                 End If
             End Try
         End Sub, "MyImage PicLoader " & GetUuid() & "#", ThreadPriority.BelowNormal)
