@@ -11,7 +11,7 @@ Public Module ModNet
     Public Function GetProxy() As WebProxy
         Dim ProxyServer As String = Settings.Get("ToolDownloadProxy")
         If Not String.IsNullOrWhiteSpace(ProxyServer) Then
-            Log("[Net] 当前代理状态：自定义")
+            Logger.Log("[Net] 当前代理状态：自定义")
             Dim ProxyUri As New Uri(ProxyServer)
             If Not ProxyUri.Scheme.StartsWithF("http") Then Return Nothing '只允许 http/https 协议
             Try
@@ -19,13 +19,13 @@ Public Module ModNet
                    ProxyUri.Host.StartsWithF("192.168.") OrElse
                    ProxyUri.Host.StartsWithF("10.") OrElse
                    ProxyUri.Host.StartsWithF("fe80") OrElse
-                   (ProxyUri.Host.Split(".")(1) > 16 AndAlso ProxyUri.Host.Split(".")(1) < 31 AndAlso ProxyUri.Host.StartsWithF("172.")) Then Log($"[Net] 使用 {ProxyUri} 作为网络代理")
+                   (ProxyUri.Host.Split(".")(1) > 16 AndAlso ProxyUri.Host.Split(".")(1) < 31 AndAlso ProxyUri.Host.StartsWithF("172.")) Then Logger.Log($"[Net] 使用 {ProxyUri} 作为网络代理")
                 '视作非本地地址
             Catch
             End Try
             Return New WebProxy(ProxyServer, True)
         End If
-        Log("[Net] 当前代理状态：跟随系统代理设置")
+        Logger.Log("[Net] 当前代理状态：跟随系统代理设置")
         Return Nothing
     End Function
     ''' <summary>
