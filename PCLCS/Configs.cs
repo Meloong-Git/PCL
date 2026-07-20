@@ -1,3 +1,4 @@
+using MeloongCore;
 namespace PCLCS;
 public static class Configs {
 
@@ -5,7 +6,7 @@ public static class Configs {
     public static readonly ConfigEntry<int> JavaConfigVersion = new(nameof(JavaConfigVersion), 0);
     public static readonly ConfigEntry<ConcurrentList<Java>> JavaList = new(nameof(JavaList), []);
     public static readonly ConfigEntry<List<string>> JavaRemovedList = new(nameof(JavaRemovedList), []);
-    public static readonly ConfigEntry<bool> InstanceMigratedJava = new(nameof(InstanceMigratedJava), false);
-    public static readonly ConfigEntry<Java> InstanceForcedJava = new(nameof(InstanceForcedJava), null);
+    public static readonly DynamicConfigEntry<bool> InstanceMigratedJava = new(nameof(InstanceMigratedJava), false);
+    public static readonly DynamicConfigEntry<Java> InstanceForcedJava = new(nameof(InstanceForcedJava), null);
 
 }

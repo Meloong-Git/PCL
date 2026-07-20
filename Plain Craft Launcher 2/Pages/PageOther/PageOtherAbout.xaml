@@ -31,8 +31,8 @@
                     </Image>
                     <local:MyButton Text="赞助 PCL !" Grid.Column="2" Grid.Row="0" Height="35" ColorType="Highlight"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://meloong.com/afd/a/LTCat" />
-                    <local:MyButton Text="查看源代码" Grid.Column="2" Grid.Row="1" Height="35" 
-                                    local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/Hex-Dragon/PCL2" />
+                    <local:MyButton Text="检查更新" Grid.Column="2" Grid.Row="1" Height="35" 
+                                    local:CustomEventService.EventType="检查更新" />
                 </Grid>
             </local:MyCard>
             <local:MyCard Margin="0,0,0,15" Title="特别鸣谢">
@@ -124,7 +124,8 @@
             <local:MyCard Margin="0,0,0,15" Title="赞助者">
                 <StackPanel Margin="25,40,19,20">
                     <TextBlock HorizontalAlignment="Left" Text="以下是近期的高级赞助者们！感谢大家对 PCL 的支持！！！" Margin="0,0,25,5.5" TextTrimming="None" TextWrapping="WrapWithOverflow" />
-                    <WrapPanel Margin="0,0,0,10">                        <TextBlock Margin="0,1.5,6,0" Text="." />
+                    <WrapPanel Margin="0,0,0,10">
+                        <TextBlock Margin="0,1.5,6,0" Text="." />
                         <TextBlock Margin="0,1.5,6,0" Text="7" />
                         <TextBlock Margin="0,1.5,6,0" Text="ln" />
                         <TextBlock Margin="0,1.5,6,0" Text="sc" />

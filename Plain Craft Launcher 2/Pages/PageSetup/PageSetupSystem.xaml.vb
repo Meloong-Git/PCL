@@ -100,7 +100,8 @@ Public Class PageSetupSystem
         End If
     End Sub
     Private Sub BtnSystemUpdate_Click(sender As Object, e As EventArgs) Handles BtnSystemUpdate.Click
-        UpdateCheckByButton()
+        ' 已交换功能为查看源代码，点击时通过自定义事件打开网页，避免再触发更新检查。
+        Return
     End Sub
     ''' <summary>
     ''' 启动器是否已经是最新版？
