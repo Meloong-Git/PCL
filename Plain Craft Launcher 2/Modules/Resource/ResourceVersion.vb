@@ -205,8 +205,8 @@ Public Class ResourceVersion
                             Select(Function(d) d("project_id").ToString).ToList
                 End If
                 'GameVersions
-                Dim RawVersions As List(Of String) = Data("game_versions").Select(Function(t) t.ToString.Trim.Lower).ToList
-                .GameVersions = RawVersions.Where(Function(v) v.Contains(".")).
+                .RawGameVersions = Data("game_versions").Select(Function(t) t.ToString.Trim.Lower).ToList
+                .GameVersions = .RawGameVersions.Where(Function(v) v.Contains(".")).
                                                Select(Function(v) If(v.Contains("-"), v.BeforeFirst("-") & " 预览版", If(v.StartsWithF("b1."), "远古版本", v))).
                                                Distinct.ToList
                 If .GameVersions.IsSingle Then
@@ -214,8 +214,8 @@ Public Class ResourceVersion
                 ElseIf .GameVersions.Count > 1 Then
                     .GameVersions = .GameVersions.SortByComparison(AddressOf CompareVersionGE).ToList
                     If .ResourceType = ResourceTypes.ModPack Then .GameVersions = New List(Of String) From { .GameVersions(0)} '整合包理应只 “支持” 一个版本
-                ElseIf RawVersions.Any(Function(v) v.RegexCheck("[0-9]{2}w[0-9]{2}[a-z]")) Then
-                    .GameVersions = RawVersions.Where(Function(v) v.RegexCheck("[0-9]{2}w[0-9]{2}[a-z]")).ToList
+                ElseIf .RawGameVersions.Any(Function(v) v.RegexCheck("[0-9]{2}w[0-9]{2}[a-z]")) Then
+                    .GameVersions = .RawGameVersions.Where(Function(v) v.RegexCheck("[0-9]{2}w[0-9]{2}[a-z]")).ToList
                 Else
                     .GameVersions = New List(Of String) From {"未知版本"}
                 End If
@@ -325,6 +325,7 @@ Public Class ResourceVersion
             .Add("DownloadCount", DownloadCount)
             .Add("ModLoaders", CInt(ModLoaders))
             .Add("GameVersions", New JArray(GameVersions))
+            .Add("RawGameVersions", New JArray(RawGameVersions))
             .Add("ReleaseType", CInt(ReleaseType))
             If FileName IsNot Nothing Then .Add("FileName", FileName)
             If DownloadUrls IsNot Nothing Then .Add("DownloadUrls", New JArray(DownloadUrls))
