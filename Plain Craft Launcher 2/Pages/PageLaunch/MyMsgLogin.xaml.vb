@@ -1,4 +1,4 @@
-﻿Public Class MyMsgLogin
+Public Class MyMsgLogin
     Private Data As JObject
     Private UserCode As String '需要用户在网页上输入的设备代码
     Private DeviceCode As String '用于轮询的设备代码
@@ -20,7 +20,7 @@
             Data = Converter.Content
             Init()
         Catch ex As Exception
-            Log(ex, "登录弹窗初始化失败", LogLevel.Hint)
+            Logger.Error(ex, "登录弹窗初始化失败", LogBehavior.Toast)
         End Try
     End Sub
 
@@ -35,9 +35,9 @@
                 AaDouble(Sub(i) TransformRotate.Angle += i, -TransformRotate.Angle, 300, 60, New AniEaseOutFluent(AniEasePower.Weak))
             }, "MyMsgBox " & Uuid)
             '记录日志
-            Log("[Control] 登录弹窗：" & LabTitle.Text & vbCrLf & LabCaption.Text)
+            Logger.Info($"登录弹窗：{LabTitle.Text}{vbCrLf}{LabCaption.Text}")
         Catch ex As Exception
-            Log(ex, "登录弹窗加载失败", LogLevel.Hint)
+            Logger.Error(ex, "登录弹窗加载失败", LogBehavior.Toast)
         End Try
     End Sub
     Private Sub Close()
@@ -60,7 +60,7 @@
     Public Sub Btn1_Click() Handles Btn1.Click
     End Sub
     Public Sub Btn3_Click() Handles Btn3.Click
-        Finished(New ThreadInterruptedException)
+        Finished(New OperationCanceledException)
     End Sub
 
     Private Sub Drag(sender As Object, e As MouseButtonEventArgs) Handles PanBorder.MouseLeftButtonDown, LabTitle.MouseLeftButtonDown
@@ -116,15 +116,15 @@
                     Timeout:=5000 + UnknownFailureCount * 5000,
                     MakeLog:=False, RequireJson:=True)
                 '获取结果
-                Dim ResultJson As JObject = GetJson(Result)
+                Dim ResultJson As JObject = Result.DeserializeJson()
                 McLaunchLog($"令牌过期时间：{ResultJson("expires_in")} 秒")
                 Hint("网页登录成功！", HintType.Green)
                 Finished({ResultJson("access_token").ToString, ResultJson("refresh_token").ToString})
                 Return
             Catch ex As Exception
                 '修改错误列表时，同时修改 ModLaunch.MsLoginStep1Refresh 中的对应代码
-                If TypeOf ex Is ResponsedWebException Then
-                    Dim Response = CType(ex, ResponsedWebException).Response
+                If TypeOf ex Is HttpRequestCodeException Then
+                    Dim Response = CType(ex, HttpRequestCodeException).Response
                     If Response.Contains("authorization_declined") Then
                         Finished(New Exception("$你拒绝了 PCL 申请的权限……"))
                         Return
@@ -147,7 +147,7 @@
                 End If
                 If UnknownFailureCount <= 2 Then
                     UnknownFailureCount += 1
-                    Log(ex, $"登录轮询第 {UnknownFailureCount} 次失败")
+                    Logger.Warn(ex, $"登录轮询第 {UnknownFailureCount} 次失败")
                     Thread.Sleep(2000)
                 Else
                     Finished(New Exception("登录轮询失败", ex))

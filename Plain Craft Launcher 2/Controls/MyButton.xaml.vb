@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Markup
+Imports System.Windows.Markup
 
 <ContentProperty("Inlines")>
 Public Class MyButton
@@ -136,7 +136,7 @@ Public Class MyButton
 
             End If
         Catch ex As Exception
-            Log(ex, "刷新按钮颜色出错")
+            Logger.Warn(ex, "刷新按钮颜色出错")
         End Try
     End Sub
 
@@ -144,7 +144,7 @@ Public Class MyButton
     Private IsMouseDown As Boolean = False
     Private Sub Button_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonUp
         If Not IsMouseDown Then Return
-        Log("[Control] 按下按钮：" & Text)
+        Logger.Info($"按下按钮：{Text}")
         RaiseEvent Click(sender, e)
         RaiseCustomEvent() '自定义事件
     End Sub

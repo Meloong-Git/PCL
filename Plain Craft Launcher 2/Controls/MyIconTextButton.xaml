@@ -1,4 +1,4 @@
-﻿<Border x:Name="PanBack" x:Class="MyIconTextButton"
+<Border x:Name="PanBack" x:Class="MyIconTextButton"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              HorizontalAlignment="Center" VerticalAlignment="Center" Background="{StaticResource ColorBrushSemiTransparent}" CornerRadius="13.5" MinHeight="27" MaxHeight="27">

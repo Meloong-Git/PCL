@@ -1,4 +1,4 @@
-﻿Public Class PageSelectRight
+Public Class PageSelectRight
 
     '窗口基础
     Private Sub PageSelectRight_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
@@ -102,7 +102,7 @@
                 Else
                     LabEmptyTitle.Text = "无可用版本"
                     LabEmptyContent.Text = "未找到任何版本的游戏，请先下载任意版本的游戏。" & vbCrLf & "若有已存在的游戏，请在左边的列表中选择添加文件夹，选择 .minecraft 文件夹将其导入。"
-                    BtnEmptyDownload.Visibility = If(Settings.Get("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow, Visibility.Collapsed, Visibility.Visible)
+                    BtnEmptyDownload.Visibility = If(Settings.Get(Of Boolean)("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow, Visibility.Collapsed, Visibility.Visible)
                 End If
             Else
                 PanBack.Visibility = Visibility.Visible
@@ -110,7 +110,7 @@
             End If
 
         Catch ex As Exception
-            Log(ex, "将版本列表转换显示时失败", LogLevel.Feedback)
+            Logger.Error(ex, "将版本列表转换显示时失败")
         End Try
     End Sub
     Public Shared Sub McInstanceListContent(sender As MyListItem, e As EventArgs)
@@ -121,16 +121,10 @@
         Dim BtnStar As New MyIconButton
         If Instance.IsStar Then
             BtnStar.ToolTip = "取消收藏"
-            ToolTipService.SetPlacement(BtnStar, Primitives.PlacementMode.Center)
-            ToolTipService.SetVerticalOffset(BtnStar, 30)
-            ToolTipService.SetHorizontalOffset(BtnStar, 2)
             BtnStar.LogoScale = 1.1
             BtnStar.Logo = Logo.IconButtonLikeFill
         Else
             BtnStar.ToolTip = "收藏"
-            ToolTipService.SetPlacement(BtnStar, Primitives.PlacementMode.Center)
-            ToolTipService.SetVerticalOffset(BtnStar, 30)
-            ToolTipService.SetHorizontalOffset(BtnStar, 2)
             BtnStar.LogoScale = 1.1
             BtnStar.Logo = Logo.IconButtonLikeLine
         End If
@@ -141,16 +135,10 @@
                                   End Sub
         Dim BtnDel As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonDelete}
         BtnDel.ToolTip = "删除"
-        ToolTipService.SetPlacement(BtnDel, Primitives.PlacementMode.Center)
-        ToolTipService.SetVerticalOffset(BtnDel, 30)
-        ToolTipService.SetHorizontalOffset(BtnDel, 2)
         AddHandler BtnDel.Click, Sub() DeleteInstance(sender, Instance)
         If Instance.State <> McInstanceState.Error Then
             Dim BtnCont As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonSetup}
             BtnCont.ToolTip = "设置"
-            ToolTipService.SetPlacement(BtnCont, Primitives.PlacementMode.Center)
-            ToolTipService.SetVerticalOffset(BtnCont, 30)
-            ToolTipService.SetHorizontalOffset(BtnCont, 2)
             AddHandler BtnCont.Click,
             Sub()
                 PageInstanceLeft.Instance = Instance
@@ -165,9 +153,6 @@
         Else
             Dim BtnCont As New MyIconButton With {.LogoScale = 1.15, .Logo = Logo.IconButtonOpen}
             BtnCont.ToolTip = "打开文件夹"
-            ToolTipService.SetPlacement(BtnCont, Primitives.PlacementMode.Center)
-            ToolTipService.SetVerticalOffset(BtnCont, 30)
-            ToolTipService.SetHorizontalOffset(BtnCont, 2)
             AddHandler BtnCont.Click, Sub() PageInstanceOverall.OpenInstanceFolder(Instance)
             AddHandler sender.MouseRightButtonUp, Sub() PageInstanceOverall.OpenInstanceFolder(Instance)
             sender.Buttons = {BtnStar, BtnDel, BtnCont}
@@ -204,13 +189,8 @@
                         If(IsHintIndie, vbCrLf & "由于该版本开启了版本隔离，删除版本时该版本对应的存档、资源包、Mod 等文件也将被一并删除！", ""),
                         "版本删除确认", , "取消",, True)
                 Case 1
-                    IniClearCache(Instance.PathIndie & "options.txt")
-                    IniClearCache(Instance.PathVersion & "PCL\Setup.ini")
-                    If IsShiftPressed Then
-                        DeleteDirectory(Instance.PathVersion)
-                    Else
-                        FileIO.FileSystem.DeleteDirectory(Instance.PathVersion, FileIO.UIOption.AllDialogs, FileIO.RecycleOption.SendToRecycleBin)
-                    End If
+                    Instance.ResetSettingsCache()
+                    DirectoryUtils.Delete(Instance.PathVersion, Not IsShiftPressed)
                     Hint("版本 " & Instance.Name & " 已删除！", HintType.Green)
                 Case 2
                     Return
@@ -238,14 +218,14 @@
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             End If
         Catch ex As OperationCanceledException
-            Log(ex, "删除版本 " & Instance.Name & " 被主动取消")
+            Logger.Warn(ex, $"删除版本 {Instance.Name} 被主动取消")
         Catch ex As Exception
-            Log(ex, "删除版本 " & Instance.Name & " 失败", LogLevel.Msgbox)
+            Logger.Error(ex, $"删除版本 {Instance.Name} 失败", LogBehavior.Alert)
         End Try
     End Sub
 
     Public Sub BtnEmptyDownload_Loaded() Handles BtnEmptyDownload.Loaded
-        Dim NewVisibility = If((Settings.Get("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow) OrElse ShowHidden, Visibility.Collapsed, Visibility.Visible)
+        Dim NewVisibility = If((Settings.Get(Of Boolean)("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow) OrElse ShowHidden, Visibility.Collapsed, Visibility.Visible)
         If BtnEmptyDownload.Visibility <> NewVisibility Then
             BtnEmptyDownload.Visibility = NewVisibility
             PanLoad.TriggerForceResize()

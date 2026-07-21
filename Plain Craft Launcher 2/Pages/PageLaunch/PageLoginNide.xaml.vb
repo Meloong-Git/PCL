@@ -1,24 +1,24 @@
-﻿Public Class PageLoginNide
+Public Class PageLoginNide
     Private IsFirstLoad As Boolean = True
     ''' <summary>
     ''' 刷新页面显示的所有信息。
     ''' </summary>
     Public Sub Reload(KeepInput As Boolean)
         '记住密码
-        CheckRemember.Checked = Settings.Get("LoginRemember")
+        CheckRemember.Checked = Settings.Get(Of Boolean)("LoginRemember")
         If KeepInput AndAlso Not IsFirstLoad Then '避免第一次就以 KeepInput 的方式加载，导致文本框里没东西
             '保留输入，只刷新下拉框列表
             Dim Input As String = ComboName.Text
-            ComboName.ItemsSource = If(Settings.Get("LoginNideEmail") = "", Nothing, Settings.Get("LoginNideEmail").ToString.Split("¨"))
+            ComboName.ItemsSource = If(Settings.Get(Of String)("LoginNideEmail") = "", Nothing, Settings.Get(Of String)("LoginNideEmail").ToString.Split("¨"))
             ComboName.Text = Input
         Else
             '不保留输入，刷新列表后自动选择第一项
-            If Settings.Get("LoginNideEmail") = "" Then
+            If Settings.Get(Of String)("LoginNideEmail") = "" Then
                 ComboName.ItemsSource = Nothing
             Else
-                ComboName.ItemsSource = Settings.Get("LoginNideEmail").ToString.Split("¨")
-                ComboName.Text = Settings.Get("LoginNideEmail").ToString.BeforeFirst("¨")
-                If Settings.Get("LoginRemember") Then TextPass.Password = Settings.Get("LoginNidePass").ToString.BeforeFirst("¨").Trim
+                ComboName.ItemsSource = Settings.Get(Of String)("LoginNideEmail").Split("¨")
+                ComboName.Text = Settings.Get(Of String)("LoginNideEmail").BeforeFirst("¨")
+                If Settings.Get(Of Boolean)("LoginRemember") Then TextPass.Password = Settings.Get(Of String)("LoginNidePass").BeforeFirst("¨").Trim
             End If
         End If
         IsFirstLoad = False
@@ -27,7 +27,7 @@
     ''' 获取当前页面的登录信息。
     ''' </summary>
     Public Shared Function GetLoginData() As McLoginServer
-        Dim Server As String = If(IsNothing(McInstanceSelected), Settings.Get("CacheNideServer"), Settings.Get("VersionServerNide", Instance:=McInstanceSelected))
+        Dim Server As String = If(IsNothing(McInstanceSelected), Settings.Get(Of String)("CacheNideServer"), Settings.Get(Of String)("VersionServerNide", Instance:=McInstanceSelected))
         If FrmLoginNide Is Nothing Then
             Return New McLoginServer(McLoginType.Nide) With {.Token = "Nide", .UserName = "", .Password = "", .Description = "统一通行证", .Type = McLoginType.Nide, .BaseUrl = "https://auth.mc-user.com:233/" & Server & "/authserver"}
         Else
@@ -55,10 +55,10 @@
         If AniControlEnabled = 0 Then Settings.Set("CacheNideAccess", "")
     End Sub
     Private Sub ComboName_SelectionChanged(sender As MyComboBox, e As SelectionChangedEventArgs) Handles ComboName.SelectionChanged
-        If sender.SelectedIndex = -1 OrElse Not Settings.Get("LoginRemember") Then
+        If sender.SelectedIndex = -1 OrElse Not Settings.Get(Of Boolean)("LoginRemember") Then
             TextPass.Password = ""
         Else
-            TextPass.Password = Settings.Get("LoginNidePass").ToString.Split("¨")(sender.SelectedIndex).Trim
+            TextPass.Password = Settings.Get(Of String)("LoginNidePass").Split("¨")(sender.SelectedIndex).Trim
         End If
     End Sub
     Private Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckRemember.Change
@@ -71,7 +71,7 @@
     End Sub
     Private Sub Btn_Click(sender As Object, e As EventArgs) Handles BtnLink.Click
         If BtnLink.Content = "注册账号" Then
-            OpenWebsite("https://login.mc-user.com:233/" & Settings.Get("VersionServerNide", Instance:=McInstanceSelected) & "/register")
+            OpenWebsite("https://login.mc-user.com:233/" & Settings.Get(Of String)("VersionServerNide", Instance:=McInstanceSelected) & "/register")
         Else
             OpenWebsite("https://login.mc-user.com:233/account/login")
         End If

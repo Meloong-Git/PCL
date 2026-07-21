@@ -1,4 +1,4 @@
-﻿Public Class MyScrollBar
+Public Class MyScrollBar
     Inherits Primitives.ScrollBar
 
     '基础
@@ -44,7 +44,7 @@
             End If
 
         Catch ex As Exception
-            Log(ex, "滚动条颜色改变出错")
+            Logger.Warn(ex, "滚动条颜色改变出错")
         End Try
     End Sub
 

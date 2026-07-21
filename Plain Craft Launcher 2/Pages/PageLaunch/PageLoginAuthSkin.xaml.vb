@@ -1,4 +1,4 @@
-﻿Public Class PageLoginAuthSkin
+Public Class PageLoginAuthSkin
 
     Public Sub New()
         InitializeComponent()
@@ -12,17 +12,17 @@
     ''' 刷新页面显示的所有信息。
     ''' </summary>
     Public Sub Reload(KeepInput As Boolean)
-        TextName.Text = Settings.Get("CacheAuthName")
-        TextEmail.Text = Settings.Get("CacheAuthUsername")
-        TextEmail.Visibility = If(Settings.Get("UiLauncherEmail"), Visibility.Collapsed, Visibility.Visible)
+        TextName.Text = Settings.Get(Of String)("CacheAuthName")
+        TextEmail.Text = Settings.Get(Of String)("CacheAuthUsername")
+        TextEmail.Visibility = If(Settings.Get(Of Boolean)("UiLauncherEmail"), Visibility.Collapsed, Visibility.Visible)
         PageLoginLegacy_Loaded()
     End Sub
     ''' <summary>
     ''' 获取当前页面的登录信息。
     ''' </summary>
     Public Shared Function GetLoginData() As McLoginServer
-        Dim Server As String = If(IsNothing(McInstanceSelected), Settings.Get("CacheAuthServerServer"), Settings.Get("VersionServerAuthServer", Instance:=McInstanceSelected)) & "/authserver"
-        Return New McLoginServer(McLoginType.Auth) With {.Token = "Auth", .BaseUrl = Server, .UserName = Settings.Get("CacheAuthUsername"), .Password = Settings.Get("CacheAuthPass"), .Description = "Authlib-Injector", .Type = McLoginType.Auth}
+        Dim Server As String = If(IsNothing(McInstanceSelected), Settings.Get(Of String)("CacheAuthServerServer"), Settings.Get(Of String)("VersionServerAuthServer", Instance:=McInstanceSelected)) & "/authserver"
+        Return New McLoginServer(McLoginType.Auth) With {.Token = "Auth", .BaseUrl = Server, .UserName = Settings.Get(Of String)("CacheAuthUsername"), .Password = Settings.Get(Of String)("CacheAuthPass"), .Description = "Authlib-Injector", .Type = McLoginType.Auth}
     End Function
 
     Private Sub PageLoginAuthSkin_MouseEnter(sender As Object, e As MouseEventArgs) Handles PanData.MouseEnter
@@ -46,7 +46,7 @@
 
     Private Sub BtnEdit_Click(sender As Object, e As EventArgs) Handles BtnEdit.Click
         If McLoginLoader.State = LoadState.Loading Then
-            Log("[Launch] 要求更换角色，但登录加载器繁忙", LogLevel.Debug)
+            Logger.Warn("要求更换角色，但登录加载器繁忙")
             If TypeOf McLoginLoader.Input Is McLoginServer AndAlso CType(McLoginLoader.Input, McLoginServer).ForceReselectProfile Then
                 Hint("正在尝试更换，请稍候！")
             Else
@@ -65,7 +65,7 @@
                 McLoginLoader.WaitForExit(Data, IsForceRestart:=True)
                 RunInUi(Sub() Reload(True))
             Catch ex As Exception
-                Log(ex, "更换角色失败", LogLevel.Hint)
+                Logger.Error(ex, "更换角色失败", LogBehavior.Toast)
             End Try
         End Sub)
     End Sub
@@ -78,7 +78,7 @@
     End Sub
 
     Private Sub Skin_Click(sender As Object, e As MouseButtonEventArgs) Handles Skin.Click
-        Dim Address As String = If(McInstanceSelected IsNot Nothing, Settings.Get("VersionServerAuthRegister", Instance:=McInstanceSelected), Settings.Get("CacheAuthServerRegister"))
+        Dim Address As String = If(McInstanceSelected IsNot Nothing, Settings.Get(Of String)("VersionServerAuthRegister", Instance:=McInstanceSelected), Settings.Get(Of String)("CacheAuthServerRegister"))
         If String.IsNullOrEmpty(New ValidateHttp().Validate(Address)) Then OpenWebsite(Address.Replace("/auth/register", "/user/closet"))
     End Sub
 

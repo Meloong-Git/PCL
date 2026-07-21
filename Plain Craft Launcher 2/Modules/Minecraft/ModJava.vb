@@ -1,758 +1,581 @@
-﻿Public Module ModJava
-    Public JavaListCacheVersion As Integer = 7
+Public Module ModJava
 
     ''' <summary>
-    ''' 目前所有可用的 Java。
+    ''' 初始化 Java 列表。
+    ''' 若没有任何可用的 Java，则触发搜索。
     ''' </summary>
-    Public JavaList As New List(Of JavaEntry)
-
-    Public Class JavaEntry
-
-        '路径
-        ''' <summary>
-        ''' java.exe 文件的完整路径。
-        ''' </summary>
-        Public ReadOnly Property PathJava As String
-            Get
-                Return PathFolder & "java.exe"
-            End Get
-        End Property
-        ''' <summary>
-        ''' java.exe 文件所在文件夹的路径，以 \ 结尾。
-        ''' </summary>
-        Public PathFolder As String
-        ''' <summary>
-        ''' 是否为用户手动导入的 Java。
-        ''' </summary>
-        Public IsUserImport As Boolean
-
-        '版本信息
-        ''' <summary>
-        ''' Java 的详细版本。若不足 4 位会在前方补 1，例如 1.16.0.1。
-        ''' 其大版本号为 Minor。
-        ''' </summary>
-        Public Version As Version
-        ''' <summary>
-        ''' Java 的大版本号。
-        ''' </summary>
-        Public ReadOnly Property MajorVersion As Integer
-            Get
-                Return Version.Minor
-            End Get
-        End Property
-        ''' <summary>
-        ''' 是否为 Java Runtime Environment。
-        ''' </summary>
-        Public IsJre As Boolean
-        ''' <summary>
-        ''' 是否为 64 位 Java。
-        ''' </summary>
-        Public Is64Bit As Boolean
-        ''' <summary>
-        ''' 是否已设置环境变量。
-        ''' </summary>
-        Public ReadOnly Property HasEnvironment As Boolean
-            Get
-                If PathFolder Is Nothing OrElse PathEnv Is Nothing Then Return False
-                Return PathEnv.Replace("\", "").Replace("/", "").ContainsF(PathFolder.Replace("\", ""), True)
-            End Get
-        End Property
-
-        '序列化
-        Public Function ToJson() As JObject
-            Return New JObject({New JProperty("Path", PathFolder), New JProperty("VersionString", Version.ToString), New JProperty("IsJre", IsJre), New JProperty("Is64Bit", Is64Bit), New JProperty("IsUserImport", IsUserImport)})
-        End Function
-        Public Shared Function FromJson(Data As JObject) As JavaEntry
-            Return New JavaEntry(Data("Path"), Data("IsUserImport")) With {.Version = New Version(Data("VersionString")), .IsJre = Data("IsJre"), .Is64Bit = Data("Is64Bit")}
-        End Function
-        ''' <summary>
-        ''' 转化为用户友好的字符串输出。
-        ''' </summary>
-        Public Overrides Function ToString() As String
-            Dim VersionString = Version.ToString
-            If VersionString.StartsWithF("1.") Then VersionString = Mid(VersionString, 3)
-            Return If(IsJre, "JRE ", "JDK ") & MajorVersion & " (" & VersionString & ")" & If(Is64Bit, "", "，32 位") & If(IsUserImport, "，手动导入", "") & "：" & PathFolder
-        End Function
-
-        '构造
-        ''' <summary>
-        ''' 输入 javaw.exe 文件所在文件夹的路径，不限制结尾。
-        ''' </summary>
-        Public Sub New(Folder As String, IsUserImport As Boolean)
-            If Not Folder.EndsWithF("\") Then Folder += "\"
-            PathFolder = Folder.Replace("/", "\")
-            Me.IsUserImport = IsUserImport
-        End Sub
-
-        '方法
-        Private IsChecked As Boolean = False
-        ''' <summary>
-        ''' 检查并获取 Java 详细信息。在 Java 存在异常时抛出错误。
-        ''' </summary>
-        Public Sub Check()
-            If IsChecked Then Return
-            Dim Output As String = Nothing
-            Try
-                '确定文件存在
-                If Not File.Exists(PathJava) Then Throw New FileNotFoundException("未找到 java.exe 文件", PathJava)
-                If {"finalshell", "Paranoia File"}.Any(Function(n) PathJava.ContainsF(n, True)) Then Throw New Exception("不兼容该精简版 Java") '#2249、#8080
-                If File.Exists(PathFolder & "pdf-bookmark") Then Throw New Exception("不兼容 PDF Bookmark 的 Java") '#5326
-                IsJre = Not File.Exists(PathFolder & "javac.exe")
-                '运行 -version
-                Output = StartProcessAndGetOutput(PathJava, "-version", 15000).Lower
-                If Output = "" Then Throw New ApplicationException("尝试运行该 Java 失败")
-                If ModeDebug Then Log("[Java] Java 检查输出：" & PathJava & vbCrLf & Output)
-                If Output.Contains("/lib/ext exists") Then Throw New ApplicationException("无法运行该 Java，请在删除 Java 文件夹中的 /lib/ext 文件夹后再试")
-                If Output.Contains("a fatal error") Then Throw New ApplicationException("无法运行该 Java，该 Java 或系统存在问题")
-                '获取详细信息
-                Dim VersionString = If(RegexSeek(Output, "(?<=version "")[^""]+"), If(RegexSeek(Output, "(?<=openjdk )[0-9]+"), "")).Replace("_", ".").Split("-").First
-                If VersionString.Split(".").Count > 4 Then VersionString = VersionString.Replace(".0.", ".") '#3493，VersionString = "21.0.2.0.2"
-                Do While VersionString.Split(".").Count < 4
-                    If VersionString.StartsWithF("1.") Then
-                        VersionString = VersionString & ".0"
-                    Else
-                        VersionString = "1." & VersionString
+    Public Sub JavaInit()
+        Try
+            '从老版本迁移
+            If Configs.JavaConfigVersion.Get() = 0 Then
+                Try
+                    'Java 列表
+                    Logger.Warn("正在从老版本迁移 Java 列表")
+                    Dim OldJavaList = Settings.Get(Of String)("LaunchArgumentJavaAll").DeserializeJson(Of JArray).
+                                      Select(Function(JavaObject) New Java(JavaObject("Path").ToString)).ToList()
+                    OldJavaList = JavaUtils.SortAsync(OldJavaList).Run()
+                    Logger.Info($"已从老版本设置中发现 {OldJavaList.Count} 个 Java")
+                    '强制选择的 Java
+                    Dim SelectedJavaSetting = Settings.Get(Of String)("LaunchArgumentJavaSelect")
+                    Dim SelectedJava = If(SelectedJavaSetting.StartsWithF("{"), SelectedJavaSetting.DeserializeJson(Of JObject)()("Path").ToString, "")
+                    Dim Match = OldJavaList.FirstOrDefault(Function(j) j.Folder.Equals(SelectedJava, StringComparison.OrdinalIgnoreCase))
+                    If Match IsNot Nothing Then
+                        OldJavaList.Remove(Match)
+                        OldJavaList.Insert(0, Match)
+                        Logger.Info($"已将老版本设置中强制选择的 Java 置顶：{Match}")
                     End If
-                Loop
-                If VersionString = "" Then Throw New ApplicationException($"未找到该 Java 的版本号{If(Output.Length < 500, $"{vbCrLf}输出为：{vbCrLf}{Output}", "")}")
-                Version = New Version(VersionString)
-                If Version.Minor = 0 Then
-                    Log("[Java] 疑似 X.0.X.X 格式版本号：" & Version.ToString)
-                    Version = New Version(1, Version.Major, Version.Build, Version.Revision)
-                End If
-                Is64Bit = Output.Contains("64-bit")
-                If Version.Minor <= 4 OrElse Version.Minor >= 100 Then Throw New ApplicationException("分析详细信息失败，获取的版本为 " & Version.ToString)
-                '#3649：在 64 位系统上禁用 32 位 Java
-                If Not Is64Bit AndAlso Not Is32BitSystem Then Throw New Exception("该 Java 为 32 位版本，请安装 64 位的 Java")
-            Catch ex As ApplicationException
-                Throw ex
-            Catch ex As ThreadInterruptedException
-                Throw ex
+                    Configs.JavaList.Set(New ConcurrentList(Of Java)(OldJavaList))
+                    '完成迁移
+                    Configs.JavaConfigVersion.Set(Versions.JavaConfigVersion)
+                Catch ex As Exception
+                    Logger.Error(ex, "从老版本 PCL 迁移 Java 列表失败")
+                End Try
+            End If
+            '读取缓存
+            Dim List = Configs.JavaList.Get()
+            If List.Any Then
+                Logger.Info($"共有 {List.Count} 个可用的 Java：{vbCrLf}- {List.Select(Function(j) j.ToString).Join(vbCrLf + "- ")}")
+                Return
+            End If
+            '如果没有 Java，则触发搜索
+            Logger.Warn("初始化未找到可用的 Java，将自动触发搜索")
+            JavaListRefreshWorker.Start()
+        Catch ex As Exception
+            Logger.Error(ex, "初始化 Java 列表失败")
+            Configs.JavaList.Reset()
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' 搜索并获取所有可用的 Java，检查所有 Java 的可用性，写入设置，并在结束后更新设置页面显示。
+    ''' </summary>
+    Public WithEvents JavaListRefreshWorker As New RedoableWorker(Sub(c, p) JavaUtils.RefreshListAsync(c, p).Run())
+
+#Region "UI 事件"
+
+    ''' <summary>
+    ''' 更新设置页面的 Java 列表显示。
+    ''' </summary>
+    Public Sub UpdateJavaLists() Handles JavaListRefreshWorker.Started, JavaListRefreshWorker.Stopped
+        RunInUi(
+        Sub()
+            FrmSetupLaunch?.UpdateJavaList()
+            FrmInstanceSetup?.UpdateJavaList()
+        End Sub)
+    End Sub
+
+    ''' <summary>
+    ''' 手动触发导入 Java。
+    ''' </summary>
+    Public Sub ManuallyImportJava()
+        '选择
+        Dim NewJavaPath As String = Dialogs.SelectFile("选择 java.exe（可能在 bin 文件夹中）", False, filter:="java.exe|java.exe").FirstOrDefault()
+        If String.IsNullOrEmpty(NewJavaPath) Then Return
+        '验证 Java 可用
+        Dim NewJava As New Java(PathUtils.RemoveLastPart(NewJavaPath))
+        If Not NewJava.CheckAsync().Run() Then
+            Hint("该 Java 存在异常，无法使用", HintType.Red)
+            Return
+        End If
+        '不再移除它
+        Configs.JavaRemovedList.Edit(Sub(ByRef List) List.RemoveIf(Function(f) f.Equals(NewJava.Folder, StringComparison.OrdinalIgnoreCase)))
+        '加入列表顶部
+        Configs.JavaList.Edit(
+        Sub(ByRef List)
+            List.Remove(NewJava)
+            List.Insert(0, NewJava)
+        End Sub)
+        Hint($"已将 Java 加入列表：{NewJavaPath}", HintType.Green)
+        UpdateJavaLists()
+    End Sub
+
+    ''' <summary>
+    ''' 手动从 Java 列表中移除指定的 Java，并记录到已移除列表中。
+    ''' </summary>
+    Public Sub ManuallyRemoveJava(JavaEntry As Java)
+        Configs.JavaList.Edit(Sub(ByRef List) List.Remove(JavaEntry)) '从 Java 列表中移除
+        Configs.JavaRemovedList.Edit(Function(List) List.Append(JavaEntry.Folder).DistinctBy(Function(s) s.Lower()).ToList()) '记录已移除
+        Hint($"已将 Java 移除出列表：{JavaEntry}", HintType.Green)
+        UpdateJavaLists()
+        PageInstanceLeft.ReloadCurrentJava() '如果强制指定了该 Java，这会把它自动重置掉
+    End Sub
+
+    ''' <summary>
+    ''' 手动触发搜索 Java。
+    ''' </summary>
+    Public Sub ManuallySearchJava(Optional CancellationToken As CancellationToken = Nothing)
+        RunInThread(
+        Sub()
+            JavaListRefreshWorker.Start(cancellationToken:=CancellationToken)
+            JavaListRefreshWorker.WaitIfRunningAsync(cancellationToken:=CancellationToken).Run() 'worker 开始/结束时会自动重载 UI
+            If Configs.JavaList.Get().Any Then
+                Hint("已找到 " & Configs.JavaList.Get().Count & " 个 Java！", HintType.Green)
+            Else
+                Hint("未找到可用的 Java！", HintType.Red)
+            End If
+        End Sub)
+    End Sub
+
+#End Region
+
+#Region "选取"
+
+    ''' <summary>
+    ''' 分析指定 Minecraft 版本的基础 Java 版本要求。不受设置影响。
+    ''' 如果由于 Java 版本要求冲突而导致没有可用的 Java，则返回 null。
+    ''' </summary>
+    Public Function GetJavaRequirement(Instance As McInstance) As (Range As ValueRange(Of Version), RecommendedComponent As String)
+
+        '版本设置已经强制指定了 Java 版本要求
+        If Settings.Get(Of Integer)("VersionArgumentJavaV2", Instance) = 1 Then
+            Try
+                Dim Range = ValueRange(Of Version).FromString(Settings.Get(Of String)("VersionArgumentJavaRange", Instance), Function(s) StringUtils.ParseVersionWithDefaults(s))
+                Return (Range, Nothing)
             Catch ex As Exception
-                Log("[Java] 检查失败的 Java 输出：" & If(PathJava, "Nothing") & vbCrLf & If(Output, "无程序输出"))
-                Throw New Exception("检查 Java 失败（" & If(PathJava, "Nothing") & "）", ex)
+                Logger.Warn($"版本设置中指定的 Java 版本范围有误（{Settings.Get(Of String)("VersionArgumentJavaRange", Instance)}），这可能是因为首次修改此设置，尚未初始化")
             End Try
-            IsChecked = True
+        End If
+
+        '----------------------------------- 从 Minecraft 版本信息获取需求 -----------------------------------
+
+        Dim JavaRange = ValueRange(Of Version).All()
+        Dim AddConstraint =
+        Sub(Constraint As ValueRange(Of Version))
+            JavaRange = JavaRange?.Intersect(Constraint)
+            If JavaRange.IsEmpty Then Logger.Warn($"Java 版本要求冲突（当前追加的要求为 {Constraint}，版本为 {Instance.VersionDisplayName}）")
         End Sub
 
+        '原版 26-：通过版本号判断
+        If (Not Instance.Version.Vaild AndAlso Instance.ReleaseTime >= New Date(2024, 4, 2)) OrElse
+           (Instance.Version.Vaild AndAlso Instance.Version.Vanilla >= New Version(20, 0, 5)) Then
+            '1.20.5+（24w14a+）：至少 Java 21
+            AddConstraint(ValueRange(Of Version).AtLeast(New Version(21, 0)))
+        ElseIf (Not Instance.Version.Vaild AndAlso Instance.ReleaseTime >= New Date(2021, 11, 16)) OrElse
+               (Instance.Version.Vaild AndAlso Instance.Version.Vanilla.Major >= 18) Then
+            '1.18 pre2+：至少 Java 17
+            AddConstraint(ValueRange(Of Version).AtLeast(New Version(17, 0)))
+        ElseIf (Not Instance.Version.Vaild AndAlso Instance.ReleaseTime >= New Date(2021, 5, 11)) OrElse
+               (Instance.Version.Vaild AndAlso Instance.Version.Vanilla.Major >= 17) Then
+            '1.17+ (21w19a+)：至少 Java 16
+            AddConstraint(ValueRange(Of Version).AtLeast(New Version(16, 0)))
+        ElseIf Instance.ReleaseTime.Year >= 2017 Then 'Minecraft 1.12 与 1.11 的分界线正好是 2017 年，太棒了
+            '1.12+：至少 Java 8
+            AddConstraint(ValueRange(Of Version).AtLeast(New Version(8, 0)))
+        ElseIf Instance.ReleaseTime <= New Date(2013, 5, 1) AndAlso Instance.ReleaseTime.Year >= 2001 Then '避免某些版本写个 1960 年
+            '1.5.2-：最高 Java 8
+            AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
+        End If
+
+        '原版 26+：获取 Mojang 要求的 Java 版本
+        Dim RecommendedComponent As String = Nothing
+        Dim RecommendedCode As Integer =
+            If(Instance.JsonObject?("javaVersion")?("majorVersion")?.ToObject(Of Integer),
+            If(Instance.JsonVersion?("java_version")?.ToObject(Of Integer), 0))
+        If RecommendedCode >= 22 Then
+            Logger.Info("Mojang 要求至少使用 Java " & RecommendedCode)
+            AddConstraint(ValueRange(Of Version).AtLeast(New Version(RecommendedCode, 0)))
+            RecommendedComponent =
+                If(Instance.JsonObject?("javaVersion")?("component")?.ToString,
+                   Instance.JsonVersion?("java_component")?.ToString)
+            If RecommendedComponent = "" Then RecommendedComponent = Nothing
+        End If
+
+        'OptiFine 检测
+        If Instance.Version.HasOptiFine AndAlso Instance.Version.Vaild Then '不管非标准版本
+            If Instance.Version.Vanilla.Major < 7 Then
+                '<1.7：至多 Java 8
+                AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
+            ElseIf Instance.Version.Vanilla.Major >= 8 AndAlso Instance.Version.Vanilla.Major < 12 Then
+                '1.8 - 1.11：必须恰好 Java 8
+                AddConstraint(ValueRange(Of Version).ClosedOpen(New Version(8, 0), New Version(9, 0)))
+            ElseIf Instance.Version.Vanilla.Major = 12 Then
+                '1.12：最高 Java 8
+                AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
+            End If
+        End If
+
+        'Forge 检测（部分测试结果见 #8432）
+        If Instance.Version.HasForge Then
+            If Instance.Version.Vanilla >= New Version(6, 0, 1) AndAlso Instance.Version.Vanilla <= New Version(7, 0, 2) Then
+                '1.6.1 - 1.7.2：必须 Java 7
+                AddConstraint(ValueRange(Of Version).ClosedOpen(New Version(7, 0), New Version(8, 0)))
+            ElseIf Instance.Version.Vanilla.Major <= 12 OrElse Not Instance.Version.Vaild Then '非标准版本
+                '<=1.12：Java 8
+                AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
+            ElseIf Instance.Version.Vanilla.Major <= 14 Then
+                '1.13 - 1.14：Java 8 - 10
+                AddConstraint(ValueRange(Of Version).ClosedOpen(New Version(8, 0), New Version(11, 0)))
+            ElseIf Instance.Version.Vanilla.Major = 15 Then
+                '1.15：Java 8 - 15
+                AddConstraint(ValueRange(Of Version).ClosedOpen(New Version(8, 0), New Version(16, 0)))
+            ElseIf CompareVersionGE(Instance.Version.Forge, "34.0.0") AndAlso CompareVersionGE("36.2.25", Instance.Version.Forge) Then
+                '1.16.3~5，Forge 34.0.0 ~ 36.2.25：最高 Java 8u320
+                AddConstraint(ValueRange(Of Version).AtMost(New Version(8, 0, 320)))
+            ElseIf CompareVersionGE(Instance.Version.Forge, "36.2.26") AndAlso CompareVersionGE("36.999999.999999", Instance.Version.Forge) Then
+                '1.16.5，Forge 36.2.26+，<37.0.0：最高 Java 23
+                AddConstraint(ValueRange(Of Version).LessThan(New Version(24, 0)))
+            ElseIf CompareVersionGE(Instance.Version.Forge, "37.0.0") AndAlso CompareVersionGE("37.0.79", Instance.Version.Forge) Then
+                '1.17.1，Forge 37.0.0 ~ 37.0.79：最高 Java 16
+                AddConstraint(ValueRange(Of Version).LessThan(New Version(17, 0)))
+            ElseIf Instance.Version.Vanilla.Major = 18 AndAlso Instance.Version.HasOptiFine Then '#305
+                '1.18：若安装了 OptiFine，最高 Java 18
+                AddConstraint(ValueRange(Of Version).LessThan(New Version(19, 0)))
+            ElseIf CompareVersionGE(Instance.Version.Forge, "45.0.21") AndAlso CompareVersionGE("45.0.65", Instance.Version.Forge) Then
+                '1.19.4，Forge 45.0.21 ~ 45.0.65：最高 Java 19
+                AddConstraint(ValueRange(Of Version).LessThan(New Version(20, 0)))
+            ElseIf CompareVersionGE(Instance.Version.Forge, "45.0.66") AndAlso CompareVersionGE("47.4.8", Instance.Version.Forge) Then
+                '1.19.4~1.20.1，Forge 45.0.66 ~ 47.4.8：最高 Java 21
+                AddConstraint(ValueRange(Of Version).LessThan(New Version(22, 0)))
+            End If
+        End If
+
+        'NeoForge 检测
+        If Instance.Version.HasNeoForge Then
+            If Instance.Version.Vanilla = New Version(20, 0, 1) OrElse
+               (CompareVersionGE("20.2.62-beta", Instance.Version.NeoForge) AndAlso Not Instance.Version.NeoForge.Contains("25w14craftmine")) Then
+                '1.20.1，以及 1.20.2 的 20.2.62-beta 之前：最高 Java 21
+                AddConstraint(ValueRange(Of Version).LessThan(New Version(22, 0)))
+            End If
+        End If
+
+        'Fabric 检测
+        If Instance.Version.HasFabric AndAlso Instance.Version.Vaild Then '不管非标准版本
+            If Instance.Version.Vanilla.Major >= 15 AndAlso Instance.Version.Vanilla.Major <= 16 Then
+                '1.15 - 1.16：Java 8+
+                AddConstraint(ValueRange(Of Version).AtLeast(New Version(8, 0)))
+            ElseIf Instance.Version.Vanilla.Major >= 18 Then
+                '1.18+：Java 17+
+                AddConstraint(ValueRange(Of Version).AtLeast(New Version(17, 0)))
+            End If
+        End If
+
+        'LiteLoader 检测
+        If Instance.Version.HasLiteLoader AndAlso Instance.Version.Vaild Then '不管非标准版本
+            '最高 Java 8
+            AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
+        End If
+
+        '统一通行证检测
+        If Settings.Get(Of McLoginType)("LoginType") = McLoginType.Nide Then
+            '至少 Java 8u101
+            AddConstraint(ValueRange(Of Version).AtLeast(New Version(8, 0, 141)))
+        End If
+
+        Return (JavaRange, RecommendedComponent)
+    End Function
+
+    ''' <summary>
+    ''' 根据版本或 Java 范围要求寻找适合的 Java。
+    ''' 若指定了 <paramref name="TryFixOrHint"/>，则会在找不到时会尝试下载 Java 或提示用户下载，否则只会静默运行。
+    ''' </summary>
+    ''' <returns>最适合的 Java。若找不到或失败则返回 null，除非取消否则不会抛出异常。</returns>
+    Public Function SelectOrDownloadJava(Target As OneOf(Of ValueRange(Of Version), McInstance), TryFixOrHint As Boolean, Optional c As CancellationToken = Nothing, Optional p As ProgressProvider = Nothing) As Java
+        Try
+            If Target.Is(Of McInstance) Then MigrateInstanceJavaSettings(Target.As(Of McInstance), c, p?.SplitTo(0.2)) '迁移
+            Dim Instance As McInstance = If(Target.Is(Of McInstance), Target.As(Of McInstance), Nothing)
+            Select Case If(Instance Is Nothing, 0, Settings.Get(Of Integer)("VersionArgumentJavaV2", Instance))
+
+                Case 2 '============================= 使用版本文件夹中的 Java =============================
+
+                    '查找版本文件夹下的 Java
+                    Logger.Info($"版本设置要求使用版本文件夹中的 Java：{Instance.PathVersion}")
+                    Dim JavaFound = JavaUtils.SearchFoldersAsync(True, {Instance.PathVersion}, c, p?.SplitTo(1)).Run().FirstOrDefault()
+                    If JavaFound IsNot Nothing Then
+                        Logger.Info($"已发现版本文件夹中的 Java：{JavaFound}")
+                        Return JavaFound
+                    End If
+                    '未能找到
+                    If TryFixOrHint Then
+                        SwitchToInstanceSetup(Instance)
+                        MyMsgBox($"该版本的版本设置选择了 {vbLQ}使用版本文件夹中的 Java{vbRQ}，但版本文件夹里没能找到 Java。{vbCrLf}请先修改启动选项中的 Java 设置，或在版本文件夹中放一个 Java，然后再试。",
+                            "未找到 Java", IsWarn:=True, ForceWait:=True)
+                    End If
+                    Return Nothing
+
+                Case 3 '=============================== 强制指定特定 Java ===============================
+
+                    Dim ChosenJava = Configs.InstanceForcedJava.Get(Instance.Config)
+                    Logger.Info($"版本设置中强制指定的 Java：{Instance.PathVersion} → {ChosenJava}")
+                    If ChosenJava Is Nothing Then
+                        If TryFixOrHint Then
+                            SwitchToInstanceSetup(Instance)
+                            MyMsgBox($"该版本的版本设置选择了 {vbLQ}使用指定的 Java{vbRQ}，但还没有指定任何 Java。{vbCrLf}请先选择你想使用的 Java，然后再试。",
+                                "未选择 Java", IsWarn:=True, ForceWait:=True)
+                        End If
+                        p?.Skip() : Return Nothing '<==== 设置中未指定 Java
+                    End If
+                    If Not Configs.JavaList.Get().Contains(ChosenJava) Then
+                        Configs.InstanceForcedJava.Reset(Instance.Config)
+                        UpdateJavaLists()
+                        If TryFixOrHint Then
+                            SwitchToInstanceSetup(Instance)
+                            Logger.Error("版本设置中指定的 Java 不在 Java 列表中，请重新选择一个 Java！", LogBehavior.Alert)
+                        End If
+                        p?.Skip() : Return Nothing '<==== 设置中指定的 Java 不在列表中
+                    End If
+                    If Not ChosenJava.CheckAsync(c).Run() Then
+                        Configs.InstanceForcedJava.Reset(Instance.Config)
+                        UpdateJavaLists()
+                        If TryFixOrHint Then
+                            SwitchToInstanceSetup(Instance)
+                            Logger.Error("版本设置中指定的 Java 已无法使用，请重新选择一个 Java，然后再试。", LogBehavior.Alert)
+                        Else
+                            Logger.Error("版本设置中指定的 Java 已无法使用，请重新选择一个 Java！", LogBehavior.Toast)
+                        End If
+                        p?.Finish() : Return Nothing '<==== 指定的 Java 存在异常
+                    End If
+                    p?.Finish() : Return ChosenJava '<==== 成功找到并检查通过
+
+                Case Else '======================== 根据版本范围自动选择 JavaList 中的 Java ========================
+
+                    '获取范围
+                    Dim Range As ValueRange(Of Version) =
+                        If(Target.Is(Of McInstance), GetJavaRequirement(Instance).Range, Target.As(Of ValueRange(Of Version)))
+                    Dim RecommendedComponent As String =
+                        If(Target.Is(Of McInstance), GetJavaRequirement(Instance).RecommendedComponent, Nothing)
+                    Logger.Info($"自动选择以下范围的 Java：{Range} {RecommendedComponent}")
+                    If Range.IsEmpty Then Throw New Exception("Java 版本需求存在冲突，导致没有任何可能适配的 Java，请查看 PCL 的日志了解详细信息！")
+
+                    '搜索 Java
+                    Dim SelectJavaFromJavaList =
+                    Function() As Java
+                        JavaListRefreshWorker.WaitIfRunning() '等待进行中的搜索结束
+                        For Each ChosenJava In Configs.JavaList.Get()
+                            If Not ChosenJava.CheckAsync(c).Run() Then '检查
+                                Logger.Warn($"Java 检查失败，将尝试列表中的下一个 Java：{ChosenJava}")
+                                Continue For
+                            End If
+                            If ChosenJava.Version Is Nothing OrElse Not Range.Contains(ChosenJava.Version) Then Continue For '版本范围
+                            Logger.Info($"已选定 Java：{ChosenJava}")
+                            Return ChosenJava
+                        Next
+                        Return Nothing
+                    End Function
+                    p?.Set(0.25)
+                    Dim Result = SelectJavaFromJavaList()
+                    If Result IsNot Nothing Then p?.Skip() : Return Result
+
+                    SyncLock JavaLock '#3797
+                        '既有列表中没有合适的 Java，重新触发搜索
+                        Logger.Warn($"既有列表中没有合适的 Java，重新触发搜索")
+                        JavaListRefreshWorker.Start(c, p?.SplitTo(0.3))
+                        Result = SelectJavaFromJavaList()
+                        If Result IsNot Nothing Then p?.Skip() : Return Result
+                        If Not TryFixOrHint Then Return Nothing
+
+                        '电脑中没有合适的 Java，获取 Mojang 提供的 Java 下载列表
+                        Logger.Warn($"电脑中没有合适的 Java，开始获取 Mojang 提供的 Java 下载列表")
+                        Dim Components = DownloadJavaList()
+                        c.ThrowIfCancellationRequested()
+                        p?.Set(0.4)
+
+                        '确定要下载的目标 Java
+                        Dim JavaToDownload As JavaDownloadInfo = If(
+                        Components.FirstOrDefault(Function(Comp) Comp.Java("version")("name").ToString = RecommendedComponent), '优先选择指定的 Component
+                        Components.FirstOrDefault(Function(Comp) Range.Contains(Comp.JavaVersion)))
+                        If JavaToDownload Is Nothing Then
+                            Logger.Warn($"Mojang 提供的 Java 列表中没有合适的 Java，无法自动下载")
+                            '提示需要手动下载 Java
+                            Dim Description As String
+                            Dim HasPureLower As Boolean = Range.HasLower AndAlso Range.IsLowerInclusive AndAlso
+                            Range.Lower.Minor <= 0 AndAlso Range.Lower.Build <= 0 AndAlso Range.Lower.Revision <= 0
+                            Dim HasPureUpper As Boolean = Range.HasUpper AndAlso Not Range.IsUpperInclusive AndAlso
+                            Range.Upper.Minor <= 0 AndAlso Range.Upper.Build <= 0 AndAlso Range.Upper.Revision <= 0
+                            If Range.HasLower AndAlso Range.HasUpper Then '有上下界
+                                If HasPureLower AndAlso HasPureUpper Then
+                                    If Range.Lower.Major = Range.Upper.Major - 1 Then
+                                        Description = $" Java {Range.Lower.Major}"
+                                    Else
+                                        Description = $" Java {Range.Lower.Major} ~ {Range.Upper.Major - 1}"
+                                    End If
+                                Else
+                                    Description = $" Java {Range}" '摆烂
+                                End If
+                            ElseIf Range.HasLower Then '只有下界
+                                If HasPureLower Then
+                                    Description = $" Java {Range.Lower.Major} 或更高版本的 Java"
+                                ElseIf Range.IsLowerInclusive Then
+                                    Description = $" Java {Range.Lower} 或更高版本的 Java"
+                                Else
+                                    Description = $"版本高于 {Range.Lower} 的 Java"
+                                End If
+                            Else '只有上界
+                                If HasPureUpper Then
+                                    Description = $" Java {Range.Upper.Major - 1} 或更低版本的 Java"
+                                ElseIf Range.IsUpperInclusive Then
+                                    Description = $" Java {Range.Upper} 或更低版本的 Java"
+                                Else
+                                    Description = $"版本低于 {Range.Upper} 的 Java"
+                                End If
+                            End If
+                            MyMsgBox($"PCL 没能找到合适的 Java。{vbCrLf}请在网上搜索并手动安装{Description}， 然后在【设置 → 启动 → 高级选项 → Java 列表】中导入它。", "需要手动安装 Java")
+                            Return Nothing
+                        End If
+
+                        '自动下载 Java
+                        Dim JavaLoader = CreateJavaDownloadLoader(JavaToDownload)
+                        Try
+                            JavaLoader.WaitForExit(IsForceRestart:=True, c:=c, p:=p?.SplitTo(0.95))
+                        Finally
+                            JavaLoader.Cancel() '确保取消时中止 Java 下载
+                        End Try
+                        Result = SelectJavaFromJavaList()
+                        If Result IsNot Nothing Then p?.Finish() : Return Result
+                        Throw New Exception($"下载 Java {JavaToDownload.ComponentName} 后仍然无法找到合适的 Java")
+                    End SyncLock
+            End Select
+        Catch ex As Exception
+            ex.ThrowIfCanceled()
+            Logger.Error(ex, "选择 Java 时出现异常")
+            p?.Skip() : Return Nothing
+        End Try
+    End Function
+    Private Sub SwitchToInstanceSetup(Instance As McInstance)
+        RunInUi(
+        Sub()
+            PageInstanceLeft.Instance = Instance
+            FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.InstanceSetup)
+        End Sub)
+    End Sub
+    Private ReadOnly JavaLock As New Object
+
+    ''' <summary>
+    ''' 从老版本 PCL 迁移版本独立的 Java 设置。
+    ''' </summary>
+    Private Sub MigrateInstanceJavaSettings(Instance As McInstance, Optional c As CancellationToken = Nothing, Optional p As ProgressProvider = Nothing)
+        If Configs.InstanceMigratedJava.Get(Instance.Config) Then p?.Skip() : Return
+        If FrmInstanceSetup IsNot Nothing Then RunInUiWait(Sub() FrmInstanceSetup.ComboArgumentJava.IsEnabled = False)
+        Try
+            Logger.Info($"正在尝试迁移版本独立的 Java 设置（{Instance.Name}）")
+            '强制使用指定 Java
+            Dim ForcedJavaSetting = Settings.Get(Of String)("VersionArgumentJavaSelect", Instance)
+            If Not ForcedJavaSetting.StartsWithF("{") Then
+                p?.Set(0.4, True) : GoTo NoForcedJava
+            End If
+            Dim ForcedJava = New Java(ForcedJavaSetting.DeserializeJson(Of JObject)()("Path").ToString)
+            If Not ForcedJava.CheckAsync(c).Run() Then
+                Hint("该版本的设置中强制指定的 Java 存在异常，该设置已重置", HintType.Red)
+                p?.Set(0.4) : GoTo NoForcedJava
+            End If
+            Logger.Info($"将版本独立设置改为老版本中强制指定的 Java：{ForcedJava}")
+            If Not Configs.JavaList.Get().Contains(ForcedJava) Then
+                Configs.JavaList.Edit(Sub(ByRef List) List.Add(ForcedJava)) '加入列表底部
+                Logger.Info($"已将强制指定的 Java 加入 Java 列表底部：{ForcedJava}")
+            End If
+            Configs.InstanceForcedJava.Set(ForcedJava, Instance.Config)
+            Settings.Set("VersionArgumentJavaV2", 3, Instance)
+            UpdateJavaLists()
+            Configs.InstanceMigratedJava.Set(True, Instance.Config) '完成
+            p?.Finish() : Return
+NoForcedJava:
+            Dim JavaFound = JavaUtils.SearchFoldersAsync(True, {Instance.PathVersion}, c, p?.SplitTo(1)).Run()
+            If JavaFound.Any() Then
+                '从版本文件夹中发现了 Java
+                Logger.Info($"在版本文件夹中发现了 Java，将版本独立设置改为优先使用版本文件夹的 Java：{JavaFound}")
+                Settings.Set("VersionArgumentJavaV2", 2, Instance)
+            Else
+                '自动选择
+                Logger.Info("没有需要迁移的内容，自动选择 Java")
+                Settings.Set("VersionArgumentJavaV2", 0, Instance)
+            End If
+            Configs.InstanceMigratedJava.Set(True, Instance.Config) '完成
+        Finally
+            If FrmInstanceSetup IsNot Nothing Then RunInUiWait(
+            Sub()
+                SettingService.RefreshSettings(FrmInstanceSetup.ComboArgumentJava)
+                SettingService.RefreshSettings(FrmInstanceSetup.ComboArgumentJavaSelect)
+                FrmInstanceSetup.ComboArgumentJava.IsEnabled = True
+            End Sub)
+        End Try
+    End Sub
+
+#End Region
+
+#Region "下载（均为内部工具方法，无外部调用）"
+
+    Private Class JavaDownloadInfo
+        Public Property ComponentName As String
+        Public Property Java As JObject
+        Public Property JavaVersion As Version
     End Class
 
     ''' <summary>
-    ''' Path 环境变量。
+    ''' 下载 Mojang 提供的 Java 列表。
+    ''' <para/> 若本次打开程序已经下载过，则会直接返回缓存的结果。
     ''' </summary>
-    Private ReadOnly Property PathEnv As String
-        Get
-            If _PathEnv Is Nothing Then _PathEnv = If(Environment.GetEnvironmentVariable("Path"), "")
-            Return _PathEnv
-        End Get
-    End Property
-    Private _PathEnv As String = Nothing
-
-    ''' <summary>
-    ''' JAVA_HOME 环境变量。
-    ''' </summary>
-    Private ReadOnly Property PathJavaHome As String
-        Get
-            If _PathJavaHome Is Nothing Then _PathJavaHome = If(Environment.GetEnvironmentVariable("JAVA_HOME"), "")
-            Return _PathJavaHome
-        End Get
-    End Property
-    Private _PathJavaHome As String = Nothing
-
-    ''' <summary>
-    ''' 初始化 Java 列表，但除非没有 Java，否则不进行检查。
-    ''' </summary>
-    Public Sub JavaListInit()
-        JavaList = New List(Of JavaEntry)
-        Try
-            If Settings.Get("CacheJavaListVersion") < JavaListCacheVersion Then
-                '不使用缓存
-                Log("[Java] 要求 Java 列表缓存更新")
-                Settings.Set("CacheJavaListVersion", JavaListCacheVersion)
-            Else
-                '使用缓存
-                For Each JsonEntry In GetJson(Settings.Get("LaunchArgumentJavaAll"))
-                    JavaList.Add(JavaEntry.FromJson(JsonEntry))
-                Next
-            End If
-            If Not JavaList.Any() Then
-                Log("[Java] 初始化未找到可用的 Java，将自动触发搜索", LogLevel.Developer)
-                JavaSearchLoader.Start(0)
-            Else
-                Log("[Java] 缓存中有 " & JavaList.Count & " 个可用的 Java：")
-                JavaList.ForEach(Sub(j) Log($"[Java]  - {j}"))
-            End If
-        Catch ex As Exception
-            Log(ex, "初始化 Java 列表失败", LogLevel.Feedback)
-            Settings.Set("LaunchArgumentJavaAll", "[]")
-        End Try
-    End Sub
-
-    ''' <summary>
-    ''' 防止多个需要 Java 的部分同时要求下载 Java（#3797）。
-    ''' </summary>
-    Public JavaLock As New Object
-    ''' <summary>
-    ''' 根据要求返回最适合的 Java，若找不到则返回 Nothing。
-    ''' 最小与最大版本在与输入相同时也会通过。
-    ''' 必须在工作线程调用，且必须包括 SyncLock JavaLock。
-    ''' </summary>
-    Public Function JavaSelect(CancelException As String, Optional MinVersion As Version = Nothing, Optional MaxVersion As Version = Nothing,
-                               Optional GameInstance As McInstance = Nothing) As JavaEntry
-        Try
-            Dim AllowedJavaList As New List(Of JavaEntry)
-
-            '添加特定的 Java
-            Dim JavaPreList As New Dictionary(Of String, Boolean)
-            If McFolderSelected.Split("\").Count > 3 AndAlso Not McFolderSelected.Contains("AppData\Roaming") Then
-                JavaSearchFolder(GetPathFromFullPath(McFolderSelected), JavaPreList, False, True) 'Minecraft 文件夹的父文件夹（如果不是根目录或 %APPDATA% 的话）
-            End If
-            JavaSearchFolder(McFolderSelected, JavaPreList, False, True) 'Minecraft 文件夹
-            JavaPreList = JavaPreList.Where(Function(j) Not j.Key.Contains(".minecraft\runtime")).
-                ToDictionary(Function(j) j.Key, Function(j) j.Value) '排除官启自带 Java（#4286）
-            If GameInstance IsNot Nothing Then JavaSearchFolder(GameInstance.PathVersion, JavaPreList, False, True) '所选版本文件夹
-            Dim TargetJavaList As New List(Of JavaEntry)
-            For Each Entry In JavaPreList
-                TargetJavaList.Add(New JavaEntry(Entry.Key, Entry.Value))
-            Next
-
-            '检查特定的 Java
-            If TargetJavaList.Any Then
-                TargetJavaList = JavaCheckList(TargetJavaList)
-                Log("[Java] 检查后找到 " & TargetJavaList.Count & " 个特定路径下的 Java：")
-                For Each Java In TargetJavaList
-                    Log($"[Java]  - {Java}")
-                Next
-            End If
-
-#Region "添加用户指定的 Java，储存到 UserJava 中"
-
-            Dim UserJava As JavaEntry = Nothing
-
-            '获取版本独立设置中指定的 Java
-            Dim VersionSelect As String = ""
-            If GameInstance IsNot Nothing Then
-                VersionSelect = Settings.Get("VersionArgumentJavaSelect", Instance:=GameInstance)
-                If VersionSelect.StartsWithF("{") Then
-                    Try
-                        UserJava = JavaEntry.FromJson(GetJson(VersionSelect))
-                        UserJava.Check()
-                    Catch ex As ThreadInterruptedException
-                        Throw
-                    Catch ex As Exception
-                        UserJava = Nothing
-                        Settings.Reset("VersionArgumentJavaSelect", Instance:=GameInstance)
-                        Log(ex, "版本独立设置中指定的 Java 已无法使用，此设置已重置", LogLevel.Hint)
-                    End Try
-                End If
-            End If
-
-            '获取全局设置中指定的 Java
-            If UserJava Is Nothing AndAlso VersionSelect <> "" AndAlso Settings.Get("LaunchArgumentJavaSelect") <> "" Then
+    Private Function DownloadJavaList() As List(Of JavaDownloadInfo)
+        'TODO: 写一个更简单的 Lazy，允许重置缓存
+        Static Components As New Lazy(Of List(Of JavaDownloadInfo))(
+        Function()
+            '下载 Mojang 提供的 Java 列表
+            Dim IndexFileStr As String = NetRequestByLoader(DlVersionListOrder(
+                {"https://piston-meta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"},
+                {"https://bmclapi2.bangbang93.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"}
+            ), IsJson:=True)
+            '解析 Java 列表
+            Dim Results = New List(Of JavaDownloadInfo)
+            For Each Prop As JProperty In IndexFileStr.DeserializeJson(Of JObject)()("windows-x64")
+                If Prop.Name = "minecraft-java-exe" Then Continue For '不是完整 Java
                 Try
-                    UserJava = JavaEntry.FromJson(GetJson(Settings.Get("LaunchArgumentJavaSelect")))
-                    UserJava.Check()
-                Catch ex As ThreadInterruptedException
-                    Throw
-                Catch ex As Exception
-                    UserJava = Nothing
-                    Settings.Reset("LaunchArgumentJavaSelect")
-                    Log(ex, "全局设置中指定的 Java 已无法使用，此设置已重置", LogLevel.Hint)
-                End Try
-            End If
-
-            '添加到特定 Java 列表
-            If UserJava IsNot Nothing Then
-                Log($"[Java] 用户指定的 Java：{UserJava}")
-                TargetJavaList.Add(UserJava)
-            End If
-
-#End Region
-
-RetryGet:
-            '等待进行中的搜索结束
-            If JavaSearchLoader.State <> LoadState.Finished AndAlso JavaSearchLoader.State <> LoadState.Waiting Then JavaSearchLoader.WaitForExit()
-            Select Case JavaSearchLoader.State
-                Case LoadState.Failed
-                    Throw JavaSearchLoader.Error
-                Case LoadState.Interrupted
-                    Throw New ThreadInterruptedException("Java 搜索加载器已中断")
-            End Select
-
-            '生成完整的 Java 列表
-            Dim AllJavaList As New List(Of JavaEntry)
-            AllJavaList.AddRange(TargetJavaList)
-            AllJavaList.AddRange(JavaList)
-
-            '根据选定条件进行过滤
-            For Each Java In AllJavaList
-                If MinVersion IsNot Nothing AndAlso Java.Version < MinVersion Then Continue For
-                If MaxVersion IsNot Nothing AndAlso Java.Version > MaxVersion Then Continue For
-                If Java.Is64Bit AndAlso Is32BitSystem Then Continue For
-                AllowedJavaList.Add(Java)
-            Next
-
-            '若未找到适合的 Java，尝试触发搜索
-            If Not AllowedJavaList.Any() AndAlso JavaSearchLoader.State = LoadState.Waiting Then
-                Log("[Java] 未找到满足条件的 Java，尝试进行搜索")
-                JavaSearchLoader.Start(IsForceRestart:=True)
-                GoTo RetryGet
-            End If
-
-#Region "检查用户指定的 Java 是否可用"
-
-            '确保指定的 Java 可用
-            If UserJava Is Nothing Then GoTo ExitUserJavaCheck
-            If AllowedJavaList.Any(Function(j) j.PathFolder = UserJava.PathFolder) Then
-                Log("[Java] 使用用户指定的 Java：" & UserJava.PathFolder)
-                AllowedJavaList = New List(Of JavaEntry) From {UserJava}
-                GoTo UserPass
-            End If
-
-            '指定的 Java 不可用，弹窗要求选择
-            Log("[Java] 发现用户指定的不兼容 Java：" & UserJava.ToString)
-            Log($"[Java] 目前实际可用的 Java 列表：")
-            For Each Java In AllowedJavaList
-                Log($"[Java]  - {Java}")
-            Next
-            Dim Requirement As String = ""
-            Dim ShowRevision As Boolean = False
-            If (MinVersion Is Nothing OrElse MinVersion.Minor = 0) AndAlso (MaxVersion IsNot Nothing AndAlso MaxVersion.Minor < 999) Then
-                ShowRevision = MaxVersion.MinorRevision < 999
-                Requirement = "最高兼容到 Java " & MaxVersion.Minor & If(ShowRevision, "." & MaxVersion.MajorRevision & "." & MaxVersion.MinorRevision, "")
-            ElseIf (MinVersion IsNot Nothing AndAlso MinVersion.Minor > 0) AndAlso (MaxVersion Is Nothing OrElse MaxVersion.Minor >= 999) Then
-                ShowRevision = MinVersion.MinorRevision > 0 OrElse MinVersion.MajorRevision > 0
-                Requirement = "至少需要 Java " & MinVersion.Minor & If(ShowRevision, "." & MinVersion.MajorRevision & "." & MinVersion.MinorRevision, "")
-            ElseIf (MinVersion IsNot Nothing AndAlso MinVersion.Minor > 0) AndAlso (MaxVersion IsNot Nothing AndAlso MaxVersion.Minor < 999) Then
-                ShowRevision = MinVersion.MinorRevision > 0 OrElse MinVersion.MajorRevision > 0 OrElse MaxVersion.MinorRevision < 999
-                Dim Left As String = MinVersion.Minor & If(ShowRevision, "." & MinVersion.MajorRevision & "." & MinVersion.MinorRevision, "")
-                Dim Right As String = MaxVersion.Minor & If(ShowRevision, "." & MaxVersion.MajorRevision & "." & MaxVersion.MinorRevision, "")
-                Requirement = "需要 Java " & If(Left = Right, Left, Left & " ~ " & Right)
-            End If
-            Dim JavaCurrent As String = UserJava.MajorVersion & If(ShowRevision, "." & UserJava.Version.MajorRevision & "." & UserJava.Version.MinorRevision, "")
-            If GameInstance IsNot Nothing AndAlso Settings.Get("VersionAdvanceJava", GameInstance) Then
-                '直接跳过弹窗
-                Log("[Java] 设置中指定了使用 Java " & JavaCurrent & "，但当前版本" & Requirement & "，这可能会导致游戏崩溃！", LogLevel.Debug)
-                AllowedJavaList = New List(Of JavaEntry) From {UserJava}
-            Else
-                Select Case MyMsgBox("你在设置中手动指定了使用 Java " & JavaCurrent & "，但当前" & Requirement & "。" & vbCrLf &
-                            "如果强制使用该 Java，可能导致游戏崩溃。" & vbCrLf &
-                            "你也可以将 游戏 Java 设置修改为 自动选择合适的 Java。" & vbCrLf &
-                            vbCrLf &
-                            " - 指定的 Java：" & UserJava.ToString,
-                            "Java 兼容性警告", "让 PCL 自动选择", "强制使用该 Java", "取消")
-                    Case 1 '让 PCL 自动选择
-                    Case 2 '强制使用指定的 Java
-                        Log("[Java] 已强制使用用户指定的不兼容 Java")
-                        AllowedJavaList = New List(Of JavaEntry) From {UserJava}
-                    Case 3 '取消启动
-                        Throw New Exception(CancelException)
-                End Select
-            End If
-
-ExitUserJavaCheck:
-#End Region
-
-            '若依然未找到适合的 Java，直接返回
-            If Not AllowedJavaList.Any() Then Return Nothing
-
-            '优先使用特定目录下的 Java
-            For Each Java In AllowedJavaList
-                '如果在官启文件夹启动，会将官启自带 Java 错误视作 MC 文件夹指定 Java，导致了 #2054 的第二例
-                If Java.PathFolder.Contains(".minecraft\cache\java") Then Continue For
-                If Java.PathFolder.Contains("PCL\MyDownload\") Then Continue For '#5780
-                If TargetJavaList.Contains(Java) Then
-                    '直接使用指定的 Java
-                    AllowedJavaList = New List(Of JavaEntry) From {Java}
-                    Log("[Java] 优先使用特定路径下的 Java：" & Java.ToString)
-                    GoTo UserPass
-                End If
-            Next
-UserPass:
-
-            '对适合的 Java 进行排序
-            AllowedJavaList = AllowedJavaList.SortByComparison(AddressOf JavaSorter)
-            Log($"[Java] 排序后的 Java 优先顺序：")
-            For Each Java In AllowedJavaList
-                Log($"[Java]  - {Java}")
-            Next
-
-            '检查选定的 Java，若测试失败则尝试进行搜索
-            Dim SelectedJava = AllowedJavaList.First
-            Try
-                SelectedJava.Check()
-            Catch ex As ThreadInterruptedException
-                Throw
-            Catch ex As Exception
-                If ex.InnerException IsNot Nothing AndAlso TypeOf (ex.InnerException) Is ThreadInterruptedException Then Throw ex.InnerException
-                Log(ex, "最终选定的 Java 已无法使用，尝试进行搜索")
-                AllowedJavaList = New List(Of JavaEntry)
-                JavaSearchLoader.Start(IsForceRestart:=True)
-                GoTo RetryGet
-            End Try
-
-            '返回
-            Log("[Java] 最终选定的 Java：" & AllowedJavaList.First.ToString)
-            Return SelectedJava
-
-        Catch ex As ThreadInterruptedException
-            Log(ex, "查找符合条件的 Java 时出现加载器中断")
-            Return Nothing
-        Catch ex As Exception
-            If ex.Message = "$$" Then Throw ex
-            Log(ex, "查找符合条件的 Java 失败", LogLevel.Feedback)
-            Return Nothing
-        End Try
-    End Function
-    ''' <summary>
-    ''' 是否强制指定了 64 位 Java。如果没有强制指定，返回是否安装了 64 位 Java。
-    ''' </summary>
-    Public Function JavaIs64Bit(Optional GameInstance As McInstance = Nothing) As Boolean
-        Try
-            '检查强制指定
-            Dim UserSetup As String = Settings.Get("LaunchArgumentJavaSelect")
-            If GameInstance IsNot Nothing Then
-                Dim UserSetupVersion As String = Settings.Get("VersionArgumentJavaSelect", Instance:=GameInstance)
-                If UserSetupVersion <> "使用全局设置" Then UserSetup = UserSetupVersion
-            End If
-            If UserSetup <> "" Then
-                Dim UserJava As JavaEntry = Nothing
-                Try
-                    UserJava = JavaEntry.FromJson(GetJson(UserSetup))
-                Catch ex As Exception
-                    Log(ex, "版本指定的 Java 信息已损坏，已重置版本设置中指定的 Java")
-                    Settings.Set("VersionArgumentJavaSelect", "使用全局设置", Instance:=GameInstance)
-                    GoTo NoUserJava
-                End Try
-                For Each Java In JavaList
-                    If Java.PathFolder = UserJava.PathFolder Then Return UserJava.Is64Bit
-                Next
-            End If
-NoUserJava:
-            '检查列表
-            For Each Java In JavaList
-                If Java.Is64Bit Then Return True
-            Next
-            Return False
-        Catch ex As Exception
-            Log(ex, "检查 Java 类别时出错", LogLevel.Feedback)
-            Settings.Set("LaunchArgumentJavaSelect", "")
-            Return True
-        End Try
-    End Function
-    ''' <summary>
-    ''' 将 Java 按照适用性排序。
-    ''' </summary>
-    Public Function JavaSorter(Left As JavaEntry, Right As JavaEntry) As Boolean
-        Dim PathInfo As New DirectoryInfo(Path)
-        Dim PathMcInfo As New DirectoryInfo(McFolderSelected)
-        '1. 尽量在当前文件夹或当前 Minecraft 文件夹
-        Dim ProgramPathParent As String, MinecraftPathParent As String = ""
-        ProgramPathParent = If(PathInfo.Parent, PathInfo).FullName
-        If McFolderSelected <> "" Then MinecraftPathParent = If(PathMcInfo.Parent, PathMcInfo).FullName
-        If Left.PathFolder.StartsWithF(ProgramPathParent) AndAlso Not Right.PathFolder.StartsWithF(ProgramPathParent) Then Return True
-        If Not Left.PathFolder.StartsWithF(ProgramPathParent) AndAlso Right.PathFolder.StartsWithF(ProgramPathParent) Then Return False
-        If McFolderSelected <> "" Then
-            If Left.PathFolder.StartsWithF(MinecraftPathParent) AndAlso Not Right.PathFolder.StartsWithF(MinecraftPathParent) Then Return True
-            If Not Left.PathFolder.StartsWithF(MinecraftPathParent) AndAlso Right.PathFolder.StartsWithF(MinecraftPathParent) Then Return False
-        End If
-        '2. 尽量使用 64 位
-        If Left.Is64Bit AndAlso Not Right.Is64Bit Then Return True
-        If Not Left.Is64Bit AndAlso Right.Is64Bit Then Return False
-        '3. 尽量不使用 JDK
-        If Left.IsJre AndAlso Not Right.IsJre Then Return True
-        If Not Left.IsJre AndAlso Right.IsJre Then Return False
-        '4. Java 大版本
-        If Left.MajorVersion <> Right.MajorVersion Then
-            '                             Java  7   8   9  10  11  12 13 14 15  16  17  18  19  20
-            Dim Weight = {0, 1, 2, 3, 4, 5, 6, 14, 30, 10, 12, 15, 13, 9, 8, 7, 11, 31, 29, 16, 17} '更高的版本指定为 20，且越低越好
-            Return If(Left.MajorVersion > 20, 20 - Left.MajorVersion * 0.0001, Weight.ElementAtOrDefault(Left.MajorVersion)) >=
-                   If(Right.MajorVersion > 20, 20 - Right.MajorVersion * 0.0001, Weight.ElementAtOrDefault(Right.MajorVersion))
-        End If
-        '5. 最次级版本号更接近 51
-        Return Math.Abs(Left.Version.Revision - 51) <= Math.Abs(Right.Version.Revision - 51)
-    End Function
-
-#Region "搜索"
-
-    ''' <summary>
-    ''' 模糊搜索并获取所有可用的 Java，并在结束后更新设置页面显示。输出将直接写入 JavaList。
-    ''' </summary>
-    Public JavaSearchLoader As New LoaderTask(Of Integer, Integer)("查找 Java", AddressOf JavaSearchLoaderSub) With {.ProgressWeight = 2}
-    Private Sub JavaSearchLoaderSub(Loader As LoaderTask(Of Integer, Integer))
-        If FrmSetupLaunch IsNot Nothing Then
-            RunInUiWait(
-            Sub()
-                FrmSetupLaunch.ComboArgumentJava.Items.Clear()
-                FrmSetupLaunch.ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = "加载中……", .IsSelected = True})
-            End Sub)
-        End If
-        If FrmInstanceSetup IsNot Nothing Then
-            RunInUiWait(
-            Sub()
-                FrmInstanceSetup.ComboArgumentJava.Items.Clear()
-                FrmInstanceSetup.ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = "加载中……", .IsSelected = True})
-            End Sub)
-        End If
-
-        Try
-
-            '可能包含 Java 的文件夹列表，以 “\” 结尾，且仅包含 “\”
-            'Key：文件夹地址
-            'Value: 是否为玩家手动导入
-            Dim JavaPreList As New Dictionary(Of String, Boolean)
-
-#Region "模糊查找可能可用的 Java"
-
-            '查找环境变量中的 Java
-            For Each PathInEnv As String In Split((PathEnv & ";" & PathJavaHome).Replace("\\", "\").Replace("/", "\"), ";")
-                PathInEnv = PathInEnv.Trim(" """.ToCharArray())
-                If PathInEnv = "" Then Continue For
-                If Not PathInEnv.EndsWithF("\") Then PathInEnv += "\"
-                '粗略检查有效性
-                If File.Exists(PathInEnv & "javaw.exe") Then JavaPreList(PathInEnv) = False
-            Next
-            '查找磁盘中的 Java
-            For Each Disk As DriveInfo In DriveInfo.GetDrives()
-                If Disk.DriveType = DriveType.Network Then Continue For '跳过网络驱动器（#3705）
-                JavaSearchFolder(Disk.Name, JavaPreList, False)
-            Next
-            '查找用户文件夹中的 Java
-            JavaSearchFolder(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), JavaPreList, False)
-            JavaSearchFolder(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\.jdks\", JavaPreList, False, IsFullSearch:=True)
-            JavaSearchFolder(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) & "\.sdkman\candidates\java\", JavaPreList, False, IsFullSearch:=True)
-            '查找启动器目录中的 Java
-            JavaSearchFolder(Path, JavaPreList, False, IsFullSearch:=True)
-            '查找所选 Minecraft 文件夹中的 Java
-            If Not String.IsNullOrWhiteSpace(McFolderSelected) AndAlso Path <> McFolderSelected Then JavaSearchFolder(McFolderSelected, JavaPreList, False, IsFullSearch:=True)
-
-            '若不全为符号链接，则清除符号链接的地址
-            Dim JavaWithoutReparse As New Dictionary(Of String, Boolean)
-            For Each Pair In JavaPreList
-                Dim Folder As String = Pair.Key.Replace("\\", "\").Replace("/", "\")
-                Dim Info As FileSystemInfo = New FileInfo(Folder & "javaw.exe")
-                Do
-                    If Info.Attributes.HasFlag(FileAttributes.ReparsePoint) Then
-                        Log("[Java] 位于 " & Folder & " 的 Java 包含符号链接")
-                        Continue For
-                    End If
-                    Info = If(TypeOf Info Is FileInfo, CType(Info, FileInfo).Directory, CType(Info, DirectoryInfo).Parent)
-                Loop While Info IsNot Nothing
-                Log("[Java] 位于 " & Folder & " 的 Java 不含符号链接")
-                JavaWithoutReparse.Add(Pair.Key, Pair.Value)
-            Next
-            If JavaWithoutReparse.Any Then JavaPreList = JavaWithoutReparse
-
-            '若不全为特殊引用，则清除特殊引用的地址
-            Dim JavaWithoutInherit As New Dictionary(Of String, Boolean)
-            For Each Pair In JavaPreList
-                If Pair.Key.Contains("java8path_target_") OrElse Pair.Key.Contains("javapath_target_") OrElse Pair.Key.Contains("javatmp") OrElse Pair.Key.ContainsF("system32") Then
-                    Log("[Java] 位于 " & Pair.Key & " 的 Java 位于特殊路径，不应优先使用")
-                Else
-                    JavaWithoutInherit.Add(Pair.Key, Pair.Value)
-                End If
-            Next
-            If JavaWithoutInherit.Any Then JavaPreList = JavaWithoutInherit
-
-#End Region
-
-#Region "添加玩家手动导入的 Java"
-
-            Dim ImportedJava As String = Settings.Get("LaunchArgumentJavaAll")
-            Try
-                For Each JavaJsonObject In GetJson(ImportedJava)
-                    Dim Entry = JavaEntry.FromJson(JavaJsonObject)
-                    If Entry.IsUserImport Then JavaPreList(Entry.PathFolder) = True
-                Next
-            Catch ex As Exception
-                Log(ex, "Java 列表已损坏", LogLevel.Feedback)
-                Settings.Set("LaunchArgumentJavaAll", "[]")
-            End Try
-
-#End Region
-
-            '确保可用并获取详细信息，转入正式列表
-            Dim NewJavaList As New List(Of JavaEntry)
-            For Each Entry In JavaPreList.Distinct(Function(a, b) a.Key.Lower = b.Key.Lower) '#794
-                NewJavaList.Add(New JavaEntry(Entry.Key, Entry.Value))
-            Next
-            NewJavaList = JavaCheckList(NewJavaList).SortByComparison(AddressOf JavaSorter)
-
-            '修改设置项
-            Dim AllList As New JArray
-            For Each Java In NewJavaList
-                AllList.Add(Java.ToJson)
-            Next
-            Settings.Set("LaunchArgumentJavaAll", AllList.ToString(Newtonsoft.Json.Formatting.None))
-            JavaList = NewJavaList
-
-        Catch ex As Exception
-            Log(ex, "搜索 Java 时出错", LogLevel.Feedback)
-            JavaList = New List(Of JavaEntry)
-        End Try
-
-        Log("[Java] Java 搜索完成，发现 " & JavaList.Count & " 个 Java")
-        If FrmSetupLaunch IsNot Nothing Then RunInUi(Sub() FrmSetupLaunch.UpdateJavaComboBox())
-        If FrmInstanceSetup IsNot Nothing Then RunInUi(Sub() FrmInstanceSetup.RefreshJavaComboBox())
-    End Sub
-
-    ''' <summary>
-    ''' 多线程检查列表中的所有 Java 项。
-    ''' </summary>
-    Private Function JavaCheckList(JavaEntries As List(Of JavaEntry)) As List(Of JavaEntry)
-        Log("[Java] 开始确认列表 Java 状态，共 " & JavaEntries.Count & " 项")
-        JavaCheckList = New List(Of JavaEntry)
-        Dim ListLock As New Object
-
-        '启动检查线程
-        Dim CheckThreads As New List(Of Thread)
-        For Each Entry In JavaEntries
-            Dim CheckThread As New Thread(
-            Sub()
-                Try
-                    Entry.Check()
-                    If ModeDebug Then Log("[Java]  - " & Entry.ToString)
-                    SyncLock ListLock
-                        JavaCheckList.Add(Entry)
-                    End SyncLock
-                Catch ex As ThreadInterruptedException
-                Catch ex As Exception
-                    If Entry.IsUserImport Then
-                        Log(ex, "位于 " & Entry.PathFolder & " 的 Java 存在异常，将被自动移除", LogLevel.Hint)
+                    Dim Entry = Prop.Value.FirstOrDefault
+                    If Entry Is Nothing Then Continue For
+                    Dim JavaName = Entry("version")("name").ToString '可能的名称格式："12"、"8u51-cacert462b08"、"17.0.8.1"、"17.0.1.12.1"、"21.0.7"
+                    If JavaName.Contains(".") Then
+                        Dim Parts As String() = JavaName.Split(".")
+                        Results.Add(New JavaDownloadInfo With {.ComponentName = Prop.Name, .Java = Entry, .JavaVersion = New Version(Val(Parts(0)), Val(Parts(1)), If(Parts.Length >= 3, Val(Parts(2)), 0), If(Parts.Length >= 4, Val(Parts(3)), 0))})
+                    ElseIf JavaName.StartsWithF("8u51-") Then
+                        Results.Add(New JavaDownloadInfo With {.ComponentName = Prop.Name, .Java = Entry, .JavaVersion = New Version(8, 0, 51, 0)})
                     Else
-                        Log(ex, "位于 " & Entry.PathFolder & " 的 Java 存在异常")
+                        Results.Add(New JavaDownloadInfo With {.ComponentName = Prop.Name, .Java = Entry, .JavaVersion = New Version(Val(JavaName.BeforeFirstOfAny({"u", "."})), 0, 0, 0)})
                     End If
+                Catch ex As Exception
+                    Logger.Warn(ex, $"解析 Mojang 提供的 Java 列表项失败，已跳过（{Prop.Name}）")
                 End Try
-            End Sub)
-            CheckThreads.Add(CheckThread)
-            CheckThread.Start()
-        Next
-
-        '等待构造线程完成
-Wait:
-        Thread.Sleep(10)
-        For Each CheckThread In CheckThreads
-            If CheckThread.IsAlive Then GoTo Wait
-        Next
-    End Function
-    ''' <summary>
-    ''' 模糊搜索指定文件夹下的 Java，并只进行粗略的检查。这不会搜索全部路径。
-    ''' </summary>
-    ''' <param name="OriginalPath">开始搜索的起始路径，不限制结尾。</param>
-    ''' <param name="IsFullSearch">搜索当前文件夹下的全部文件夹（此参数不会传递到子文件夹）。</param>
-    Private Sub JavaSearchFolder(OriginalPath As String, ByRef Results As Dictionary(Of String, Boolean), Source As Boolean, Optional IsFullSearch As Boolean = False)
-        Try
-            Log("[Java] 开始" & If(IsFullSearch, "完全", "部分") & "遍历查找：" & OriginalPath)
-            JavaSearchFolder(New DirectoryInfo(OriginalPath), Results, Source, IsFullSearch)
-        Catch ex As UnauthorizedAccessException
-            Log("[Java] 遍历查找 Java 时遭遇无权限的文件夹：" & OriginalPath)
-        Catch ex As Exception
-            Log(ex, "遍历查找 Java 时出错（" & OriginalPath & "）")
-        End Try
-    End Sub
-    ''' <summary>
-    ''' 模糊搜索指定文件夹下的 Java，并只进行粗略的检查。这不会搜索全部路径。
-    ''' </summary>
-    ''' <param name="OriginalPath">开始搜索的起始路径，不限制结尾。</param>
-    ''' <param name="IsFullSearch">搜索当前文件夹下的全部文件夹（此参数不会传递到子文件夹）。</param>
-    Private Sub JavaSearchFolder(OriginalPath As DirectoryInfo, ByRef Results As Dictionary(Of String, Boolean), Source As Boolean, Optional IsFullSearch As Boolean = False)
-        Try
-            '确认目录存在
-            If Not OriginalPath.Exists Then Return
-            Dim Path As String = OriginalPath.FullName.Replace("\\", "\")
-            If Not Path.EndsWithF("\") Then Path += "\"
-            '若该目录有 Java，则加入结果
-            If File.Exists(Path & "javaw.exe") Then Results(Path) = Source
-            '查找其下的所有文件夹
-            '不应使用网易的 Java：https://github.com/Meloong-Git/PCL/issues/1279#issuecomment-2761489121
-            Static Keywords As String() = {
-                "java", "jdk", "jre", "env", "环境", "run", "软件", "mc", "dragon", "well", "bin", "sdk", "candidate", "current",
-                "software", "cache", "temp", "corretto", "roaming", "users", "craft", "program", "世界", "net",
-                "游戏", "oracle", "game", "file", "data", "jvm", "服务", "server", "客户", "client", "整合",
-                "应用", "运行", "前置", "mojang", "官启", "官方", "新建文件夹", "eclipse", "microsoft", "hotspot",
-                "runtime", "x86", "x64", "arm", "forge", "原版", "optifine", "官方", "启动", "hmcl", "mod", "forge", "fabric",
-                "download", "launch", "程序", "path", "version", "baka", "pcl", "zulu", "local", "packages", "4297127d64ec6", "1.", "启动", "jbr"}
-            For Each FolderInfo As DirectoryInfo In OriginalPath.EnumerateDirectories
-                If FolderInfo.Attributes.HasFlag(FileAttributes.ReparsePoint) Then Continue For '跳过符号链接
-                Dim SearchEntry = GetFolderNameFromPath(FolderInfo.Name).Lower '用于搜索的字符串
-                If IsFullSearch OrElse
-                   OriginalPath.Name.Lower = "users" OrElse Val(SearchEntry) > 0 OrElse Keywords.Any(Function(w) SearchEntry.Contains(w)) OrElse SearchEntry = "bin" Then
-                    JavaSearchFolder(FolderInfo, Results, Source)
-                End If
             Next
-        Catch ex As UnauthorizedAccessException
-            Log("[Java] 遍历查找 Java 时遭遇无权限的文件夹：" & OriginalPath.FullName)
-        Catch ex As Exception
-            Log(ex, "遍历查找 Java 时出错（" & OriginalPath.FullName & "）")
-        End Try
-    End Sub
-
-#End Region
-
-#Region "下载"
+            Return Results
+        End Function)
+        Return Components.Value
+    End Function
 
     ''' <summary>
-    ''' 获取下载 Java 的加载器。需要开启 IsForceRestart 以正常刷新 Java 列表。
+    ''' 构建下载指定 Java 的加载器。
     ''' </summary>
-    Public Function GetJavaDownloadLoader() As LoaderCombo(Of String)
-        Dim JavaDownloadLoader As New LoaderDownload("下载 Java 文件", New List(Of NetFile)) With {.ProgressWeight = 10}
-        Dim Loader = New LoaderCombo(Of String)($"下载 Java", {
-            New LoaderTask(Of String, List(Of NetFile))("获取 Java 下载信息", AddressOf JavaFileList) With {.ProgressWeight = 2},
-            JavaDownloadLoader,
-            JavaSearchLoader
-        })
-        AddHandler JavaDownloadLoader.OnStateChangedThread,
-        Sub(Raw As LoaderBase, NewState As LoadState, OldState As LoadState)
-            If (NewState = LoadState.Failed OrElse NewState = LoadState.Interrupted) AndAlso LastJavaBaseDir IsNot Nothing Then
-                Log($"[Java] 由于下载未完成，清理未下载完成的 Java 文件：{LastJavaBaseDir}", LogLevel.Debug)
-                DeleteDirectory(LastJavaBaseDir)
-            ElseIf NewState = LoadState.Finished Then
-                LastJavaBaseDir = Nothing
-            End If
-        End Sub
-        JavaDownloadLoader.HasOnStateChangedThread = True
-        Return Loader
-    End Function
-    Private LastJavaBaseDir As String = Nothing '用于在下载中断或失败时删除未完成下载的 Java 文件夹，防止残留只下了一半但 -version 能跑的 Java
-    Private Sub JavaFileList(Loader As LoaderTask(Of String, List(Of NetFile)))
-        Log("[Java] 开始获取 Java 下载信息")
-        Dim IndexFileStr As String = NetRequestByLoader(DlVersionListOrder(
-            {"https://piston-meta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"},
-            {"https://bmclapi2.bangbang93.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"}
-        ), IsJson:=True)
-        '查找要下载的目标 Java
-        Dim TargetEntry As JProperty = Nothing
-        Dim Components As JObject = CType(GetJson(IndexFileStr), JObject)($"windows-x{If(Is32BitSystem, "86", "64")}")
-        If Components.ContainsKey(Loader.Input) Then '精确匹配
-            TargetEntry = Components.Property(Loader.Input)
-        Else '模糊匹配
-            TargetEntry = Components.Properties.FirstOrDefault(
-                Function(c) c.Value IsNot Nothing AndAlso c.Value.ToArray.FirstOrDefault()?("version")("name").ToString.StartsWithF(Loader.Input))
-            If TargetEntry Is Nothing Then Throw New Exception($"未能找到所需的 Java {Loader.Input}")
-        End If
-        Dim TargetComponent = TargetEntry.Value.ToArray.FirstOrDefault
-        If TargetComponent Is Nothing Then Throw New Exception($"Mojang 未提供所需的 Java {Loader.Input}")
-        '获取文件列表
-        Dim Address As String = TargetComponent("manifest")("url")
-        McLaunchLog($"准备下载 Java {TargetComponent("version")("name")}（{TargetEntry.Name}）：{Address}")
+    Private Function CreateJavaDownloadLoader(Target As JavaDownloadInfo) As LoaderCombo(Of Integer)
+
+        '分析需要下载的 Java 文件列表
+        Dim Address As String = Target.Java("manifest")("url")
+        Logger.Info($"准备下载 Java {Target.Java("version")("name")}（{Target.ComponentName}）：{Address}")
         Dim ListFileStr As String = NetRequestByLoader(DlSourceOrder({Address}, {Address.Replace("piston-meta.mojang.com", "bmclapi2.bangbang93.com")}), IsJson:=True)
-        LastJavaBaseDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\.minecraft\runtime\" & TargetEntry.Name & "\"
-        Dim Results As New List(Of NetFile)
-        For Each File As JProperty In CType(GetJson(ListFileStr), JObject)("files")
+        Dim BaseDir As String = $"{Paths.AppData}.minecraft\runtime\{Target.ComponentName}\"
+        Dim FilesToDownload As New List(Of NetFile)
+        For Each File As JProperty In CType(ListFileStr.DeserializeJson(), JObject)("files")
             If CType(File.Value, JObject)("downloads")?("raw") Is Nothing Then Continue For
             Dim Info As JObject = CType(File.Value, JObject)("downloads")("raw")
-            Dim Checker As New FileChecker(ActualSize:=Info("size"), Hash:=Info("sha1"))
+            Dim Checker As New FileChecker With {.ActualSize = Info("size"), .Hash = Info("sha1")}
             If Checker.Hash = "12976a6c2b227cbac58969c1455444596c894656" OrElse Checker.Hash = "c80e4bab46e34d02826eab226a4441d0970f2aba" OrElse Checker.Hash = "84d2102ad171863db04e7ee22a259d1f6c5de4a5" Then
-                '跳过 3 个无意义大量重复文件（#3827）
-                Continue For
+                Continue For '跳过 3 个无意义大量重复文件（#3827）
             End If
-            If Checker.Check(LastJavaBaseDir & File.Name) Is Nothing Then Continue For '跳过已存在的文件
             Dim Url As String = Info("url")
-            Results.Add(New NetFile(DlSourceOrder({Url}, {Url.Replace("piston-data.mojang.com", "bmclapi2.bangbang93.com")}), LastJavaBaseDir & File.Name, Checker))
+            FilesToDownload.Add(New NetFile(
+                DlSourceOrder({Url}, {Url.Replace("piston-data.mojang.com", "bmclapi2.bangbang93.com")}),
+                BaseDir & File.Name, Checker))
         Next
-        Loader.Output = Results
-        Log($"[Java] 需要下载 {Results.Count} 个文件，目标文件夹：{LastJavaBaseDir}")
-    End Sub
+        Logger.Info($"该 Java 需要下载 {FilesToDownload.Count} 个文件，目标文件夹：{BaseDir}")
+
+        '构建加载器
+        Dim Loader = New LoaderCombo(Of Integer)("下载 Java", {
+            New LoaderDownload("下载 Java 文件", FilesToDownload) With {.ProgressWeight = 10},
+            New LoaderWorker("刷新 Java 列表", JavaListRefreshWorker)
+        }) With {.OnStateChanged =
+        Sub(RawLoader As LoaderCombo(Of Integer))
+            If RawLoader.State = LoadState.Failed OrElse RawLoader.State = LoadState.Canceled Then
+                Logger.Warn($"由于 Java 下载未完成，清理未下载完成的 Java 文件夹：{BaseDir}")
+                DirectoryUtils.Delete(BaseDir)
+            End If
+        End Sub}
+        Return Loader
+
+    End Function
 
 #End Region
 

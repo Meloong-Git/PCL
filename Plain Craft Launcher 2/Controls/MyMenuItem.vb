@@ -1,4 +1,4 @@
-﻿Public Class MyMenuItem
+Public Class MyMenuItem
     Inherits MenuItem
 
     Private Sub MyMenuItem_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
@@ -7,7 +7,9 @@
             If IconControl IsNot Nothing Then IconControl.Data = (New GeometryConverter).ConvertFromString(Icon)
         End If
         '对父级设置透明度
-        CType(Parent, ContextMenu).Opacity = Settings.Get("UiLauncherTransparent") / 1000 + 0.4
+        If TypeOf Parent Is ContextMenu Then
+            CType(Parent, ContextMenu).Opacity = Settings.Get(Of Integer)("UiLauncherTransparent") / 1000 + 0.4
+        End If
     End Sub
 
     '基础

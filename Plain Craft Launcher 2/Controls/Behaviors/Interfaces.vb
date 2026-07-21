@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Threading
+Imports System.Windows.Threading
 
 ''' <summary>
 ''' 指示页面可以通过按下 F5 或以其他方式刷新。

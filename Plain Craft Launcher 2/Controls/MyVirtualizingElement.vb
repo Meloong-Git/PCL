@@ -1,4 +1,4 @@
-﻿Public Class MyVirtualizingElement(Of T As FrameworkElement)
+Public Class MyVirtualizingElement(Of T As FrameworkElement)
     Inherits FrameworkElement
 
     Private Initializer As Func(Of T)
@@ -58,7 +58,7 @@ Public Class MyVirtualizingElement
     ''' 如果类型错误，则返回原值。
     ''' </summary>
     Public Shared Function TryInit(Element As FrameworkElement) As FrameworkElement
-        If GetType(MyVirtualizingElement(Of )).IsInstanceOfGenericType(Element) Then
+        If GeneralUtils.IsGenericInstanceOf(Element, GetType(MyVirtualizingElement(Of ))) Then
             Return CType(Element, Object).Init()
         ElseIf TypeOf Element Is MyVirtualizingElement Then
             Return CType(Element, MyVirtualizingElement).Init()

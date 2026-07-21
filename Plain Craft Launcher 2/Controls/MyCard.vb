@@ -1,4 +1,4 @@
-﻿Public Class MyCard
+Public Class MyCard
 
     '控件
     Inherits Grid
@@ -121,17 +121,17 @@
             Case 6
                 Stack.Tag = CType(Stack.Tag, List(Of DlForgeVersionEntry)).OrderByDescending(Function(a) a).ToList
             Case 8, 9
-                Stack.Tag = CType(Stack.Tag, List(Of CompFile)).SortByComparison(Function(a, b) a.ReleaseDate > b.ReleaseDate)
+                Stack.Tag = CType(Stack.Tag, List(Of ResourceVersion)).SortByComparison(Function(a, b) a.ReleaseDate > b.ReleaseDate)
                 HasDuplicates =
-                    CType(Stack.Tag, List(Of CompFile)).Distinct(Function(a, b) a.DisplayName = b.DisplayName).Count <>
-                    CType(Stack.Tag, List(Of CompFile)).Count
+                    CType(Stack.Tag, List(Of ResourceVersion)).DistinctBy(Function(a) a.Display).Count <>
+                    CType(Stack.Tag, List(Of ResourceVersion)).Count
         End Select
         '控件转换
         Select Case Type
             Case 6
                 ForgeDownloadListItemPreload(Stack, Stack.Tag, AddressOf ForgeSave_Click, True)
             Case 8
-                CompFilesCardPreload(Stack, Stack.Tag)
+                PageDownloadResourceDetail.ResourceFilesCardPreload(Stack, Stack.Tag)
         End Select
         '实现控件虚拟化
         For Each Data As Object In Stack.Tag
@@ -149,12 +149,12 @@
                     Stack.Children.Add(McDownloadListItem(Data, Sub(sender, e) FrmDownloadInstall.MinecraftSelected(sender, e), False))
                 Case 8
                     '若存在重复的版本名，则显示文件名而非版本名（#1344）
-                    Stack.Children.Add(CType(Data, CompFile).ToListItem(
-                        AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=HasDuplicates))
+                    Stack.Children.Add(CType(Data, ResourceVersion).ToListItem(
+                        AddressOf FrmDownloadResourceDetail.Save_Click, IsBadDisplay:=HasDuplicates))
                 Case 9
                     '若存在重复的版本名，则显示文件名而非版本名（#1344）
-                    Stack.Children.Add(CType(Data, CompFile).ToListItem(
-                        AddressOf FrmDownloadCompDetail.Install_Click, AddressOf FrmDownloadCompDetail.Save_Click, BadDisplayName:=HasDuplicates))
+                    Stack.Children.Add(CType(Data, ResourceVersion).ToListItem(
+                        AddressOf FrmDownloadResourceDetail.Install_Click, AddressOf FrmDownloadResourceDetail.Save_Click, IsBadDisplay:=HasDuplicates))
                 Case 10
                     Stack.Children.Add(LiteLoaderDownloadListItem(Data, AddressOf LiteLoaderSave_Click, True))
                 Case 11
@@ -164,7 +164,7 @@
                 Case 13
                     Stack.Children.Add(NeoForgeDownloadListItem(Data, AddressOf NeoForgeSave_Click, True))
                 Case Else
-                    Log("未知的虚拟化种类：" & Type, LogLevel.Feedback)
+                    Logger.Error($"未知的虚拟化种类：{Type}")
             End Select
         Next
         Stack.Children.Add(New FrameworkElement With {.Height = 18}) '下边距，同时适应折叠
@@ -296,9 +296,10 @@
             If Not IsSwapped AndAlso TypeOf SwapControl Is StackPanel Then StackInstall(SwapControl, SwapType, Title)
             '若尚未加载，会在 Loaded 事件中触发无动画的折叠，不需要在这里进行
             If Not IsLoaded Then Return
-            '更新高度
+            '更新样式
             SwapControl.Visibility = Visibility.Visible
             TriggerForceResize()
+            UpdateCursorStyle()
             '改变箭头
             AniStart(AaRotateTransform(MainSwap, If(_IsSwapped, If(SwapLogoRight, 270, 0), 180) - CType(MainSwap.RenderTransform, RotateTransform).Angle, 250,, New AniEaseOutFluent(AniEasePower.ExtraStrong)), "MyCard Swap " & Uuid, True)
         End Set
@@ -351,11 +352,17 @@
         End If
 
         IsSwapped = Not IsSwapped
-        Log("[Control] " & If(IsSwapped, "折叠卡片", "展开卡片") & If(Title Is Nothing, "", "：" & Title))
+        Logger.Info($"{If(IsSwapped, "折叠卡片", "展开卡片")}{If(Title Is Nothing, "", "：" & Title)}")
         RaiseEvent Swap(Me, e)
     End Sub
     Private Sub MyCard_MouseLeave_Swap(sender As Object, e As MouseEventArgs) Handles Me.MouseLeave
         IsSwapMouseDown = False
+    End Sub
+    Private Sub UpdateCursorStyle() Handles Me.MouseMove
+        If _MainSwap Is Nothing Then Cursor = Nothing : Return
+        Dim Pos As Double = Mouse.GetPosition(Me).Y
+        Cursor = If(MainSwap.Visibility = Visibility.Visible AndAlso (IsSwapped OrElse (Pos <= SwapedHeight - 6 AndAlso Not (Pos = 0 AndAlso Not IsMouseDirectlyOver))),
+            Cursors.Hand, Nothing)
     End Sub
 
 #End Region

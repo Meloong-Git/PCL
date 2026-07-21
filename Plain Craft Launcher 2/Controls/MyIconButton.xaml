@@ -1,4 +1,4 @@
-﻿<Border x:Class="MyIconButton"
+<Border x:Class="MyIconButton"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
             CornerRadius="1000" Background="{StaticResource ColorBrushSemiTransparent}" BorderThickness="0.001">

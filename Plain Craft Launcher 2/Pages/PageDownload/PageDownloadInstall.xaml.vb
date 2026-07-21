@@ -1,4 +1,4 @@
-﻿Public Class PageDownloadInstall
+Public Class PageDownloadInstall
 
     Private Sub LoaderInit() Handles Me.Initialized
         DisabledPageAnimControls.Add(BtnStart)
@@ -171,8 +171,8 @@
     Private SelectedForge As DlForgeVersionEntry = Nothing
     Private SelectedNeoForge As DlNeoForgeListEntry = Nothing
     Private SelectedFabric As String = Nothing
-    Private SelectedFabricApi As CompFile = Nothing
-    Private SelectedOptiFabric As CompFile = Nothing
+    Private SelectedFabricApi As ResourceVersion = Nothing
+    Private SelectedOptiFabric As ResourceVersion = Nothing
 
     ''' <summary>
     ''' 重载已选择的项目的显示。
@@ -301,7 +301,7 @@
             Else
                 BtnFabricApiClear.Visibility = Visibility.Visible
                 ImgFabricApi.Visibility = Visibility.Visible
-                LabFabricApi.Text = SelectedFabricApi.DisplayName.Split("]")(1).Replace("Fabric API ", "").Replace(" build ", ".").Trim
+                LabFabricApi.Text = SelectedFabricApi.Display.Split("]")(1).Replace("Fabric API ", "").Replace(" build ", ".").Trim
                 LabFabricApi.Foreground = ColorGray1
             End If
         End If
@@ -322,7 +322,7 @@
             Else
                 BtnOptiFabricClear.Visibility = Visibility.Visible
                 ImgOptiFabric.Visibility = Visibility.Visible
-                LabOptiFabric.Text = SelectedOptiFabric.DisplayName.Lower.Replace("optifabric-", "").Replace(".jar", "").Trim.TrimStart("v")
+                LabOptiFabric.Text = SelectedOptiFabric.Display.Lower.Replace("optifabric-", "").Replace(".jar", "").Trim.TrimStart("v")
                 LabOptiFabric.Foreground = ColorGray1
             End If
         End If
@@ -525,15 +525,17 @@
             Next
             '自动选择版本
             If VersionWaitingSelect Is Nothing Then Exit Try
-            Log("[Download] 自动选择 MC 版本：" & VersionWaitingSelect)
+            Logger.Info($"自动选择 MC 版本：{VersionWaitingSelect}")
             For Each Version As JObject In Versions
                 If Version("id").ToString <> VersionWaitingSelect Then Continue For
                 Dim Item = McDownloadListItem(Version, Sub()
                                                        End Sub, False).Init()
                 MinecraftSelected(Item, Nothing)
+                VersionWaitingSelect = Nothing
+                Return
             Next
         Catch ex As Exception
-            Log(ex, "可视化安装版本列表出错", LogLevel.Feedback)
+            Logger.Error(ex, "可视化安装版本列表出错")
         End Try
     End Sub
     ''' <summary>
@@ -625,7 +627,7 @@
                 PanOptiFine.Children.Add(OptiFineDownloadListItem(Version, AddressOf OptiFine_Selected, False))
             Next
         Catch ex As Exception
-            Log(ex, "可视化 OptiFine 安装版本列表出错", LogLevel.Feedback)
+            Logger.Error(ex, "可视化 OptiFine 安装版本列表出错")
         End Try
     End Sub
 
@@ -687,7 +689,7 @@
                 PanLiteLoader.Children.Add(LiteLoaderDownloadListItem(Version, AddressOf LiteLoader_Selected, False))
             Next
         Catch ex As Exception
-            Log(ex, "可视化 LiteLoader 安装版本列表出错", LogLevel.Feedback)
+            Logger.Error(ex, "可视化 LiteLoader 安装版本列表出错")
         End Try
     End Sub
 
@@ -761,7 +763,7 @@
                 PanForge.Children.Add(ForgeDownloadListItem(Version, AddressOf Forge_Selected, False))
             Next
         Catch ex As Exception
-            Log(ex, "可视化 Forge 安装版本列表出错", LogLevel.Feedback)
+            Logger.Error(ex, "可视化 Forge 安装版本列表出错")
         End Try
     End Sub
 
@@ -819,7 +821,7 @@
                 PanNeoForge.Children.Add(NeoForgeDownloadListItem(Version, AddressOf NeoForge_Selected, False))
             Next
         Catch ex As Exception
-            Log(ex, "可视化 NeoForge 安装版本列表出错", LogLevel.Feedback)
+            Logger.Error(ex, "可视化 NeoForge 安装版本列表出错")
         End Try
     End Sub
 
@@ -881,7 +883,7 @@
             CardFabric.SwapControl = PanFabric
             CardFabric.SwapType = 12
         Catch ex As Exception
-            Log(ex, "可视化 Fabric 安装版本列表出错", LogLevel.Feedback)
+            Logger.Error(ex, "可视化 Fabric 安装版本列表出错")
         End Try
     End Sub
 
@@ -911,17 +913,18 @@
     ''' <summary>
     ''' 判断某 Fabric API 是否适配当前选择的原版版本。
     ''' </summary>
-    Public Function IsFabricApiCompatible(FabricApi As CompFile) As Boolean
-        Dim FabricApiName = FabricApi.DisplayName
+    Public Function IsFabricApiCompatible(FabricApi As ResourceVersion) As Boolean
+        Dim FabricApiName = FabricApi.Display
         Try
             If FabricApiName Is Nothing OrElse VanillaName Is Nothing Then Return False
+            FabricApiName = FabricApiName.Lower
             Dim TargetName = VanillaName.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3").Lower
             If FabricApi.RawGameVersions.Any(Function(f) f = TargetName)
                 Return True
             End If
             Return False
         Catch ex As Exception
-            Log(ex, "判断 Fabric API 版本适配性出错（" & FabricApiName & ", " & VanillaName & "）")
+            Logger.Warn(ex, $"判断 Fabric API 版本适配性出错（{FabricApiName}, {VanillaName}）")
             Return False
         End Try
     End Function
@@ -955,12 +958,12 @@
             If DlFabricApiLoader.State <> LoadState.Finished Then Return
             If VanillaName Is Nothing OrElse SelectedFabric Is Nothing Then Return
             '获取版本列表
-            Dim Versions As New List(Of CompFile)
+            Dim Versions As New List(Of ResourceVersion)
             For Each Version In DlFabricApiLoader.Output
                 If IsFabricApiCompatible(Version) Then
-                    If Not Version.DisplayName.StartsWithF("[") Then
-                        Log("[Download] 已特判修改 Fabric API 显示名：" & Version.DisplayName, LogLevel.Debug)
-                        Version.DisplayName = "[" & VanillaName & "] " & Version.DisplayName
+                    If Not Version.Display.StartsWithF("[") Then
+                        Logger.Warn($"已特判修改 Fabric API 显示名：{Version.Display}")
+                        Version.Display = "[" & VanillaName & "] " & Version.Display
                     End If
                     Versions.Add(Version)
                 End If
@@ -977,11 +980,11 @@
             If Not AutoSelectedFabricApi Then
                 AutoSelectedFabricApi = True
                 Dim Item As MyListItem = MyVirtualizingElement.TryInit(PanFabricApi.Children(0))
-                Log($"[Download] 已自动选择 Fabric API：{Item.Title}")
+                Logger.Info($"已自动选择 Fabric API：{Item.Title}")
                 FabricApi_Selected(Item, Nothing)
             End If
         Catch ex As Exception
-            Log(ex, "可视化 Fabric API 安装版本列表出错", LogLevel.Feedback)
+            Logger.Error(ex, "可视化 Fabric API 安装版本列表出错")
         End Try
     End Sub
 
@@ -1005,12 +1008,12 @@
     ''' <summary>
     ''' 判断某 OptiFabric 是否适配当前选择的原版版本。
     ''' </summary>
-    Private Function IsOptiFabricCompatible(ModFile As CompFile) As Boolean
+    Private Function IsOptiFabricCompatible(ModFile As ResourceVersion) As Boolean
         Try
             If VanillaName Is Nothing Then Return False
             Return ModFile.GameVersions.Contains(VanillaName)
         Catch ex As Exception
-            Log(ex, "判断 OptiFabric 版本适配性出错（" & VanillaName & "）")
+            Logger.Warn(ex, $"判断 OptiFabric 版本适配性出错（{VanillaName}）")
             Return False
         End Try
     End Function
@@ -1053,7 +1056,7 @@
             If DlOptiFabricLoader.State <> LoadState.Finished Then Return
             If VanillaName Is Nothing OrElse SelectedFabric Is Nothing OrElse SelectedOptiFine Is Nothing Then Return
             '获取版本列表
-            Dim Versions As New List(Of CompFile)
+            Dim Versions As New List(Of ResourceVersion)
             For Each Version In DlOptiFabricLoader.Output
                 If IsOptiFabricCompatible(Version) Then Versions.Add(Version)
             Next
@@ -1070,10 +1073,10 @@
             If AutoSelectedOptiFabric OrElse VanillaDrop >= 140 AndAlso VanillaDrop <= 150 Then Return '1.14~15 不自动选择
             AutoSelectedOptiFabric = True
             Dim Item As MyListItem = MyVirtualizingElement.TryInit(PanOptiFabric.Children(0))
-            Log($"[Download] 已自动选择 OptiFabric：{Item.Title}")
+            Logger.Info($"已自动选择 OptiFabric：{Item.Title}")
             OptiFabric_Selected(Item, Nothing)
         Catch ex As Exception
-            Log(ex, "可视化 OptiFabric 安装版本列表出错", LogLevel.Feedback)
+            Logger.Error(ex, "可视化 OptiFabric 安装版本列表出错")
         End Try
     End Sub
 
@@ -1100,7 +1103,7 @@
     Private Sub BtnStart_Click() Handles BtnStart.Click
         '确认版本隔离
         If (SelectedForge IsNot Nothing OrElse SelectedNeoForge IsNot Nothing OrElse SelectedFabric IsNot Nothing) AndAlso
-           (Settings.Get("LaunchArgumentIndieV2") = 0 OrElse Settings.Get("LaunchArgumentIndieV2") = 2) Then
+           (Settings.Get(Of Integer)("LaunchArgumentIndieV2") = 0 OrElse Settings.Get(Of Integer)("LaunchArgumentIndieV2") = 2) Then
             If MyMsgBox("你尚未开启版本隔离，多个 MC 版本会共用同一个 Mod 文件夹。" & vbCrLf &
                         "因此，游戏可能会因为读取到与当前版本不符的 Mod 而崩溃。" & vbCrLf &
                         "推荐先在 设置 → 启动选项 → 默认版本隔离 中开启版本隔离！", "版本隔离提示", "取消下载", "继续") = 1 Then

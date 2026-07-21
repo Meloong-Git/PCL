@@ -1,4 +1,4 @@
-﻿Public Class MyTextBox
+Public Class MyTextBox
     Inherits TextBox
     Implements ISettingControl
 
@@ -228,7 +228,7 @@
             '改变文本
             RaiseEvent ValidatedTextChanged(sender, e)
         Catch ex As Exception
-            Log(ex, "进行输入验证时出错", LogLevel.Critical)
+            Logger.Error(ex, "进行输入验证时出错")
         End Try
     End Sub
 
@@ -282,7 +282,7 @@
             End If
 
         Catch ex As Exception
-            Log(ex, "文本框颜色改变出错")
+            Logger.Warn(ex, "文本框颜色改变出错")
         End Try
     End Sub
     Private Sub RefreshTextColor() Handles Me.IsEnabledChanged

@@ -1,4 +1,4 @@
-﻿Public Class PageOtherHelpDetail
+Public Class PageOtherHelpDetail
     Implements IRefreshable
     Public Entry As HelpEntry
 
@@ -18,18 +18,18 @@
         If Content = "" Then Throw New Exception("帮助 xaml 文件为空")
         Try
             '修改时应同时修改 PageLaunchRight.LoadContent
-            Content = ArgumentReplace(Content, AddressOf EscapeXML)
+            Content = ArgumentReplace(Content, AddressOf StringUtils.XmlEscape)
             Do While Content.Contains("xmlns")
                 Content = Content.RegexReplace("xmlns[^""']*(""|')[^""']*(""|')", "").Replace("xmlns", "") '禁止声明命名空间
             Loop
-            Content = "<StackPanel xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:sys=""clr-namespace:System;assembly=mscorlib"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"" xmlns:local=""clr-namespace:PCL;assembly=Plain Craft Launcher 2"">" & Content & "</StackPanel>"
+            Content = "<StackPanel xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation"" xmlns:sys=""clr-namespace:System;assembly=mscorlib"" xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"" xmlns:local=""clr-namespace:PCL;assembly=Plain Craft Launcher 2"" xmlns:core=""clr-namespace:MeloongCore;assembly=MeloongCore"" xmlns:corewpf=""clr-namespace:MeloongCore.Wpf;assembly=MeloongCore.Wpf"">" & Content & "</StackPanel>"
             Me.Entry = Entry
             PanCustom.Children.Clear()
             PanCustom.Children.Add(GetObjectFromXML(Content))
             Return True
         Catch ex As Exception
-            Log("[System] 自定义信息内容：" & vbCrLf & Content)
-            Log(ex, "加载帮助 XAML 文件失败", LogLevel.Msgbox)
+            Logger.Info($"自定义信息内容：{vbCrLf}{Content}")
+            Logger.Error(ex, "加载帮助 XAML 文件失败", LogBehavior.Alert)
             Return False
         End Try
     End Function

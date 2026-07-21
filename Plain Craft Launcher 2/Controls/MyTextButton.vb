@@ -1,4 +1,4 @@
-﻿Public Class MyTextButton
+Public Class MyTextButton
     Inherits Label
 
     Public Event Click(sender As Object, e As EventArgs)
@@ -45,7 +45,7 @@
     Private Sub MyTextButton_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles Me.PreviewMouseLeftButtonUp
         If Not IsMouseDown Then Return
         IsMouseDown = False
-        Log("[Control] 按下文本按钮：" & Text)
+        Logger.Info($"按下文本按钮：{Text}")
         RaiseEvent Click(Me, Nothing)
         RaiseCustomEvent()
         e.Handled = True

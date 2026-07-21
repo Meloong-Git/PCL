@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Markup
+Imports System.Windows.Markup
 
 <ContentProperty("Inlines")>
 Public Class MyExtraTextButton
@@ -82,7 +82,7 @@ Public Class MyExtraTextButton
     '触发点击事件
     Private Sub Button_LeftMouseUp(sender As Object, e As MouseButtonEventArgs) Handles PanClick.MouseLeftButtonUp
         If Not IsLeftMouseHeld Then Return
-        Log("[Control] 按下附加图标按钮：" & Text)
+        Logger.Info($"按下附加图标按钮：{Text}")
         RaiseEvent Click(sender, e)
         e.Handled = True
         RaiseCustomEvent()
@@ -156,7 +156,7 @@ Public Class MyExtraTextButton
 
             End If
         Catch ex As Exception
-            Log(ex, "刷新附加图标按钮颜色出错")
+            Logger.Warn(ex, "刷新附加图标按钮颜色出错")
         End Try
     End Sub
 

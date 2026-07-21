@@ -1,4 +1,4 @@
-﻿Public Class CrashAnalyzer
+Public Class CrashAnalyzer
 
     '构造函数
     Private TempFolder As String
@@ -7,9 +7,9 @@
         Me.TargetInstance = TargetInstance
         '构建文件结构
         TempFolder = RequestTaskTempFolder()
-        Directory.CreateDirectory(TempFolder & "Temp\")
-        Directory.CreateDirectory(TempFolder & "Report\")
-        Log("[Crash] 崩溃分析暂存文件夹：" & TempFolder)
+        DirectoryUtils.Create(TempFolder & "Temp\")
+        DirectoryUtils.Create(TempFolder & "Report\")
+        Logger.Info($"崩溃分析暂存文件夹：{TempFolder}")
     End Sub
 
     '1：准备用于分析的 Log 文件
@@ -19,35 +19,30 @@
     ''' </summary>
     ''' <param name="LatestLog">从 PCL 捕获到的最后 200 行程序输出。</param>
     Public Sub Collect(VersionPathIndie As String, Optional LatestLog As IList(Of String) = Nothing)
-        Log("[Crash] 步骤 1：收集日志文件")
+        Logger.Info("步骤 1：收集日志文件")
 
         '简单收集可能的日志文件路径
         Dim PossibleLogs As New List(Of String)
         Try
-            Dim DirInfo As New DirectoryInfo(VersionPathIndie & "crash-reports\")
-            If DirInfo.Exists Then
-                For Each File In DirInfo.EnumerateFiles
-                    PossibleLogs.Add(File.FullName)
-                Next
-            End If
+            PossibleLogs.AddRange(DirectoryUtils.EnumerateFiles(VersionPathIndie & "crash-reports\", True))
         Catch ex As Exception
-            Log(ex, "收集 Minecraft 崩溃日志文件夹下的日志失败")
+            Logger.Warn(ex, "收集 Minecraft 崩溃日志文件夹下的日志失败")
         End Try
         Try
-            For Each File In New DirectoryInfo(VersionPathIndie).Parent.Parent.EnumerateFiles
+            For Each File In DirectoryUtils.GetInfo(VersionPathIndie).Parent.Parent.EnumerateFiles
                 If If(File.Extension, "") <> ".log" Then Continue For
-                PossibleLogs.Add(File.FullName)
+                PossibleLogs.Add(PathUtils.RemoveExtendedPrefix(File.FullName))
             Next
         Catch ex As Exception
-            Log(ex, "收集 Minecraft 主文件夹下的日志失败")
+            Logger.Warn(ex, "收集 Minecraft 主文件夹下的日志失败")
         End Try
         Try
-            For Each File In New DirectoryInfo(VersionPathIndie).EnumerateFiles
+            For Each File In DirectoryUtils.GetInfo(VersionPathIndie).EnumerateFiles
                 If If(File.Extension, "") <> ".log" Then Continue For
-                PossibleLogs.Add(File.FullName)
+                PossibleLogs.Add(PathUtils.RemoveExtendedPrefix(File.FullName))
             Next
         Catch ex As Exception
-            Log(ex, "收集 Minecraft 隔离文件夹下的日志失败")
+            Logger.Warn(ex, "收集 Minecraft 隔离文件夹下的日志失败")
         End Try
         PossibleLogs.Add(VersionPathIndie & "logs\latest.log") 'Minecraft 日志
         PossibleLogs.Add(VersionPathIndie & "logs\debug.log") 'Minecraft Debug 日志
@@ -57,74 +52,75 @@
         Dim RightLogs As New List(Of String)
         For Each LogFile In PossibleLogs
             Try
-                Dim Info As New FileInfo(LogFile)
+                Dim Info = FileUtils.GetInfo(LogFile)
                 If Not Info.Exists Then Continue For
                 Dim Time = Math.Abs((Info.LastWriteTime - Date.Now).TotalMinutes)
                 If Time < 3 AndAlso Info.Length > 0 Then
                     RightLogs.Add(LogFile)
-                    Log("[Crash] 可能可用的日志文件：" & LogFile & "（" & Math.Round(Time, 1) & " 分钟）")
+                    Logger.Info($"可能可用的日志文件：{LogFile}（{Math.Round(Time, 1)} 分钟）")
                 End If
             Catch ex As Exception
-                Log(ex, "确认崩溃日志时间失败（" & LogFile & "）")
+                Logger.Warn(ex, $"确认崩溃日志时间失败（{LogFile}）")
             End Try
         Next
-        If Not RightLogs.Any() Then Log("[Crash] 未发现可能可用的日志文件")
+        If Not RightLogs.Any() Then Logger.Info("未发现可能可用的日志文件")
 
         '将可能可用的日志文件导出
         For Each FilePath In RightLogs
             Try
-                AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(FilePath, ReadFile(FilePath).Split(vbCrLf.ToCharArray)))
+                AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(FilePath, FileUtils.ReadAsLines(FilePath)))
             Catch ex As Exception
-                Log(ex, "读取可能的崩溃日志文件失败（" & FilePath & "）")
+                Logger.Warn(ex, $"读取可能的崩溃日志文件失败（{FilePath}）")
             End Try
         Next
         If LatestLog IsNot Nothing AndAlso LatestLog.Any Then
             Dim RawOutput As String = LatestLog.Join(vbCrLf)
-            Log("[Crash] 以下为游戏输出的最后一段内容：" & vbCrLf & RawOutput)
-            WriteFile(TempFolder & "RawOutput.log", RawOutput)
+            Logger.Info($"以下为游戏输出的最后一段内容：{vbCrLf}{RawOutput}")
+            FileUtils.Write(TempFolder & "RawOutput.log", RawOutput)
             AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(TempFolder & "RawOutput.log", LatestLog.ToArray))
             LatestLog.Clear()
         End If
 
-        Log("[Crash] 步骤 1：收集日志文件完成，收集到 " & AnalyzeRawFiles.Count & " 个文件")
+        Logger.Info($"步骤 1：收集日志文件完成，收集到 {AnalyzeRawFiles.Count} 个文件")
     End Sub
     ''' <summary>
     ''' 从文件路径直接导入日志文件或崩溃报告压缩包。
     ''' </summary>
     Public Sub Import(FilePath As String)
-        Log("[Crash] 步骤 1：自主导入日志文件")
+        Logger.Info("步骤 1：自主导入日志文件")
 
         '尝试视作压缩包解压
         Try
-            Dim Info As New FileInfo(FilePath)
+            Dim Info = FileUtils.GetInfo(FilePath)
             If Info.Exists AndAlso Info.Length > 0 AndAlso Not FilePath.EndsWithF(".jar", True) Then
-                ExtractCompressedFile(FilePath, TempFolder & "Temp\")
-                Log("[Crash] 已解压导入的日志文件：" & FilePath)
+                FileUtils.ExtractToDirectory(FilePath, TempFolder & "Temp\")
+                Logger.Info($"已解压导入的日志文件：{FilePath}")
                 GoTo Extracted
             End If
         Catch
         End Try
         '并非压缩包
-        CopyFile(FilePath, TempFolder & "Temp\" & GetFileNameFromPath(FilePath))
-        Log("[Crash] 已复制导入的日志文件：" & FilePath)
+        FileUtils.Copy(FilePath, TempFolder & "Temp\" & PathUtils.GetLastPart(FilePath))
+        Logger.Info($"已复制导入的日志文件：{FilePath}")
 Extracted:
 
         '导入其中的日志文件
-        For Each TargetFile As FileInfo In New DirectoryInfo(TempFolder & "Temp\").EnumerateFiles.ToList()
+        For Each TargetFile As FileInfo In DirectoryUtils.GetInfo(TempFolder & "Temp\").EnumerateFiles
             Try
                 If Not TargetFile.Exists OrElse TargetFile.Length = 0 Then Continue For
                 Dim Ext As String = TargetFile.Extension.Lower
                 If Ext = ".log" OrElse Ext = ".txt" Then
-                    AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(TargetFile.FullName, ReadFile(TargetFile.FullName).Split(vbCrLf.ToCharArray)))
+                    AnalyzeRawFiles.Add(New KeyValuePair(Of String, String())(
+                            PathUtils.RemoveExtendedPrefix(TargetFile.FullName), FileUtils.ReadAsLines(TargetFile.FullName)))
                 Else
-                    File.Delete(TargetFile.FullName)
+                    FileUtils.Delete(TargetFile.FullName)
                 End If
             Catch ex As Exception
-                Log(ex, "导入单个日志文件失败")
+                Logger.Warn(ex, "导入单个日志文件失败")
             End Try
         Next
 
-        Log("[Crash] 步骤 1：自主导入日志文件，收集到 " & AnalyzeRawFiles.Count & " 个文件")
+        Logger.Info($"步骤 1：自主导入日志文件，收集到 {AnalyzeRawFiles.Count} 个文件")
     End Sub
 
     '2：确认实际用于分析的 Log 文本
@@ -141,25 +137,25 @@ Extracted:
     ''' 返回是否有足够信息可用于分析。
     ''' </summary>
     Public Function Prepare() As Boolean
-        Log("[Crash] 步骤 2：准备日志文本")
+        Logger.Info("步骤 2：准备日志文本")
 
         '对日志文件进行分类
         DirectFile = Nothing
         Dim AllFiles As New List(Of KeyValuePair(Of AnalyzeFileType, KeyValuePair(Of String, String())))
         For Each LogFile In AnalyzeRawFiles
-            Dim MatchName As String = GetFileNameFromPath(LogFile.Key).Lower
+            Dim MatchName As String = PathUtils.GetLastPart(LogFile.Key).Lower
             Dim TargetType As AnalyzeFileType
             If MatchName.StartsWithF("hs_err") Then
                 TargetType = AnalyzeFileType.HsErr
-                DirectFile = LogFile
+                If DirectFile Is Nothing Then DirectFile = LogFile
             ElseIf MatchName.StartsWithF("crash-") Then
                 TargetType = AnalyzeFileType.CrashReport
-                DirectFile = LogFile
+                If DirectFile Is Nothing Then DirectFile = LogFile
             ElseIf MatchName = "latest.log" OrElse MatchName = "latest log.txt" OrElse
                    MatchName = "debug.log" OrElse MatchName = "debug log.txt" OrElse
                    MatchName = "游戏崩溃前的输出.txt" OrElse MatchName = "rawoutput.log" Then
                 TargetType = AnalyzeFileType.MinecraftLog
-                If DirectFile Is Nothing Then DirectFile = LogFile
+                DirectFile = LogFile
             ElseIf MatchName = "启动器日志.txt" OrElse MatchName = "PCL2 启动器日志.txt" OrElse MatchName = "PCL 启动器日志.txt" OrElse MatchName = "log1.txt" Then
                 If LogFile.Value.Any(Function(s) s.Contains("以下为游戏输出的最后一段内容")) Then
                     TargetType = AnalyzeFileType.MinecraftLog
@@ -172,20 +168,20 @@ Extracted:
             ElseIf MatchName.EndsWithF(".txt", True) Then
                 TargetType = AnalyzeFileType.ExtraReportFile
             Else
-                Log("[Crash] " & MatchName & " 分类为 Ignore")
+                Logger.Info($"{MatchName} 分类为 Ignore")
                 Continue For
             End If
             If LogFile.Value.Any Then
                 AllFiles.Add(New KeyValuePair(Of AnalyzeFileType, KeyValuePair(Of String, String()))(TargetType, LogFile))
-                Log("[Crash] " & MatchName & " 分类为 " & GetStringFromEnum(TargetType))
+                Logger.Info($"{MatchName} 分类为 {TargetType}")
             Else
-                Log("[Crash] " & MatchName & " 由于内容为空跳过")
+                Logger.Info($"{MatchName} 由于内容为空跳过")
             End If
         Next
 
         '若只有额外日志，则将它们视作 Minecraft 日志
         If AllFiles.Any() AndAlso AllFiles.All(Function(p) p.Key = AnalyzeFileType.ExtraLogFile) Then
-            Log("[Crash] 由于仅发现了额外日志，将它们视作 Minecraft 日志进行分析")
+            Logger.Info("由于仅发现了额外日志，将它们视作 Minecraft 日志进行分析")
             AllFiles = AllFiles.Select(Function(p) New KeyValuePair(Of AnalyzeFileType, KeyValuePair(Of String, String()))(AnalyzeFileType.MinecraftLog, p.Value)).ToList
         End If
 
@@ -205,9 +201,9 @@ Extracted:
                         Dim DatedFiles As New SortedList(Of Date, KeyValuePair(Of String, String()))()
                         For Each File In SelectedFiles
                             Try
-                                DatedFiles.Add(New FileInfo(File.Key).LastWriteTime, File)
+                                DatedFiles.Add(FileUtils.GetInfo(File.Key).LastWriteTime, File)
                             Catch ex As Exception
-                                Log(ex, "获取日志文件修改时间失败")
+                                Logger.Warn(ex, "获取日志文件修改时间失败")
                                 DatedFiles.Add(New Date(1900, 1, 1), File)
                             End Try
                         Next
@@ -216,12 +212,12 @@ Extracted:
                         OutputFiles.Add(NewestFile.Key)
                         If SelectType = AnalyzeFileType.HsErr Then
                             LogHs = GetHeadTailLines(NewestFile.Value, 200, 100)
-                            Log("[Crash] 输出报告：" & NewestFile.Key & "，作为虚拟机错误信息")
-                            Log("[Crash] 导入分析：" & NewestFile.Key & "，作为虚拟机错误信息")
+                            Logger.Info($"输出报告：{NewestFile.Key}，作为虚拟机错误信息")
+                            Logger.Info($"导入分析：{NewestFile.Key}，作为虚拟机错误信息")
                         Else
                             LogCrash = GetHeadTailLines(NewestFile.Value, 300, 700)
-                            Log("[Crash] 输出报告：" & NewestFile.Key & "，作为 Minecraft 崩溃报告")
-                            Log("[Crash] 导入分析：" & NewestFile.Key & "，作为 Minecraft 崩溃报告")
+                            Logger.Info($"输出报告：{NewestFile.Key}，作为 Minecraft 崩溃报告")
+                            Logger.Info($"导入分析：{NewestFile.Key}，作为 Minecraft 崩溃报告")
                         End If
                     Case AnalyzeFileType.MinecraftLog
                         LogMc = ""
@@ -229,9 +225,9 @@ Extracted:
                         '创建文件名词典
                         Dim FileNameDict As New Dictionary(Of String, KeyValuePair(Of String, String()))
                         For Each SelectedFile In SelectedFiles
-                            FileNameDict(GetFileNameFromPath(SelectedFile.Key).Lower) = SelectedFile
+                            FileNameDict(PathUtils.GetLastPart(SelectedFile.Key).Lower) = SelectedFile
                             OutputFiles.Add(SelectedFile.Key)
-                            Log("[Crash] 输出报告：" & SelectedFile.Key & "，作为 Minecraft 或启动器日志")
+                            Logger.Info($"输出报告：{SelectedFile.Key}，作为 Minecraft 或启动器日志")
                         Next
                         '选择一份最佳的来自启动器的游戏日志
                         For Each FileName As String In {"rawoutput.log", "启动器日志.txt", "log1.txt", "游戏崩溃前的输出.txt", "PCL2 启动器日志.txt", "PCL 启动器日志.txt"}
@@ -244,13 +240,13 @@ Extracted:
                                     LogMc += Line & vbLf
                                 ElseIf Line.Contains("以下为游戏输出的最后一段内容") Then
                                     HasLauncherMark = True
-                                    Log("[Crash] 找到 PCL 输出的游戏实时日志头")
+                                    Logger.Info("找到 PCL 输出的游戏实时日志头")
                                 End If
                             Next
                             '导入后 500 行
                             If Not HasLauncherMark Then LogMc += GetHeadTailLines(CurrentLog.Value, 0, 500)
                             LogMc = LogMc.TrimEnd(vbCrLf.ToCharArray)
-                            Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为启动器日志")
+                            Logger.Info($"导入分析：{CurrentLog.Key}，作为启动器日志")
                             Exit For
                         Next
                         '选择一份最佳的 Minecraft Log
@@ -258,7 +254,7 @@ Extracted:
                             If Not FileNameDict.ContainsKey(FileName) Then Continue For
                             Dim CurrentLog = FileNameDict(FileName)
                             LogMc += GetHeadTailLines(CurrentLog.Value, 1500, 500)
-                            Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为 Minecraft 日志")
+                            Logger.Info($"导入分析：{CurrentLog.Key}，作为 Minecraft 日志")
                             Exit For
                         Next
                         '查找 Debug Log
@@ -266,7 +262,7 @@ Extracted:
                             If Not FileNameDict.ContainsKey(FileName) Then Continue For
                             Dim CurrentLog = FileNameDict(FileName)
                             LogMcDebug += GetHeadTailLines(CurrentLog.Value, 1000, 0)
-                            Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为 Minecraft Debug 日志")
+                            Logger.Info($"导入分析：{CurrentLog.Key}，作为 Minecraft Debug 日志")
                             Exit For
                         Next
                         '兜底
@@ -276,7 +272,7 @@ Extracted:
                             ElseIf FileNameDict.Any() Then '如果都没有找到，则使用第一个文件
                                 Dim CurrentLog = FileNameDict.First.Value
                                 LogMc += GetHeadTailLines(CurrentLog.Value, 1500, 500)
-                                Log("[Crash] 导入分析：" & CurrentLog.Key & "，作为兜底日志")
+                                Logger.Info($"导入分析：{CurrentLog.Key}，作为兜底日志")
                             Else
                                 LogMc = Nothing
                                 Throw New Exception("无法找到匹配的 Minecraft Log")
@@ -287,21 +283,22 @@ Extracted:
                         '全部丢过去
                         For Each SelectedFile In SelectedFiles
                             OutputFiles.Add(SelectedFile.Key)
-                            Log("[Crash] 输出报告：" & SelectedFile.Key & "，不用作分析")
+                            Logger.Info($"输出报告：{SelectedFile.Key}，不用作分析")
                         Next
                 End Select
             Catch ex As Exception
-                Log(ex, "分类处理日志文件时出错")
+                Logger.Warn(ex, "分类处理日志文件时出错")
             End Try
         Next
 
         '结束
-        Prepare = LogMc IsNot Nothing OrElse LogHs IsNot Nothing OrElse LogCrash IsNot Nothing
-        If Prepare Then
-            Log(("[Crash] 步骤 2：准备日志文本完成，找到" & If(LogMc Is Nothing, "", "游戏日志、") & If(LogMcDebug Is Nothing, "", "游戏 Debug 日志、") & If(LogHs Is Nothing, "", "虚拟机日志、") & If(LogCrash Is Nothing, "", "崩溃日志、")).TrimEnd("、") & "用作分析")
+        Dim Result = LogMc IsNot Nothing OrElse LogHs IsNot Nothing OrElse LogCrash IsNot Nothing
+        If Result Then
+            Logger.Info($"{("[Crash] 步骤 2：准备日志文本完成，找到" & If(LogMc Is Nothing, "", "游戏日志、") & If(LogMcDebug Is Nothing, "", "游戏 Debug 日志、") & If(LogHs Is Nothing, "", "虚拟机日志、") & If(LogCrash Is Nothing, "", "崩溃日志、")).TrimEnd("、")}用作分析")
         Else
-            Log("[Crash] 步骤 2：准备日志文本完成，没有任何可供分析的日志")
+            Logger.Info("步骤 2：准备日志文本完成，没有任何可供分析的日志")
         End If
+        Return Result
     End Function
     ''' <summary>
     ''' 输出字符串的前后某些行，并统一行尾为 vbLf (正则 \n)、删除空行和重复行。
@@ -392,7 +389,7 @@ Extracted:
     ''' 根据 AnalyzeLogs 与可能的版本信息分析崩溃原因。
     ''' </summary>
     Public Sub Analyze()
-        Log("[Crash] 步骤 3：分析崩溃原因")
+        Logger.Info("步骤 3：分析崩溃原因")
         LogAll = If(LogMc, If(LogMcDebug, "")) & If(LogHs, "") & If(LogCrash, "")
 
         '1. 精准日志匹配，中/高优先级
@@ -406,21 +403,21 @@ Extracted:
             Dim Keywords As New List(Of String)
             '崩溃日志
             If LogCrash IsNot Nothing Then
-                Log("[Crash] 开始进行崩溃日志堆栈分析")
+                Logger.Info("开始进行崩溃日志堆栈分析")
                 Keywords.AddRange(AnalyzeStackKeyword(LogCrash.BeforeFirst("System Details")))
             End If
             'Minecraft 日志
             If LogMc IsNot Nothing Then
-                Dim Fatals As List(Of String) = RegexSearch(LogMc, "/FATAL] .+?(?=[\n]+\[)")
+                Dim Fatals As List(Of String) = LogMc.RegexSearch("/FATAL] .+?(?=[\n]+\[)").ToList
                 If LogMc.Contains("Unreported exception thrown!") Then Fatals.Add(LogMc.Between("Unreported exception thrown!", "at oolloo.jlw.Wrapper"))
-                Log("[Crash] 开始进行 Minecraft 日志堆栈分析，发现 " & Fatals.Count & " 个报错项")
+                Logger.Info($"开始进行 Minecraft 日志堆栈分析，发现 {Fatals.Count} 个报错项")
                 For Each Fatal In Fatals
                     Keywords.AddRange(AnalyzeStackKeyword(Fatal))
                 Next
             End If
             '虚拟机日志
             If LogHs IsNot Nothing Then
-                Log("[Crash] 开始进行虚拟机堆栈分析")
+                Logger.Info("开始进行虚拟机堆栈分析")
                 Dim StackLogs As String = LogHs.Between("T H R E A D", "Registers:")
                 Keywords.AddRange(AnalyzeStackKeyword(StackLogs))
             End If
@@ -435,7 +432,7 @@ Extracted:
                 GoTo Done
             End If
         Else
-            Log("[Crash] 可能并未安装 Mod，不进行堆栈分析")
+            Logger.Info("可能并未安装 Mod，不进行堆栈分析")
         End If
 
         '3. 精准日志匹配，低优先级
@@ -444,27 +441,27 @@ Extracted:
         '输出到日志
 Done:
         If Not CrashReasons.Any() Then
-            Log("[Crash] 步骤 3：分析崩溃原因完成，未找到可能的原因")
+            Logger.Info("步骤 3：分析崩溃原因完成，未找到可能的原因")
         Else
-            Log("[Crash] 步骤 3：分析崩溃原因完成，找到 " & CrashReasons.Count & " 条可能的原因")
+            Logger.Info($"步骤 3：分析崩溃原因完成，找到 {CrashReasons.Count} 条可能的原因")
             For Each Reason In CrashReasons
-                Log("[Crash]  - " & GetStringFromEnum(Reason.Key) & If(Reason.Value.Any, "（" & Reason.Value.Join("；"c) & "）", ""))
+                Logger.Info($"- {Reason.Key}{If(Reason.Value.Any, "（" & Reason.Value.Join("；"c) & "）", "")}")
             Next
         End If
     End Sub
     ''' <summary>
     ''' 增加一个可能的崩溃原因。
     ''' </summary>
-    Private Sub AppendReason(Reason As CrashReason, Optional Additional As ICollection(Of String) = Nothing)
+    Private Sub AppendReason(Reason As CrashReason, Optional Additional As IEnumerable(Of String) = Nothing)
         If CrashReasons.ContainsKey(Reason) Then
             If Additional IsNot Nothing Then
                 CrashReasons(Reason).AddRange(Additional)
                 CrashReasons(Reason) = CrashReasons(Reason).Distinct.ToList
             End If
         Else
-            CrashReasons.Add(Reason, New List(Of String)(If(Additional, {})))
+            CrashReasons.Add(Reason, New List(Of String)(If(Additional, {}).ToList))
         End If
-        Log("[Crash] 可能的崩溃原因：" & GetStringFromEnum(Reason) & If(Additional IsNot Nothing AndAlso Additional.Any, "（" & Additional.Join("；"c) & "）", ""))
+        Logger.Info($"可能的崩溃原因：{Reason}{If(Additional IsNot Nothing AndAlso Additional.Any, "（" & Additional.Join("；"c) & "）", "")}")
     End Sub
     Private Sub AppendReason(Reason As CrashReason, Additional As String)
         AppendReason(Reason, If(String.IsNullOrEmpty(Additional), Nothing, New List(Of String) From {Additional}))
@@ -485,7 +482,7 @@ Done:
         '崩溃报告分析，高优先级
         If LogCrash IsNot Nothing Then
             If LogCrash.Contains("Unable to make protected final java.lang.Class java.lang.ClassLoader.defineClass") Then AppendReason(CrashReason.Java版本过高)
-            If LogCrash.Contains("Failed loading config file ") Then AppendReason(CrashReason.Mod配置文件导致游戏崩溃, {TryAnalyzeModName(If(RegexSeek(LogCrash, "(?<=Failed loading config file .+ for modid )[^\n]+"), "").TrimEnd(vbCrLf)).First, If(RegexSeek(LogCrash, "(?<=Failed loading config file ).+(?= of type)"), "").TrimEnd(vbCrLf)}) '#7071
+            If LogCrash.Contains("Failed loading config file ") Then AppendReason(CrashReason.Mod配置文件导致游戏崩溃, {TryAnalyzeModName(If(LogCrash.RegexSeek("(?<=Failed loading config file .+ for modid )[^\n]+"), "").TrimEnd(vbCrLf)).First, If(LogCrash.RegexSeek("(?<=Failed loading config file ).+(?= of type)"), "").TrimEnd(vbCrLf)}) '#7071
         End If
 
         '游戏日志分析
@@ -495,7 +492,6 @@ Done:
             If LogMc.Contains("The driver does not appear to support OpenGL") Then AppendReason(CrashReason.显卡不支持OpenGL)
             If LogMc.Contains("java.lang.ClassCastException: java.base/jdk") Then AppendReason(CrashReason.使用JDK)
             If LogMc.Contains("java.lang.ClassCastException: class jdk.") Then AppendReason(CrashReason.使用JDK)
-            If LogMc.Contains("TRANSFORMER/net.optifine/net.optifine.reflect.Reflector.<clinit>(Reflector.java") Then AppendReason(CrashReason.OptiFine与Forge不兼容)
             If LogMc.Contains("java.lang.NoSuchMethodError: 'void net.minecraft.client.renderer.texture.SpriteContents.<init>") Then AppendReason(CrashReason.OptiFine与Forge不兼容)
             If LogMc.Contains("java.lang.NoSuchMethodError: 'java.lang.String com.mojang.blaze3d.systems.RenderSystem.getBackendDescription") Then AppendReason(CrashReason.OptiFine与Forge不兼容)
             If LogMc.Contains("java.lang.NoSuchMethodError: 'void net.minecraft.client.renderer.block.model.BakedQuad.<init>") Then AppendReason(CrashReason.OptiFine与Forge不兼容)
@@ -515,7 +511,7 @@ Done:
             If LogMc.Contains("java.lang.RuntimeException: Shaders Mod detected. Please remove it, OptiFine has built-in support for shaders.") Then AppendReason(CrashReason.ShadersMod与OptiFine同时安装)
             If LogMc.Contains("java.lang.NoSuchMethodError: sun.security.util.ManifestEntryVerifier") OrElse LogMc.Contains("java.lang.NoSuchMethodError: 'void sun.security.util.ManifestEntryVerifier") Then AppendReason(CrashReason.低版本Forge与高版本Java不兼容)
             If LogMc.Contains("1282: Invalid operation") Then AppendReason(CrashReason.光影或资源包导致OpenGL1282错误)
-            If LogMc.Contains("signer information does not match signer information of other classes in the same package") Then AppendReason(CrashReason.文件或内容校验失败, If(RegexSeek(LogMc, "(?<=class "")[^']+(?=""'s signer information)"), "").TrimEnd(vbCrLf))
+            If LogMc.Contains("signer information does not match signer information of other classes in the same package") Then AppendReason(CrashReason.文件或内容校验失败, If(LogMc.RegexSeek("(?<=class "")[^']+(?=""'s signer information)"), "").TrimEnd(vbCrLf))
             If LogMc.Contains("Maybe try a lower resolution resourcepack?") Then AppendReason(CrashReason.材质过大或显卡配置不足)
             If LogMc.Contains("java.lang.NoSuchMethodError: net.minecraft.world.server.ChunkManager$ProxyTicketManager.shouldForceTicks(J)Z") AndAlso LogMc.Contains("OptiFine") Then AppendReason(CrashReason.OptiFine导致无法加载世界)
             If LogMc.Contains("Unsupported class file major version") Then AppendReason(CrashReason.Java版本不兼容)
@@ -536,18 +532,18 @@ Done:
                 End If
             End If
             '确定的 Mod 导致崩溃
-            If LogMc.Contains("Caught exception from ") Then AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(RegexSeek(LogMc, "(?<=Caught exception from )[^\n]+?")?.TrimEnd((vbCrLf & " ").ToCharArray)))
+            If LogMc.Contains("Caught exception from ") Then AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(LogMc.RegexSeek("(?<=Caught exception from )[^\n]+?")?.TrimEnd((vbCrLf & " ").ToCharArray)))
             'Mod 重复 / 前置问题
-            If LogMc.Contains("DuplicateModsFoundException") Then AppendReason(CrashReason.Mod重复安装, RegexSearch(LogMc, "(?<=\n\t[\w]+ : [A-Z]:[^\n]+(/|\\))[^/\\\n]+?.jar", RegularExpressions.RegexOptions.IgnoreCase))
-            If LogMc.Contains("Found a duplicate mod") Then AppendReason(CrashReason.Mod重复安装, RegexSearch(If(RegexSeek(LogMc, "Found a duplicate mod[^\n]+"), ""), "[^\\/]+.jar", RegularExpressions.RegexOptions.IgnoreCase))
-            If LogMc.Contains("Found duplicate mods") Then AppendReason(CrashReason.Mod重复安装, RegexSearch(LogMc, "(?<=Mod ID: ')\w+?(?=' from mod files:)").Distinct.ToList)
-            If LogMc.Contains("ModResolutionException: Duplicate") Then AppendReason(CrashReason.Mod重复安装, RegexSearch(If(RegexSeek(LogMc, "ModResolutionException: Duplicate[^\n]+"), ""), "[^\\/]+.jar", RegularExpressions.RegexOptions.IgnoreCase))
+            If LogMc.Contains("DuplicateModsFoundException") Then AppendReason(CrashReason.Mod重复安装, LogMc.RegexSearch("(?<=\n\t[\w]+ : [A-Z]:[^\n]+(/|\\))[^/\\\n]+?.jar", RegularExpressions.RegexOptions.IgnoreCase))
+            If LogMc.Contains("Found a duplicate mod") Then AppendReason(CrashReason.Mod重复安装, If(LogMc.RegexSeek("Found a duplicate mod[^\n]+"), "").RegexSearch("[^\\/]+.jar", RegularExpressions.RegexOptions.IgnoreCase))
+            If LogMc.Contains("Found duplicate mods") Then AppendReason(CrashReason.Mod重复安装, LogMc.RegexSearch("(?<=Mod ID: ')\w+?(?=' from mod files:)").Distinct.ToList)
+            If LogMc.Contains("ModResolutionException: Duplicate") Then AppendReason(CrashReason.Mod重复安装, If(LogMc.RegexSeek("ModResolutionException: Duplicate[^\n]+"), "").RegexSearch("[^\\/]+.jar", RegularExpressions.RegexOptions.IgnoreCase))
             If LogMc.Contains("Incompatible mods found!") Then '#5006, #5115
-                AppendReason(CrashReason.Mod互不兼容, If(RegexSeek(LogMc, "(?<=Incompatible mods found![\s\S]+: )[\s\S]+?(?=\tat )"), "").BeforeFirst("更多信息：").Replace("Some of your mods are incompatible with the game or each other!", "").Trim((vbCrLf & " ").ToCharArray))
+                AppendReason(CrashReason.Mod互不兼容, If(LogMc.RegexSeek("(?<=Incompatible mods found![\s\S]+: )[\s\S]+?(?=\tat )"), "").BeforeFirst("更多信息：").Replace("Some of your mods are incompatible with the game or each other!", "").Trim((vbCrLf & " ").ToCharArray))
             End If
             If LogMc.Contains("Missing or unsupported mandatory dependencies:") Then
                 AppendReason(CrashReason.Mod缺少前置或MC版本错误,
-                    RegexSearch(LogMc, "(?<=Missing or unsupported mandatory dependencies:)([\n\r]+\t(.*))+", RegularExpressions.RegexOptions.IgnoreCase).
+                    LogMc.RegexSearch("(?<=Missing or unsupported mandatory dependencies:)([\n\r]+\t(.*))+", RegularExpressions.RegexOptions.IgnoreCase).
                     Select(Function(s) s.Trim((vbCrLf & vbTab & " ").ToCharArray)).Distinct().ToList())
             End If
         End If
@@ -569,19 +565,19 @@ Done:
             If LogCrash.Contains("java.lang.OutOfMemoryError") Then AppendReason(CrashReason.内存不足)
             If LogCrash.Contains("Pixel format not accelerated") Then AppendReason(CrashReason.显卡驱动不支持导致无法设置像素格式)
             If LogCrash.Contains("Manually triggered debug crash") Then AppendReason(CrashReason.玩家手动触发调试崩溃)
-            If LogCrash.Contains("has mods that were not found") AndAlso RegexCheck(LogCrash, "The Mod File [^\n]+optifine\\OptiFine[^\n]+ has mods that were not found") Then AppendReason(CrashReason.OptiFine与Forge不兼容)
+            If LogCrash.Contains("has mods that were not found") AndAlso LogCrash.RegexCheck("The Mod File [^\n]+optifine\\OptiFine[^\n]+ has mods that were not found") Then AppendReason(CrashReason.OptiFine与Forge不兼容)
             'Mod 导致的崩溃
             If LogCrash.Contains("-- MOD ") Then
                 Dim LogCrashMod As String = LogCrash.Between("-- MOD ", "Failure message:")
-                If LogCrashMod.ContainsF(".jar", True) Then
-                    AppendReason(CrashReason.确定Mod导致游戏崩溃, If(RegexSeek(LogCrashMod, "(?<=Mod File: ).+"), "").TrimEnd((vbCrLf & " ").ToCharArray))
+                If LogCrashMod.ContainsIgnoreCase(".jar") Then
+                    AppendReason(CrashReason.确定Mod导致游戏崩溃, If(LogCrashMod.RegexSeek("(?<=Mod File: ).+"), "").TrimEnd((vbCrLf & " ").ToCharArray))
                 Else
-                    AppendReason(CrashReason.Mod加载器报错, If(RegexSeek(LogCrash, "(?<=Failure message: )[\w\W]+?(?=\tMod)"), "").Replace(vbTab, " ").TrimEnd((vbCrLf & " ").ToCharArray))
+                    AppendReason(CrashReason.Mod加载器报错, If(LogCrash.RegexSeek("(?<=Failure message: )[\w\W]+?(?=\tMod)"), "").Replace(vbTab, " ").TrimEnd((vbCrLf & " ").ToCharArray))
                 End If
             End If
-            If LogCrash.Contains("Multiple entries with same key: ") Then AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(If(RegexSeek(LogCrash, "(?<=Multiple entries with same key: )[^=]+"), "").TrimEnd((vbCrLf & " ").ToCharArray)))
-            If LogCrash.Contains("LoaderExceptionModCrash: Caught exception from ") Then AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(If(RegexSeek(LogCrash, "(?<=LoaderExceptionModCrash: Caught exception from )[^\n]+"), "").TrimEnd((vbCrLf & " ").ToCharArray)))
-            If LogCrash.Contains("Failed loading config file ") Then AppendReason(CrashReason.Mod配置文件导致游戏崩溃, {TryAnalyzeModName(If(RegexSeek(LogCrash, "(?<=Failed loading config file .+ for modid )[^\n]+"), "").TrimEnd(vbCrLf)).First, If(RegexSeek(LogCrash, "(?<=Failed loading config file ).+(?= of type)"), "").TrimEnd(vbCrLf)})
+            If LogCrash.Contains("Multiple entries with same key: ") Then AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(If(LogCrash.RegexSeek("(?<=Multiple entries with same key: )[^=]+"), "").TrimEnd((vbCrLf & " ").ToCharArray)))
+            If LogCrash.Contains("LoaderExceptionModCrash: Caught exception from ") Then AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(If(LogCrash.RegexSeek("(?<=LoaderExceptionModCrash: Caught exception from )[^\n]+"), "").TrimEnd((vbCrLf & " ").ToCharArray)))
+            If LogCrash.Contains("Failed loading config file ") Then AppendReason(CrashReason.Mod配置文件导致游戏崩溃, {TryAnalyzeModName(If(LogCrash.RegexSeek("(?<=Failed loading config file .+ for modid )[^\n]+"), "").TrimEnd(vbCrLf)).First, If(LogCrash.RegexSeek("(?<=Failed loading config file ).+(?= of type)"), "").TrimEnd(vbCrLf)})
         End If
 
     End Sub
@@ -600,14 +596,14 @@ Done:
                 LogText.Contains("mixin.injection.throwables.") OrElse LogText.Contains(".json] FAILED during )")
             If Not IsMixin Then Return False
             'Mod 名称匹配
-            Dim ModName As String = RegexSeek(LogText, "(?<=from mod )[^.\/ ]+(?=\] from)")
-            If ModName Is Nothing Then ModName = RegexSeek(LogText, "(?<=for mod )[^.\/ ]+(?= failed)")
+            Dim ModName As String = LogText.RegexSeek("(?<=from mod )[^.\/ ]+(?=\] from)")
+            If ModName Is Nothing Then ModName = LogText.RegexSeek("(?<=for mod )[^.\/ ]+(?= failed)")
             If ModName IsNot Nothing Then
                 AppendReason(CrashReason.ModMixin失败, TryAnalyzeModName(ModName.TrimEnd((vbCrLf & " ").ToCharArray)))
                 Return True
             End If
             'JSON 名称匹配
-            For Each JsonName In RegexSearch(LogText, "(?<=^[^\t]+[ \[{(])[^ \[{(]+\.[^ ]+(?=\.json)", RegularExpressions.RegexOptions.Multiline)
+            For Each JsonName In LogText.RegexSearch("(?<=^[^\t]+[ \[{(])[^ \[{(]+\.[^ ]+(?=\.json)", RegularExpressions.RegexOptions.Multiline)
                 AppendReason(CrashReason.ModMixin失败,
                              TryAnalyzeModName(JsonName.Replace("mixins", "mixin").Replace(".mixin", "").Replace("mixin.", "")))
                 Return True
@@ -622,12 +618,12 @@ Done:
             'Mixin 崩溃
             Dim IsMixin As Boolean = MixinAnalyze(LogMc)
             '常规信息
-            If LogMc.Contains("An exception was thrown, the game will display an error screen and halt.") Then AppendReason(CrashReason.Forge报错, RegexSeek(LogMc, "(?<=the game will display an error screen and halt.[\n\r]+[^\n]+?Exception: )[\s\S]+?(?=\n\tat)")?.Trim(vbCrLf))
-            If LogMc.Contains("A potential solution has been determined:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, RegexSearch(If(RegexSeek(LogMc, "(?<=A potential solution has been determined:\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+").Join(vbLf))
-            If LogMc.Contains("A potential solution has been determined, this may resolve your problem:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, RegexSearch(If(RegexSeek(LogMc, "(?<=A potential solution has been determined, this may resolve your problem:\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+").Join(vbLf))
-            If LogMc.Contains("确定了一种可能的解决方法，这样做可能会解决你的问题：") Then AppendReason(CrashReason.Fabric报错并给出解决方案, RegexSearch(If(RegexSeek(LogMc, "(?<=确定了一种可能的解决方法，这样做可能会解决你的问题：\n)(\s+ - [^\n]+\n)+"), ""), "(?<=\s+)[^\n]+").Join(vbLf))
+            If LogMc.Contains("An exception was thrown, the game will display an error screen and halt.") Then AppendReason(CrashReason.Forge报错, LogMc.RegexSeek("(?<=the game will display an error screen and halt.[\n\r]+[^\n]+?Exception: )[\s\S]+?(?=\n\tat)")?.Trim(vbCrLf))
+            If LogMc.Contains("A potential solution has been determined:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, If(LogMc.RegexSeek("(?<=A potential solution has been determined:\n)(\s+ - [^\n]+\n)+"), "").RegexSearch("(?<=\s+)[^\n]+").Join(vbLf))
+            If LogMc.Contains("A potential solution has been determined, this may resolve your problem:") Then AppendReason(CrashReason.Fabric报错并给出解决方案, If(LogMc.RegexSeek("(?<=A potential solution has been determined, this may resolve your problem:\n)(\s+ - [^\n]+\n)+"), "").RegexSearch("(?<=\s+)[^\n]+").Join(vbLf))
+            If LogMc.Contains("确定了一种可能的解决方法，这样做可能会解决你的问题：") Then AppendReason(CrashReason.Fabric报错并给出解决方案, If(LogMc.RegexSeek("(?<=确定了一种可能的解决方法，这样做可能会解决你的问题：\n)(\s+ - [^\n]+\n)+"), "").RegexSearch("(?<=\s+)[^\n]+").Join(vbLf))
             If Not IsMixin AndAlso LogMc.Contains("due to errors, provided by ") Then '在 #3104 的情况下，这一句导致 OptiFabric 的 Mixin 失败错判为 Fabric Loader 加载失败
-                AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(If(RegexSeek(LogMc, "(?<=due to errors, provided by ')[^']+"), "").TrimEnd((vbCrLf & " ").ToCharArray)))
+                AppendReason(CrashReason.确定Mod导致游戏崩溃, TryAnalyzeModName(If(LogMc.RegexSeek("(?<=due to errors, provided by ')[^']+"), "").TrimEnd((vbCrLf & " ").ToCharArray)))
             End If
         End If
 
@@ -639,7 +635,7 @@ Done:
             If LogCrash.Contains("Suspected Mod") Then
                 Dim SuspectsRaw As String = LogCrash.Between("Suspected Mod", "Stacktrace")
                 If Not SuspectsRaw.StartsWithF("s: None") Then 'Suspected Mods: None
-                    Dim Suspects = RegexSearch(SuspectsRaw, "(?<=\n\t[^(\t]+\()[^)\n]+")
+                    Dim Suspects = SuspectsRaw.RegexSearch("(?<=\n\t[^(\t]+\()[^)\n]+")
                     If Suspects.Any Then AppendReason(CrashReason.怀疑Mod导致游戏崩溃, TryAnalyzeModName(Suspects))
                 End If
             End If
@@ -660,14 +656,14 @@ Done:
             'Mod 解析错误（常见于 Fabric 前置校验失败）
             If LogMc.Contains("Mod resolution failed") Then AppendReason(CrashReason.Mod加载器报错)
             'Mixin 失败可以导致大量 Mod 实例创建失败，因此需要放到低优先级中
-            If LogMc.Contains("Failed to create mod instance.") Then AppendReason(CrashReason.Mod初始化失败, TryAnalyzeModName(If(RegexSeek(LogMc, "(?<=Failed to create mod instance. ModID: )[^,]+"), If(RegexSeek(LogMc, "(?<=Failed to create mod instance. ModId )[^\n]+(?= for )"), "")).TrimEnd(vbCrLf)))
+            If LogMc.Contains("Failed to create mod instance.") Then AppendReason(CrashReason.Mod初始化失败, TryAnalyzeModName(If(LogMc.RegexSeek("(?<=Failed to create mod instance. ModID: )[^,]+"), If(LogMc.RegexSeek("(?<=Failed to create mod instance. ModId )[^\n]+(?= for )"), "")).TrimEnd(vbCrLf)))
             '注意：Fabric 的 Warnings were found! 不一定是崩溃原因，它可能是单纯的警报
         End If
 
         '崩溃报告分析
         If LogCrash IsNot Nothing Then
-            If LogCrash.Contains(vbTab & "Block location: World: ") Then AppendReason(CrashReason.特定方块导致崩溃, If(RegexSeek(LogCrash, "(?<=\tBlock: Block\{)[^\}]+"), "") & " " & If(RegexSeek(LogCrash, "(?<=\tBlock location: World: )\([^\)]+\)"), ""))
-            If LogCrash.Contains(vbTab & "Entity's Exact location: ") Then AppendReason(CrashReason.特定实体导致崩溃, If(RegexSeek(LogCrash, "(?<=\tEntity Type: )[^\n]+(?= \()"), "") & " (" & If(RegexSeek(LogCrash, "(?<=\tEntity's Exact location: )[^\n]+"), "").TrimEnd(vbCrLf.ToCharArray) & ")")
+            If LogCrash.Contains(vbTab & "Block location: World: ") Then AppendReason(CrashReason.特定方块导致崩溃, If(LogCrash.RegexSeek("(?<=\tBlock: Block\{)[^\}]+"), "") & " " & If(LogCrash.RegexSeek("(?<=\tBlock location: World: )\([^\)]+\)"), ""))
+            If LogCrash.Contains(vbTab & "Entity's Exact location: ") Then AppendReason(CrashReason.特定实体导致崩溃, If(LogCrash.RegexSeek("(?<=\tEntity Type: )[^\n]+(?= \()"), "") & " (" & If(LogCrash.RegexSeek("(?<=\tEntity's Exact location: )[^\n]+"), "").TrimEnd(vbCrLf.ToCharArray) & ")")
         End If
 
     End Sub
@@ -679,8 +675,8 @@ Done:
 
         '进行正则匹配
         Dim StackSearchResults As New List(Of String)
-        StackSearchResults.AddRange(RegexSearch(ErrorStack, "(?<=\n[^{]+)[a-zA-Z_]+\w+\.[a-zA-Z_]+[\w\.]+(?=\.[\w\.$]+\.)"))
-        StackSearchResults.AddRange(RegexSearch(ErrorStack, "(?<=at [^(]+?\.\w+\$\w+\$)[\w\$]+?(?=\$\w+\()").Select(Function(s) s.Replace("$", "."))) 'Mixin 堆栈：xxx.xxx.xxxx$xxxx$xxx
+        StackSearchResults.AddRange(ErrorStack.RegexSearch("(?<=\n[^{]+)[a-zA-Z_]+\w+\.[a-zA-Z_]+[\w\.]+(?=\.[\w\.$]+\.)"))
+        StackSearchResults.AddRange(ErrorStack.RegexSearch("(?<=at [^(]+?\.\w+\$\w+\$)[\w\$]+?(?=\$\w+\()").Select(Function(s) s.Replace("$", "."))) 'Mixin 堆栈：xxx.xxx.xxxx$xxxx$xxx
         StackSearchResults = StackSearchResults.Distinct.ToList
 
         '检查堆栈开头
@@ -698,10 +694,10 @@ Done:
 NextStack:
         Next
         PossibleStacks = PossibleStacks.Distinct.ToList
-        Log("[Crash] 找到 " & PossibleStacks.Count & " 条可能的堆栈信息")
+        Logger.Info($"找到 {PossibleStacks.Count} 条可能的堆栈信息")
         If Not PossibleStacks.Any() Then Return New List(Of String)
         For Each Stack As String In PossibleStacks
-            Log("[Crash]  - " & Stack)
+            Logger.Info($"- {Stack}")
         Next
 
         '检查堆栈关键词
@@ -724,10 +720,10 @@ NextStack:
             Next
         Next
         PossibleWords = PossibleWords.Distinct.ToList
-        Log("[Crash] 从堆栈信息中找到 " & PossibleWords.Count & " 个可能的 Mod ID 关键词")
-        If PossibleWords.Any Then Log("[Crash]  - " & PossibleWords.Join(", "))
+        Logger.Info($"从堆栈信息中找到 {PossibleWords.Count} 个可能的 Mod ID 关键词")
+        If PossibleWords.Any Then Logger.Info($"- {PossibleWords.Join(", ")}")
         If PossibleWords.Count > 10 Then
-            Log("[Crash] 关键词过多，考虑匹配出错，不纳入考虑")
+            Logger.Info("关键词过多，考虑匹配出错，不纳入考虑")
             Return New List(Of String)
         Else
             Return PossibleWords
@@ -738,7 +734,7 @@ NextStack:
     ''' 根据 Mod 关键词尝试获取实际的 Mod 名称。
     ''' 若失败则返回 Nothing。
     ''' </summary>
-    Private Function AnalyzeModName(Keywords As List(Of String)) As List(Of String)
+    Private Function AnalyzeModName(Keywords As IEnumerable(Of String)) As List(Of String)
         Dim ModFileNames As New List(Of String)
 
         '预处理关键词（分割括号）
@@ -756,7 +752,7 @@ NextStack:
             Dim IsFabricDetail As Boolean = Details.Contains("Fabric Mods") '是否为 Fabric 信息格式
             If IsFabricDetail Then
                 Details = Details.Replace("Fabric Mods", "¨")
-                Log("[Crash] 崩溃报告中检测到 Fabric Mod 信息格式")
+                Logger.Info("崩溃报告中检测到 Fabric Mod 信息格式")
             End If
             Details = Details.AfterLast("¨")
 
@@ -764,10 +760,10 @@ NextStack:
             '[Fabric] 获取所有包含 Mod 信息的行
             Dim ModNameLines As New List(Of String)
             For Each Line In Details.Split(vbLf)
-                If (Line.ContainsF(".jar", True) AndAlso Line.Length - Line.Replace(".jar", "").Length = 4) OrElse '只有一个 .jar
-                   (IsFabricDetail AndAlso Line.StartsWithF(vbTab & vbTab) AndAlso Not RegexCheck(Line, "\t\tfabric[\w-]*: Fabric")) Then ModNameLines.Add(Line)
+                If (Line.ContainsIgnoreCase(".jar") AndAlso Line.Length - Line.Replace(".jar", "").Length = 4) OrElse '只有一个 .jar
+                   (IsFabricDetail AndAlso Line.StartsWithF(vbTab & vbTab) AndAlso Not Line.RegexCheck("\t\tfabric[\w-]*: Fabric")) Then ModNameLines.Add(Line)
             Next
-            Log("[Crash] 崩溃报告中找到 " & ModNameLines.Count & " 个可能的 Mod 项目行")
+            Logger.Info($"崩溃报告中找到 {ModNameLines.Count} 个可能的 Mod 项目行")
 
             '获取 Mod ID 与关键词的匹配行
             Dim HintLines As New List(Of String)
@@ -781,18 +777,18 @@ NextStack:
                 Next
             Next
             HintLines = HintLines.Distinct.ToList
-            Log("[Crash] 崩溃报告中找到 " & HintLines.Count & " 个可能的崩溃 Mod 匹配行")
+            Logger.Info($"崩溃报告中找到 {HintLines.Count} 个可能的崩溃 Mod 匹配行")
             For Each ModLine As String In HintLines
-                Log("[Crash]  - " & ModLine)
+                Logger.Info($"- {ModLine}")
             Next
 
             '从 Mod 匹配行中提取 .jar 文件的名称
             For Each Line As String In HintLines
                 Dim Name As String
                 If IsFabricDetail Then
-                    Name = RegexSeek(Line, "(?<=: )[^\n]+(?= [^\n]+)")
+                    Name = Line.RegexSeek("(?<=: )[^\n]+(?= [^\n]+)")
                 Else
-                    Name = RegexSeek(Line, "(?<=\()[^\t]+.jar(?=\))|(?<=(\t\t)|(\| ))[^\t\|]+.jar", RegularExpressions.RegexOptions.IgnoreCase)
+                    Name = Line.RegexSeek("(?<=\()[^\t]+.jar(?=\))|(?<=(\t\t)|(\| ))[^\t\|]+.jar", RegularExpressions.RegexOptions.IgnoreCase)
                 End If
                 If Name IsNot Nothing Then ModFileNames.Add(Name)
             Next
@@ -803,8 +799,8 @@ NextStack:
         If LogMcDebug IsNot Nothing Then
 
             'Forge: Found valid mod file YungsBetterStrongholds-1.20-Forge-4.0.1.jar with {betterstrongholds} mods - versions {1.20-Forge-4.0.1}
-            Dim ModNameLines As List(Of String) = RegexSearch(LogMcDebug, "(?<=valid mod file ).*", RegularExpressions.RegexOptions.Multiline)
-            Log("[Crash] Debug 信息中找到 " & ModNameLines.Count & " 个可能的 Mod 项目行")
+            Dim ModNameLines = LogMcDebug.RegexSearch("(?<=valid mod file ).*", RegularExpressions.RegexOptions.Multiline)
+            Logger.Info($"Debug 信息中找到 {ModNameLines.Count} 个可能的 Mod 项目行")
 
             '获取 Mod ID 与关键词的匹配行
             Dim HintLines As New List(Of String)
@@ -814,15 +810,15 @@ NextStack:
                 Next
             Next
             HintLines = HintLines.Distinct.ToList
-            Log("[Crash] Debug 信息中找到 " & HintLines.Count & " 个可能的崩溃 Mod 匹配行")
+            Logger.Info($"Debug 信息中找到 {HintLines.Count} 个可能的崩溃 Mod 匹配行")
             For Each ModLine As String In HintLines
-                Log("[Crash]  - " & ModLine)
+                Logger.Info($"- {ModLine}")
             Next
 
             '从 Mod 匹配行中提取 .jar 文件的名称
             For Each Line As String In HintLines
                 Dim Name As String
-                Name = RegexSeek(Line, ".*(?= with)")
+                Name = Line.RegexSeek(".*(?= with)")
                 If Name IsNot Nothing Then ModFileNames.Add(Name)
             Next
 
@@ -833,9 +829,9 @@ NextStack:
         If Not ModFileNames.Any() Then
             Return Nothing
         Else
-            Log("[Crash] 找到 " & ModFileNames.Count & " 个可能的崩溃 Mod 文件名")
+            Logger.Info($"找到 {ModFileNames.Count} 个可能的崩溃 Mod 文件名")
             For Each ModFileName As String In ModFileNames
-                Log("[Crash]  - " & ModFileName)
+                Logger.Info($"- {ModFileName}")
             Next
             Return ModFileNames
         End If
@@ -851,9 +847,9 @@ NextStack:
     ''' <summary>
     ''' 尝试从关键字获取 Mod 名称，若失败则返回原关键字。
     ''' </summary>
-    Private Function TryAnalyzeModName(Keywords As List(Of String)) As List(Of String)
-        If Not Keywords.Any Then Return Keywords
-        Return If(AnalyzeModName(Keywords), Keywords)
+    Private Function TryAnalyzeModName(Keywords As IEnumerable(Of String)) As List(Of String)
+        If Not Keywords.Any Then Return Keywords.ToList
+        Return If(AnalyzeModName(Keywords), Keywords.ToList)
     End Function
 
     '4：根据原因输出信息
@@ -866,15 +862,15 @@ NextStack:
         FrmMain.ShowWindowToTop()
         Dim Detail As String = GetAnalyzeResult(IsManualAnalyze)
         Select Case MyMsgBox(Detail, If(IsManualAnalyze, "错误报告分析结果", "Minecraft 出现错误"),
-            "确定", If(IsManualAnalyze OrElse DirectFile Is Nothing, "", "查看日志"), If(IsManualAnalyze, "", "导出错误报告"),
+            "确定", If(IsManualAnalyze OrElse DirectFile Is Nothing, "", "查看输出"), If(IsManualAnalyze, "", "导出错误报告"),
             Button2Action:=If(IsManualAnalyze OrElse DirectFile Is Nothing, Nothing,
             Sub()
-                '弹窗选择：查看日志
-                If File.Exists(DirectFile.Value.Key) Then
+                '弹窗选择：查看输出
+                If FileUtils.Exists(DirectFile.Value.Key) Then
                     StartProcess(DirectFile.Value.Key)
                 Else
                     Dim FilePath As String = PathTemp & "Crash.txt"
-                    WriteFile(FilePath, DirectFile.Value.Value.Join(vbCrLf))
+                    FileUtils.Write(FilePath, DirectFile.Value.Value.Join(vbCrLf))
                     StartProcess(FilePath)
                 End If
             End Sub))
@@ -883,17 +879,16 @@ NextStack:
                 Dim FileAddress As String = Nothing
                 Try
                     '获取文件路径
-                    RunInUiWait(Sub() FileAddress = SelectSaveFile("选择保存位置", "错误报告-" & Date.Now.ToString("G").Replace("/", "-").Replace(":", ".").Replace(" ", "_") & ".zip", "Minecraft 错误报告(*.zip)|*.zip"))
-                    If String.IsNullOrEmpty(FileAddress) Then Return
-                    Directory.CreateDirectory(GetPathFromFullPath(FileAddress))
-                    If File.Exists(FileAddress) Then File.Delete(FileAddress)
+                    RunInUiWait(Sub() FileAddress = Dialogs.SaveFile("选择保存位置", "错误报告-" & Date.Now.ToString("G").Replace("/", "-").Replace(":", ".").Replace(" ", "_") & ".zip", filter:={("zip", "Minecraft 错误报告")}))
+                    If FileAddress Is Nothing Then Return
+                    FileUtils.Delete(FileAddress)
                     '输出诊断信息
                     FeedbackInfo()
-                    LogFlush()
+                    Logger.Instance.Flush()
                     '复制文件
                     If ExtraFiles IsNot Nothing Then OutputFiles.AddRange(ExtraFiles)
                     For Each OutputFile In OutputFiles
-                        Dim FileName As String = GetFileNameFromPath(OutputFile)
+                        Dim FileName As String = PathUtils.GetLastPart(OutputFile)
                         Dim FileEncoding As Encoding = Nothing
                         Select Case FileName
                             Case "LatestLaunch.bat"
@@ -905,23 +900,21 @@ NextStack:
                                 FileName = "游戏崩溃前的输出.txt"
                                 FileEncoding = Encoding.UTF8
                         End Select
-                        If File.Exists(OutputFile) Then
-                            If FileEncoding Is Nothing Then FileEncoding = GetEncoding(ReadFileBytes(OutputFile))
-                            Dim FileContent As String = ReadFile(OutputFile, FileEncoding)
-                            FileContent = FilterUserName(FilterAccessToken(FileContent, If(FileName = "启动脚本.bat", "F", "*")), "*")
-                            WriteFile(TempFolder & "Report\" & FileName, FileContent, Encoding:=FileEncoding)
-                            Log($"[Crash] 导出文件：{FileName}，编码：{FileEncoding.HeaderName}")
-                        End If
+                        If Not FileUtils.Exists(OutputFile) Then Continue For
+                        Dim FileContent As String = FileUtils.ReadAsString(OutputFile, FileEncoding)
+                        FileContent = FilterUserName(FilterAccessToken(FileContent, If(FileName = "启动脚本.bat", "F", "*")), "*")
+                        FileUtils.Write(TempFolder & "Report\" & FileName, FileContent, FileEncoding)
+                        Logger.Info($"导出错误报告文件：{FileName}")
                     Next
                     '导出报告
-                    Compression.ZipFile.CreateFromDirectory(TempFolder & "Report\", FileAddress)
-                    DeleteDirectory(TempFolder & "Report\")
+                    FileUtils.CreateZipFromDirectory(FileAddress, TempFolder & "Report\")
+                    DirectoryUtils.Delete(TempFolder & "Report\")
                     Hint("错误报告已导出！", HintType.Green)
+                    OpenExplorer(FileAddress)
                 Catch ex As Exception
-                    Log(ex, "导出错误报告失败", LogLevel.Feedback)
+                    Logger.Error(ex, "导出错误报告失败")
                     Return
                 End Try
-                OpenExplorer(FileAddress)
         End Select
         '上报
         If IsManualAnalyze Then Return
@@ -955,13 +948,13 @@ NextStack:
                 Case CrashReason.内存不足
                     Results.Add("Minecraft 内存不足，导致其无法继续运行。\n这很可能是因为电脑内存不足、游戏分配的内存不足，或是配置要求过高。\n\n你可以尝试在 更多 → 百宝箱 中选择 内存优化，然后再启动游戏。\n如果还是不行，请在启动设置中增加为游戏分配的内存，并删除配置要求较高的材质、Mod、光影。\n如果依然不奏效，请在开始游戏前尽量关闭其他软件，或者……换台电脑？\h")
                 Case CrashReason.使用OpenJ9
-                    Results.Add("游戏因为使用 OpenJ9 而崩溃了。\n请在启动设置的 Java 选择一项中改用非 OpenJ9 的 Java，然后再启动游戏。")
+                    Results.Add("游戏因为使用 OpenJ9 而崩溃了。\n请在版本设置的 Java 选项中改用非 OpenJ9 的 Java，然后再启动游戏。")
                 Case CrashReason.使用JDK
-                    Results.Add("游戏似乎因为使用 JDK，或 Java 版本过高而崩溃了。\n请在启动设置的 Java 选择一项中改用 JRE 8（Java 8），然后再启动游戏。\n如果你没有安装 JRE 8，你可以从网络中下载、安装一个。")
+                    Results.Add("游戏似乎因为使用 JDK，或 Java 版本过高而崩溃了。\n请在版本设置的 Java 选项中改用 Java 8，然后再启动游戏。\n如果你没有安装 Java 8，可以从网络中下载、安装一个。")
                 Case CrashReason.Java版本过高
-                    Results.Add("游戏似乎因为你所使用的 Java 版本过高而崩溃了。\n请在启动设置的 Java 选择一项中改用较低版本的 Java，然后再启动游戏。\n如果没有，可以从网络中下载、安装一个。")
+                    Results.Add("游戏似乎因为你所使用的 Java 版本过高而崩溃了。\n请在版本设置的 Java 选项中改用较低版本的 Java，然后再启动游戏。\n如果没有，可以从网络中下载、安装一个。")
                 Case CrashReason.Java版本不兼容
-                    Results.Add("游戏不兼容你当前使用的 Java。\n如果没有合适的 Java，可以从网络中下载、安装一个。")
+                    Results.Add("游戏不兼容你当前使用的 Java。\n请在版本设置的 Java 选项中改用合适版本的 Java，然后再启动游戏。\n如果你没有安装任何 Mod 并且因此崩溃，请向 PCL 提交反馈。")
                 Case CrashReason.Mod名称包含特殊字符
                     Results.Add("由于有 Mod 的名称包含特殊字符，导致游戏崩溃。\n请尝试修改 Mod 文件名，让它只包含英文字母、数字、减号（-）、下划线（_）和小数点，然后再启动游戏。")
                 Case CrashReason.MixinBootstrap缺失
@@ -1117,7 +1110,7 @@ NextStack:
                     Replace("\n", vbCrLf).
                     Replace("\h", "").
                     Replace("\e", If(IsHandAnalyze, "", vbCrLf & "你可以查看错误报告了解错误具体是如何发生的。")).
-                    Replace(vbCrLf, vbCr).Replace(vbLf, vbCr).Replace(vbCr, vbCrLf).
+                    ReplaceLineEndings(vbCrLf).
                     Trim(vbCrLf.ToCharArray) &
                 If(Not Results.Any(Function(r) r.EndsWithF("\h")) OrElse IsHandAnalyze, "",
                     vbCrLf & "如果要寻求帮助，请把错误报告文件发给对方，而不是发送这个窗口的照片或者截图。" &

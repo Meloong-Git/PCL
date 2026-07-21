@@ -1,7 +1,6 @@
-﻿Public Class PageInstanceSetup
+Public Class PageInstanceSetup
 
-    Private Shadows IsLoaded As Boolean = False
-
+    Private LoadedFirst As Boolean = False
     Private Sub PageSetupSystem_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
 
         '重复加载部分
@@ -14,8 +13,30 @@
         AniControlEnabled -= 1
 
         '非重复加载部分
-        If IsLoaded Then Return
-        IsLoaded = True
+        If LoadedFirst Then Return
+        LoadedFirst = True
+
+        'Java 加载器同步
+        AddHandler PageInstanceLeft.CurrentJavaWorker.Started, AddressOf UpdateJavaRelatedUi
+        AddHandler PageInstanceLeft.CurrentJavaWorker.Stopped, AddressOf UpdateJavaRelatedUi
+
+        '版本范围校验
+        TextArgumentJavaRange.ValidateRules = New ObjectModel.Collection(Of Validate) From {New ValidateFunc(
+        Function(Str As String)
+            Try
+                If String.IsNullOrWhiteSpace(Str) Then Return "不能为空"
+                Dim Range = ValueRange(Of Version).FromString(Str, Function(s) StringUtils.ParseVersionWithDefaults(s))
+                If Range.IsEmpty Then Return "范围下限的版本号比上限更高，导致该范围无法匹配到任何版本"
+                If Range.HasLower AndAlso Range.Lower.Major <= 1 AndAlso (Range.Lower.Minor > 0 OrElse Range.Lower.Build > 0 OrElse Range.Lower.Revision > 0) Then Return "不应使用 1.x 格式进行匹配（例如，若想匹配 Java 17，应填写 17 而非 1.17）"
+                If Range.HasUpper AndAlso Range.Upper.Major <= 1 AndAlso (Range.Upper.Minor > 0 OrElse Range.Upper.Build > 0 OrElse Range.Upper.Revision > 0) Then Return "不应使用 1.x 格式进行匹配（例如，若想匹配 Java 17，应填写 17 而非 1.17）"
+                If Range.HasUpper AndAlso Range.Upper.Major <= 4 Then Return "该范围所要求的 Java 版本过低"
+                If Range.HasUpper AndAlso Range.IsUpperInclusive AndAlso Range.Upper.Minor <= 0 AndAlso Range.Upper.Build <= 0 Then Return $"右侧闭区间的意图并不明确。如果不想允许 Java {Range.Upper.Major}，请改为 {vbLQ}{Range.Upper.Major}){vbRQ}。如果想允许 Java {Range.Upper.Major}，请改为 {vbLQ}{Range.Upper.Major + 1}){vbRQ}。"
+                If Range.Intersect(ValueRange(Of Version).OpenClosed(New Version(5, 0), New Version(99, 0))).IsEmpty() Then Return "该范围无法匹配到任何常见的 Java"
+                Return ""
+            Catch ex As Exception
+                Return ex.Message
+            End Try
+        End Function)}
 
         '内存自动刷新
         Dim timer As New Threading.DispatcherTimer With {.Interval = New TimeSpan(0, 0, 0, 1)}
@@ -27,47 +48,29 @@
         Try
 
             '启动参数
-            TextArgumentTitle.Text = Settings.Get("VersionArgumentTitle", Instance:=PageInstanceLeft.Instance)
-            TextArgumentInfo.Text = Settings.Get("VersionArgumentInfo", Instance:=PageInstanceLeft.Instance)
             Dim _unused = PageInstanceLeft.Instance.PathIndie '触发自动判定
-            ComboArgumentIndieV2.SelectedIndex = If(Settings.Get("VersionArgumentIndieV2", Instance:=PageInstanceLeft.Instance), 0, 1)
-            RefreshJavaComboBox()
-
-            '游戏内存
-            CType(FindName("RadioRamType" & Settings.Get("VersionRamType", Instance:=PageInstanceLeft.Instance)), MyRadioBox).Checked = True
-            OnVersionRamTypeChanged(Settings.Get("VersionRamType", Instance:=PageInstanceLeft.Instance))
-            SliderRamCustom.Value = Settings.Get("VersionRamCustom", Instance:=PageInstanceLeft.Instance)
-            ComboRamOptimize.SelectedIndex = Settings.Get("VersionRamOptimize", Instance:=PageInstanceLeft.Instance)
+            ComboArgumentIndieV2.SelectedIndex = If(Settings.Get(Of Boolean)("VersionArgumentIndieV2", Instance:=PageInstanceLeft.Instance), 0, 1)
+            UpdateJavaList()
 
             '服务器
-            TextServerEnter.Text = Settings.Get("VersionServerEnter", Instance:=PageInstanceLeft.Instance)
-            ComboServerLogin.SelectedIndex = Settings.Get("VersionServerLogin", Instance:=PageInstanceLeft.Instance)
+            ComboServerLogin.SelectedIndex = Settings.Get(Of Integer)("VersionServerLogin", Instance:=PageInstanceLeft.Instance)
             ComboServerLoginLast = ComboServerLogin.SelectedIndex
-            ServerLogin(ComboServerLogin.SelectedIndex)
-            TextServerNide.Text = Settings.Get("VersionServerNide", Instance:=PageInstanceLeft.Instance)
-            TextServerAuthServer.Text = Settings.Get("VersionServerAuthServer", Instance:=PageInstanceLeft.Instance)
-            TextServerAuthName.Text = Settings.Get("VersionServerAuthName", Instance:=PageInstanceLeft.Instance)
-            TextServerAuthRegister.Text = Settings.Get("VersionServerAuthRegister", Instance:=PageInstanceLeft.Instance)
+            UpdateServerLoginUI()
 
             '高级设置
-            TextAdvanceJvm.Text = Settings.Get("VersionAdvanceJvm", Instance:=PageInstanceLeft.Instance)
-            TextAdvanceGame.Text = Settings.Get("VersionAdvanceGame", Instance:=PageInstanceLeft.Instance)
-            TextAdvanceRun.Text = Settings.Get("VersionAdvanceRun", Instance:=PageInstanceLeft.Instance)
-            CheckAdvanceRunWait.Checked = Settings.Get("VersionAdvanceRunWait", Instance:=PageInstanceLeft.Instance)
-            If Settings.Get("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance) = 2 Then
-                Log("[Setup] 已迁移老版本的关闭文件校验设置")
+            If Settings.Get(Of Integer)("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance) = 2 Then
+                Logger.Info("已迁移老版本的关闭文件校验设置")
                 Settings.Reset("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance)
                 Settings.Set("VersionAdvanceAssetsV2", True, Instance:=PageInstanceLeft.Instance)
             End If
-            CheckAdvanceAssetsV2.Checked = Settings.Get("VersionAdvanceAssetsV2", Instance:=PageInstanceLeft.Instance)
-            CheckAdvanceJava.Checked = Settings.Get("VersionAdvanceJava", Instance:=PageInstanceLeft.Instance)
-            CheckAdvanceDisableJLW.Checked = Settings.Get("VersionAdvanceDisableJLW", Instance:=PageInstanceLeft.Instance)
-            CheckAdvanceDisableModUpdate.Checked = Settings.Get("VersionAdvanceDisableModUpdate", Instance:=PageInstanceLeft.Instance)
 
             SettingService.RefreshSettings(Me)
 
+            '游戏内存
+            OnVersionRamTypeChanged(Settings.Get(Of Integer)("VersionRamType", Instance:=PageInstanceLeft.Instance))
+
         Catch ex As Exception
-            Log(ex, "重载版本独立设置时出错", LogLevel.Feedback)
+            Logger.Error(ex, "重载版本独立设置时出错")
         End Try
     End Sub
 
@@ -75,64 +78,21 @@
     Public Sub Reset()
         Try
 
-            Settings.Reset("VersionServerEnter", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionServerLogin", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionServerNide", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionServerAuthServer", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionServerAuthRegister", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionServerAuthName", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionArgumentTitle", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionArgumentInfo", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionArgumentIndieV2", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionRamType", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionRamCustom", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionRamOptimize", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionAdvanceJvm", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionAdvanceGame", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionAdvanceAssetsV2", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionAdvanceJava", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionAdvanceRun", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionAdvanceRunWait", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionAdvanceDisableJLW", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionAdvanceDisableModUpdate", Instance:=PageInstanceLeft.Instance)
-            Settings.Reset("VersionArgumentJavaSelect", Instance:=PageInstanceLeft.Instance)
-            JavaSearchLoader.Start(IsForceRestart:=True)
-
             SettingService.ResetSettings(Me)
 
-            Log("[Setup] 已初始化版本独立设置")
+            Settings.Reset("VersionServerLogin", Instance:=PageInstanceLeft.Instance)
+            Settings.Reset("VersionArgumentIndieV2", Instance:=PageInstanceLeft.Instance)
+            Settings.Reset("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance)
+            Configs.InstanceForcedJava.Reset(PageInstanceLeft.Instance.Config)
+            JavaListRefreshWorker.Start()
+
+            Logger.Info("已初始化版本独立设置")
             Hint("已初始化版本独立设置！", HintType.Green, False)
         Catch ex As Exception
-            Log(ex, "初始化版本独立设置失败", LogLevel.Msgbox)
+            Logger.Error(ex, "初始化版本独立设置失败", LogBehavior.Alert)
         End Try
 
         Reload()
-    End Sub
-
-    '将控件改变路由到设置改变
-    Private Shared Sub RadioBoxChange(sender As MyRadioBox, e As Object) Handles RadioRamType0.Check, RadioRamType1.Check, RadioRamType2.Check
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag.ToString.Split("/")(0), Val(sender.Tag.ToString.Split("/")(1)), Instance:=PageInstanceLeft.Instance)
-    End Sub
-    Private Shared Sub TextBoxChange(sender As MyTextBox, e As Object) Handles TextServerEnter.ValidatedTextChanged, TextArgumentInfo.ValidatedTextChanged, TextAdvanceGame.ValidatedTextChanged, TextAdvanceJvm.ValidatedTextChanged, TextServerNide.ValidatedTextChanged, TextServerAuthName.ValidatedTextChanged, TextServerAuthRegister.ValidatedTextChanged, TextServerAuthServer.ValidatedTextChanged, TextArgumentTitle.ValidatedTextChanged, TextAdvanceRun.ValidatedTextChanged
-        If AniControlEnabled = 0 Then
-            '#3194，不能删减 /
-            'Dim HandledText As String = sender.Text
-            'If sender.Tag = "VersionServerAuthServer" OrElse sender.Tag = "VersionServerAuthRegister" Then HandledText = HandledText.TrimEnd("/")
-            Settings.Set(sender.Tag, sender.Text, Instance:=PageInstanceLeft.Instance)
-        End If
-    End Sub
-    Private Shared Sub SliderChange(sender As MySlider, e As Object) Handles SliderRamCustom.Change
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Value, Instance:=PageInstanceLeft.Instance)
-    End Sub
-    Private Shared Sub ComboChange(sender As MyComboBox, e As Object) Handles ComboRamOptimize.SelectionChanged
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.SelectedIndex, Instance:=PageInstanceLeft.Instance)
-    End Sub
-    Private Shared Sub CheckBoxLikeComboChange(sender As MyComboBox, e As Object) Handles ComboArgumentIndieV2.SelectionChanged
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.SelectedIndex = 0, Instance:=PageInstanceLeft.Instance)
-    End Sub
-    Private Shared Sub CheckBoxChange(sender As MyCheckBox, e As Object) Handles CheckAdvanceRunWait.Change, CheckAdvanceAssetsV2.Change, CheckAdvanceJava.Change, CheckAdvanceDisableJLW.Change, CheckAdvanceDisableModUpdate.Change
-        If AniControlEnabled = 0 Then Settings.Set(sender.Tag, sender.Checked, Instance:=PageInstanceLeft.Instance)
     End Sub
 
 #Region "游戏内存"
@@ -158,7 +118,7 @@
         Dim RamAvailable As Double = Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024, 1)
         Dim RamGameActual As Double = Math.Round(Math.Min(RamGame, RamAvailable), 5)
         Dim RamUsed As Double = Math.Round(RamTotal - RamAvailable, 5)
-        Dim RamEmpty As Double = Math.Round(MathClamp(RamTotal - RamUsed - RamGame, 0, 1000), 1)
+        Dim RamEmpty As Double = Math.Round((RamTotal - RamUsed - RamGame).Clamp(0, 1000), 1)
         '设置最大可用内存
         If RamTotal <= 1.5 Then
             SliderRamCustom.MaxValue = Math.Max(Math.Floor((RamTotal - 0.3) / 0.1), 1)
@@ -174,7 +134,6 @@
                           If(RamGame <> RamGameActual, " (可用 " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
         LabRamUsed.Text = If(RamUsed = Math.Floor(RamUsed), RamUsed & ".0", RamUsed) & " GB"
         LabRamTotal.Text = " / " & If(RamTotal = Math.Floor(RamTotal), RamTotal & ".0", RamTotal) & " GB"
-        LabRamWarn.Visibility = If(RamGame = 1 AndAlso Not JavaIs64Bit(PageInstanceLeft.Instance) AndAlso Not Is32BitSystem AndAlso JavaList.Any, Visibility.Visible, Visibility.Collapsed)
         If ShowAnim Then
             '宽度动画
             AniStart({
@@ -278,10 +237,10 @@
     ''' <summary>
     ''' 获取当前设置的 RAM 值。单位为 GB。
     ''' </summary>
-    Public Shared Function GetRam(Instance As McInstance, Optional Is32BitJava As Boolean? = Nothing) As Double
+    Public Shared Function GetRam(Instance As McInstance) As Double
         '跟随全局设置
-        If Settings.Get("VersionRamType", Instance:=Instance) = 2 Then
-            Return PageSetupLaunch.GetRam(Instance, True, Is32BitJava)
+        If Settings.Get(Of Integer)("VersionRamType", Instance:=Instance) = 2 Then
+            Return PageSetupLaunch.GetRam(Instance, True)
         End If
 
         '------------------------------------------
@@ -290,7 +249,7 @@
 
         '使用当前版本的设置
         Dim RamGive As Double
-        If Settings.Get("VersionRamType", Instance:=Instance) = 0 Then
+        If Settings.Get(Of Integer)("VersionRamType", Instance:=Instance) = 0 Then
             '自动配置
             Dim RamAvailable As Double = Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024 * 10) / 10
             '确定需求的内存值
@@ -301,7 +260,7 @@
             If Instance IsNot Nothing AndAlso Not Instance.IsLoaded Then Instance.Load()
             If Instance IsNot Nothing AndAlso Instance.Modable Then
                 '可安装 Mod 的版本
-                Dim ModDir As New DirectoryInfo(Instance.PathIndie & "mods\")
+                Dim ModDir = DirectoryUtils.GetInfo(Instance.PathIndie & "mods\")
                 Dim ModCount As Integer = If(ModDir.Exists, ModDir.GetFiles.Count(Function(f) {".jar", ".zip", ".litemod"}.Contains(f.Extension.Lower)), 0)
                 RamMininum = 0.5 + ModCount / 150
                 RamTarget1 = 1.5 + ModCount / 90
@@ -346,7 +305,7 @@ PreFin:
             RamGive = Math.Round(Math.Max(RamGive, RamMininum), 1)
         Else
             '手动配置
-            Dim Value As Integer = Settings.Get("VersionRamCustom", Instance:=Instance)
+            Dim Value As Integer = Settings.Get(Of Integer)("VersionRamCustom", Instance:=Instance)
             If Value <= 12 Then
                 RamGive = Value * 0.1 + 0.3
             ElseIf Value <= 25 Then
@@ -357,8 +316,6 @@ PreFin:
                 RamGive = (Value - 33) * 2 + 16
             End If
         End If
-        '若使用 32 位 Java，则限制为 1G
-        If If(Is32BitJava, Not JavaIs64Bit(PageInstanceLeft.Instance)) Then RamGive = Math.Min(1, RamGive)
         Return RamGive
     End Function
 
@@ -389,7 +346,7 @@ PreFin:
     Private ComboServerLoginLast As Integer
     Private Sub ComboServerLogin_Changed() Handles ComboServerLogin.SelectionChanged, TextServerNide.ValidatedTextChanged, TextServerAuthServer.ValidatedTextChanged, TextServerAuthRegister.ValidatedTextChanged
         If AniControlEnabled <> 0 Then Return
-        ServerLogin(ComboServerLogin.SelectedIndex)
+        UpdateServerLoginUI()
         '检查是否输入正确，正确才触发设置改变
         If ComboServerLogin.SelectedIndex = 3 AndAlso Not TextServerNide.IsValidated Then Return
         If ComboServerLogin.SelectedIndex = 4 AndAlso Not TextServerAuthServer.IsValidated Then Return
@@ -397,10 +354,11 @@ PreFin:
         If ComboServerLoginLast = ComboServerLogin.SelectedIndex Then Return
         '触发
         ComboServerLoginLast = ComboServerLogin.SelectedIndex
-        ComboChange(ComboServerLogin, Nothing)
+        Settings.Set("VersionServerLogin", ComboServerLogin.SelectedIndex, Instance:=PageInstanceLeft.Instance)
     End Sub
-    Public Sub ServerLogin(Type As Integer)
+    Private Sub UpdateServerLoginUI()
         If LabServerNide Is Nothing Then Return
+        Dim Type = ComboServerLogin.SelectedIndex
         LabServerNide.Visibility = If(Type = 3, Visibility.Visible, Visibility.Collapsed)
         TextServerNide.Visibility = If(Type = 3, Visibility.Visible, Visibility.Collapsed)
         PanServerNide.Visibility = If(Type = 3, Visibility.Visible, Visibility.Collapsed)
@@ -412,11 +370,6 @@ PreFin:
         TextServerAuthServer.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
         BtnServerAuthLittle.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
         CardServer.TriggerForceResize()
-    End Sub
-
-    '统一通行证
-    Private Sub BtnServerNideWeb_Click(sender As Object, e As EventArgs) Handles BtnServerNideWeb.Click
-        OpenWebsite("https://login.mc-user.com:233/server/intro")
     End Sub
 
     'LittleSkin
@@ -431,105 +384,174 @@ PreFin:
 
 #End Region
 
-#Region "Java 选择"
+#Region "Java 主类别和预览"
 
-    '刷新 Java 下拉框显示
-    Public Sub RefreshJavaComboBox()
-        If ComboArgumentJava Is Nothing Then Return
-        '初始化列表
-        ComboArgumentJava.Items.Clear()
-        ComboArgumentJava.Items.Add(New MyComboBoxItem With {.Content = "跟随全局设置", .Tag = "使用全局设置"})
-        ComboArgumentJava.Items.Add(New MyComboBoxItem With {.Content = "自动选择合适的 Java", .Tag = "自动选择"})
-        '更新列表
-        Dim SelectedItem As MyComboBoxItem = Nothing
-        Dim SelectedBySetup As String = Settings.Get("VersionArgumentJavaSelect", Instance:=PageInstanceLeft.Instance)
-        Try
-            For Each Java In JavaList.Clone().OrderByDescending(Function(v) v.MajorVersion)
-                Dim ListItem = New MyComboBoxItem With {.Content = Java.ToString, .ToolTip = Java.PathFolder, .Tag = Java}
-                ToolTipService.SetHorizontalOffset(ListItem, 400)
-                ComboArgumentJava.Items.Add(ListItem)
-                '判断人为选中
-                If SelectedBySetup = "" OrElse SelectedBySetup = "使用全局设置" Then Continue For
-                If JavaEntry.FromJson(GetJson(SelectedBySetup)).PathFolder = Java.PathFolder Then SelectedItem = ListItem
-            Next
-        Catch ex As Exception
-            Settings.Set("VersionArgumentJavaSelect", "使用全局设置", Instance:=PageInstanceLeft.Instance)
-            Log(ex, "更新版本设置 Java 下拉框失败", LogLevel.Feedback)
-        End Try
-        '更新选择项
-        If SelectedItem Is Nothing AndAlso JavaList.Any Then
-            If SelectedBySetup = "" Then
-                SelectedItem = ComboArgumentJava.Items(1) '选中 “自动选择”
-            Else
-                SelectedItem = ComboArgumentJava.Items(0) '选中 “跟随全局设置”
-            End If
-        End If
-        ComboArgumentJava.SelectedItem = SelectedItem
-        '结束处理
-        If SelectedItem Is Nothing Then
-            ComboArgumentJava.Items.Clear()
-            ComboArgumentJava.Items.Add(New ComboBoxItem With {.Content = "未找到可用的 Java", .IsSelected = True})
-        End If
-        RefreshRam(True)
-    End Sub
-    '阻止在特定情况下展开下拉框
-    Private Sub ComboArgumentJava_DropDownOpened(sender As Object, e As EventArgs) Handles ComboArgumentJava.DropDownOpened
-        If ComboArgumentJava.SelectedItem Is Nothing OrElse ComboArgumentJava.Items(0).Content = "未找到可用的 Java" OrElse ComboArgumentJava.Items(0).Content = "加载中……" Then
-            ComboArgumentJava.IsDropDownOpen = False
-        End If
+    Private Sub ReloadCurrentJava() Handles ComboArgumentJava.SelectionChanged, TextArgumentJavaRange.ValidatedTextChanged
+        PageInstanceLeft.ReloadCurrentJava()
     End Sub
 
-    '下拉框选择更改
-    Private Sub JavaSelectionUpdate() Handles ComboArgumentJava.SelectionChanged
-        If AniControlEnabled <> 0 Then Return
-        'Java 不可用时也不清空，会导致刷新时找不到对象
-        If ComboArgumentJava.SelectedItem Is Nothing OrElse ComboArgumentJava.SelectedItem.Tag Is Nothing Then Return
-        '设置新的 Java
-        Dim SelectedJava = ComboArgumentJava.SelectedItem.Tag
-        If "使用全局设置".Equals(SelectedJava) Then
-            '选择 “自动”
-            Settings.Set("VersionArgumentJavaSelect", "使用全局设置", Instance:=PageInstanceLeft.Instance)
-            Log("[Java] 修改版本 Java 选择设置：跟随全局设置")
-        ElseIf "自动选择".Equals(SelectedJava) Then
-            '选择 “自动”
-            Settings.Set("VersionArgumentJavaSelect", "", Instance:=PageInstanceLeft.Instance)
-            Log("[Java] 修改版本 Java 选择设置：自动选择")
-        Else
-            '选择指定项
-            Settings.Set("VersionArgumentJavaSelect", CType(SelectedJava.ToJson(), JObject).ToString(Newtonsoft.Json.Formatting.None), Instance:=PageInstanceLeft.Instance)
-            Log("[Java] 修改版本 Java 选择设置：" & SelectedJava.ToString)
-        End If
-        RefreshRam(True)
+    Private Sub UpdateJavaRelatedUi() Handles ComboArgumentJava.SelectionChanged, TextArgumentJavaRange.TextChanged
+        RunInUi(AddressOf _UpdateJavaRelatedUi)
+    End Sub
+    Private Sub _UpdateJavaRelatedUi()
+        Dim JavaWorker = PageInstanceLeft.CurrentJavaWorker
+        Select Case ComboArgumentJava.SelectedIndex
+            Case 0, 2
+                HintArgumentJava.Visibility = Visibility.Visible
+                TextArgumentJavaRange.Visibility = Visibility.Collapsed
+                PanArgumentJavaSelect.Visibility = Visibility.Collapsed
+                '显示当前会选择的 Java
+                If Not JavaWorker.LastSucceeded OrElse JavaWorker.Running Then
+                    If Not JavaWorker.Running Then JavaWorker.Start()
+                    HintArgumentJava.Text = $"正在查找 Java……"
+                    HintArgumentJava.Theme = MyHint.Themes.Blue
+                ElseIf JavaWorker.LastResult Is Nothing Then
+                    If ComboArgumentJava.SelectedIndex = 0 Then
+                        HintArgumentJava.Text = $"你的电脑上没有可供该版本使用的 Java，PCL 会在启动游戏时自动下载。"
+                        HintArgumentJava.Theme = MyHint.Themes.Yellow
+                    Else
+                        HintArgumentJava.Text = $"该版本的版本文件夹中没有发现任何 Java！{vbCrLf}请点击此处打开版本文件夹，然后将 Java 文件夹复制进去。"
+                        HintArgumentJava.Theme = MyHint.Themes.Red
+                    End If
+                Else
+                    HintArgumentJava.Text = $"将会使用：{JavaWorker.LastResult}"
+                    HintArgumentJava.Theme = MyHint.Themes.Blue
+                End If
+            Case 1
+                HintArgumentJava.Visibility = Visibility.Visible
+                TextArgumentJavaRange.Visibility = Visibility.Visible
+                PanArgumentJavaSelect.Visibility = Visibility.Collapsed
+                '首次设置
+                If Not Settings.HasSaved("VersionArgumentJavaRange", PageInstanceLeft.Instance) Then
+                    Dim DefaultRange As String = GetJavaRequirement(PageInstanceLeft.Instance).Range.ToString.Replace("-∞", "").Replace("+∞", "")
+                    Settings.Set("VersionArgumentJavaRange", DefaultRange, PageInstanceLeft.Instance)
+                    TextArgumentJavaRange.Text = DefaultRange
+                End If
+                '输入的范围有误
+                If Not String.IsNullOrEmpty(TextArgumentJavaRange.ValidateResult) Then
+                    HintArgumentJava.Text = $"Java 版本范围错误：{TextArgumentJavaRange.ValidateResult}"
+                    HintArgumentJava.Theme = MyHint.Themes.Red
+                    Return
+                End If
+                '显示当前会选择的 Java
+                If Not JavaWorker.LastSucceeded OrElse JavaWorker.Running Then
+                    If Not JavaWorker.Running Then JavaWorker.Start()
+                    HintArgumentJava.Text = $"正在查找 Java……"
+                    HintArgumentJava.Theme = MyHint.Themes.Blue
+                ElseIf JavaWorker.LastResult Is Nothing Then
+                    HintArgumentJava.Text = $"你的电脑上没有任何 Java 符合该版本范围！{vbCrLf}如果 Mojang 提供了对应版本的 Java，PCL 会在启动游戏时自动下载。"
+                    HintArgumentJava.Theme = MyHint.Themes.Yellow
+                Else
+                    HintArgumentJava.Text = $"将会使用：{JavaWorker.LastResult}"
+                    HintArgumentJava.Theme = MyHint.Themes.Blue
+                End If
+            Case 3
+                HintArgumentJava.Visibility = Visibility.Collapsed
+                TextArgumentJavaRange.Visibility = Visibility.Collapsed
+                PanArgumentJavaSelect.Visibility = Visibility.Visible
+        End Select
+    End Sub
+    Private Sub HintArgumentJava_Click(sender As Object, e As MouseButtonEventArgs) Handles HintArgumentJava.Click
+        If ComboArgumentJava.SelectedIndex = 2 Then PageInstanceOverall.OpenInstanceFolder(PageInstanceLeft.Instance)
     End Sub
 
 #End Region
 
-#Region "其他设置"
+#Region "选择特定 Java 的下拉框"
+    '注意：修改此处代码时需要同时修改 PageSetupLaunch.xaml.vb
 
-    '版本隔离警告
-    Private IsReverting As Boolean = False
+    '刷新 Java 下拉框显示
+    Public Sub UpdateJavaList()
+        If ComboArgumentJavaSelect Is Nothing OrElse LabArgumentJava Is Nothing OrElse Not ComboArgumentJavaSelect.IsLoaded Then Return
+        ComboArgumentJavaSelect.Items.Clear()
+        '还需要等待搜索结束
+        If JavaListRefreshWorker.Running Then
+            BtnArgumentJavaSearch.IsEnabled = False
+            ComboArgumentJavaSelect.IsEnabled = False
+            LabArgumentJava.Text = "搜索中 …"
+            Return
+        End If
+        '========================================== 显示结果 ==========================================
+        BtnArgumentJavaSearch.IsEnabled = True
+        ComboArgumentJavaSelect.IsEnabled = True
+        Dim SelectedJava As Java = Configs.InstanceForcedJava.Get(PageInstanceLeft.Instance.Config)
+        '更新下拉框文本
+        If Not Configs.JavaList.Get().Any() Then
+            LabArgumentJava.Text = "未找到 Java，点击以导入已有的 Java"
+        ElseIf SelectedJava Is Nothing Then
+            LabArgumentJava.Text = "点击选择 Java …"
+        Else
+            LabArgumentJava.Text = SelectedJava.ToString
+        End If
+        '更新列表
+        Try
+            For Each JavaEntry In Configs.JavaList.Get()
+                Dim JavaItem As New MyListItem With {
+                    .FontSize = 13, .Height = 24, .IsScaleAnimationEnabled = False, .Type = MyListItem.CheckType.Clickable,
+                    .Tag = JavaEntry, .Title = JavaEntry.ToString}
+                AddHandler JavaItem.MouseLeftButtonUp, Sub(sender As Object, e As MouseButtonEventArgs) e.Handled = True
+                AddHandler JavaItem.Click,
+                Sub()
+                    Configs.InstanceForcedJava.Set(JavaEntry, PageInstanceLeft.Instance.Config)
+                    UpdateJavaList()
+                    ComboArgumentJavaSelect.IsDropDownOpen = False
+                End Sub
+                ComboArgumentJavaSelect.Items.Add(JavaItem)
+                Dim Buttons As New List(Of MyIconButton)
+                '从列表中移除按钮
+                Dim IsOfficial As Boolean = JavaEntry.Folder.StartsWithF($"{Paths.AppData}.minecraft\runtime\")
+                Dim DeleteButton As New MyIconButton With {.Logo = Logo.IconButtonStop, .Height = 24, .Width = 24}
+                DeleteButton.IsEnabled = Not IsOfficial
+                DeleteButton.ToolTip = If(DeleteButton.IsEnabled, "从列表中移除", "无法移除官方 Java")
+                AddHandler DeleteButton.Click, Sub() ManuallyRemoveJava(JavaEntry)
+                ToolTipService.SetShowOnDisabled(DeleteButton, True)
+                Buttons.Add(DeleteButton)
+                '打开文件夹按钮
+                Dim OpenButton As New MyIconButton With {.Logo = Logo.IconButtonOpen, .LogoScale = 1.1, .Height = 24, .Width = 24}
+                OpenButton.ToolTip = "打开文件夹"
+                AddHandler OpenButton.Click, Sub() OpenExplorer(JavaEntry.JavaExePath)
+                Buttons.Add(OpenButton)
+                JavaItem.Buttons = Buttons
+            Next
+            Dim ImportItem As New MyListItem With {
+                .FontSize = 13, .Height = 24, .IsScaleAnimationEnabled = False, .Title = " 导入电脑中已有的 Java…", .Type = MyListItem.CheckType.Clickable}
+            AddHandler ImportItem.MouseLeftButtonUp,
+            Sub(sender As Object, e As MouseButtonEventArgs)
+                e.Handled = True
+                ManuallyImportJava()
+            End Sub
+            ComboArgumentJavaSelect.Items.Add(ImportItem)
+        Catch ex As Exception
+            Logger.Error(ex, "更新 Java 下拉框失败")
+        End Try
+    End Sub
+    Private Sub BtnAdvanceJavaSearch_Click() Handles BtnArgumentJavaSearch.Click
+        ManuallySearchJava()
+    End Sub
+
+#End Region
+
+    '版本隔离
     Private Sub ComboArgumentIndieV2_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboArgumentIndieV2.SelectionChanged
         If AniControlEnabled <> 0 Then Return
+        Static IsReverting As Boolean = False
         If IsReverting Then Return
-        If MyMsgBox("调整版本隔离后，你可能得把游戏存档、Mod 等文件手动迁移到新的游戏文件夹中。" & vbCrLf &
-                    "如果修改后发现存档消失，把这项设置改回来就能恢复。" & vbCrLf &
+        If MyMsgBox("调整版本隔离设置后，你需要游戏存档、Mod 等文件手动迁移到新的游戏文件夹中。" & vbCrLf &
+                    "如果发现存档消失，把这项设置改回来就能恢复。" & vbCrLf &
                     "如果你不会迁移存档，不建议修改这项设置！",
                     "警告", "我知道我在做什么", "取消", IsWarn:=True) = 2 Then
             IsReverting = True
-            ComboArgumentIndieV2.SelectedItem = e.RemovedItems(0)
+            If e.RemovedItems.Count > 0 Then ComboArgumentIndieV2.SelectedItem = e.RemovedItems(0)
             IsReverting = False
         End If
+        '实际应用设置
+        Settings.Set("VersionArgumentIndieV2", sender.SelectedIndex = 0, Instance:=PageInstanceLeft.Instance)
     End Sub
 
-#End Region
-
-#Region "高级设置"
-
+    '启动前执行命令
     Private Sub TextAdvanceRun_TextChanged(sender As Object, e As TextChangedEventArgs) Handles TextAdvanceRun.TextChanged
-        CheckAdvanceRunWait.Visibility = If(TextAdvanceRun.Text = "", Visibility.Collapsed, Visibility.Visible)
+        CheckAdvanceRunWait.Visibility = (TextAdvanceRun.Text <> "").ToVisibility
     End Sub
-
-#End Region
 
     '切换到全局设置
     Private Sub BtnSwitch_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSwitch.Click
@@ -538,10 +560,11 @@ PreFin:
 
     '去除参数中的回车
     Private Sub ReplaceEnter(sender As MyTextBox, e As TextChangedEventArgs) Handles TextAdvanceJvm.TextChanged, TextAdvanceGame.TextChanged
-        Dim NewText = sender.Text.Replace(vbCrLf, vbCr).Replace(vbLf, vbCr).Replace(vbCr, " ")
+        Dim NewText = sender.Text.ReplaceLineEndings(" ", mergeMultiple:=True)
         If NewText = sender.Text Then Return
         Dim CaretIndex = sender.CaretIndex
         sender.Text = NewText
         sender.CaretIndex = Math.Max(0, CaretIndex - 1)
     End Sub
+
 End Class

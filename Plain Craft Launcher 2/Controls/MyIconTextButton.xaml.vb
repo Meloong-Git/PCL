@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Markup
+Imports System.Windows.Markup
 
 <ContentProperty("Inlines")>
 Public Class MyIconTextButton
@@ -70,7 +70,7 @@ Public Class MyIconTextButton
     Private IsMouseDown As Boolean = False
     Private Sub MyIconTextButton_MouseUp() Handles Me.MouseLeftButtonUp
         If Not IsMouseDown Then Return
-        Log("[Control] 按下带图标按钮：" & Text)
+        Logger.Info($"按下带图标按钮：{Text}")
         IsMouseDown = False
         RaiseEvent Click(Me, New RouteEventArgs(True))
         RaiseCustomEvent() '自定义事件
@@ -166,7 +166,7 @@ Public Class MyIconTextButton
 
             End If
         Catch ex As Exception
-            Log(ex, "刷新带图标按钮颜色出错")
+            Logger.Warn(ex, "刷新带图标按钮颜色出错")
         End Try
     End Sub
 

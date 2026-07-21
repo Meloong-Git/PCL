@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Markup
+Imports System.Windows.Markup
 
 <ContentProperty("Inlines")>
 Public Class MyHint
@@ -99,7 +99,7 @@ Public Class MyHint
     End Property
     Public Property RelativeSetup As String = ""
     Private Sub MyHint_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
-        If CanClose AndAlso Settings.Get(RelativeSetup) Then Visibility = Visibility.Collapsed
+        If CanClose AndAlso Settings.Get(Of Boolean)(RelativeSetup) Then Visibility = Visibility.Collapsed
     End Sub
     Private Sub BtnClose_Click(sender As Object, e As EventArgs) Handles BtnClose.Click
         Settings.SetSafe(RelativeSetup, True)
@@ -112,7 +112,7 @@ Public Class MyHint
     Private Sub MyHint_MouseUp(sender As Object, e As MouseButtonEventArgs) Handles Me.MouseLeftButtonUp
         If Not IsMouseDown Then Return
         IsMouseDown = False
-        Log("[Control] 按下提示条" & If(String.IsNullOrEmpty(Name), "", "：" & Name))
+        Logger.Info($"按下提示条{If(String.IsNullOrEmpty(Name), "", "：" & Name)}")
         RaiseEvent Click(sender, e)
         If e.Handled Then Return
         e.Handled = True

@@ -1,4 +1,4 @@
-﻿Public Class MyExtraButton
+Public Class MyExtraButton
 
     '声明
     Public Event Click(sender As Object, e As MouseButtonEventArgs) '自定义事件
@@ -84,7 +84,7 @@
     '触发点击事件
     Private Sub Button_LeftMouseUp(sender As Object, e As MouseButtonEventArgs) Handles PanClick.MouseLeftButtonUp
         If IsLeftMouseHeld Then
-            Log("[Control] 按下附加按钮" & If(ToolTip = "", "", "：" & ToolTip.ToString))
+            Logger.Info($"按下附加按钮{If(ToolTip = "", "", "：" & ToolTip)}")
             RaiseEvent Click(sender, e)
             e.Handled = True
             Button_LeftMouseUp()
@@ -92,7 +92,7 @@
     End Sub
     Private Sub Button_RightMouseUp(sender As Object, e As MouseButtonEventArgs) Handles PanClick.MouseRightButtonUp
         If IsRightMouseHeld Then
-            Log("[Control] 右键按下附加按钮" & If(ToolTip = "", "", "：" & ToolTip.ToString))
+            Logger.Info($"右键按下附加按钮{If(ToolTip = "", "", "：" & ToolTip)}")
             RaiseEvent RightClick(sender, e)
             e.Handled = True
             Button_RightMouseUp()
@@ -193,7 +193,7 @@
 
             End If
         Catch ex As Exception
-            Log(ex, "刷新图标按钮颜色出错")
+            Logger.Warn(ex, "刷新图标按钮颜色出错")
         End Try
     End Sub
 

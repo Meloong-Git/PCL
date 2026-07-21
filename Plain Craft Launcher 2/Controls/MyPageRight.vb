@@ -1,4 +1,4 @@
-﻿Public Class MyPageRight
+Public Class MyPageRight
     Inherits AdornerDecorator
     Public PageUuid As Integer = GetUuid()
 
@@ -35,7 +35,7 @@
         Set(value As PageStates)
             If _PageState = value Then Return
             _PageState = value
-            If ModeDebug Then Log("[UI] 页面状态切换为 " & GetStringFromEnum(value))
+            Logger.Trace($"页面状态切换为 {value}")
         End Set
     End Property
 
@@ -59,9 +59,9 @@
     ''' <param name="PanAlways">无论是否在加载总是要显示的容器。可以为 Nothing。</param>
     ''' <param name="RealLoader">在工作线程执行的加载器。</param>
     ''' <param name="FinishedInvoke">当加载器执行完成，在 UI 线程触发的 UI 初始化事件。</param>
-    Public Sub PageLoaderInit(LoaderUi As MyLoading, PanLoader As FrameworkElement, PanContent As FrameworkElement, PanAlways As FrameworkElement,
-                              RealLoader As LoaderBase,
-                              Optional FinishedInvoke As Action(Of LoaderBase) = Nothing, Optional InputInvoke As Func(Of Object) = Nothing,
+    Public Sub PageLoaderInit(Of TIn, TOut)(LoaderUi As MyLoading, PanLoader As FrameworkElement, PanContent As FrameworkElement, PanAlways As FrameworkElement,
+                              RealLoader As LoaderTask(Of TIn, TOut),
+                              Optional FinishedInvoke As Action(Of LoaderTask(Of TIn, TOut)) = Nothing, Optional InputInvoke As Func(Of TIn) = Nothing,
                               Optional AutoRun As Boolean = True)
         '初始化参数
         Me.PanLoader = PanLoader
@@ -89,13 +89,59 @@
         If PanAlways IsNot Nothing Then PanAlways.Visibility = Visibility.Collapsed
         '初次运行加载器
         If PageLoaderAutoRun Then
-            If PageLoader.GetType.Name.StartsWithF("LoaderTask") Then
-                PageLoader.Start(CType(PageLoader, Object).StartGetInput(Nothing, PageLoaderInputInvoke))
-            Else
-                Dim Input = Nothing
-                If PageLoaderInputInvoke IsNot Nothing Then Input = PageLoaderInputInvoke()
-                PageLoader.Start(Input)
-            End If
+            '上下两个重载只有这里不一样
+            PageLoader.Start(RealLoader.StartGetInput(Nothing, PageLoaderInputInvoke))
+        End If
+        If PageLoader.State = LoadState.Finished AndAlso FinishedInvoke IsNot Nothing Then
+            RunInUiWait(Sub() FinishedInvoke(RealLoader)) '加载器已提前完成，直接触发事件
+        End If
+        '设置加载环
+        PageLoaderUi.State = RealLoader
+        AddHandler PageLoaderUi.Click, Sub() If RealLoader.State = LoadState.Failed Then PageLoaderRestart() '点击重试事件
+    End Sub
+    ''' <summary>
+    ''' 表明页面存在需要在后台执行的加载器。
+    ''' </summary>
+    ''' <param name="LoaderUi">MyLoading 控件。</param>
+    ''' <param name="PanLoader">MyLoading 控件对应的卡片。</param>
+    ''' <param name="PanContent">加载结束后出现的内容容器。</param>
+    ''' <param name="PanAlways">无论是否在加载总是要显示的容器。可以为 Nothing。</param>
+    ''' <param name="RealLoader">在工作线程执行的加载器。</param>
+    ''' <param name="FinishedInvoke">当加载器执行完成，在 UI 线程触发的 UI 初始化事件。</param>
+    Public Sub PageLoaderInit(Of TIn)(LoaderUi As MyLoading, PanLoader As FrameworkElement, PanContent As FrameworkElement, PanAlways As FrameworkElement,
+                              RealLoader As LoaderCombo(Of TIn),
+                              Optional FinishedInvoke As Action(Of LoaderCombo(Of TIn)) = Nothing, Optional InputInvoke As Func(Of TIn) = Nothing,
+                              Optional AutoRun As Boolean = True)
+        '初始化参数
+        Me.PanLoader = PanLoader
+        Me.PanContent = PanContent
+        Me.PanAlways = PanAlways
+        Me.PageLoader = RealLoader
+        Me.PageLoaderUi = LoaderUi
+        Me.PageLoaderInputInvoke = InputInvoke
+        Me.PageLoaderAutoRun = AutoRun
+        '添加结束 Invoke
+        If FinishedInvoke IsNot Nothing Then
+            AddHandler RealLoader.PreviewFinish,
+            Sub()
+                Do While PageState = MyPageRight.PageStates.PageExit OrElse PageState = MyPageRight.PageStates.ContentExit
+                    Thread.Sleep(10) '不在退出动画时执行 UI 线程操作，避免退出动画被重置
+                Loop
+                RunInUiWait(Sub() FinishedInvoke(RealLoader))
+                Thread.Sleep(20) '由于大量初始化控件会导致掉帧，延迟触发 State 改变事件
+            End Sub
+        End If
+        AddHandler RealLoader.OnStateChangedUi, Sub(Loader As LoaderBase, NewState As LoadState, OldState As LoadState) RunInUi(Sub() PageLoaderState(Loader, NewState, OldState))
+        '隐藏 UI
+        PanLoader.Visibility = Visibility.Collapsed
+        PanContent.Visibility = Visibility.Collapsed
+        If PanAlways IsNot Nothing Then PanAlways.Visibility = Visibility.Collapsed
+        '初次运行加载器
+        If PageLoaderAutoRun Then
+            '上下两个重载只有这里不一样
+            Dim Input = Nothing
+            If PageLoaderInputInvoke IsNot Nothing Then Input = PageLoaderInputInvoke()
+            PageLoader.Start(Input)
         End If
         If PageLoader.State = LoadState.Finished AndAlso FinishedInvoke IsNot Nothing Then
             RunInUiWait(Sub() FinishedInvoke(RealLoader)) '加载器已提前完成，直接触发事件
@@ -107,7 +153,7 @@
     '重试
     Public Sub PageLoaderRestart(Optional Input As Object = Nothing, Optional IsForceRestart As Boolean = True) '由外部调用的重试
         If Not PageLoaderAutoRun Then Return
-        If PageLoader.GetType.Name.StartsWithF("LoaderTask") Then
+        If GeneralUtils.IsGenericInstanceOf(PageLoader, GetType(LoaderTask(Of ,))) OrElse TypeOf PageLoader Is LoaderWorker Then
             PageLoader.Start(CType(PageLoader, Object).StartGetInput(Input, PageLoaderInputInvoke), IsForceRestart:=IsForceRestart)
         Else
             If Input Is Nothing AndAlso PageLoaderInputInvoke IsNot Nothing Then Input = PageLoaderInputInvoke()
@@ -125,11 +171,11 @@
     ''' 需要根据加载器状态，从 Empty 切换到 ContentEnter、LoaderWait、LoaderEnter。
     ''' </summary>
     Public Sub PageOnEnter()
-        If ModeDebug Then Log("[UI] 已触发 PageOnEnter")
+        Logger.Trace("已触发 PageOnEnter")
         RaiseEvent PageEnter()
         Select Case PageState
             Case PageStates.Empty
-                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Interrupted Then
+                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Canceled Then
                     '如果加载器在进入页面时不启动（例如联机），那么在此时就会有 State = Waiting
                     PageState = PageStates.ContentEnter
                     TriggerEnterAnimation(PanAlways, If(PanContent, Child))
@@ -142,7 +188,7 @@
                 End If
             Case PageStates.ContentExit
                 '和上面的一样，但是不管 PanAlways
-                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Interrupted Then
+                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Canceled Then
                     PageState = PageStates.ContentEnter
                     TriggerEnterAnimation(If(PanContent, Child))
                 ElseIf PageLoader.State = LoadState.Loading Then
@@ -155,7 +201,7 @@
             Case PageStates.ContentEnter
                 '重复调用 PageOnEnter，直接忽略
             Case Else
-                Throw New Exception("在状态为 " & GetStringFromEnum(PageState) & " 时触发了 PageOnEnter 事件。")
+                Throw New Exception("在状态为 " & PageState.ToString() & " 时触发了 PageOnEnter 事件。")
         End Select
     End Sub
     Public Event PageEnter()
@@ -164,7 +210,7 @@
     ''' 需要立即切换至 PageExit 或 Empty。
     ''' </summary>
     Public Sub PageOnExit()
-        If ModeDebug Then Log("[UI] 已触发 PageOnExit")
+        Logger.Trace("已触发 PageOnExit")
         RaiseEvent PageExit()
         Select Case PageState
             Case PageStates.ContentEnter, PageStates.ContentStay
@@ -189,7 +235,7 @@
     ''' </summary>
     Public Sub PageOnForceExit()
         If PageState = PageStates.Empty Then Return
-        If ModeDebug Then Log("[UI] 已触发 PageOnForceExit")
+        Logger.Trace("已触发 PageOnForceExit")
         PageState = PageStates.Empty
         AniStop("PageRight PageChange " & PageUuid)
         '由于动画会被强制中止，所以需要手动进行隐藏
@@ -206,7 +252,7 @@
     ''' 需要在 PageEnter 事件确认要显示的子页面有哪些。
     ''' </summary>
     Public Sub PageOnContentExit()
-        If ModeDebug Then Log("[UI] 已触发 PageOnContentExit")
+        Logger.Trace("已触发 PageOnContentExit")
         If PageLoader IsNot Nothing AndAlso PageLoader.State = LoadState.Loading Then
             'Loading 的加载器可能触发进一步变化，难以预测会触发子页面的动画还是加载器完成的动画
             Throw New Exception("在调用 PageOnContentExit 时，加载器不能为 Loading 状态")
@@ -235,7 +281,7 @@
     ''' 需要根据目前状态，从 ContentEnter 切换到 ContentStay，或从 LoaderEnter 切换到 LoaderStayForce。
     ''' </summary>
     Private Sub PageOnEnterAnimationFinished()
-        If ModeDebug Then Log("[UI] 已触发 PageOnEnterAnimationFinished")
+        Logger.Trace("已触发 PageOnEnterAnimationFinished")
         Select Case PageState
             Case PageStates.ContentEnter
                 PageState = PageStates.ContentStay
@@ -243,7 +289,7 @@
                 PageState = PageStates.LoaderStayForce
                 AniStart(AaCode(AddressOf PageOnLoaderStayFinished, 400), "PageRight PageChange " & PageUuid)
             Case Else
-                Throw New Exception("在状态为 " & GetStringFromEnum(PageState) & " 时触发了 PageOnEnterAnimationFinished 事件。")
+                Throw New Exception("在状态为 " & PageState.ToString() & " 时触发了 PageOnEnterAnimationFinished 事件。")
         End Select
     End Sub
     ''' <summary>
@@ -251,7 +297,7 @@
     ''' 需要根据目前状态，从 AllExit 切换到 Empty，或从 LoaderExit 切换到 ContentEnter，或从 ContentExit 重新触发 PageOnEnter。
     ''' </summary>
     Private Sub PageOnExitAnimationFinished()
-        If ModeDebug Then Log("[UI] 已触发 PageOnExitAnimationFinished")
+        Logger.Trace("已触发 PageOnExitAnimationFinished")
         Select Case PageState
             Case PageStates.PageExit
                 PageState = PageStates.Empty
@@ -261,7 +307,7 @@
                 PageState = PageStates.ContentEnter
                 TriggerEnterAnimation(PanContent)
             Case Else
-                Throw New Exception("在状态为 " & GetStringFromEnum(PageState) & " 时触发了 PageOnExitAnimationFinished 事件。")
+                Throw New Exception("在状态为 " & PageState.ToString() & " 时触发了 PageOnExitAnimationFinished 事件。")
         End Select
     End Sub
     ''' <summary>
@@ -269,7 +315,7 @@
     ''' 需要从 LoaderWait 切换到 LoaderEnter。
     ''' </summary>
     Private Sub PageOnLoaderWaitFinished()
-        If ModeDebug Then Log("[UI] 已触发 PageOnLoaderWaitFinished")
+        Logger.Trace("已触发 PageOnLoaderWaitFinished")
         Select Case PageState
             Case PageStates.LoaderWait
                 PageState = PageStates.LoaderEnter
@@ -279,7 +325,7 @@
                     TriggerEnterAnimation(PanLoader)
                 End If
             Case Else
-                Throw New Exception("在状态为 " & GetStringFromEnum(PageState) & " 时触发了 PageOnLoaderWaitFinished 事件。")
+                Throw New Exception("在状态为 " & PageState.ToString() & " 时触发了 PageOnLoaderWaitFinished 事件。")
         End Select
     End Sub
     ''' <summary>
@@ -287,7 +333,7 @@
     ''' 需要从 LoaderStayForce 切换到 LoaderStay 或 LoaderExit。
     ''' </summary>
     Private Sub PageOnLoaderStayFinished()
-        If ModeDebug Then Log("[UI] 已触发 PageOnLoaderStayFinished")
+        Logger.Trace("已触发 PageOnLoaderStayFinished")
         Select Case PageState
             Case PageStates.LoaderStayForce
                 If PageLoader.State = LoadState.Finished Then
@@ -297,7 +343,7 @@
                     PageState = PageStates.LoaderStay
                 End If
             Case Else
-                Throw New Exception("在状态为 " & GetStringFromEnum(PageState) & " 时触发了 PageOnLoaderWaitFinished 事件。")
+                Throw New Exception("在状态为 " & PageState.ToString() & " 时触发了 PageOnLoaderWaitFinished 事件。")
         End Select
     End Sub
 
@@ -308,7 +354,7 @@
         Select Case NewState
             Case LoadState.Failed, LoadState.Loading
                 If OldState = LoadState.Failed OrElse OldState = LoadState.Loading Then Return
-                If ModeDebug Then Log("[UI] 已触发 PageLoaderState (Start/Refresh)")
+                Logger.Trace("已触发 PageLoaderState (Start/Refresh)")
                 '（重新）开始运行
                 '需要从部分状态切换到 ReloadExit
                 Select Case PageState
@@ -318,9 +364,9 @@
                     Case PageStates.LoaderExit
                         PageState = PageStates.ContentExit
                 End Select
-            Case LoadState.Finished, LoadState.Interrupted, LoadState.Waiting
+            Case LoadState.Finished, LoadState.Canceled, LoadState.Waiting
                 If Not (OldState = LoadState.Failed OrElse OldState = LoadState.Loading) Then Return
-                If ModeDebug Then Log("[UI] 已触发 PageLoaderState (Stop/Interrupt)")
+                Logger.Trace("已触发 PageLoaderState (Stop/Canceled)")
                 '运行结束
                 '需要从 LoaderWait 切换到 ContentEnter，或从 LoaderStay 切换到 LoaderExit
                 Select Case PageState
