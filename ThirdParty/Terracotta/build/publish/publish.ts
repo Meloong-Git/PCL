@@ -187,7 +187,7 @@ export async function main({context, octokit, require}) {
                         },
                         "headers": {
                             "Authorization": "Bearer " + process.env.CNB_TOKEN,
-                            "Accept": "application/json", // Fucking CNB API force Accept to be exact 'application/json'.
+                            "Accept": "application/json", // CNB API requires Accept to be exactly 'application/json'.
                             "Content-Type": "application/json;charset=UTF-8"
                         }
                     }
@@ -219,7 +219,7 @@ export async function main({context, octokit, require}) {
                     method: "POST",
                     headers: {
                         "Authorization": "Bearer " + process.env.CNB_TOKEN,
-                        "Accept": "application/json", // Fucking CNB API force Accept to be exact 'application/json'.
+                        "Accept": "application/json", // CNB API requires Accept to be exactly 'application/json'.
                     }
                 }).then(r => r.text()).then(j => console.log(j));
             }));
