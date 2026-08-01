@@ -5,6 +5,11 @@ Public Class PageOtherHelp
 
     '滚动条
     Private Sub PageOther_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
+        If Lang = "zh-CN" Then
+            HintSCOnly.Visibility = Visibility.Collapsed
+        Else
+            HintSCOnly.Visibility = Visibility.Visible
+        End If
         PanBack.ScrollToHome()
     End Sub
     '初始化加载器信息
@@ -147,13 +152,13 @@ Public Class PageOtherHelp
             Dim SearchResult = Search(QueryList, SearchBox.Text, MaxBlurCount:=5, MinBlurSimilarity:=0.08)
             PanSearchList.Children.Clear()
             If Not SearchResult.Any() Then
-                PanSearch.Title = "无搜索结果"
+                PanSearch.Title = GetLang("LangPageVersionModSearchNoResult")
                 PanSearchList.Visibility = Visibility.Collapsed
             Else
-                PanSearch.Title = "搜索结果"
+                PanSearch.Title = GetLang("LangPageVersionModSearchResult")
                 For Each Result In SearchResult
                     Dim Item = Result.Item.ToListItem
-                    If ModeDebug Then Item.Info = If(Result.AbsoluteRight, "完全匹配，", "") & "相似度：" & Math.Round(Result.Similarity, 3) & "，" & Item.Info
+                    If ModeDebug Then Item.Info = If(Result.AbsoluteRight, GetLang("LangPageOtherHelpSearchExactMatch"), "") & GetLang("LangPageOtherHelpSearchSimilarity") & Math.Round(Result.Similarity, 3) & "，" & Item.Info
                     PanSearchList.Children.Add(Item)
                 Next
                 PanSearchList.Visibility = Visibility.Visible

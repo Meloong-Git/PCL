@@ -28,10 +28,10 @@ Public Class PageSetupLaunch
             UpdateRamType()
             UpdateJavaList()
         Catch ex As NullReferenceException
-            Logger.Error(ex, "启动设置项存在异常，已被自动重置", LogBehavior.Alert)
+            Logger.Error(ex, GetLang("LangPageSetupLaunchReloadByError"), LogBehavior.Alert)
             Reset()
         Catch ex As Exception
-            Logger.Error(ex, "重载启动设置时出错")
+            Logger.Error(ex, GetLang("LangPageSetupLaunchReloadFail"))
         End Try
     End Sub
     Public Sub Reset()
@@ -41,9 +41,10 @@ Public Class PageSetupLaunch
             Configs.JavaList.Reset()
             Configs.JavaRemovedList.Reset()
             JavaListRefreshWorker.Start()
-            Hint("已初始化启动设置！", HintType.Green)
+            Logger.Info(GetLang("LangPageSetupLaunchInit"))
+            Hint(GetLang("LangPageSetupLaunchInit"), HintType.Green, False)
         Catch ex As Exception
-            Logger.Error(ex, "初始化启动设置失败", LogBehavior.Alert)
+            Logger.Error(ex, GetLang("LangPageSetupLaunchInitFail"), LogBehavior.Alert)
         End Try
         Refresh()
     End Sub
@@ -88,8 +89,8 @@ Public Class PageSetupLaunch
             Settings.Set("LaunchSkinSlim", SkinInfo.IsSlim)
             Return True
         Catch ex As Exception
-            Logger.Error(ex, "改变离线皮肤失败", LogBehavior.Alert)
-            Return False
+            Logger.Error(ex, GetLang("LangPageSetupLaunchSkinChangeFail"), LogBehavior.Alert)
+            ChangeSkin = False
         Finally
             '设置当前显示
             PageLaunchLeft.SkinLegacy.Start(IsForceRestart:=True)
@@ -99,9 +100,9 @@ Public Class PageSetupLaunch
         Try
             FileUtils.Delete(Paths.AppDataThenName & "CustomSkin.png")
             RadioSkinType0.SetChecked(True, True)
-            Hint("离线皮肤已清空！", HintType.Green)
+            Hint(GetLang("LangPageSetupLaunchSkinEmptied"), HintType.Green)
         Catch ex As Exception
-            Logger.Error(ex, "清空离线皮肤失败", LogBehavior.Alert)
+            Logger.Error(ex, GetLang("LangPageSetupLaunchSkinEmptyFail"), LogBehavior.Alert)
         End Try
     End Sub
     Private Sub BtnSkinSave_Click(sender As Object, e As EventArgs) Handles BtnSkinSave.Click
@@ -162,7 +163,7 @@ Public Class PageSetupLaunch
         End If
         '设置文本
         LabRamGame.Text = If(RamGame = Math.Floor(RamGame), RamGame & ".0", RamGame) & " GB" &
-                          If(RamGame <> RamGameActual, " (可用 " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
+                          If(RamGame <> RamGameActual, " (" & GetLang("LangPageSetupLaunchMemAvailable") & " " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
         LabRamUsed.Text = If(RamUsed = Math.Floor(RamUsed), RamUsed & ".0", RamUsed) & " GB"
         LabRamTotal.Text = " / " & If(RamTotal = Math.Floor(RamTotal), RamTotal & ".0", RamTotal) & " GB"
         If ShowAnim Then
@@ -360,7 +361,7 @@ PreFin:
         If JavaListRefreshWorker.Running Then
             BtnAdvanceJavaSearch.IsEnabled = False
             ComboAdvanceJava.IsEnabled = False
-            LabAdvanceJava.Text = "搜索中 …"
+            LabAdvanceJava.Text = GetLang("LangPageSetupLaunchLaunchJavaLoading")
             Return
         End If
         '========================================== 显示结果 ==========================================
@@ -368,7 +369,7 @@ PreFin:
         ComboAdvanceJava.IsEnabled = True
         '更新下拉框文本
         Dim Count = Configs.JavaList.Get().Count
-        LabAdvanceJava.Text = If(Count > 0, $"共有 {Count} 个 Java …", "未找到 Java，点击以导入已有的 Java")
+        LabAdvanceJava.Text = If(Count > 0, GetLang("LangPageSetupLaunchLaunchJavaDescDisplay", Count), GetLang("LangPageSetupLaunchLaunchJavaNoJava"))
         '更新列表
         Try
             Dim JavaEntries = Configs.JavaList.Get()
@@ -378,20 +379,20 @@ PreFin:
                     .FontSize = 13, .Height = 24, .IsScaleAnimationEnabled = False, .Type = MyListItem.CheckType.Clickable,
                     .Tag = JavaEntry, .Title = JavaEntry.ToString}
                 AddHandler JavaItem.MouseLeftButtonUp, Sub(sender As Object, e As MouseButtonEventArgs) e.Handled = True
-                AddHandler JavaItem.Click, Sub() Hint("点击选项右侧的箭头可以进行排序，以控制 PCL 优先选择哪个 Java！")
+                AddHandler JavaItem.Click, Sub() Hint(GetLang("LangPageSetupLaunchLaunchJavaHintClickArrow2Sort"))
                 ComboAdvanceJava.Items.Add(JavaItem)
                 Dim Buttons As New List(Of MyIconButton)
                 '向上移动按钮
                 Dim UpButton As New MyIconButton With {.Logo = Logo.IconButtonArrowUp, .LogoScale = 0.95, .Height = 24, .Width = 24}
                 UpButton.IsEnabled = i > 0
-                UpButton.ToolTip = "提高优先级"
+                UpButton.ToolTip = GetLang("LangPageSetupLaunchLaunchJavaBtnMakeGreater")
                 ToolTipService.SetShowOnDisabled(UpButton, True)
                 AddHandler UpButton.Click, Sub() MoveJavaInList(JavaEntry, -1)
                 Buttons.Add(UpButton)
                 '向下移动按钮
                 Dim DownButton As New MyIconButton With {.Logo = Logo.IconButtonArrowDown, .LogoScale = 0.95, .Height = 24, .Width = 24}
                 DownButton.IsEnabled = i < JavaEntries.Count - 1
-                DownButton.ToolTip = "降低优先级"
+                DownButton.ToolTip = GetLang("LangPageSetupLaunchLaunchJavaBtnMakeLess")
                 ToolTipService.SetShowOnDisabled(DownButton, True)
                 AddHandler DownButton.Click, Sub() MoveJavaInList(JavaEntry, 1)
                 Buttons.Add(DownButton)
@@ -399,19 +400,19 @@ PreFin:
                 Dim IsOfficial As Boolean = JavaEntry.Folder.StartsWithF($"{Paths.AppData}.minecraft\runtime\")
                 Dim DeleteButton As New MyIconButton With {.Logo = Logo.IconButtonStop, .Height = 24, .Width = 24}
                 DeleteButton.IsEnabled = Not IsOfficial
-                DeleteButton.ToolTip = If(DeleteButton.IsEnabled, "从列表中移除", "无法移除官方 Java")
+                DeleteButton.ToolTip = If(DeleteButton.IsEnabled, GetLang("LangPageSetupLaunchLaunchJavaTooltipRemoveItem"), GetLang("LangPageSetupLaunchLaunchJavaTooltipUnableRemoveOfficialJava"))
                 AddHandler DeleteButton.Click, Sub() ManuallyRemoveJava(JavaEntry)
                 ToolTipService.SetShowOnDisabled(DeleteButton, True)
                 Buttons.Add(DeleteButton)
                 '打开文件夹按钮
                 Dim OpenButton As New MyIconButton With {.Logo = Logo.IconButtonOpen, .LogoScale = 1.1, .Height = 24, .Width = 24}
-                OpenButton.ToolTip = "打开文件夹"
+                OpenButton.ToolTip = GetLang("LangSetOpenFolder")
                 AddHandler OpenButton.Click, Sub() OpenExplorer(JavaEntry.JavaExePath)
                 Buttons.Add(OpenButton)
                 JavaItem.Buttons = Buttons
             Next
             Dim ImportItem As New MyListItem With {
-                .FontSize = 13, .Height = 24, .IsScaleAnimationEnabled = False, .Title = "导入电脑中已有的 Java…", .Type = MyListItem.CheckType.Clickable}
+                .FontSize = 13, .Height = 24, .IsScaleAnimationEnabled = False, .Title = GetLang("LangPageSetupLaunchLaunchJavaBtnImportExistJava"), .Type = MyListItem.CheckType.Clickable}
             AddHandler ImportItem.MouseLeftButtonUp,
             Sub(sender As Object, e As MouseButtonEventArgs)
                 e.Handled = True
@@ -452,8 +453,7 @@ PreFin:
     Private Sub ComboArgumentVisibie_SizeChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboArgumentVisibie.SelectionChanged
         If AniControlEnabled <> 0 Then Return
         If ComboArgumentVisibie.SelectedIndex = 0 Then
-            If MyMsgBox("若在游戏启动后立即关闭启动器，崩溃检测、更改游戏标题等功能将失效。" & vbCrLf &
-                        "如果想保留这些功能，可以选择让启动器在游戏启动后隐藏，游戏退出后自动关闭。", "提醒", "继续", "取消") = 2 Then
+            If MyMsgBox(GetLang("LangPageSetupLaunchLaunchDialogCloseOnGameStartContent"), GetLang("LangPageSetupLaunchLaunchDialogCloseOnGameStartTitle"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel")) = 2 Then
                 If e.RemovedItems.Count > 0 Then ComboArgumentVisibie.SelectedItem = e.RemovedItems(0)
             End If
         End If
@@ -463,10 +463,8 @@ PreFin:
     Private Sub CheckArgumentRam_Change() Handles CheckArgumentRam.Change
         If AniControlEnabled <> 0 Then Return
         If Not CheckArgumentRam.Checked Then Return
-        If MyMsgBox("内存优化会显著延长启动耗时，建议仅在内存不足时开启。" & vbCrLf &
-                    "如果你在使用机械硬盘，这还可能导致一小段时间的严重卡顿。" &
-                    If(WindowsUtils.HasAdminRole(), "", $"{vbCrLf}{vbCrLf}每次启动游戏，PCL 都需要申请管理员权限以进行内存优化。{vbCrLf}若想自动授予权限，可以右键 PCL，打开 属性 → 兼容性 → 以管理员身份运行此程序。"),
-                    "提醒", "确定", "取消") = 2 Then
+        If MyMsgBox(GetLang("LangPageSetupLaunchMemReduceDialogEnableContent"),
+                    GetLang("LangPageSetupLaunchMemReduceDialogEnableTitle"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then
             CheckArgumentRam.Checked = False
         End If
     End Sub
@@ -474,7 +472,7 @@ PreFin:
     '版本隔离提示
     Private Sub ComboArgumentIndie_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboArgumentIndieV2.SelectionChanged
         If AniControlEnabled <> 0 Then Return
-        MyMsgBox("本设置仅会对之后新安装的版本生效。" & vbCrLf & "如果要修改已安装的版本的隔离方式，请在它的版本独立设置中调整。")
+        MyMsgBox(GetLang("LangPageSetupLaunchVersionIsolationDialogContent"))
     End Sub
 
 #End Region

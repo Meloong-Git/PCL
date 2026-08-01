@@ -11,15 +11,15 @@
             </local:MyScrollViewer>
             <local:MyCard HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40" x:Name="PanEmpty" UseAnimation="False">
                 <StackPanel Margin="20,17">
-                    <TextBlock Name="LabEmptyTitle" Margin="0,0,0,9" HorizontalAlignment="Center" Text="无可用版本" FontSize="19" UseLayoutRounding="True" SnapsToDevicePixels="True" Foreground="{DynamicResource ColorBrush3}" />
+                    <TextBlock Name="LabEmptyTitle" Margin="0,0,0,9" HorizontalAlignment="Center" Text="{StaticResource LangSelectNoAvailableVersion}" FontSize="19" UseLayoutRounding="True" SnapsToDevicePixels="True" Foreground="{DynamicResource ColorBrush3}" />
                     <Rectangle HorizontalAlignment="Stretch" Height="2" Fill="{DynamicResource ColorBrush3}" />
-                    <TextBlock Name="LabEmptyContent" Margin="10,15,10,5" Text="未找到任何版本的游戏，请先下载任意版本的游戏。&#xa;若有已存在的游戏，请在左边的列表中选择“添加文件夹”，选择 .minecraft 文件夹将其导入。" TextWrapping="Wrap" />
-                    <local:MyButton Height="35" HorizontalAlignment="Center" x:Name="BtnEmptyDownload" MinWidth="140" Text="下载游戏" Margin="0,10,0,0" Padding="13,0" ColorType="Highlight" />
+                    <TextBlock Name="LabEmptyContent" Margin="10,15,10,5" Text="{StaticResource LangSelectNoAvailableVersionTip}" TextWrapping="Wrap" />
+                    <local:MyButton Height="35" HorizontalAlignment="Center" x:Name="BtnEmptyDownload" MinWidth="140" Text="{StaticResource LangSelectNoAvailableVersionDownloadGame}" Margin="0,10,0,0" Padding="13,0" ColorType="Highlight" />
                 </StackPanel>
             </local:MyCard>
         </Grid>
         <local:MyCard HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" x:Name="PanLoad" Margin="40">
-            <local:MyLoading Text="正在获取版本列表" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" AutoRun="False" />
+            <local:MyLoading Text="{StaticResource LangSelectGettingVersion}" Margin="20,20,20,17" x:Name="Load" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" AutoRun="False" />
         </local:MyCard>
     </Grid>
 </local:MyPageRight>

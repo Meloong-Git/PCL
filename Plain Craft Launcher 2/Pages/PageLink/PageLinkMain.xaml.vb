@@ -94,9 +94,9 @@ Public Class PageLinkMain
     '创建
     Private Sub Create_MouseLeftButtonUp() Handles PanSelectCreate.MouseLeftButtonUp
         '输入端口号
-        Dim Port As String = MyMsgBoxInput("输入端口", $"在单人游戏的暂停菜单选择 {vbLQ}对局域网开放{vbRQ}，然后输入端口数字。{vbCrLf}甚至可以输入其他游戏的端口……嗯……",
-            ValidateRules:=New Collection(Of Validate) From {New ValidateInteger(1024, 65535)},
-            HintText:="端口号")
+        Dim Port As String = MyMsgBoxInput(GetLang("LangPageLinkInputPort"), GetLang("LangPageLinkInputPortDesc"),
+            ValidateRules:=New ObjectModel.Collection(Of Validate) From {New ValidateInteger(1024, 65535)},
+            HintText:=GetLang("LangPageLinkInputPortHint"))
         If Port Is Nothing Then Return
         '基础信息
         IsServerSide = True
@@ -123,8 +123,8 @@ Public Class PageLinkMain
     ''' 输入邀请码，切换到联机页并立即加入房间。
     ''' </summary>
     Public Shared Sub Join() Handles PanSelectJoin.MouseLeftButtonUp
-        Dim Code As String = MyMsgBoxInput("输入邀请码", "输入房主发给你的邀请码。",
-            HintText:=If(String.IsNullOrEmpty(LastCode), "", "使用上一次的邀请码"))
+        Dim Code As String = MyMsgBoxInput(GetLang("LangPageLinkInputCode"), GetLang("LangPageLinkInputCodeDesc"),
+            HintText:=If(String.IsNullOrEmpty(LastCode), "", GetLang("LangPageLinkInputCodeHintLast")))
         If Not String.IsNullOrEmpty(LastCode) AndAlso Code IsNot Nothing AndAlso Code = "" Then Code = LastCode
         If Code Is Nothing Then Return
         Join(Code)
@@ -155,21 +155,21 @@ Public Class PageLinkMain
         ChangeState(LinkStates.Loading)
     End Sub
     Public Shared Function ValidateCodeFormat(Code As String) As String
-        If Code Is Nothing Then Return "邀请码为空！"
+        If Code Is Nothing Then Return GetLang("LangPageLinkCodeEmpty")
         Code = FixCodeFormat(Code)
         '判断类型
         If Not (Code.Length >= 14 AndAlso Code(0) = "P"c AndAlso Code(5) = "-"c AndAlso Code(11) = "-"c) Then
             If Code.StartsWithF("U/") Then 'HMCL
-                Return "请让房主使用 PCL 创建房间！"
+                Return GetLang("LangPageLinkCodeNotPCL")
             ElseIf Code.Length = 10 Then 'PCL CE
-                Return "请让房主使用非社区版的 PCL 创建房间！"
+                Return GetLang("LangPageLinkCodeNotCE")
             Else
-                Return "邀请码有误，请让房主使用 PCL 创建房间！"
+                Return GetLang("LangPageLinkCodeInvalid")
             End If
         End If
         '校验版本
         If Code.Length >= 23 AndAlso Code(17) = "-"c AndAlso
-            Val(Code.Substring(18, 2)) > INVITE_CODE_VERSION Then Return "你的 PCL 版本太老了，请在更新 PCL 之后再联机！"
+            Val(Code.Substring(18, 2)) > INVITE_CODE_VERSION Then Return GetLang("LangPageLinkCodeOldVersion")
         Return Nothing
     End Function
     Private Shared Function FixCodeFormat(Code As String) As String
@@ -189,7 +189,7 @@ Public Class PageLinkMain
     ''' </summary>
     Public Shared Sub Join(Code As String)
         If LinkState <> LinkStates.Waiting Then
-            Hint("你已经在联机房间中了！", HintType.Red)
+            Hint(GetLang("LangPageLinkHintAlreadyInRoom"), HintType.Red)
         ElseIf FrmMain.PageCurrent = FormMain.PageType.Link Then
             FrmLinkMain.JoinInternal(Code)
         Else
@@ -219,8 +219,8 @@ Public Class PageLinkMain
         '页面切换会由 Loader 调用 MyPageRight 来触发
         'UI 更新
         UpdateProgressBar(0)
-        LabLoadTitle.Text = If(IsServerSide, "创建房间中", "加入房间中")
-        UpdateLoadingPage("正在初始化……", "准备初始化")
+        LabLoadTitle.Text = If(IsServerSide, GetLang("LangPageLinkCreatingRoom"), GetLang("LangPageLinkJoiningRoom"))
+        UpdateLoadingPage(GetLang("LangPageLinkLoadingInit"), GetLang("LangPageLinkFailBriefInit"))
     End Sub
 
     '由 Loading 状态切换到 Failed
@@ -248,8 +248,8 @@ Public Class PageLinkMain
     '===============================
 
     Private Sub UpdateLoadingPage(Title As String, FailBrief As String)
-        If FailReason = FailBrief & "失败" Then Return
-        FailReason = FailBrief & "失败"
+        If FailReason = FailBrief & GetLang("LangPageLinkFailSuffix") Then Return
+        FailReason = FailBrief & GetLang("LangPageLinkFailSuffix")
         Logger.Info($"开始步骤：{Title}")
         RunInUiWait(
         Sub()
@@ -257,7 +257,7 @@ Public Class PageLinkMain
             FrmLinkMain.LabLoadDesc.Text = Title
         End Sub)
     End Sub
-    Private FailReason As String = "准备初始化"
+    Private FailReason As String = GetLang("LangPageLinkFailBriefInit")
 
     '取消加载
     Private Sub BtnLoadCancel_Click() Handles BtnLoadCancel.Click
@@ -302,10 +302,10 @@ Public Class PageLinkMain
 
         'UI 更新
         If IsServerSide Then
-            LabFinishTitle.Text = "已创建房间"
-            LabFinishDesc.Text = $"把邀请码发给朋友，让大家加入房间吧！{vbCrLf}邀请码：{GetInviteCode()}"
-            BtnFinishExit.Text = "关闭"
-            BtnFinishPing.ToolTip = "网络延迟"
+            LabFinishTitle.Text = GetLang("LangPageLinkFinishedCreateTitle")
+            LabFinishDesc.Text = GetLang("LangPageLinkFinishedCreateDesc", GetInviteCode())
+            BtnFinishExit.Text = GetLang("LangPageLinkBtnClose")
+            BtnFinishPing.ToolTip = GetLang("LangPageLinkToolTipNetPing")
             BtnFinishCopy.Visibility = Visibility.Visible
             Copy() '立即复制邀请码
             '下边栏
@@ -315,10 +315,10 @@ Public Class PageLinkMain
             LabFinishIp.Visibility = Visibility.Collapsed
             LabFinishPort.Text = ServerPort
         Else
-            LabFinishTitle.Text = "已加入房间"
-            LabFinishDesc.Text = $"在多人游戏页面的最下方就能找到联机房间！{vbCrLf}注意：使用离线登录时不要手动输入 IP！"
-            BtnFinishExit.Text = "离开"
-            BtnFinishPing.ToolTip = "与房主的延迟"
+            LabFinishTitle.Text = GetLang("LangPageLinkFinishTitle")
+            LabFinishDesc.Text = GetLang("LangPageLinkFinishedJoinDesc")
+            BtnFinishExit.Text = GetLang("LangPageLinkBtnLeave")
+            BtnFinishPing.ToolTip = GetLang("LangPageLinkToolTipHostPing")
             BtnFinishCopy.Visibility = Visibility.Collapsed
             '下边栏
             BtnFinishPort.Visibility = Visibility.Collapsed
@@ -346,9 +346,9 @@ Public Class PageLinkMain
         If LinkState = LinkStates.Waiting OrElse LinkState = LinkStates.Failed Then Return False
         If Not Silent Then
             If IsServerSide AndAlso PeopleCount > 1 Then
-                If MyMsgBox("你确定要关闭联机房间吗？" & vbCrLf & "所有玩家都需要重新输入邀请码才可加入游戏！", "退出联机", "确定", "取消", IsWarn:=True) = 2 Then Return True
+                If MyMsgBox(GetLang("LangPageLinkExitDialogContentWarn"), GetLang("LangPageLinkExitDialogTitle"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel"), IsWarn:=True) = 2 Then Return True
             ElseIf Closing Then
-                If MyMsgBox(If(IsServerSide, "你确定要关闭联机房间吗？", "你确定要离开联机房间吗？"), "退出联机", "确定", "取消") = 2 Then Return True
+                If MyMsgBox(If(IsServerSide, GetLang("LangPageLinkExitDialogContentClose"), GetLang("LangPageLinkExitDialogContentLeave")), GetLang("LangPageLinkExitDialogTitle"), GetLang("LangDialogBtnOK"), GetLang("LangDialogBtnCancel")) = 2 Then Return True
             End If
         End If
         ChangeState(LinkStates.Waiting)
@@ -357,10 +357,10 @@ Public Class PageLinkMain
 
     '复制邀请码
     Private Sub Copy() Handles BtnFinishCopy.Click
-        Dim CodeText As String = $"在 PCL 启动器中输入邀请码【{GetInviteCode()}】，即可加入联机房间！"
+        Dim CodeText As String = GetLang("LangPageLinkCopyInviteCode", GetInviteCode())
         ClipboardSet(CodeText, False)
         Settings.Set("LinkLastAutoJoinInviteCode", CodeText)
-        Hint("已复制邀请码！", HintType.Green)
+        Hint(GetLang("LangPageLinkHintCopied"), HintType.Green)
     End Sub
     Private Function GetInviteCode() As String
         Return $"{NetworkName}-{NetworkSecret}-{INVITE_CODE_VERSION.ToString.PadLeft(2, "0"c)}{ _
@@ -370,7 +370,7 @@ Public Class PageLinkMain
     '复制 IP
     Private Sub BtnFinishIp_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles BtnFinishIp.MouseLeftButtonUp
         ClipboardSet(ClientAddress, False)
-        Hint("已复制服务器地址！", HintType.Green)
+        Hint(GetLang("LangPageLinkHintCopiedAddress"), HintType.Green)
     End Sub
 
 #End Region
@@ -416,27 +416,27 @@ Public Class PageLinkMain
 
 #Region "加载"
 
-    Private WithEvents LinkLoader As New LoaderCombo(Of Integer)("联机", {
-        New LoaderTask(Of Integer, Integer)("获取配置", AddressOf InitConfig) With {.ProgressWeight = 8},
-        New LoaderTask(Of Integer, List(Of NetFile))("准备下载联机模块", AddressOf InitPrepareDownload) With {.ProgressWeight = 2},
-        New LoaderDownload("下载联机模块", New List(Of NetFile)) With {.ProgressWeight = 40},
-        New LoaderTask(Of Integer, Integer)("启动联机模块", AddressOf InitLaunch) With {.ProgressWeight = 50}
+    Private WithEvents LinkLoader As New LoaderCombo(Of Integer)(GetLang("LangTitleLink"), {
+        New LoaderTask(Of Integer, Integer)(GetLang("LangPageLinkTaskConfig"), AddressOf InitConfig) With {.ProgressWeight = 8},
+        New LoaderTask(Of Integer, List(Of NetFile))(GetLang("LangPageLinkTaskPrepareDownload"), AddressOf InitPrepareDownload) With {.ProgressWeight = 2},
+        New LoaderDownload(GetLang("LangPageLinkTaskDownload"), New List(Of NetFile)) With {.ProgressWeight = 40},
+        New LoaderTask(Of Integer, Integer)(GetLang("LangPageLinkTaskLaunch"), AddressOf InitLaunch) With {.ProgressWeight = 50}
     })
 
     '1. 获取服务器配置
     Private Sub InitConfig(Task As LoaderTask(Of Integer, Integer))
-        UpdateLoadingPage("正在联网获取配置……", "联网获取配置")
+        UpdateLoadingPage(GetLang("LangPageLinkLoadingConfig"), GetLang("LangPageLinkFailBriefConfig"))
         If VersionBranchMain <> "Official" Then
             Throw New Exception($"$开源版无法联网获取配置。{vbCrLf}你可以在 PCL 官方版的缓存文件夹下查看 ServerConfig 的当前内容， 并在代码中进行相应修改。")
         End If
         ServerLoader.WaitForExit(LoaderToSyncProgress:=Task)
-        If ServerConfig Is Nothing Then Throw New Exception("无法从服务器获取配置")
+        If ServerConfig Is Nothing Then Throw New Exception(GetLang("LangPageLinkPanicConfigFail"))
         '检查是否已禁用联机功能
         Dim DisableReason = ServerConfig("Link")?("DisableReason2")?.ToString
         If Not String.IsNullOrEmpty(DisableReason) Then Throw New Exception("$" & DisableReason) 'TODO: 可能不会显示错误原因？
         If CType(ServerConfig("Link"), JObject).ContainsKey("MinVersionCode") AndAlso
            VersionCode < ServerConfig("Link")("MinVersionCode").ToObject(Of Integer) Then
-            Throw New Exception("$你的 PCL 版本太老了，请在更新 PCL 之后再联机！")
+            Throw New Exception("$" & GetLang("LangPageLinkCodeOldVersion"))
         End If
     End Sub
 
@@ -444,7 +444,7 @@ Public Class PageLinkMain
     Private ServerVersion As Integer
     Private Sub InitPrepareDownload(Task As LoaderTask(Of Integer, List(Of NetFile)))
         '获取 CPU 架构
-        UpdateLoadingPage("正在获取 CPU 架构……", "获取 CPU 架构")
+        UpdateLoadingPage(GetLang("LangPageLinkLoadingArch"), GetLang("LangPageLinkFailBriefArch"))
         Dim Architecture As String = GetType(String).Assembly.GetName().ProcessorArchitecture
         Select Case Architecture
             Case ProcessorArchitecture.X86
@@ -460,7 +460,7 @@ Public Class PageLinkMain
         Logger.Info($"CPU 架构：{Architecture}")
         Telemetry("联机开始")
         '检查 EasyTier 版本
-        UpdateLoadingPage("正在检查联机模块版本……", "检查联机模块版本")
+        UpdateLoadingPage(GetLang("LangPageLinkLoadingVersion"), GetLang("LangPageLinkFailBriefVersion"))
         If Not (FileUtils.Exists(PathEasyTier & "联机模块 CLI.exe") AndAlso FileUtils.Exists(PathEasyTier & "联机模块.exe") AndAlso
                 FileUtils.Exists(PathEasyTier & "Packet.dll")) Then
             Settings.Set("LinkEasyTierVersion", -1)
@@ -476,14 +476,14 @@ Public Class PageLinkMain
                 New FileChecker With {.MinSize = 1024 * 1024 * 2}))
         End If
         '开始下载
-        UpdateLoadingPage("正在下载联机模块……", "下载联机模块")
+        UpdateLoadingPage(GetLang("LangPageLinkLoadingDownload"), GetLang("LangPageLinkFailBriefDownload"))
         Task.Output = RequiredFiles
     End Sub
 
     '3. 启动联机模块
     Private Sub InitLaunch(Task As LoaderTask(Of Integer, Integer))
         '解压文件
-        UpdateLoadingPage("正在解压联机模块……", "解压联机模块")
+        UpdateLoadingPage(GetLang("LangPageLinkLoadingExtract"), GetLang("LangPageLinkFailBriefExtract"))
         If FileUtils.Exists(PathEasyTier & "EasyTier.zip") Then
             '解压
             Dim ExtractPath As String = RequestTaskTempFolder()
@@ -499,23 +499,23 @@ Public Class PageLinkMain
         End If
         Task.Progress = 0.07
         '获取节点列表
-        UpdateLoadingPage("正在获取节点列表……", "获取节点列表")
+        UpdateLoadingPage(GetLang("LangPageLinkLoadingNodes"), GetLang("LangPageLinkFailBriefNodes"))
         Dim RawPeers As List(Of String)
         Dim CustomPeers As String = Settings.Get(Of String)("LinkCustomPeer")
         If String.IsNullOrWhiteSpace(CustomPeers) Then
             If DiscoverNodeID = -2 AndAlso Not IsServerSide Then
-                Panic("未填写自定义节点设置", $"$你必须在 {vbLQ}自定义节点{vbRQ} 设置中填写与房主相同的内容，{vbCrLf}才能进入该房间！")
+                Panic(GetLang("LangPageLinkPanicNoCustomPeer"), "$" & GetLang("LangPageLinkPanicNoCustomPeerDetail"))
                 Return
             End If
             RawPeers = GetTargetPeers()
         Else
-            If DiscoverNodeID <> -2 AndAlso Not IsServerSide Then Hint("房主可能没有使用自定义节点设置，请确认你们的自定义节点设置是否一致！")
+            If DiscoverNodeID <> -2 AndAlso Not IsServerSide Then Hint(GetLang("LangPageLinkHintCustomPeerMismatch"))
             RawPeers = CustomPeers.Split("，,".ToCharArray).Select(Function(p) p.Trim).Where(Function(p) Not String.IsNullOrEmpty(p)).ToList()
             Logger.Info($"使用自定义节点：{CustomPeers}")
         End If
         Task.Progress = 0.13
         '获取空闲端口
-        UpdateLoadingPage("正在启动联机模块……", "启动联机模块")
+        UpdateLoadingPage(GetLang("LangPageLinkLoadingStart"), GetLang("LangPageLinkFailBriefStart"))
         Dim FreePorts = FindFreePorts(5, ServerPort)
         ClientPort = FreePorts(0)
         RPCPort = FreePorts(1)
@@ -563,10 +563,10 @@ Public Class PageLinkMain
                 Case -1 'CLI 无返回
                     Task.Progress = (Task.Progress + 0.02).Clamp(0.15, 0.25)
                 Case 0 'CLI 有返回，但未连接到任何节点
-                    UpdateLoadingPage("正在连接到节点……", "连接节点")
+                    UpdateLoadingPage(GetLang("LangPageLinkLoadingNode"), GetLang("LangPageLinkFailBriefNode"))
                     Task.Progress = (Task.Progress + 0.02).Clamp(If(IsServerSide, 0.5, 0.3), If(IsServerSide, 0.95, 0.5))
                 Case Else '已连接到节点，但未连接到房主
-                    UpdateLoadingPage("正在连接到房主……", "连接房主")
+                    UpdateLoadingPage(GetLang("LangPageLinkLoadingHost"), GetLang("LangPageLinkFailBriefHost"))
                     Task.Progress = (Task.Progress + 0.02).Clamp(Math.Min(0.45 + PeerCount * 0.05, 0.65), 0.95)
             End Select
             '超时判定
@@ -577,18 +577,18 @@ Public Class PageLinkMain
             Else '进度停滞超过 30s
                 Select Case PeerCount
                     Case -1 'CLI 无返回
-                        Panic("无法启动联机模块", "近期日志：" & vbCrLf & LogHistory.Join(vbCrLf))
+                        Panic(GetLang("LangPageLinkPanicCannotStart"), GetLang("LangPageLinkRecentLog", LogHistory.Join(vbCrLf)))
                     Case 0 'CLI 有返回，但未连接到任何节点
-                        Panic("无法连接到节点", $"请检查你的网络环境是否良好。")
+                        Panic(GetLang("LangPageLinkPanicCannotConnectNode"), GetLang("LangPageLinkCheckNetworkGood"))
                     Case Else '已连接到节点，但未连接到房主
-                        Panic("无法连接到房主", $"可能的原因：{vbCrLf}- 你或者房主的网络环境不佳{vbCrLf}- 房主已关闭房间{vbCrLf}- 邀请码输错了")
+                        Panic(GetLang("LangPageLinkPanicCannotConnectHost"), GetLang("LangPageLinkCannotConnectHostReasons"))
                 End Select
             End If
         Loop Until Task.IsCanceled
         If Task.IsCanceled Then Throw New OperationCanceledException
         '等待连接稳定，最多 5s
         If IsServerSide Then Return
-        UpdateLoadingPage("连接优化中……", "优化连接")
+        UpdateLoadingPage(GetLang("LangPageLinkLoadingOptimize"), GetLang("LangPageLinkFailBriefOptimize"))
         Task.Progress = 0.999
         For i = 1 To 50
             Dim Server = GetTargetPeer()
@@ -654,7 +654,7 @@ ForcedPass:
                 SelectedDiscoverNode = Nodes.FirstOrDefault(Function(n) n("id").ToObject(Of Integer) = DiscoverNodeID)
                 If SelectedDiscoverNode Is Nothing Then
                     Logger.Warn($"未找到 ID {DiscoverNodeID} 的发现节点")
-                    Panic("房间已过期", "请让房主重新创建房间！")
+                    Panic(GetLang("LangPageLinkPanicRoomExpired"), GetLang("LangPageLinkAskRecreateRoom"))
                     Throw New OperationCanceledException
                 End If
             End If
@@ -669,7 +669,7 @@ ForcedPass:
             If ModeDebug OrElse Not IsServerSide Then '房主只连接发现节点，不连接中继节点
                 Dim RelayCount As Integer = ServerConfig("Link")("RandomPeer").ToObject(Of Integer)
                 Dim RelayNodes = Nodes.Where(Function(n) n("allow_relay").ToObject(Of Boolean)).ToList()
-                If RelayNodes.Count < RelayCount Then Throw New Exception($"可用的中继节点数量不足，需要 {RelayCount} 个，实际 {RelayNodes.Count} 个")
+                If RelayNodes.Count < RelayCount Then Throw New Exception(GetLang("LangPageLinkPanicRelayCount", RelayCount, RelayNodes.Count))
                 FinalPeers.AddRange(RelayNodes.Take(RelayCount).Select(Function(n) n("address").ToString()))
             End If
         Catch ex As Exception
@@ -741,14 +741,14 @@ ForcedPass:
     Private Sub Panic(Brief As String, Detail As String)
         '常见原因分析
         If Detail.Contains("failed to listen on ") Then
-            Detail = $"监听端口失败。{vbCrLf}请点击重试，如果还是出现此错误，可以重启电脑解决。{vbCrLf}{vbCrLf}{Detail}"
+            Detail = GetLang("LangPageLinkPanicListenPortFailed", Detail)
         End If
         '显示信息
         If LinkState = LinkStates.Loading Then
             FailReason = Brief
             LinkLoader.Failed(New Exception(Detail))
         Else
-            MyMsgBox(Detail, "联机出错：" & Brief, IsWarn:=True)
+            MyMsgBox(Detail, GetLang("LangPageLinkErrorTitle", Brief), IsWarn:=True)
             ChangeState(LinkStates.Waiting)
             Telemetry("联机失败", "Exception", FilterUserName(Brief & "：" & Detail, "*"))
         End If
@@ -937,7 +937,7 @@ ForcedPass:
             Logger.Warn(ex, "获取节点信息失败")
             If LinkState = LinkStates.Finished Then
                 FailCount += 1
-                If FailCount >= 4 Then Panic("获取节点信息失败", ex.Message)
+            If FailCount >= 4 Then Panic(GetLang("LangPageLinkPanicNodeInfoFail"), ex.Message)
             End If
         End Try
     End Sub
@@ -1032,12 +1032,12 @@ ForcedPass:
                 Dim Ping As Double = GetPeerPing()
                 Dim Connecting As Boolean = Ping Mod 500 = 0 OrElse $"{Ping:0.0}" = "1.0" OrElse FailCount > 0
                 If Connecting Then
-                    LabFinishPing.Text = "连接优化中"
+                    LabFinishPing.Text = GetLang("LangPageLinkOptimizing")
                 Else
-                    LabFinishPing.Text = If(Ping >= 10, $"{Ping:0} ms", $"{Ping:0.0} ms")
+                    LabFinishPing.Text = If(Ping >= 10, GetLang("LangPageLinkPingMs", $"{Ping:0}"), GetLang("LangPageLinkPingMs", $"{Ping:0.0}"))
                 End If
                 '人数显示
-                LabFinishPlayer.Text = PeopleCount & "  人"
+                LabFinishPlayer.Text = GetLang("LangPageLinkPlayerCount", PeopleCount)
                 '------------------------
                 '  提示条
                 '------------------------
@@ -1049,18 +1049,18 @@ ForcedPass:
                 If Server Is Nothing Then Return
                 If Server.Relay Then
                     If NATType >= NATTypes.Symmetric AndAlso Server.NATType >= NATTypes.Symmetric Then
-                        HintFinish.Text = "你和房主的网络环境都不太好，"
+                        HintFinish.Text = GetLang("LangPageLinkHintNetBothBad")
                     ElseIf NATType >= NATTypes.Symmetric Then
-                        HintFinish.Text = "你的网络环境不太好，"
+                        HintFinish.Text = GetLang("LangPageLinkHintNetYourBad")
                     ElseIf Server.NATType >= NATTypes.Symmetric Then
-                        HintFinish.Text = "房主的网络环境不太好，"
+                        HintFinish.Text = GetLang("LangPageLinkHintNetHostBad")
                     Else
-                        HintFinish.Text = "你或者房主的网络环境不太好，"
+                        HintFinish.Text = GetLang("LangPageLinkHintNetEitherBad")
                     End If
                     If String.IsNullOrWhiteSpace(Settings.Get(Of String)("LinkCustomPeer")) Then
-                        HintFinish.Text &= "正使用社区节点进行中继。"
+                        HintFinish.Text &= GetLang("LangPageLinkHintRelayCommunity")
                     Else
-                        HintFinish.Text &= "正通过自定义节点进行中继。"
+                        HintFinish.Text &= GetLang("LangPageLinkHintRelayCustom")
                     End If
                     HintFinish.Visibility = Visibility.Visible
                     HintFinish.Theme = MyHint.Themes.Yellow
@@ -1075,18 +1075,18 @@ ForcedPass:
                 If OtherPlayers.All(Function(p) p.NATType < NATTypes.PortRestricted) Then Return '任意其他玩家的 NAT 为 3 或更差
                 HintFinish.Visibility = Visibility.Visible
                 HintFinish.Theme = MyHint.Themes.Blue
-                HintFinish.Text = "你的网络环境比房主更好！如果你来当房主，其他玩家或许能更加流畅！"
+                HintFinish.Text = GetLang("LangPageLinkHintBetterHost")
             End Sub)
         End If
         '检查核心状态
         CheckCrash()
         '检查节点状态
         If Not Peers.Any Then
-            Panic("网络连接已断开", "请检查你的网络环境是否正常。")
+            Panic(GetLang("LangPageLinkPanicDisconnected"), GetLang("LangPageLinkCheckNetworkNormal"))
             Return
         End If
         If Not IsServerSide AndAlso Not Peers.Any(Function(p) p.Type = Peer.Types.Server) Then
-            MyMsgBox("房主已离开房间！", "联机结束")
+            MyMsgBox(GetLang("LangPageLinkHostLeft"), GetLang("LangPageLinkEndTitle"))
             ChangeState(LinkStates.Waiting)
             Return
         End If
@@ -1095,7 +1095,7 @@ ForcedPass:
             Try
                 Static BroadcastSocket As New Socket(SocketType.Dgram, ProtocolType.Udp)
                 BroadcastSocket.SendTo(
-                    Encoding.UTF8.GetBytes($"[MOTD]PCL 联机房间[/MOTD][AD]{ClientPort}[/AD]"),
+                    Encoding.UTF8.GetBytes("[MOTD]" & GetLang("LangPageLinkMotd") & "[/MOTD][AD]" & ClientPort & "[/AD]"),
                     SocketFlags.None,
                     New IPEndPoint(IPAddress.Loopback, 4445))
             Catch ex As Exception
@@ -1108,7 +1108,7 @@ ForcedPass:
     ''' </summary>
     Private Sub CheckCrash()
         If ProcessCore IsNot Nothing AndAlso Not ProcessCore.HasExited Then Return
-        Panic("联机模块已崩溃", "近期日志：" & vbCrLf & LogHistory.Join(vbCrLf))
+        Panic(GetLang("LangPageLinkPanicCrash"), GetLang("LangPageLinkRecentLog", LogHistory.Join(vbCrLf)))
     End Sub
 
 #End Region

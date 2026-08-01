@@ -51,7 +51,7 @@ Public Module ModBase
     ''' <summary>
     ''' 当前程序的语言。
     ''' </summary>
-    Public Lang As String = "zh_CN"
+    Public Lang As String = ReadReg("SystemLang", ReadReg("Lang", GetDefaultLang()))
     ''' <summary>
     ''' 程序的打开计时。
     ''' </summary>
@@ -640,10 +640,10 @@ Public Module ModBase
     ''' 检查是否拥有某一文件夹的 I/O 权限。如果出错，则抛出异常。
     ''' </summary>
     Public Sub CheckPermissionWithException(Folder As String)
-        If String.IsNullOrWhiteSpace(Folder) Then Throw New ArgumentNullException("文件夹名不能为空！")
+        If String.IsNullOrWhiteSpace(Folder) Then Throw New ArgumentNullException(GetLang("LangModBaseExceptionEmptyFolderName"))
         Folder = PathUtils.AddSlashSuffix(Folder)
         If Folder.EndsWithF(":\System Volume Information\") OrElse Folder.EndsWithF(":\$RECYCLE.BIN\") Then Throw New UnauthorizedAccessException("没有对系统文件夹的权限！")
-        If Not DirectoryUtils.Exists(Folder) Then Throw New DirectoryNotFoundException("文件夹不存在！")
+        If Not DirectoryUtils.Exists(Folder) Then Throw New DirectoryNotFoundException(GetLang("LangModBaseExceptionFolderNotExist"))
         Dim TestFilePath As String = $"{Folder}CheckPermission{GetUuid()}.txt"
         FileUtils.Write(TestFilePath, "临时文件，用于检测该文件夹的权限是否正常。")
         FileUtils.Delete(TestFilePath)
@@ -1045,8 +1045,7 @@ Public Module ModBase
         Catch ex As Exception
             Logger.Warn(ex, $"无法打开网页（{Url}）")
             ClipboardSet(Url, False)
-            MyMsgBox("可能由于浏览器未正确配置，PCL 无法为你打开网页。" & vbCrLf & "网址已经复制到剪贴板，若有需要可以手动粘贴访问。" & vbCrLf &
-                     $"网址：{Url}", "无法打开网页")
+            MyMsgBox(GetLang("LangModBaseDialogWebOpenFailContent"), GetLang("LangModBaseDialogWebOpenFailTitle"))
         End Try
     End Sub
     ''' <summary>
@@ -1082,7 +1081,7 @@ Public Module ModBase
                         If Not String.IsNullOrEmpty(Text) Then My.Computer.Clipboard.SetText(Text)
                     End Sub)
                 End Sub)
-                If ShowSuccessHint Then Hint("已成功复制！", HintType.Green)
+                If ShowSuccessHint Then Hint(GetLang("LangModBaseHintCopySuccess"), HintType.Green)
             Catch ex As Exception
                 Logger.Error(ex, "可能由于剪贴板被其他程序占用，文本复制失败", LogBehavior.Toast)
             End Try

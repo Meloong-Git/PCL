@@ -34,7 +34,7 @@ Public Class PageSelectRight
                 Dim CardName As String = ""
                 Select Case Card.Key
                     Case McInstanceCardType.OriginalLike
-                        CardName = "常规版本"
+                        CardName = GetLang("LangSelectVersionTypeRegular")
                     Case McInstanceCardType.API
                         Dim IsForgeExists As Boolean = False
                         Dim IsNeoForgeExists As Boolean = False
@@ -47,32 +47,32 @@ Public Class PageSelectRight
                             If Instance.Version.HasNeoForge Then IsNeoForgeExists = True
                         Next
                         If If(IsLiteExists, 1, 0) + If(IsForgeExists, 1, 0) + If(IsFabricExists, 1, 0) + If(IsNeoForgeExists, 1, 0) > 1 Then
-                            CardName = "可安装 Mod"
+                            CardName = GetLang("LangSelectVersionTypeModAbility")
                         ElseIf IsForgeExists Then
-                            CardName = "Forge 版本"
+                            CardName = GetLang("LangSelectVersionTypeForge")
                         ElseIf IsNeoForgeExists Then
-                            CardName = "NeoForge 版本"
+                            CardName = GetLang("LangSelectVersionTypeNeoForge")
                         ElseIf IsLiteExists Then
-                            CardName = "LiteLoader 版本"
+                            CardName = GetLang("LangSelectVersionTypeLiteloader")
                         Else
-                            CardName = "Fabric 版本"
+                            CardName = GetLang("LangSelectVersionTypeFabric")
                         End If
                     Case McInstanceCardType.Error
-                        CardName = "错误的版本"
+                        CardName = GetLang("LangSelectVersionTypeError")
                     Case McInstanceCardType.Hidden
-                        CardName = "隐藏的版本"
+                        CardName = GetLang("LangSelectVersionTypeHidden")
                     Case McInstanceCardType.Rubbish
-                        CardName = "不常用版本"
+                        CardName = GetLang("LangSelectVersionTypeNotCommonlyUsed")
                     Case McInstanceCardType.Star
-                        CardName = "收藏夹"
+                        CardName = GetLang("LangSelectVersionTypeFavorites")
                     Case McInstanceCardType.Fool
-                        CardName = "愚人节版本"
+                        CardName = GetLang("LangSelectVersionTypeAprilFool")
                     Case Else
-                        Throw New ArgumentException("未知的卡片种类（" & Card.Key & "）")
+                        Throw New ArgumentException(GetLang("LangSelectVersionTypeUnknown") & "（" & Card.Key & "）")
                 End Select
 #End Region
                 '建立控件
-                Dim CardTitle As String = CardName & If(CardName = "收藏夹", "", " (" & Card.Value.Count & ")")
+                Dim CardTitle As String = CardName & If(CardName = GetLang("LangSelectVersionTypeFavorites"), "", " (" & Card.Value.Count & ")")
                 Dim NewCard As New MyCard With {.Title = CardTitle, .Margin = New Thickness(0, 0, 0, 15), .SwapType = 0}
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Card.Value}
                 NewCard.Children.Add(NewStack)
@@ -96,12 +96,12 @@ Public Class PageSelectRight
                 PanEmpty.Visibility = Visibility.Visible
                 PanBack.Visibility = Visibility.Collapsed
                 If ShowHidden Then
-                    LabEmptyTitle.Text = "无隐藏版本"
-                    LabEmptyContent.Text = "没有版本被隐藏，你可以在版本设置的版本分类选项中隐藏版本。" & vbCrLf & "再次按下 F11 即可退出隐藏版本查看模式。"
+                    LabEmptyTitle.Text = GetLang("LangSelectVersionNoHidden")
+                    LabEmptyContent.Text = GetLang("LangSelectVersionNoHiddenTip")
                     BtnEmptyDownload.Visibility = Visibility.Collapsed
                 Else
-                    LabEmptyTitle.Text = "无可用版本"
-                    LabEmptyContent.Text = "未找到任何版本的游戏，请先下载任意版本的游戏。" & vbCrLf & "若有已存在的游戏，请在左边的列表中选择添加文件夹，选择 .minecraft 文件夹将其导入。"
+                    LabEmptyTitle.Text = GetLang("LangSelectNoAvailableVersion")
+                    LabEmptyContent.Text = GetLang("LangSelectNoAvailableVersionTip")
                     BtnEmptyDownload.Visibility = If(Settings.Get(Of Boolean)("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow, Visibility.Collapsed, Visibility.Visible)
                 End If
             Else
@@ -110,7 +110,7 @@ Public Class PageSelectRight
             End If
 
         Catch ex As Exception
-            Logger.Error(ex, "将版本列表转换显示时失败")
+            Logger.Error(ex, GetLang("LangSelectVersionListLoadFail"))
         End Try
     End Sub
     Public Shared Sub McInstanceListContent(sender As MyListItem, e As EventArgs)
@@ -120,11 +120,11 @@ Public Class PageSelectRight
         '图标按钮
         Dim BtnStar As New MyIconButton
         If Instance.IsStar Then
-            BtnStar.ToolTip = "取消收藏"
+            BtnStar.ToolTip = GetLang("LangSelectBtnCancelFavorite")
             BtnStar.LogoScale = 1.1
             BtnStar.Logo = Logo.IconButtonLikeFill
         Else
-            BtnStar.ToolTip = "收藏"
+            BtnStar.ToolTip = GetLang("LangSelectBtnFavorite")
             BtnStar.LogoScale = 1.1
             BtnStar.Logo = Logo.IconButtonLikeLine
         End If
@@ -134,11 +134,11 @@ Public Class PageSelectRight
                                       LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
                                   End Sub
         Dim BtnDel As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonDelete}
-        BtnDel.ToolTip = "删除"
+        BtnDel.ToolTip = GetLang("LangSelectDelete")
         AddHandler BtnDel.Click, Sub() DeleteInstance(sender, Instance)
         If Instance.State <> McInstanceState.Error Then
             Dim BtnCont As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonSetup}
-            BtnCont.ToolTip = "设置"
+            BtnCont.ToolTip = GetLang("LangSelectBtnSet")
             AddHandler BtnCont.Click,
             Sub()
                 PageInstanceLeft.Instance = Instance
@@ -152,7 +152,7 @@ Public Class PageSelectRight
             sender.Buttons = {BtnStar, BtnDel, BtnCont}
         Else
             Dim BtnCont As New MyIconButton With {.LogoScale = 1.15, .Logo = Logo.IconButtonOpen}
-            BtnCont.ToolTip = "打开文件夹"
+            BtnCont.ToolTip = GetLang("LangSelectBtnOpenFolder")
             AddHandler BtnCont.Click, Sub() PageInstanceOverall.OpenInstanceFolder(Instance)
             AddHandler sender.MouseRightButtonUp, Sub() PageInstanceOverall.OpenInstanceFolder(Instance)
             sender.Buttons = {BtnStar, BtnDel, BtnCont}
@@ -185,15 +185,17 @@ Public Class PageSelectRight
         Try
             Dim IsShiftPressed As Boolean = My.Computer.Keyboard.ShiftKeyDown
             Dim IsHintIndie As Boolean = Instance.State <> McInstanceState.Error AndAlso Instance.PathIndie <> McFolderSelected
-            Select Case MyMsgBox($"你确定要{If(IsShiftPressed, "永久", "")}删除版本 {Instance.Name} 吗？" &
-                        If(IsHintIndie, vbCrLf & "由于该版本开启了版本隔离，删除版本时该版本对应的存档、资源包、Mod 等文件也将被一并删除！", ""),
-                        "版本删除确认", , "取消",, True)
+            Dim MsgBoxContent As String = If(IsShiftPressed, GetLang("LangSelectDeleteVersionContentB", Instance.Name), GetLang("LangSelectDeleteVersionContentA", Instance.Name)) & If(IsHintIndie, vbCrLf & GetLang("LangSelectDeleteVersionContentC"), "")
+            Select Case MyMsgBox(MsgBoxContent, GetLang("LangSelectDeleteVersionTitle"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel"),, True)
+
                 Case 1
                     Instance.ResetSettingsCache()
                     DirectoryUtils.Delete(Instance.PathVersion, Not IsShiftPressed)
-                    Hint("版本 " & Instance.Name & " 已删除！", HintType.Green)
+                    Hint( GetLang("LangSelectVersionDeleted", Instance.Name), HintType.Green)
                 Case 2
                     Return
+                Case Else
+                    Exit Sub
             End Select
             '从 UI 中移除
             If Instance.DisplayType = McInstanceCardType.Hidden OrElse Not Instance.IsStar Then
@@ -218,9 +220,9 @@ Public Class PageSelectRight
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             End If
         Catch ex As OperationCanceledException
-            Logger.Warn(ex, $"删除版本 {Instance.Name} 被主动取消")
+            Logger.Warn(ex, GetLang("LangSelectVersionDeleteCancelled", Instance.Name))
         Catch ex As Exception
-            Logger.Error(ex, $"删除版本 {Instance.Name} 失败", LogBehavior.Alert)
+            Logger.Error(ex, GetLang("LangSelectVersionDeleteFail", Instance.Name), LogBehavior.Alert)
         End Try
     End Sub
 

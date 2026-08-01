@@ -159,7 +159,7 @@ GroupDone:
         Dim Results = GetResults()
 
         Dim TargetCardName As String = If(TargetVersion <> "" OrElse TargetLoaders <> ModLoaders.None,
-            $"{If(TargetLoaders <> ModLoaders.None, TargetLoaders.ToString + " ", "")}{TargetVersion}（所选版本）", "")
+            GetLang("LangDownloadCompSelectedVersion") & $"{If(TargetLoaders <> ModLoaders.None, TargetLoaders.ToString + " ", "")}{TargetVersion}", "")
         '归类到卡片下
         Dim Dict As New SortedDictionary(Of String, List(Of ResourceVersion))(New CardSorter(TargetCardName))
         Dict.Add("其他", New List(Of ResourceVersion))
@@ -224,7 +224,7 @@ GroupDone:
                 End If
                 '增加提示
                 If Pair.Key = "其他" Then
-                    NewStack.Children.Add(New MyHint With {.Text = "由于版本信息更新缓慢，可能无法识别刚更新的 MC 版本。几天后即可正常识别。", .Theme = MyHint.Themes.Yellow, .Margin = New Thickness(5, 0, 0, 8)})
+                    NewStack.Children.Add(New MyHint With {.Text = GetLang("LangDownloadCompApiSlow"), .Theme = MyHint.Themes.Yellow, .Margin = New Thickness(5, 0, 0, 8)})
                 End If
             Next
             '如果只有一张卡片，展开第一张卡片
@@ -235,7 +235,7 @@ GroupDone:
             If Project.Types = ResourceTypes.ModOrDataPack AndAlso (TargetResourceType = ResourceTypes.Mod OrElse TargetResourceType = ResourceTypes.DataPack) Then
                 HintAlternative.Visibility = Visibility.Visible
                 HintAlternative.Text = If(TargetResourceType = ResourceTypes.Mod,
-                    "以下是该项目的 Mod 版本。点击这里查看其数据包版本。", "以下是该项目的数据包版本。点击这里查看其 Mod 版本。")
+                    GetLang("LangDownloadCompHintAlternativeMod"), GetLang("LangDownloadCompHintAlternativeDataPack"))
             Else
                 HintAlternative.Visibility = Visibility.Collapsed
             End If
@@ -282,7 +282,7 @@ GroupDone:
         PanIntro.Children.Insert(0, ResourceItem)
 
         '决定按钮显示
-        BtnIntroWeb.Text = $"转到 {Project.Platform}"
+        BtnIntroWeb.Text = If(Project.Platform = ResourcePlatforms.CurseForge, GetLang("LangDownloadCompToCurseForge"), GetLang("LangDownloadCompToModrinth"))
         BtnIntroWiki.Visibility = If(Project.WikiId = 0, Visibility.Collapsed, Visibility.Visible)
 
         AniControlEnabled -= 1
@@ -294,23 +294,23 @@ GroupDone:
 
             '获取基本信息
             Dim File As ResourceVersion = sender.Tag
-            Dim LoaderName As String = $"{Project.Platform} 整合包下载：{Project.TranslatedName} "
+            Dim LoaderName As String = $"{Project.Platform} {GetLang("LangDownloadCompDownloadModpack")}{Project.TranslatedName} "
 
             '获取版本名
             Dim PackName As String = Project.TranslatedName.Replace(".zip", "").Replace(".rar", "").Replace(".mrpack", "").Replace("\", "＼").Replace("/", "／").Replace("|", "｜").Replace(":", "：").Replace("<", "＜").Replace(">", "＞").Replace("*", "＊").Replace("?", "？").Replace("""", "").Replace("： ", "：")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
             If Validate.Validate(PackName) <> "" Then PackName = ""
-            Dim InstanceName As String = MyMsgBoxInput("输入版本名称", "", PackName, New Collection(Of Validate) From {Validate})
+            Dim InstanceName As String = MyMsgBoxInput(GetLang("LangDownloadCompInputInstanceName"), "", PackName, New Collection(Of Validate) From {Validate})
             If String.IsNullOrEmpty(InstanceName) Then Return
 
             '构造步骤加载器
             Dim Loaders As New List(Of LoaderBase)
             Dim Target As String = $"{McFolderSelected}versions\{InstanceName}\原始整合包.{If(Project.Platform = ResourcePlatforms.CurseForge, "zip", "mrpack")}"
             Dim LogoFileAddress As String = ResourceItem.PathLogo.ActualSource
-            Loaders.Add(New LoaderDownload("下载整合包文件", {
+            Loaders.Add(New LoaderDownload(GetLang("LangDownloadCompTaskDownloadModpackFile"), {
                 File.ToNetFile(Target, ResourceVersion.DownloadReason.Standalone, File.GameVersions.FirstOrDefault, File.ModLoaders)
             }) With {.ProgressWeight = 10, .Block = True})
-            Loaders.Add(New LoaderTask(Of Integer, Integer)("准备安装整合包",
+            Loaders.Add(New LoaderTask(Of Integer, Integer)(GetLang("LangDownloadCompTaskPrepareInstallModpack"),
             Sub() ModpackInstall(Target, InstanceName, If(FileUtils.Exists(LogoFileAddress), LogoFileAddress, Nothing))) With {.ProgressWeight = 0.1})
 
             '启动
@@ -318,9 +318,9 @@ GroupDone:
             Sub(MyLoader)
                 Select Case MyLoader.State
                     Case LoadState.Failed
-                        Hint(MyLoader.Name & "失败：" & MyLoader.Error.GetDisplay(False), HintType.Red)
+                        Hint(MyLoader.Name & GetLang("LangPageVersionOverallCompleteFileFail") & MyLoader.Error.GetDisplay(False), HintType.Red)
                     Case LoadState.Canceled
-                        Hint(MyLoader.Name & "已取消！", HintType.Blue)
+                        Hint(MyLoader.Name & GetLang("LangTaskAbort"), HintType.Blue)
                     Case LoadState.Loading
                         Return '不重新加载版本列表
                 End Select
@@ -344,11 +344,11 @@ GroupDone:
             Try
                 Dim Desc As String = Nothing
                 Select Case File.ResourceType
-                    Case ResourceTypes.ModPack : Desc = "整合包"
-                    Case ResourceTypes.Mod : Desc = "Mod "
-                    Case ResourceTypes.ResourcePack : Desc = "资源包"
-                    Case ResourceTypes.Shader : Desc = "光影包"
-                    Case ResourceTypes.DataPack : Desc = "数据包"
+                    Case ResourceTypes.ModPack : Desc = GetLang("LangDownloadPageLeftModpack")
+                    Case ResourceTypes.Mod : Desc = GetLang("LangDownloadPageLeftMods")
+                    Case ResourceTypes.ResourcePack : Desc = GetLang("LangDownloadPageLeftResourcepack")
+                    Case ResourceTypes.Shader : Desc = GetLang("LangDownloadPageLeftShader")
+                    Case ResourceTypes.DataPack : Desc = GetLang("LangDownloadPageLeftDatapack")
                 End Select
                 '确认默认保存位置
                 Dim DefaultFolder As String = Nothing
@@ -423,7 +423,7 @@ GroupDone:
                         '查找所有可能的版本
                         Dim NeedLoad As Boolean = McInstanceListLoader.State <> LoadState.Finished
                         If NeedLoad Then
-                            Hint("正在查找适合的游戏版本……")
+                            Hint(GetLang("LangDownloadCompSearchingSuitableInstance"))
                             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\", WaitForExit:=True)
                         End If
                         Dim SuitableInstanceList = McInstanceList.Values.SelectMany(Function(l) l).Where(Function(v) IsInstanceSuitable(v)).
@@ -439,7 +439,7 @@ GroupDone:
                         Else
                             DefaultFolder = McFolderSelected
                             If NeedLoad Then
-                                Hint($"当前 MC 文件夹中没有找到合适的版本！")
+                                Hint(GetLang("LangDownloadCompNoSuitableInstance"))
                             Else
                                 Logger.Info("由于当前版本不兼容，使用当前的 MC 文件夹作为默认下载位置")
                             End If
@@ -474,13 +474,13 @@ GroupDone:
                     Dim Ext As String = If(File.ResourceType = ResourceTypes.Mod,
                         If(File.FileName.EndsWithF(".litemod"), "litemod", "jar"),
                         If(File.FileName.EndsWithF(".mrpack"), "mrpack", "zip"))
-                    Target = Dialogs.SaveFile("选择保存位置", FileName, DefaultFolder, {(Ext, Desc & "文件")})
+                    Target = Dialogs.SaveFile(GetLang("LangSaveAs"), FileName, DefaultFolder, {(Ext, Desc & GetLang("LangSaveAsFile"))})
                     If Target Is Nothing Then Return
                     '构造步骤加载器
-                    Dim LoaderName As String = Desc & "下载：" & PathUtils.GetFileNameWithoutExtension(Target) & " "
+                    Dim LoaderName As String = Desc & GetLang("LangDownloadCompTaskDownloadFileDetail") & PathUtils.GetFileNameWithoutExtension(Target) & " "
                     If Target <> DefaultFolder Then CachedFolder(File.ResourceType) = PathUtils.RemoveLastPart(Target)
                     Dim Loaders As New List(Of LoaderBase)
-                    Loaders.Add(New LoaderDownload("下载文件", {
+                    Loaders.Add(New LoaderDownload(GetLang("LangDownloadCompTaskDownloadFile"), {
                         File.ToNetFile(Target, If(TargetResourceType = ResourceTypes.Any, ResourceVersion.DownloadReason.Dependency, ResourceVersion.DownloadReason.Standalone))
                     }) With {.ProgressWeight = 6, .Block = True})
                     '启动
@@ -528,14 +528,14 @@ GroupDone:
             Return ResourceProject.Cache.ContainsKey(dep)
         End Function).ToList
         '添加开头间隔
-        Stack.Children.Add(New TextBlock With {.Text = "前置资源", .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 2, 0, 5)})
+        Stack.Children.Add(New TextBlock With {.Text = GetLang("LangModCompModDependent"), .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 2, 0, 5)})
         '添加前置列表
         For Each Dep In Deps
             Dim Item = ResourceProject.Cache(Dep).ToResourceItem(False, False)
             Stack.Children.Add(Item)
         Next
         '添加结尾间隔
-        Stack.Children.Add(New TextBlock With {.Text = "版本列表", .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 12, 0, 5)})
+        Stack.Children.Add(New TextBlock With {.Text = GetLang("LangModCompModAlternateVersion"), .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 12, 0, 5)})
     End Sub
 
 End Class

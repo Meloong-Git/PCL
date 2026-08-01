@@ -37,6 +37,7 @@ Public Class Settings
         New Setting("SystemSystemCache", "", Source:=Sources.Registry),
         New Setting("SystemSystemUpdate", 0),
         New Setting("SystemSystemActivity", 0),
+        New Setting("SystemLang", "", Source:=Sources.Registry),
         New Setting("SystemSystemTelemetry", True, Source:=Sources.Registry),
         New Setting("CacheDrops", "", Source:=Sources.Registry),
         New Setting("CacheConfig", 0, Source:=Sources.Registry),

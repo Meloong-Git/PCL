@@ -11,6 +11,31 @@ Public Class Application
             MeloongCore.Main.Init("PCL")
             MeloongCore.Wpf.Main.Init()
             Logger.Instance = New PclLogger With {.logFolder = Paths.BaseThenName, .MinLevel = If(ModeDebug, LogLevel.Trace, LogLevel.Info)}
+            '同步语言到新配置系统
+            Settings.Set("SystemLang", Lang)
+            '刷新语言
+            Try
+                Application.Current.Resources.MergedDictionaries(1) = New ResourceDictionary With {.Source = New Uri("pack://application:,,,/Resources/Language/" & Lang & ".xaml", UriKind.RelativeOrAbsolute)}
+            Catch ex As Exception
+                MsgBox("无法找到语言资源：" & Lang & vbCrLf & "Language resource cannot be found:" & Lang, MsgBoxStyle.Critical)
+                Lang = GetDefaultLang()
+            End Try
+
+            '依照选择语言切换字体
+            Dim LaunchFont As FontFamily
+            Select Case Lang
+                Case "zh-TW", "zh-HK", "lzh", "zh-MARS"
+                    LaunchFont = New FontFamily(New Uri("pack://application:,,,/"), "./Resources/#PCL English, Segoe UI, Microsoft JhengHei UI")
+                Case "ja-JP"
+                    LaunchFont = New FontFamily(New Uri("pack://application:,,,/"), "./Resources/#PCL English, Segoe UI, Yu Gothic UI, Microsoft YaHei UI")
+                Case "ko-KR"
+                    LaunchFont = New FontFamily(New Uri("pack://application:,,,/"), "./Resources/#PCL English, Segoe UI, Malgun Gothic, Microsoft YaHei UI")
+                Case "en-US", "en-GB", "zh-CN", "zh-MEME"
+                    LaunchFont = New FontFamily(New Uri("pack://application:,,,/"), "./Resources/#PCL English, Segoe UI, Microsoft YaHei UI")
+                Case Else '非英语的其他西欧语言统一使用 Segoe UI
+                    LaunchFont = New FontFamily(New Uri("pack://application:,,,/"), "Segoe UI, ./Resources/#PCL English, Microsoft YaHei UI")
+            End Select
+            SwitchApplicationFont(LaunchFont)
             '提升主线程优先级
             Thread.CurrentThread.Priority = ThreadPriority.Highest
             '执行开发版测试
@@ -56,7 +81,7 @@ Public Class Application
                     Try
                         PageOtherTest.MemoryOptimizeInternal(False)
                     Catch ex As Exception
-                        MsgBox(ex.Message, MsgBoxStyle.Critical, "内存优化失败")
+                        MsgBox(ex.Message, MsgBoxStyle.Critical, GetLang("LangApplicationDialogContentMemReduceFail"))
                         Environment.Exit(-1)
                     End Try
                     If My.Computer.Info.AvailablePhysicalMemory < Ram Then '避免 ULong 相减出现负数
@@ -72,11 +97,9 @@ Public Class Application
                 DirectoryUtils.Create(Paths.Base & "PCL\Musics\")
                 CheckPermissionWithException(Paths.Base & "PCL\")
             Catch ex As Exception
-                MsgBox($"PCL 没有对当前文件夹的权限（{Paths.Base}PCL\），请尝试：" & vbCrLf &
-                  "1. 将 PCL 移动到其他文件夹" & If(Paths.Base.StartsWithF("C:", True), "，例如 C 盘和桌面以外的其他位置。", "。") & vbCrLf &
-                  "2. 删除当前目录中的 PCL 文件夹，然后再试。" & vbCrLf &
-                  "3. 右键 PCL 选择属性，打开 兼容性 中的 以管理员身份运行此程序。",
-                MsgBoxStyle.Critical, "运行环境错误")
+                MsgBox(GetLang("LangApplicationDialogContentNoPermission", Paths.Base,
+                                If(Paths.Base.StartsWithF("C:", True), GetLang("LangApplicationDialogNoPermissionMoveSuffixC"), GetLang("LangApplicationDialogNoPermissionMoveSuffixDefault"))),
+                       MsgBoxStyle.Critical, GetLang("LangModSecretPermissionError"))
                 Environment.[Exit](ProcessReturnValues.Cancel)
             End Try
 RetryCacheCheck:
@@ -85,9 +108,9 @@ RetryCacheCheck:
                 CheckPermissionWithException(PathTemp)
             Catch ex As Exception
                 If PathTemp = Path.GetTempPath() & "PCL\" Then
-                    MyMsgBox("PCL 无法访问缓存文件夹，可能导致程序出错或无法正常使用！" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDisplay(True), "缓存文件夹不可用")
+                    MyMsgBox(GetLang("LangApplicationDialogContentCacheFolderUnavailable", ex.GetDisplay(True)), GetLang("LangApplicationDialogTitleCacheFolderUnavailable"))
                 Else
-                    MyMsgBox("手动设置的缓存文件夹不可用，PCL 将使用默认缓存文件夹。" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDisplay(True), "缓存文件夹不可用")
+                    MyMsgBox(GetLang("LangApplicationDialogContentCustomCacheFolderUnavailable", ex.GetDisplay(True)), GetLang("LangApplicationDialogTitleCacheFolderUnavailable"))
                     Settings.Set("SystemSystemCache", "")
                     PathTemp = Path.GetTempPath() & "PCL\"
                     GoTo RetryCacheCheck
@@ -123,15 +146,18 @@ RetryCacheCheck:
             Logger.Info($"程序路径：{PathExe}")
             Logger.Info($"系统编码：{Encoding.Default.HeaderName} ({Encoding.Default.CodePage}, GBK={IsGBKEncoding})")
             Logger.Info($"管理员权限：{WindowsUtils.HasAdminRole()}")
+            Logger.Info("[Location] 启动器语言：" & Lang)
+            Logger.Info("[Location] 当前系统环境是否为中国大陆：" & IsLocationZH())
             '检测异常环境
             If Paths.Base.Contains(Path.GetTempPath()) OrElse Paths.Base.Contains("AppData\Local\Temp\") Then
-                MyMsgBox("请将 PCL 从压缩包中解压后再使用！" & vbCrLf & "如果不会解压，可以在网上寻找教程。", "需要解压！", "我知道了", IsWarn:=True, ForceWait:=True)
+                MyMsgBox(GetLang("LangApplicationDialogContentUnzipLauncher"), GetLang("LangApplicationDialogTitleUnzipLauncher"), GetLang("LangDialogBtnOK"), IsWarn:=True, ForceWait:=True)
                 FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
             If Not Environment.Is64BitOperatingSystem Then
-                MyMsgBox("PCL 和新版 Minecraft 均不再支持 32 位系统，请重装为 64 位系统后再进行游戏！", "环境警告", "我知道了", IsWarn:=True, ForceWait:=True)
+                MyMsgBox(GetLang("LangApplicationDialogContent32BitWarn"), GetLang("LangApplicationDialogTitle32BitWarn"), GetLang("LangDialogBtnOK"), IsWarn:=True, ForceWait:=True)
                 FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
+            SetUnmanagedDll()
             '计时
             Logger.Info($"第一阶段加载用时：{GetTimeMs() - ApplicationStartTick} ms")
             ApplicationStartTick = GetTimeMs()
@@ -142,7 +168,7 @@ RetryCacheCheck:
                 FilePath = PathExe
             Catch
             End Try
-            MsgBox(ex.GetDisplay(True) & vbCrLf & "PCL 所在路径：" & If(String.IsNullOrEmpty(FilePath), "获取失败", FilePath), MsgBoxStyle.Critical, "PCL 初始化错误")
+            MsgBox(ex.GetDisplay(True) & vbCrLf & GetLang("LangApplicationDialogPathPrefix") & If(String.IsNullOrEmpty(FilePath), GetLang("LangApplicationDialogPathGetFail"), FilePath), MsgBoxStyle.Critical, GetLang("LangApplicationDialogTitleInitError"))
             FormMain.EndProgramForce(ProcessReturnValues.Exception)
         End Try
     End Sub
@@ -216,24 +242,8 @@ RetryCacheCheck:
         End If
     End Sub
 
-    '动态 DLL 加载
-    Private Sub New() '这里必须尽早调用，且不能使用任何库，否则加载 MeloongCore 就会导致崩溃
-        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "ThrottleDebounce", "System.Net.Http.Formatting", "PCLCS", "MeloongCore.Wpf", "MeloongCore"}
-        Static LoadedAssemblies As New ConcurrentDictionary(Of String, Lazy(Of Assembly))(StringComparer.Ordinal) '缓存
-        AddHandler AppDomain.CurrentDomain.AssemblyResolve,
-        Function(sender As Object, Args As ResolveEventArgs) As Assembly
-            Dim Prefix As String = Prefixes.FirstOrDefault(Function(p) Args.Name.StartsWith(p, StringComparison.Ordinal))
-            If Prefix Is Nothing Then Return Nothing
-            Dim LazyAssembly = LoadedAssemblies.GetOrAdd(Prefix, Function(p) New Lazy(Of Assembly)(
-            Function()
-                Dim LoadedAssembly = Assembly.Load(DirectCast(My.Resources.ResourceManager.GetObject(p), Byte()))
-                If p = "Imazen.WebP" Then ExtractLibwebp() 'WebP 特判
-                Return LoadedAssembly
-            End Function, LazyThreadSafetyMode.ExecutionAndPublication))
-            Return LazyAssembly.Value
-        End Function
-    End Sub
-    Private Shared Sub ExtractLibwebp() '这个方法会调用 ModBase，进而调用 MeloongCore，所以不能放在 New 里
+    Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
+    Private Shared Sub SetUnmanagedDll()
         SetDllDirectory(PathPure.TrimEnd("\"c))
         Try
             ExtractResources(PathPure & "libwebp.dll", "libwebp64")
@@ -241,7 +251,6 @@ RetryCacheCheck:
             Logger.Warn(ex, "写入 libwebp.dll 失败") '防止同时加载多个图片时，同时写入文件导致文件占用，进而导致崩溃
         End Try
     End Sub
-    Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
 
     '切换窗口
 

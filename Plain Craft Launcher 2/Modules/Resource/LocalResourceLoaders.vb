@@ -10,13 +10,13 @@ Public Module LocalResourceLoaders
             If PageInstanceMod.UpdatingInstanceModFolders.Contains(Loader.Input) Then
                 Logger.Info($"等待 Mod 更新完成后才能继续加载 Mod 列表：{Loader.Input}")
                 Try
-                    RunInUiWait(Sub() If FrmInstanceMod IsNot Nothing Then FrmInstanceMod.Load.Text = "正在更新 Mod")
+                    RunInUiWait(Sub() If FrmInstanceMod IsNot Nothing Then FrmInstanceMod.Load.Text = GetLang("LangModModUpdatingMod"))
                     Do Until Not PageInstanceMod.UpdatingInstanceModFolders.Contains(Loader.Input)
                         If Loader.IsCanceled Then Return
                         Thread.Sleep(100)
                     Loop
                 Finally
-                    RunInUiWait(Sub() If FrmInstanceMod IsNot Nothing Then FrmInstanceMod.Load.Text = "正在加载 Mod 列表")
+                    RunInUiWait(Sub() If FrmInstanceMod IsNot Nothing Then FrmInstanceMod.Load.Text = GetLang("LangModModLoadingModList"))
                 End Try
                 FrmInstanceMod.LoaderRun(LoaderFolderRunType.UpdateOnly)
             End If

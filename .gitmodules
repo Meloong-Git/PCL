@@ -1,3 +1,3 @@
 [submodule "MeloongCore"]
 	path = MeloongCore
-	url = https://github.com/Meloong-Git/MeloongCore.git
+	url = git@github.com:PCL-Community/MeloongCore.git

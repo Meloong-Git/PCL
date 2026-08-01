@@ -31,9 +31,9 @@ Public Module ModLaunch
     Public Function McLaunchStart(Optional Options As McLaunchOptions = Nothing) As Boolean
         CurrentLaunchOptions = If(Options, New McLaunchOptions)
         '预检查
-        If Not RunInUi() Then Throw New Exception("McLaunchStart 必须在 UI 线程调用！")
+        If Not RunInUi() Then Throw New Exception(GetLang("LangModLaunchExceptionRunNotInUI"))
         If McLaunchLoader.State = LoadState.Loading Then
-            Hint("已有游戏正在启动中！", HintType.Red)
+            Hint(GetLang("LangModLaunchAlreadyLaunchGame"), HintType.Red)
             Return False
         End If
         '强制切换需要启动的版本
@@ -43,13 +43,13 @@ Public Module ModLaunch
             Try
                 CurrentLaunchOptions.Instance.GetJsonPath()
             Catch
-                Hint($"无法启动 {CurrentLaunchOptions.Instance.Name}：当前 Minecraft 文件夹中尚未安装该版本！", HintType.Red)
+                Hint(GetLang("LangModLaunchHintVersionNotInstalled", CurrentLaunchOptions.Instance.Name), HintType.Red)
                 Return False
             End Try
             '检查版本
             CurrentLaunchOptions.Instance.Load()
             If CurrentLaunchOptions.Instance.State = McInstanceState.Error Then
-                Hint($"无法启动 {CurrentLaunchOptions.Instance.Name}：{CurrentLaunchOptions.Instance.Info}", HintType.Red)
+                Hint(GetLang("LangModLaunchLaunchFail", CurrentLaunchOptions.Instance.Name, CurrentLaunchOptions.Instance.Info), HintType.Red)
                 Return False
             End If
             '切换版本
@@ -111,30 +111,30 @@ Public Module ModLaunch
         Try
             '构造主加载器
             Dim Loaders As New List(Of LoaderBase) From {
-                New LoaderTask(Of Integer, Integer)("获取 Java", AddressOf McLaunchJava) With {.ProgressWeight = 4, .Block = False},
+                New LoaderTask(Of Integer, Integer)(GetLang("LangModLaunchStartStageGetJava"), AddressOf McLaunchJava) With {.ProgressWeight = 4, .Block = False},
                 McLoginLoader, '.ProgressWeight = 15, .Block = False
-                New LoaderCombo(Of String)("补全文件", DlClientFix(McInstanceSelected, False, True)) With {.ProgressWeight = 15, .Show = False},
-                New LoaderTask(Of String, Integer)("获取启动参数", AddressOf McLaunchArgumentMain) With {.ProgressWeight = 2},
-                New LoaderTask(Of Integer, Integer)("解压文件", AddressOf McLaunchNatives) With {.ProgressWeight = 2},
-                New LoaderTask(Of Integer, Integer)("预启动处理", AddressOf McLaunchPrerun) With {.ProgressWeight = 1},
-                New LoaderTask(Of Integer, Integer)("执行自定义命令", AddressOf McLaunchCustom) With {.ProgressWeight = 1},
-                New LoaderTask(Of Integer, Process)("启动进程", AddressOf McLaunchRun) With {.ProgressWeight = 2},
-                New LoaderTask(Of Process, Integer)("等待游戏窗口出现", AddressOf McLaunchWait) With {.ProgressWeight = 1},
-                New LoaderTask(Of Integer, Integer)("结束处理", AddressOf McLaunchEnd) With {.ProgressWeight = 1}
+                New LoaderCombo(Of String)(GetLang("LangModLaunchStartStageCompleteFile"), DlClientFix(McInstanceSelected, False, True)) With {.ProgressWeight = 15, .Show = False},
+                New LoaderTask(Of String, Integer)(GetLang("LangModLaunchStartStageGetParameters"), AddressOf McLaunchArgumentMain) With {.ProgressWeight = 2},
+                New LoaderTask(Of Integer, Integer)(GetLang("LangModLaunchStartStageExtractFile"), AddressOf McLaunchNatives) With {.ProgressWeight = 2},
+                New LoaderTask(Of Integer, Integer)(GetLang("LangModLaunchStartStagePreProcess"), AddressOf McLaunchPrerun) With {.ProgressWeight = 1},
+                New LoaderTask(Of Integer, Integer)(GetLang("LangModLaunchStartStageExecuteCommand"), AddressOf McLaunchCustom) With {.ProgressWeight = 1},
+                New LoaderTask(Of Integer, Process)(GetLang("LangModLaunchStartStageWaitForProgress"), AddressOf McLaunchRun) With {.ProgressWeight = 2},
+                New LoaderTask(Of Process, Integer)(GetLang("LangModLaunchStartStageWaitForWindow"), AddressOf McLaunchWait) With {.ProgressWeight = 1},
+                New LoaderTask(Of Integer, Integer)(GetLang("LangModLaunchStartStageLaunchEnd"), AddressOf McLaunchEnd) With {.ProgressWeight = 1}
             }
             '内存优化
             Select Case Settings.Get(Of Integer)("VersionRamOptimize", Instance:=McInstanceSelected)
                 Case 0 '全局
                     If Settings.Get(Of Boolean)("LaunchArgumentRam") Then '使用全局设置
                         CType(Loaders(2), LoaderCombo(Of String)).Block = False
-                        Loaders.Insert(3, New LoaderTask(Of Integer, Integer)("内存优化", AddressOf McLaunchMemoryOptimize) With {.ProgressWeight = 30})
+                        Loaders.Insert(3, New LoaderTask(Of Integer, Integer)(GetLang("LangModLaunchStartStageMemReduce"), AddressOf McLaunchMemoryOptimize) With {.ProgressWeight = 30})
                     End If
                 Case 1 '开启
                     CType(Loaders(2), LoaderCombo(Of String)).Block = False
-                    Loaders.Insert(3, New LoaderTask(Of Integer, Integer)("内存优化", AddressOf McLaunchMemoryOptimize) With {.ProgressWeight = 30})
+                    Loaders.Insert(3, New LoaderTask(Of Integer, Integer)(GetLang("LangModLaunchStartStageMemReduce"), AddressOf McLaunchMemoryOptimize) With {.ProgressWeight = 30})
                 Case 2 '关闭
             End Select
-            Dim LaunchLoader As New LoaderCombo(Of Object)("Minecraft 启动", Loaders) With {.Show = False}
+            Dim LaunchLoader As New LoaderCombo(Of Object)(GetLang("LangModLaunchStartStageMCStarted"), Loaders) With {.Show = False}
             If McLoginLoader.State = LoadState.Finished Then McLoginLoader.State = LoadState.Waiting '要求重启登录主加载器，它会自行决定是否启动副加载器
             '等待加载器执行并更新 UI
             McLaunchLoaderReal = LaunchLoader
@@ -150,7 +150,7 @@ Public Module ModLaunch
             '成功与失败处理
             Select Case LaunchLoader.State
                 Case LoadState.Finished
-                    Hint(McInstanceSelected.Name & " 启动成功！", HintType.Green)
+                    Hint(McInstanceSelected.Name & " " & GetLang("LangModLaunchStartSuccess"), HintType.Green)
                     '上报
                     If Not IsSavingBatch Then
                         Telemetry("Minecraft 启动成功",
@@ -159,14 +159,14 @@ Public Module ModLaunch
                     End If
                 Case LoadState.Canceled
                     If CanceledHint Is Nothing Then
-                        Hint(If(IsSavingBatch, "已取消导出启动脚本！", "已取消启动！"), HintType.Blue)
+                        Hint(If(IsSavingBatch, GetLang("LangModLaunchCancelExportCommand"), GetLang("LangModLaunchCancelStart")), HintType.Blue)
                     Else
                         Hint(CanceledHint, HintType.Green)
                     End If
                 Case LoadState.Failed
                     Throw LaunchLoader.Error
                 Case Else
-                    Throw New Exception("错误的状态改变：" & LaunchLoader.State.ToString())
+                    Throw New Exception(GetLang("LangModLaunchExceptionStateSwitchError", LaunchLoader.State.ToString()))
             End Select
         Catch ex As Exception
             ex.ThrowIfCanceled()
@@ -174,7 +174,8 @@ Public Module ModLaunch
 NextInner:
             If CurrentEx.Message.StartsWithF("$") Then
                 '若有以 $ 开头的错误信息，则以此为准显示提示
-                MyMsgBox(CurrentEx.Message.TrimStart("$"), If(IsSavingBatch, "导出启动脚本失败", "启动失败"))
+                '若错误信息为 $$，则不提示
+                If Not CurrentEx.Message = "$$" Then MyMsgBox(CurrentEx.Message.TrimStart("$"), If(IsSavingBatch, GetLang("LangPageVersionOverallHintExportingCommandFail"), GetLang("LangModLaunchDialogTitleLaunchFail")))
                 Throw
             ElseIf CurrentEx.InnerException IsNot Nothing Then
                 '检查下一级错误
@@ -225,12 +226,12 @@ NextInner:
     Private Sub McLaunchPrecheck()
         If Settings.Get(Of Boolean)("SystemDebugDelay") Then Thread.Sleep(RandomInteger(100, 2000))
         '检查路径
-        If McInstanceSelected.PathIndie.Contains("!") OrElse McInstanceSelected.PathIndie.Contains(";") Then Throw New Exception("游戏路径中不可包含 ! 或 ;（" & McInstanceSelected.PathIndie & "）")
-        If McInstanceSelected.PathVersion.Contains("!") OrElse McInstanceSelected.PathVersion.Contains(";") Then Throw New Exception("游戏路径中不可包含 ! 或 ;（" & McInstanceSelected.PathVersion & "）")
+        If McInstanceSelected.PathIndie.Contains("!") OrElse McInstanceSelected.PathIndie.Contains(";") Then Throw New Exception(GetLang("LangModLaunchExceptionPathIncorrect", McInstanceSelected.PathIndie))
+        If McInstanceSelected.PathVersion.Contains("!") OrElse McInstanceSelected.PathVersion.Contains(";") Then Throw New Exception(GetLang("LangModLaunchExceptionPathIncorrect", McInstanceSelected.PathVersion))
         '检查版本
-        If McInstanceSelected Is Nothing Then Throw New Exception("未选择 Minecraft 版本！")
+        If McInstanceSelected Is Nothing Then Throw New Exception(GetLang("LangModLaunchExceptionNoInstanceSelected"))
         McInstanceSelected.Load()
-        If McInstanceSelected.State = McInstanceState.Error Then Throw New Exception("Minecraft 存在问题：" & McInstanceSelected.Info)
+        If McInstanceSelected.State = McInstanceState.Error Then Throw New Exception(GetLang("LangModLaunchExceptionInstanceError", McInstanceSelected.Info))
         '检查输入信息
         Dim CheckResult As String = ""
         RunInUiWait(Sub() CheckResult = McLoginAble(McLoginInput()))
@@ -241,10 +242,7 @@ NextInner:
             Sub()
                 Select Case Settings.Get(Of Integer)("SystemLaunchCount")
                     Case 10, 20, 40, 60, 80, 100, 120, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000
-                        If MyMsgBox("PCL 已经为你启动了 " & Settings.Get(Of Integer)("SystemLaunchCount") & " 次游戏啦！" & vbCrLf &
-                                    "如果 PCL 还算好用的话，能不能考虑赞助一下 PCL……" & vbCrLf &
-                                    "如果没有大家的支持，PCL 很难在免费、无任何广告的情况下维持数年的更新（磕头）……！",
-                                    Settings.Get(Of Integer)("SystemLaunchCount") & " 次启动！", "支持 PCL！", "但是我拒绝") = 1 Then
+                        If MyMsgBox(GetLang("LangModLaunchDialogContentSponsorship", Settings.Get(Of Integer)("SystemLaunchCount")),GetLang("LangModLaunchDialogTitleSponsorship", Settings.Get(Of Integer)("SystemLaunchCount")), GetLang("LangModLaunchDialogBtn1Sponsorship"), GetLang("LangModLaunchDialogBtn2Sponsorship")) = 1 Then
                             OpenWebsite("https://meloong.com/afd/a/LTCat")
                         End If
                 End Select
@@ -258,19 +256,17 @@ NextInner:
                 Sub()
                     Select Case Settings.Get(Of Integer)("SystemLaunchCount")
                         Case 3, 8, 15, 30, 50, 70, 90, 110, 130, 180, 220, 280, 330, 380, 450, 550, 660, 750, 880, 950, 1100, 1300, 1500, 1700, 1900
-                            If MyMsgBox("你已经启动了 " & Settings.Get(Of Integer)("SystemLaunchCount") & " 次 Minecraft 啦！" & vbCrLf &
-                                "如果觉得 Minecraft 还不错，可以购买正版支持一下，毕竟开发游戏也真的很不容易……不要一直白嫖啦。" & vbCrLf & vbCrLf &
-                                "在登录一次正版账号后，就不会再出现这个提示了！",
-                                "考虑一下正版？", "支持正版游戏！", "下次一定") = 1 Then
+                            If MyMsgBox(GetLang("LangModLaunchDialogContentBuyMc", Settings.Get(Of Integer)("SystemLaunchCount"),
+                                GetLang("LangModLaunchDialogTitleBuyMc"), GetLang("LangModLaunchDialogBtn1BuyMc"), GetLang("LangModLaunchDialogBtn2BuyMc"))) = 1 Then
                                 OpenWebsite("https://www.xbox.com/zh-cn/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj")
                             End If
                     End Select
                 End Sub, "Buy Minecraft")
             ElseIf Settings.Get(Of McLoginType)("LoginType") = McLoginType.Legacy Then
-                Select Case MyMsgBox("你必须先登录正版账号，才能进行离线登录！", "正版验证", "购买正版", "试玩", "返回",
+                Select Case MyMsgBox(GetLang("LangModLaunchDialogContentMsLoginRequire"), GetLang("LangModLaunchDialogTitleMsLoginRequire"), GetLang("LangModLaunchDialogBtn1MsLoginRequire"), GetLang("LangModLaunchDialogBtn2MsLoginRequire"), GetLang("LangModLaunchDialogBtn3MsLoginRequire"),
                     Button1Action:=Sub() OpenWebsite("https://www.xbox.com/zh-cn/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj"))
                     Case 2
-                        Hint("游戏将以试玩模式启动！", HintType.Red)
+                        Hint(GetLang("LangModLaunchHintPlayInDemo"), HintType.Red)
                         CurrentLaunchOptions.ExtraGameArgs.Add("--demo")
                     Case 3
                         Throw New OperationCanceledException
@@ -458,12 +454,12 @@ NextInner:
             Case McLoginType.Auth
                 Return PageLoginAuth.IsVaild(LoginData)
             Case Else
-                Return "未知的登录方式"
+                Return GetLang("LangModLaunchUnknownLoginMethod")
         End Select
     End Function
 
     '登录主模块加载器
-    Public McLoginLoader As New LoaderTask(Of McLoginData, McLoginResult)("登录", AddressOf McLoginStart, AddressOf McLoginInput, ThreadPriority.BelowNormal) With {.ReloadTimeout = 1, .ProgressWeight = 15, .Block = False}
+    Public McLoginLoader As New LoaderTask(Of McLoginData, McLoginResult)(GetLang("LangModLaunchLogin"), AddressOf McLoginStart, AddressOf McLoginInput, ThreadPriority.BelowNormal) With {.ReloadTimeout = 1, .ProgressWeight = 15, .Block = False}
     Public Function McLoginInput() As McLoginData
         Dim LoginData As McLoginData = Nothing
         Dim LoginType = Settings.Get(Of McLoginType)("LoginType")
@@ -596,7 +592,7 @@ Relogin:
 SkipLogin:
         McLaunchLog($"微软登录结束，AccessToken 将在 {DateTimeOffset.FromUnixTimeSeconds(ExpiresAt).LocalDateTime} 过期")
         Settings.Set("HintBuy", True) '关闭正版购买提示
-        If ThemeUnlock(10, False) Then MyMsgBox("感谢你对正版游戏的支持！" & vbCrLf & "隐藏主题 跳票红 已解锁！", "提示")
+        If ThemeUnlock(10, False) Then MyMsgBox(GetLang("LangModLaunchDialogContentThemeUnlockMojang"), GetLang("LangDialogTitleTip"))
     End Sub
     Private Sub McLoginServerStart(Data As LoaderTask(Of McLoginServer, McLoginResult))
         Dim Input As McLoginServer = Data.Input
@@ -732,7 +728,7 @@ LoginFinish:
                Headers:={{"Accept-Language", "zh-CN"}},
                ContentType:="application/json; charset=utf-8", RequireJson:=True).DeserializeJson()
         '将登录结果输出
-        If LoginJson("selectedProfile") Is Nothing Then Throw New Exception("选择的角色 " & Settings.Get(Of String)("Cache" & Data.Input.Token & "Name") & " 无效！")
+        If LoginJson("selectedProfile") Is Nothing Then Throw New Exception(GetLang("LangModLaunchExceptionInvalidSelectedRole", Settings.Get(Of String)("Cache" & Data.Input.Token & "Name")))
         Data.Output.AccessToken = LoginJson("accessToken").ToString
         Data.Output.ClientToken = LoginJson("clientToken").ToString
         Data.Output.Uuid = LoginJson("selectedProfile")("id").ToString
@@ -763,10 +759,10 @@ LoginFinish:
                 ContentType:="application/json; charset=utf-8", RequireJson:=True).DeserializeJson()
             '检查登录结果
             If LoginJson("availableProfiles").Count = 0 Then
-                If Data.Input.ForceReselectProfile Then Hint("你还没有创建角色，无法更换！", HintType.Red)
-                Throw New Exception("$你还没有创建角色，请在创建角色后再试！")
+                If Data.Input.ForceReselectProfile Then Hint(GetLang("LangModLaunchHintNoRoleChangeRole"), HintType.Red)
+                Throw New Exception("$" & GetLang("LangModLaunchHintNoRole"))
             ElseIf Data.Input.ForceReselectProfile AndAlso LoginJson("availableProfiles").IsSingle Then
-                Hint("你的账户中只有一个角色，无法更换！", HintType.Red)
+                Hint(GetLang("LangModLaunchHintNoRoleOnlyOne"), HintType.Red)
             End If
             Dim SelectedName As String = Nothing
             Dim SelectedId As String = Nothing
@@ -778,7 +774,7 @@ LoginFinish:
                     If Profile("id").ToString = CacheId Then
                         SelectedName = Profile("name").ToString
                         SelectedId = Profile("id").ToString
-                        McLaunchLog("根据缓存选择的角色：" & SelectedName)
+                        McLaunchLog("根据缓存选择的角色： " & SelectedName)
                     End If
                 Next
                 '缓存无效，要求玩家选择
@@ -792,7 +788,7 @@ LoginFinish:
                             SelectionControl.Add(New MyRadioBox With {.Text = Profile("name").ToString})
                             SelectionJson.Add(Profile)
                         Next
-                        Dim SelectedIndex As Integer = MyMsgBoxSelect(SelectionControl, "选择使用的角色")
+                        Dim SelectedIndex As Integer = MyMsgBoxSelect(SelectionControl, GetLang("LangModLaunchDialogSelectRole"))
                         SelectedName = SelectionJson(SelectedIndex)("name").ToString
                         SelectedId = SelectionJson(SelectedIndex)("id").ToString
                     End Sub)
@@ -839,7 +835,7 @@ LoginFinish:
                                 RunInUi(AddressOf PageLoginNideSkin.ExitLogin)
                         End Select
                     End If
-                    Throw New Exception("$登录失败：" & ErrorMessage)
+                    Throw New Exception(GetLang("LangModLaunchExceptionLoginFail", ErrorMessage))
                 End If
             End If
             '通用关键字检测
@@ -858,11 +854,11 @@ LoginFinish:
                                             " - 只注册了账号，但没有加入对应服务器。")
                 End Select
             ElseIf ex.IsBadNetwork() Then
-                Throw New Exception("$登录失败：你的网络环境不佳，导致难以连接到海外服务器。" & vbCrLf & "请稍后再试，或使用加速器、VPN 改善网络环境。")
+                Throw New Exception(GetLang("LangModLaunchExceptionTimeout"))
             ElseIf ex.Message.StartsWithF("$") Then
                 Throw
             Else
-                Throw New Exception("登录失败：" & ex.Message, ex)
+                Throw New Exception(GetLang("LangModLaunchExceptionLoginFail", ex.Message), ex)
             End If
             Return False
         End Try
@@ -870,7 +866,7 @@ LoginFinish:
 
     '微软登录步骤 1，原始登录：获取 DeviceCode 并开启登录网页
     Private Function MsLoginStep1New(Data As LoaderTask(Of McLoginMs, McLoginResult)) As (OAuthAccessToken As String, OAuthRefreshToken As String)
-        '参考：https://learn.microsoft.com/zh-cn/entra/identity-platform/v2-oauth2-device-code
+        '参考：https://learn.microsoft.com/entra/identity-platform/v2-oauth2-device-code
 
         '初始请求
 Retry:
@@ -887,8 +883,8 @@ Retry:
             Thread.Sleep(100)
         End While
         If TypeOf Converter.Result Is RestartException Then
-            If MyMsgBox($"请在登录时选择 {vbLQ}其他登录方法{vbRQ}，然后选择 {vbLQ}使用我的密码{vbRQ}。{vbCrLf}如果没有该选项，请选择 {vbLQ}设置密码{vbRQ}，设置完毕后再登录。",
-                "需要使用密码登录", "重新登录", "设置密码", "取消",
+            If MyMsgBox(GetLang("LangModLaunchDialogContentLoginWithPassword"),
+                GetLang("LangModLaunchDialogTitleLoginWithPassword"), GetLang("LangModLaunchDialogBtn1LoginWithPassword"), GetLang("LangModLaunchDialogBtn2LoginWithPassword"), GetLang("LangDialogBtnCancel"),
                 Button2Action:=Sub() OpenWebsite("https://account.live.com/password/Change")) = 1 Then
                 GoTo Retry
             Else
@@ -919,10 +915,10 @@ Retry:
                Response.ContainsIgnoreCase("expired") Then '#8611
                 Return ("Relogin", "")
             ElseIf Response.Contains("Account security interrupt") Then
-                MyMsgBox("该账号由于安全问题无法登陆，请前往微软账户页获取更多信息。", "登录失败", "我知道了", IsWarn:=True)
+                MyMsgBox(GetLang("LangModLaunchDialogContentSecurityInterrupt"), GetLang("LangModLaunchDialogTitleLoginFail"), GetLang("LangModLaunchDialogBtnISee"), IsWarn:=True)
                 Throw New OperationCanceledException
             ElseIf Response.Contains("service abuse") Then
-                MyMsgBox("非常抱歉，该账号已被微软封禁，无法登录。", "登录失败", "我知道了", IsWarn:=True)
+                MyMsgBox(GetLang("LangModLaunchDialogContentBanned"), GetLang("LangModLaunchDialogTitleLoginFail"), GetLang("LangModLaunchDialogBtnISee"), IsWarn:=True)
                 Throw New OperationCanceledException
             Else
                 Throw
@@ -969,26 +965,23 @@ Retry:
         Catch ex As HttpRequestCodeException
             '参考 https://github.com/PrismarineJS/prismarine-auth/blob/master/src/common/Constants.js
             If ex.Response.Contains("2148916227") Then
-                MyMsgBox("该账号似乎已被微软封禁，无法登录。", "登录失败", "我知道了", IsWarn:=True)
+                MyMsgBox(GetLang("LangModLaunchDialogContentBanned"), GetLang("LangModLaunchLoginFail"), GetLang("LangModLaunchDialogBtnISee"), IsWarn:=True)
                 Throw New OperationCanceledException
             ElseIf ex.Response.Contains("2148916233") Then
-                If MyMsgBox("你尚未注册 Xbox 账户，请在注册后再登录。", "登录提示", "注册", "取消") = 1 Then
+                If MyMsgBox(GetLang("LangModLaunchDialogContentNoXBoxAccount"), GetLang("LangModLaunchDialogTitleLoginTip"), GetLang("LangModLaunchDialogBtnRegister"), GetLang("LangDialogBtnCancel")) = 1 Then
                     OpenWebsite("https://signup.live.com/signup")
                 End If
                 Throw New OperationCanceledException
             ElseIf ex.Response.Contains("2148916235") Then
-                MyMsgBox($"你的网络所在的国家或地区无法登录微软账号。{vbCrLf}请使用加速器或 VPN，然后再试。", "登录失败", "我知道了")
+                MyMsgBox(GetLang("LangModLaunchDialogContentUnableReachMicrosoft"), GetLang("LangModLaunchDialogTitleLoginFail"), GetLang("LangModLaunchDialogBtnISee"))
                 Throw New OperationCanceledException
             ElseIf ex.Response.Contains("2148916238") Then
-                If MyMsgBox("该账号年龄不足，你需要先修改出生日期，然后才能登录。" & vbCrLf &
-                            "该账号目前填写的年龄是否在 13 岁以上？", "登录提示", "13 岁以上", "12 岁以下", "我不知道") = 1 Then
+                If MyMsgBox(GetLang("LangModLaunchDialogContentAgeLimit"), GetLang("LangModLaunchDialogTitleLoginTip"), GetLang("LangModLaunchDialogBtnAgeGreater13"), GetLang("LangModLaunchDialogBtnAgeLess12"), GetLang("LangModLaunchDialogBtnIDK")) = 1 Then
                     OpenWebsite("https://account.live.com/editprof.aspx")
-                    MyMsgBox("请在打开的网页中修改账号的出生日期（至少改为 18 岁以上）。" & vbCrLf &
-                             "在修改成功后等待一分钟，然后再回到 PCL，就可以正常登录了！", "登录提示")
+                    MyMsgBox(GetLang("LangModLaunchDialogContentChangeAgeA"), GetLang("LangModLaunchDialogTitleLoginTip"))
                 Else
-                    OpenWebsite("https://support.microsoft.com/zh-cn/account-billing/如何更改-microsoft-帐户上的出生日期-837badbc-999e-54d2-2617-d19206b9540a")
-                    MyMsgBox("请根据打开的网页的说明，修改账号的出生日期（至少改为 18 岁以上）。" & vbCrLf &
-                             "在修改成功后等待一分钟，然后再回到 PCL，就可以正常登录了！", "登录提示")
+                    OpenWebsite("https://support.microsoft.com/account-billing/如何更改-microsoft-帐户上的出生日期-837badbc-999e-54d2-2617-d19206b9540a")
+                    MyMsgBox(GetLang("LangModLaunchDialogContentChangeAgeB"), GetLang("LangModLaunchDialogTitleLoginTip"))
                 End If
                 Throw New OperationCanceledException
             Else
@@ -1014,10 +1007,10 @@ Retry:
         Catch ex As HttpRequestCodeException
             If ex.StatusCode = 429 Then
                 Logger.Warn(ex, "微软登录第 4 步汇报 429")
-                Throw New Exception("$登录尝试太过频繁，请等待几分钟后再试！")
+                Throw New Exception("$" & GetLang("LangModLaunchExceptionLoginTooFrequently"))
             ElseIf ex.StatusCode = HttpStatusCode.Forbidden Then
                 Logger.Warn(ex, "微软登录第 4 步汇报 403")
-                Throw New Exception("$当前 IP 的登录尝试异常。" & vbCrLf & "如果你使用了 VPN 或加速器，请把它们关掉或更换节点后再试！")
+                Throw New Exception("$" & GetLang("LangModLaunchExceptionLoginIPIncorrect"))
             ElseIf ex.StatusCode = HttpStatusCode.ServiceUnavailable Then
                 Logger.Warn(ex, "微软登录第 4 步汇报 503")
                 Throw New Exception("$Mojang 服务器出现问题，请稍后再试。" & vbCrLf & "你的网络是正常的，PCL 也是正常的，是 Mojang 出问题了……")
@@ -1043,9 +1036,9 @@ Retry:
         Try
             Dim ResultJson As JObject = Result.DeserializeJson()
             If Not (ResultJson.ContainsKey("items") AndAlso ResultJson("items").Any) Then
-                Select Case MyMsgBox("你尚未购买正版 Minecraft，或者 Xbox Game Pass 已到期。", "登录失败", "购买 Minecraft", "取消")
+                Select Case MyMsgBox(GetLang("LangModLaunchDialogContentNoMc"), GetLang("LangModLaunchDialogTitleLoginFail"), GetLang("LangModLaunchDialogBtnByMc"), GetLang("LangDialogBtnCancel"))
                     Case 1
-                        OpenWebsite("https://www.xbox.com/zh-cn/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj")
+                        OpenWebsite("https://www.xbox.com/games/store/minecraft-java-bedrock-edition-for-pc/9nxp44l49shj")
                 End Select
                 Throw New OperationCanceledException
             End If
@@ -1066,14 +1059,14 @@ Retry:
             Select Case ex.StatusCode
                 Case 429
                     Logger.Warn(ex, "微软登录第 6 步汇报 429")
-                    Throw New Exception("$登录尝试太过频繁，请等待几分钟后再试！")
+                    Throw New Exception("$" & GetLang("LangModLaunchExceptionLoginTooFrequently"))
                 Case HttpStatusCode.NotFound
                     Logger.Warn(ex, "微软登录第 6 步汇报 404")
                     RunInNewThread(
                     Sub()
-                        Select Case MyMsgBox("请先创建 Minecraft 玩家档案，然后再重新登录。", "登录失败", "创建档案", "取消")
+                        Select Case MyMsgBox(GetLang("LangModLaunchDialogContentCreateRole"), GetLang("LangModLaunchDialogTitleLoginFail"), GetLang("LangModLaunchDialogBtnCreateRole"), GetLang("LangDialogBtnCancel"))
                             Case 1
-                                OpenWebsite("https://www.minecraft.net/zh-hans/msaprofile/mygames/editprofile")
+                                OpenWebsite("https://www.minecraft.net/msaprofile/mygames/editprofile")
                         End Select
                     End Sub, "Login Failed: Create Profile")
                     Throw New OperationCanceledException
@@ -1115,7 +1108,7 @@ Retry:
                         Uuid = McLoginMojangUuid(SkinName, False)
                     End If
                 Catch ex As Exception
-                    Logger.Error(ex, "皮肤信息获取失败，游戏将以无皮肤的方式启动", LogBehavior.Toast)
+                    Logger.Error(ex, GetLang("LangModLaunchDialogGetSkinFailHint"), LogBehavior.Toast)
                 End Try
             Case 4
                 '自定义
@@ -1135,18 +1128,18 @@ Retry:
         '从官网获取
         Try
             Dim GotJson As JObject = NetRequestByClientRetry("https://api.mojang.com/users/profiles/minecraft/" & Name, RequireJson:=True).DeserializeJson()
-            If GotJson Is Nothing Then Throw New FileNotFoundException("正版玩家档案不存在（" & Name & "）")
+            If GotJson Is Nothing Then Throw New FileNotFoundException(GetLang("LangModLaunchExceptionOnlineProfileNotFound", Name))
             Uuid = If(GotJson("id"), "")
         Catch ex As Exception
-            Logger.Warn(ex, $"从官网获取正版 Uuid 失败（{Name}）")
+            Logger.Warn(ex, GetLang("LangModLaunchExceptionOnlineUUIDGetFail", Name))
             If Not ThrowOnNotFound AndAlso ex.GetType.Name = "FileNotFoundException" Then
                 Uuid = McLoginLegacyUuid(Name) '玩家档案不存在
             Else
-                Throw New Exception("从官网获取正版 Uuid 失败", ex)
+                Throw New Exception(GetLang("LangModLaunchExceptionOnlineUUIDGetFail", "Fail"), ex)
             End If
         End Try
         '写入缓存
-        If Not Len(Uuid) = 32 Then Throw New Exception("获取的正版 Uuid 长度不足（" & Uuid & "）")
+        If Not Len(Uuid) = 32 Then Throw New Exception(GetLang("LangModLaunchExceptionOnlineUUIDLenIncorrect", Uuid))
         WriteIni(PathTemp & "Cache\Uuid\Mojang.ini", Name, Uuid)
         Return Uuid
     End Function
@@ -1272,7 +1265,7 @@ NextInstance:
                 Args.Add("-Dauthlibinjector.side=client")
                 Args.Add("-Dauthlibinjector.yggdrasil.prefetched=" & Convert.ToBase64String(Encoding.UTF8.GetBytes(Response)))
             Catch ex As Exception
-                Throw New Exception("无法连接到第三方登录服务器（" & If(Server, Nothing) & "）", ex)
+                Throw New Exception(GetLang("LangModLaunchExceptionConnectServerFail", If(Server, Nothing)), ex)
             End Try
         End If
 
@@ -1649,7 +1642,7 @@ NextInstance:
             Catch ex As InvalidDataException
                 Logger.Warn(ex, $"打开 Natives 文件失败（{Native.LocalPath}）")
                 FileUtils.Delete(Native.LocalPath)
-                Throw New Exception("无法打开 Natives 文件（" & Native.LocalPath & "），该文件可能已损坏，请重新尝试启动游戏")
+                Throw New Exception(GetLang("LangModLaunchExceptionOpenNativesFail", Native.LocalPath))
             End Try
             For Each Entry In Zip.Entries
                 Dim FileName As String = Entry.FullName
@@ -1822,8 +1815,19 @@ NextInstance:
             '1.11 ~ 12：zh_cn 时正常，zh_CN 时虽然显示了中文但语言设置会错误地显示选择英文
             '1.13+    ：zh_cn 时正常，zh_CN 时自动切换为英文
             Dim CurrentLang As String = ReadIni(SetupFileAddress, "lang", "none")
-            Dim RequiredLang As String = If(CurrentLang = "none" OrElse Not DirectoryUtils.Exists(McInstanceSelected.PathIndie & "saves"), '#3844，整合包可能已经自带了 options.txt
-                If(Settings.Get(Of Boolean)("ToolHelpChinese"), "zh_cn", "en_us"), CurrentLang.Lower)
+            Dim RequiredLang As String = CurrentLang.ToLower
+            If CurrentLang = "none" OrElse String.IsNullOrWhiteSpace(CurrentLang) OrElse Not DirectoryUtils.Exists(McInstanceSelected.PathIndie & "saves") Then '#3844，整合包可能已经自带了 options.txt
+                If Settings.Get(Of Boolean)("ToolHelpChinese") Then
+                    RequiredLang = Lang.ToLower.Replace("-", "_")
+                End If
+            End If
+            If McInstanceSelected.Version.Drop < 15 And RequiredLang.Equals("lzh") Then '1.15 之前的版本不支持 lzh
+                RequiredLang = "zh_cn"
+            End If
+            If McInstanceSelected.Version.Drop < 15 And RequiredLang.Equals("zh_hk") Then '1.15 之前的版本不支持 zh_hk
+                RequiredLang = "zh_tw"
+            End If
+
             If Not McInstanceSelected.Version.Vaild OrElse McInstanceSelected.Version.Vanilla.Major <= 10 Then
                 '将最后两位改为大写，前面的部分保留
                 RequiredLang = RequiredLang.Substring(0, RequiredLang.Length - 2) & RequiredLang.Substring(RequiredLang.Length - 2).Upper
@@ -1836,7 +1840,7 @@ NextInstance:
                 McLaunchLog($"已将语言从 {CurrentLang} 修改为 {RequiredLang}")
             End If
             ''如果是初次设置，一并修改 forceUnicodeFont
-            'If Settings.Get(Of Boolean)("ToolHelpChinese") AndAlso (CurrentLang = "none" OrElse Not DirectoryUtils.Exists(McInstanceSelected.PathIndie & "saves")) Then
+            'If Settings.Get(Of Boolean)("ToolHelpLanguage") AndAlso (CurrentLang = "none" OrElse Not DirectoryUtils.Exists(McInstanceSelected.PathIndie & "saves")) Then
             '    WriteIni(SetupFileAddress, "forceUnicodeFont", "true")
             '    McLaunchLog("已开启 forceUnicodeFont")
             'End If
@@ -1857,7 +1861,7 @@ NextInstance:
                McLoginLoader.Input.Type = McLoginType.Legacy AndAlso '离线登录
                (Settings.Get(Of Integer)("LaunchSkinType") = 2 OrElse '强制 Alex
                (Settings.Get(Of Integer)("LaunchSkinType") = 4 AndAlso Settings.Get(Of Boolean)("LaunchSkinSlim"))) Then '或选用 Alex 皮肤
-            Hint("此 Minecraft 版本尚不支持 Alex 皮肤，你的皮肤可能会显示为 Steve！", HintType.Red)
+            Hint(GetLang("LangModLaunchHintAlexSkinNotSupport"), HintType.Red)
         End If
 
         '离线皮肤资源包

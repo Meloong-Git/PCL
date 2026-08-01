@@ -45,7 +45,7 @@ Public Class PageLaunchRight
                     Case 0
                         Logger.Info("主页预设：你知道吗")
                         Content = "
-                            <local:MyCard Title=""你知道吗？"" Margin=""0,0,0,15"">
+                            <local:MyCard Title=""{StaticResource LangLaunchRightPageTips}"" Margin=""0,0,0,15"">
                                 <TextBlock Margin=""25,38,23,15"" FontSize=""13.5"" IsHitTestVisible=""False"" Text=""{hint}"" TextWrapping=""Wrap"" Foreground=""{DynamicResource ColorBrush1}"" />
                                 <local:MyIconButton Height=""22"" Width=""22"" Margin=""9"" VerticalAlignment=""Top"" HorizontalAlignment=""Right"" 
                                     EventType=""刷新主页"" EventData=""/""
@@ -54,7 +54,7 @@ Public Class PageLaunchRight
                     Case 1
                         Logger.Info("主页预设：回声洞")
                         Content = "
-                            <local:MyCard Title=""回声洞"" Margin=""0,0,0,15"">
+                            <local:MyCard Title=""{StaticResource LangLaunchRightPageEcho}"" Margin=""0,0,0,15"">
                                 <TextBlock Margin=""25,38,23,15"" FontSize=""13.5"" IsHitTestVisible=""False"" Text=""{cave}"" TextWrapping=""Wrap"" Foreground=""{DynamicResource ColorBrush1}"" />
                                 <local:MyIconButton Height=""22"" Width=""22"" Margin=""9"" VerticalAlignment=""Top"" HorizontalAlignment=""Right"" 
                                     EventType=""刷新主页"" EventData=""/""
@@ -248,8 +248,8 @@ Public Class PageLaunchRight
     Private Sub OnLoadContentFailed(ex As Exception)
         If ModeDebug OrElse Settings.Get(Of Integer)("UiCustomType") = 1 Then
             Logger.Warn(ex, "加载主页失败")
-            If MyMsgBox(If(TypeOf ex Is UnauthorizedAccessException, ex.Message, $"主页内容编写有误，请根据下列错误信息进行检查：{vbCrLf}{ex.GetDisplay(False)}"),
-                        "加载主页失败", "重试", "取消") = 1 Then ForceRefresh()
+            If MyMsgBox(If(TypeOf ex Is UnauthorizedAccessException, ex.Message, GetLang("LangLaunchRightPageLoadFailContent", ex.GetDisplay(False))),
+                        GetLang("LangLaunchRightPageLoadFailTitle"), GetLang("LangDialogBtnRetry"), GetLang("LangDialogBtnCancel")) = 1 Then ForceRefresh()
         Else
             Logger.Error(ex, "加载主页失败", LogBehavior.Toast)
         End If

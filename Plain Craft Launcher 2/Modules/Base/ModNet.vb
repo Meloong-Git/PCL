@@ -150,9 +150,9 @@ RequestFinished:
     ''' </summary>
     Public Function NetRequestByLoader(Urls As IEnumerable(Of String), Optional Timeout As Integer = 45000, Optional IsJson As Boolean = False, Optional SimulateBrowserHeaders As Boolean = False) As String
         Dim Temp As String = RequestTaskTempFolder() & "download.txt"
-        Dim NewTask As New LoaderDownload("源码获取 " & GetUuid() & "#", New List(Of NetFile) From {New NetFile(Urls, Temp, New FileChecker With {.IsJson = IsJson}, SimulateBrowserHeaders)})
+        Dim NewTask As New LoaderDownload(GetLang("LangModTaskDownloadCode", GetUuid() & "#"), New List(Of NetFile) From {New NetFile(Urls, Temp, New FileChecker With {.IsJson = IsJson}, SimulateBrowserHeaders)})
         Try
-            NewTask.WaitForExitTime(Timeout, TimeoutMessage:="连接服务器超时（第一下载源：" & Urls.First & "）")
+            NewTask.WaitForExitTime(Timeout, TimeoutMessage:=GetLang("LangModExceptionDownloadCodeSource", Urls.First))
             Dim Result = FileUtils.ReadAsString(Temp)
             FileUtils.Delete(Temp)
             Return Result
@@ -819,7 +819,7 @@ Retry:
                     Case NetState.Finished, NetState.Canceled
                         Return 1
                     Case Else
-                        Throw New ArgumentOutOfRangeException("文件状态未知：" & State)
+                        Throw New ArgumentOutOfRangeException(GetLang("LangModExceptionUnknownFileStatus", State))
                 End Select
             End Get
         End Property

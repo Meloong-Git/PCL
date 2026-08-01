@@ -45,16 +45,16 @@
         <RowDefinition Height="Auto" />
         <RowDefinition Height="1*" />
     </Grid.RowDefinitions>
-    <TextBlock Text="总进度" Grid.Row="1" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush3}" />
+    <TextBlock Text="{StaticResource LangSpeedTotalProgress}" Grid.Row="1" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush3}" />
     <TextBlock Grid.Row="2" Style="{DynamicResource Split}" />
     <TextBlock Text="00.00 %" Grid.Row="3" Name="LabProgress" HorizontalAlignment="Center" FontSize="20" />
-    <TextBlock Text="下载速度" Grid.Row="5" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush3}" />
+    <TextBlock Text="{StaticResource LangSpeedSpeed}" Grid.Row="5" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush3}" />
     <TextBlock Grid.Row="6" Style="{DynamicResource Split}" />
     <TextBlock Text="0 B/s" Grid.Row="7" Name="LabSpeed" HorizontalAlignment="Center" FontSize="20" />
-    <TextBlock Text="剩余文件" Grid.Row="9" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush3}" />
+    <TextBlock Text="{StaticResource LangSpeedLeftFiles}" Grid.Row="9" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush3}" />
     <TextBlock Grid.Row="10" Style="{DynamicResource Split}" />
     <TextBlock Text="123456789" Grid.Row="11" Name="LabFile" HorizontalAlignment="Center" FontSize="20" />
-    <TextBlock Text="剩余线程" Grid.Row="13" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush3}" />
+    <TextBlock Text="{StaticResource LangSpeedLeftThreads}" Grid.Row="13" HorizontalAlignment="Center" FontSize="14" Foreground="{DynamicResource ColorBrush3}" />
     <TextBlock Grid.Row="14" Style="{DynamicResource Split}" />
     <TextBlock Text="123456789" Grid.Row="15" Name="LabThread" HorizontalAlignment="Center" FontSize="20" />
 </local:MyPageLeft>

@@ -356,16 +356,19 @@ Public Class ResourceVersion
                 Iterator Function()
                     If ModLoaders <> ModLoaders.None Then Yield ModLoaders.Flags.Join("、"c)
                     If .Title <> FileName.BeforeLast(".") Then Yield FileName.BeforeLast(".")
-                    If Dependencies.Any Then Yield $"{Dependencies.Count} 项前置"
-                    If GameVersions.All(Function(v) Not v.Contains(".") OrElse {"w", "snapshot", "rc", "pre", "experimental", "-"}.Any(Function(s) v.ContainsIgnoreCase(s))) Then Yield $"游戏版本 {GameVersions.Join("、"c)}"
-                    If DownloadCount > 0 Then Yield $"下载 {If(DownloadCount > 100000, Math.Round(DownloadCount / 10000) & " 万", DownloadCount.ToString() + " ")}次" 'CurseForge 的下载次数经常错误地返回 0
-                    Yield $"更新于 {StringUtils.FormatTimeSpan(ReleaseDate - Date.Now, False)}"
+                    If Dependencies.Any Then Yield GetLang("LangModCompModDependentCount", Dependencies.Count)
+                    If GameVersions.All(Function(v) Not v.Contains(".") OrElse {"w", "snapshot", "rc", "pre", "experimental", "-"}.Any(Function(s) v.ContainsIgnoreCase(s))) Then Yield GetLang("LangModCompModGameVersion") & " " & GameVersions.Join("、"c)
+                    If DownloadCount > 0 Then Yield GetLang("LangModCompModDownload", If(DownloadCount > 100000, Math.Round(DownloadCount / 10000) & " " & GetLang("LangModCompModDigit1"), DownloadCount & " "))
+                    Yield GetLang("LangModCompModUpdateTime", StringUtils.FormatTimeSpan(ReleaseDate - Date.Now, False))
                     If ReleaseType <> ReleaseTypes.Release Then Yield ReleaseTypeDisplay
                 End Function().Join("，"c)
 
                 '另存为按钮
                 If SaveAsButtonHandler IsNot Nothing Then
-                    Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = "另存为"}
+                    Dim BtnSave As New MyIconButton With {.Logo = Logo.IconButtonSave, .ToolTip = GetLang("LangModCompModSaveAs")}
+                    ToolTipService.SetPlacement(BtnSave, Primitives.PlacementMode.Center)
+                    ToolTipService.SetVerticalOffset(BtnSave, 30)
+                    ToolTipService.SetHorizontalOffset(BtnSave, 2)
                     AddHandler BtnSave.Click, SaveAsButtonHandler
                     .Buttons = {BtnSave}
                 End If

@@ -68,16 +68,16 @@ Public Class PageLoginMsSkin
     Public Sub BtnSkinEdit_Click(sender As Object, e As RoutedEventArgs)
         '检查条件，获取新皮肤
         If IsChanging Then
-            Hint("正在更改皮肤中，请稍候！")
+            Hint(GetLang("LangPageLoginMsSkinChangingSkinPlzWait"))
             Return
         End If
         If McLoginLoader.State = LoadState.Failed Then
-            Hint("登录失败，无法更改皮肤！", HintType.Red)
+            Hint(GetLang("LangPageLoginMsSkinChangeSkinFailByLoginFail"), HintType.Red)
             Return
         End If
         Dim SkinInfo As McSkinInfo = McSkinSelect()
         If Not SkinInfo.IsVaild Then Return
-        Hint("正在更改皮肤……")
+        Hint(GetLang("LangPageLoginMsSkinChangingSkin"))
         IsChanging = True
         '开始实际获取
         RunInNewThread(Sub() EditSkin(SkinInfo), "Ms Skin Upload")
@@ -98,7 +98,7 @@ Retry:
                 },
                 Headers:={{"Authorization", "Bearer " & AccessToken}, {"Accept", "*/*"}, {"User-Agent", "MojangSharp/0.1"}})
             If Result.Contains("request requires user authentication") Then
-                Hint("正在重新登录，将在登录后自动更改皮肤……")
+                Hint(GetLang("LangPageLoginMsSkinLoginBeforeChangeSkin"))
                 McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
                 GoTo Retry
             End If
@@ -120,22 +120,22 @@ Retry:
                     Case HttpStatusCode.BadRequest
                         Logger.Warn(ex, "更改皮肤时遭遇 400 错误")
                         If requestException.Response?.Contains("""error""") Then
-                            Hint("更改皮肤失败：" & requestException.Response.DeserializeJson()("error").ToString, HintType.Red)
+                            Hint(GetLang("LangPageLoginMsSkinChangeSkinFail") & ": " & requestException.Response.DeserializeJson()("error").ToString, HintType.Red)
                             Return
                         ElseIf requestException.Response?.Contains("""errorMessage""") Then
-                            Hint("更改皮肤失败：" & requestException.Response.DeserializeJson()("errorMessage").ToString, HintType.Red)
+                            Hint(GetLang("LangPageLoginMsSkinChangeSkinFail") & ": " & requestException.Response.DeserializeJson()("errorMessage").ToString, HintType.Red)
                             Return
                         End If
                     Case HttpStatusCode.Unauthorized
                         Logger.Warn(ex, "更改皮肤时遭遇 401 错误")
-                        Hint("正在重新登录，将在登录后自动更改皮肤……")
+                        Hint(GetLang("LangPageLoginMsSkinLoginBeforeChangeSkin"))
                         McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
                         GoTo Retry
                 End Select
             ElseIf ex.IsBadNetwork Then
-                Hint("更改皮肤失败：连接 Mojang 服务器超时，请稍后再试，或使用 VPN 改善网络环境", HintType.Red)
+                Hint(GetLang("LangPageLoginMsSkinChangeSkinFailByTimeOut"), HintType.Red)
             Else
-                Logger.Error(ex, "更改皮肤失败", LogBehavior.Toast)
+                Logger.Error(ex, GetLang("LangPageLoginMsSkinChangeSkinFail"), LogBehavior.Toast)
             End If
         Finally
             IsChanging = False
@@ -162,13 +162,13 @@ Retry:
         RunInThread(
         Sub()
             Try
-                Hint("正在刷新披风列表……")
+                Hint(GetLang("LangPageLoginMsSkinCapeListRefreshing"))
                 If McLaunchLoader.State = LoadState.Loading Then
                     McLoginMsLoader.WaitForExit()
                 Else
                     McLoginMsLoader.WaitForExit(GetLoginData(), IsForceRestart:=True)
                 End If
-                Hint("已刷新披风列表！", HintType.Green)
+                Hint(GetLang("LangPageLoginMsSkinCapeListRefreshed"), HintType.Green)
             Catch ex As Exception
                 Logger.Error(ex, "刷新披风列表失败", LogBehavior.Toast)
             End Try

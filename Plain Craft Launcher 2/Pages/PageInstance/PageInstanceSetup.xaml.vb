@@ -87,9 +87,9 @@ Public Class PageInstanceSetup
             JavaListRefreshWorker.Start()
 
             Logger.Info("已初始化版本独立设置")
-            Hint("已初始化版本独立设置！", HintType.Green, False)
+            Hint(GetLang("LangPageVersionSetupHintIndependentSetResetSuccess"), HintType.Green, False)
         Catch ex As Exception
-            Logger.Error(ex, "初始化版本独立设置失败", LogBehavior.Alert)
+            Logger.Error(ex, GetLang("LangPageVersionSetupHintIndependentSetResetFail"), LogBehavior.Alert)
         End Try
 
         Reload()
@@ -131,7 +131,7 @@ Public Class PageInstanceSetup
         End If
         '设置文本
         LabRamGame.Text = If(RamGame = Math.Floor(RamGame), RamGame & ".0", RamGame) & " GB" &
-                          If(RamGame <> RamGameActual, " (可用 " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
+                          If(RamGame <> RamGameActual, " (" & GetLang("LangPageSetupLaunchMemAvailable") & " " & If(RamGameActual = Math.Floor(RamGameActual), RamGameActual & ".0", RamGameActual) & " GB)", "")
         LabRamUsed.Text = If(RamUsed = Math.Floor(RamUsed), RamUsed & ".0", RamUsed) & " GB"
         LabRamTotal.Text = " / " & If(RamTotal = Math.Floor(RamTotal), RamTotal & ".0", RamTotal) & " GB"
         If ShowAnim Then
@@ -375,11 +375,11 @@ PreFin:
     'LittleSkin
     Private Sub BtnServerAuthLittle_Click(sender As Object, e As EventArgs) Handles BtnServerAuthLittle.Click
         If TextServerAuthServer.Text <> "" AndAlso TextServerAuthServer.Text <> "https://littleskin.cn/api/yggdrasil" AndAlso
-            MyMsgBox("即将把第三方登录设置覆盖为 LittleSkin 登录。" & vbCrLf & "除非你是服主，或者服主要求你这样做，否则请不要继续。" & vbCrLf & vbCrLf & "是否确实需要覆盖当前设置？",
-                     "设置覆盖确认", "继续", "取消") = 2 Then Return
+            MyMsgBox(GetLang("LangPageVersionSetupDialogLittleSkinContent"),
+                     GetLang("LangPageVersionSetupDialogLittleSkinTitle"), GetLang("LangDialogBtnContinue"), GetLang("LangDialogBtnCancel")) = 2 Then Return
         TextServerAuthServer.Text = "https://littleskin.cn/api/yggdrasil"
         TextServerAuthRegister.Text = "https://littleskin.cn/auth/register"
-        TextServerAuthName.Text = "LittleSkin 登录"
+        TextServerAuthName.Text = GetLang("LangPageVersionSetupLittleSkinLogin")
     End Sub
 
 #End Region
@@ -522,7 +522,7 @@ PreFin:
             End Sub
             ComboArgumentJavaSelect.Items.Add(ImportItem)
         Catch ex As Exception
-            Logger.Error(ex, "更新 Java 下拉框失败")
+            Logger.Error(ex, GetLang("LangPageSetupLaunchJavaUpdateListFail"))
         End Try
     End Sub
     Private Sub BtnAdvanceJavaSearch_Click() Handles BtnArgumentJavaSearch.Click
@@ -536,10 +536,8 @@ PreFin:
         If AniControlEnabled <> 0 Then Return
         Static IsReverting As Boolean = False
         If IsReverting Then Return
-        If MyMsgBox("调整版本隔离设置后，你需要游戏存档、Mod 等文件手动迁移到新的游戏文件夹中。" & vbCrLf &
-                    "如果发现存档消失，把这项设置改回来就能恢复。" & vbCrLf &
-                    "如果你不会迁移存档，不建议修改这项设置！",
-                    "警告", "我知道我在做什么", "取消", IsWarn:=True) = 2 Then
+        If MyMsgBox(GetLang("LangPageVersionSetupIndieV2DialogContent"), GetLang("LangDialogTitleWarning"),
+                    GetLang("LangPageSetupSystemLaunchDialogAnnouncementBtnConfirm"), GetLang("LangDialogBtnCancel"), IsWarn:=True) = 2 Then
             IsReverting = True
             If e.RemovedItems.Count > 0 Then ComboArgumentIndieV2.SelectedItem = e.RemovedItems(0)
             IsReverting = False

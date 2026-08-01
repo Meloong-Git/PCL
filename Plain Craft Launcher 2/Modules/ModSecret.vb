@@ -145,7 +145,7 @@ Friend Module ModSecret
 #Region "更新"
 
     Friend Sub UpdateCheckByButton()
-        Hint("该版本中不包含更新功能……")
+        Hint(GetLang("LangModSecretHintNoUpdate"))
     End Sub
 
     Friend IsUpdateWaitingRestart As Boolean = False

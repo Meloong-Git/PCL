@@ -179,7 +179,7 @@ EndHint:
         ''' 有多个按钮时，是否给第一个按钮加高亮。
         ''' </summary>
         Public HighLight As Boolean
-        Public Button1 As String = "确定"
+        Public Button1 As String = GetLang("LangDialogBtnOK")
         Public Button2 As String = ""
         Public Button3 As String = ""
         ''' <summary>
@@ -220,7 +220,7 @@ EndHint:
     ''' </summary>
     ''' <param name="Title">弹窗的标题。</param>
     ''' <param name="Caption">弹窗的内容。</param>
-    ''' <param name="Button1">显示的第一个按钮，默认为“确定”。</param>
+    ''' <param name="Button1">显示的第一个按钮，默认为“确定”，内容会依据当前启动器语言而变。</param>
     ''' <param name="Button2">显示的第二个按钮，默认为空。</param>
     ''' <param name="Button3">显示的第三个按钮，默认为空。</param>
     ''' <param name="Button1Action">点击第一个按钮将执行该方法，不关闭弹窗。</param>
@@ -232,6 +232,8 @@ EndHint:
                              Optional IsWarn As Boolean = False, Optional HighLight As Boolean = True, Optional ForceWait As Boolean = False,
                              Optional Button1Action As Action = Nothing, Optional Button2Action As Action = Nothing, Optional Button3Action As Action = Nothing) As Integer
         '将弹窗列入队列
+        If Button1 = "确定" Then Button1 = GetLang("LangDialogBtnOK")
+        If Title = "提示" Then Title = GetLang("LangDialogTitleTip")
         Dim Converter As New MyMsgBoxConverter With {.Type = MyMsgBoxType.Text, .Button1 = Button1, .Button2 = Button2, .Button3 = Button3, .Text = Caption, .IsWarn = IsWarn, .Title = Title, .HighLight = HighLight, .ForceWait = True, .Button1Action = Button1Action, .Button2Action = Button2Action, .Button3Action = Button3Action}
         If Button2.Length > 0 OrElse ForceWait Then
             '若有多个按钮则开始等待
@@ -284,6 +286,8 @@ EndHint:
     ''' <param name="Button2">显示的第二个按钮，默认为“取消”。</param>
     ''' <param name="IsWarn">是否为警告弹窗，若为 True，弹窗配色和背景会变为红色。</param>
     Public Function MyMsgBoxInput(Title As String, Optional Text As String = Nothing, Optional DefaultInput As String = Nothing, Optional ValidateRules As Collection(Of Validate) = Nothing, Optional HintText As String = "", Optional Button1 As String = "确定", Optional Button2 As String = "取消", Optional IsWarn As Boolean = False) As String
+        If Button1 = "确定" Then Button1 = GetLang("LangDialogBtnOK")
+        If Button2 = "取消" Then Button2 = GetLang("LangDialogBtnCancel")
         '将弹窗列入队列
         Dim Converter As New MyMsgBoxConverter With {.Text = If(Text, ""), .HintText = If(HintText, ""), .Type = MyMsgBoxType.Input, .ValidateRules = If(ValidateRules, New Collection(Of Validate)), .Button1 = Button1, .Button2 = Button2, .Content = DefaultInput, .IsWarn = IsWarn, .Title = Title}
         WaitingMyMsgBox.Enqueue(Converter)
@@ -307,6 +311,8 @@ EndHint:
     ''' <param name="Button2">显示的第二个按钮，默认为空。</param>
     ''' <param name="IsWarn">是否为警告弹窗，若为 True，弹窗配色和背景会变为红色。</param>
     Public Function MyMsgBoxSelect(Selections As IEnumerable(Of IMyRadio), Optional Title As String = "提示", Optional Button1 As String = "确定", Optional Button2 As String = "", Optional IsWarn As Boolean = False) As Integer?
+        If Button1 = "确定" Then Button1 = GetLang("LangDialogBtnOK")
+        If Title = "提示" Then Title = GetLang("LangDialogTitleTip")
         '将弹窗列入队列
         Dim Converter As New MyMsgBoxConverter With {.Type = MyMsgBoxType.Select, .Button1 = Button1, .Button2 = Button2, .Content = Selections, .IsWarn = IsWarn, .Title = Title}
         WaitingMyMsgBox.Enqueue(Converter)
@@ -486,13 +492,13 @@ EndHint:
         ''' </summary>
         Public Sub New(FilePath As String)
             RawPath = FilePath
-            If Not FileUtils.Exists(FilePath) Then Throw New FileNotFoundException("未找到帮助文件：" & FilePath, FilePath)
+            If Not FileUtils.Exists(FilePath) Then Throw New FileNotFoundException(GetLang("LangModMainExceptionNoFileFound", FilePath), FilePath)
             Dim JsonData As JObject = ArgumentReplace(FileUtils.ReadAsString(FilePath), AddressOf StringUtils.XmlEscape).DeserializeJson()
             '加载常规信息
             If JsonData("Title") IsNot Nothing Then
                 Title = JsonData("Title")
             Else
-                Throw New ArgumentException("未找到 Title 项")
+                Throw New ArgumentException(GetLang("LangModMainExceptionNoTitleArgFound"))
             End If
             Desc = If(JsonData("Description"), "")
             Search = If(JsonData("Keywords"), "")
@@ -515,7 +521,7 @@ EndHint:
                     XamlContent = FileUtils.ReadAsString(XamlAddress)
                     IsEvent = False
                 Else
-                    Throw New FileNotFoundException("未找到帮助条目 .json 对应的 .xaml 文件（" & XamlAddress & "）")
+                    Throw New FileNotFoundException(GetLang("LangModMainExceptionNoXamlFileFound", XamlAddress))
                 End If
             End If
         End Sub
@@ -627,7 +633,7 @@ NextFile:
                 Next
 
                 '回设
-                If Not Dict.Any() Then Throw New Exception("未找到可用的帮助；若不需要帮助页面，可以在 设置 → 个性化 → 功能隐藏 中将其隐藏")
+                If Not Dict.Any() Then Throw New Exception(GetLang("LangModMainExceptionNoHelpFound"))
                 If Loader.IsCanceled Then Return
                 Loader.Output = Dict
 
@@ -760,13 +766,13 @@ NextFile:
                 GiveUpDistance = 0
                 Select Case RandomInteger(0, 3)
                     Case 0
-                        Hint("放弃吧！只需要点一下右下角的小白旗……", HintType.Red)
+                        Hint(GetLang("LangModMainAprilFoolTipA"), HintType.Red)
                     Case 1
-                        Hint("看到右下角的那面小白旗了吗？", HintType.Red)
+                        Hint(GetLang("LangModMainAprilFoolTipB"), HintType.Red)
                     Case 2
-                        Hint("这里建议点一下右下角的小白旗投降呢.jpg", HintType.Red)
+                        Hint(GetLang("LangModMainAprilFoolTipC"), HintType.Red)
                     Case 3
-                        Hint("右下角的小白旗永远等着你……", HintType.Red)
+                        Hint(GetLang("LangModMainAprilFoolTipD"), HintType.Red)
                 End Select
             End If
 

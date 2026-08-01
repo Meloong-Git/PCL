@@ -41,18 +41,19 @@ Public Class MyLoading
         End Set
     End Property
 
-    Private _Text As String = "加载中"
+    Public Shared ReadOnly TextProperty As DependencyProperty = DependencyProperty.Register("Text", GetType(String), GetType(MyLoading), New PropertyMetadata(GetLang("LangModMyLoadingLoading")))
+
     Public Property Text As String
         Get
-            Return _Text
+            Return GetValue(TextProperty)
         End Get
         Set(value As String)
-            _Text = value
+            SetValue(TextProperty, value)
             RefreshText()
         End Set
     End Property
 
-    Private _TextError As String = "加载失败"
+    Private _TextError As String = GetLang("LangModMyLoadingLoadFail")
     Public Property TextError As String
         Get
             Return _TextError
@@ -74,10 +75,10 @@ Public Class MyLoading
                 If TextErrorInherit AndAlso State.IsLoader Then
                     Dim Ex As Exception = CType(State, Object).Error
                     If Ex Is Nothing Then
-                        LabText.Text = "未知错误"
+                        LabText.Text = GetLang("LangModMyLoadingUnknownError")
                     Else
                         Ex = Ex.RootException()
-                        LabText.Text = If(Ex.IsBadNetwork(), "网络环境不佳，请稍后再试，或使用 VPN 改善网络环境", Ex.Message)
+                        LabText.Text = If(Ex.IsBadNetwork(), GetLang("LangModMyLoadingBadNetwork"), Ex.Message)
                     End If
                 Else
                     LabText.Text = TextError

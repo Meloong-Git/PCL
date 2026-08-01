@@ -24,7 +24,7 @@ Public Class PageSetupLink
         Try
             SettingService.ResetSettings(Me)
             Logger.Info("已初始化联机页设置")
-            Hint("已初始化联机页设置！", HintType.Green, False)
+            Hint(GetLang("LangPageSetupLinkHintReset"), HintType.Green, False)
         Catch ex As Exception
             Logger.Error(ex, "初始化联机页设置失败", LogBehavior.Alert)
         End Try

@@ -7,7 +7,7 @@ Public Class PageLoginMs
         Dim IndexBefore = ComboAccounts.SelectedIndex
         '刷新下拉框列表
         ComboAccounts.Items.Clear()
-        ComboAccounts.Items.Add(New MyComboBoxItem With {.Content = "添加新账号"})
+        ComboAccounts.Items.Add(New MyComboBoxItem With {.Content = GetLang("LangPageLoginMsAddAccount")})
         Try
             Dim MsJson As JObject = Settings.Get(Of String)("LoginMsJson").DeserializeJson()
             For Each Account In MsJson
@@ -55,7 +55,7 @@ Public Class PageLoginMs
     ''' </summary>
     Public Shared Function IsVaild(LoginData As McLoginMs) As String
         If LoginData.OAuthRefreshToken = "" Then
-            Return "请在登录账号后再启动游戏！"
+            Return GetLang("LangPageLoginMsAddAccountBeforeStart")
         Else
             Return ""
         End If
@@ -90,16 +90,16 @@ Public Class PageLoginMs
                 ElseIf ex.Message.StartsWithF("$") Then
                     Hint(ex.Message.TrimStart("$"), HintType.Red)
                 ElseIf TypeOf ex Is Security.Authentication.AuthenticationException AndAlso ex.Message.Contains("SSL/TLS") Then
-                    Logger.Error(ex, $"正版登录验证失败，请考虑在 [设置 → 其他] 中关闭 [在正版登录时验证 SSL 证书]，然后再试。{vbCrLf}{vbCrLf}原始错误信息：", LogBehavior.Alert)
+                    Logger.Error(ex, GetLang("LangPageLoginMsAddAccountFailA"), LogBehavior.Alert)
                 Else
-                    Logger.Error(ex, "正版登录尝试失败", LogBehavior.Alert)
+                    Logger.Error(ex, GetLang("LangPageLoginMsAddAccountFailB"), LogBehavior.Alert)
                 End If
             Finally
                 RunInUi(
                 Sub()
                     ComboAccounts.IsEnabled = True
                     BtnLogin.IsEnabled = True
-                    BtnLogin.Text = "登录"
+                    BtnLogin.Text = GetLang("LangPageLoginMsLogin")
                 End Sub)
             End Try
         End Sub, "Ms Login")

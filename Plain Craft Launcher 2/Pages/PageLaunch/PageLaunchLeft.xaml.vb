@@ -6,6 +6,7 @@ Public Class PageLaunchLeft
     Private IsLoad As Boolean = False
     Private IsLoadFinished As Boolean = False
     Public Sub PageLaunchLeft_Loaded() Handles Me.Loaded
+
         If IsLoad Then RefreshPage(True, False)
 
         AprilPosTrans.X = 0
@@ -58,7 +59,7 @@ Public Class PageLaunchLeft
                     If ex.IsCanceled Then
                         Logger.Info($"自动安装整合包已取消：{PackInstallPath}")
                     Else
-                        Logger.Error(ex, $"自动安装整合包失败：{PackInstallPath}", LogBehavior.Alert)
+                        Logger.Error(ex, GetLang("LangLaunchLeftExceptionModpackInstallFail", PackInstallPath), LogBehavior.Alert)
                     End If
                 End Try
             End If
@@ -124,18 +125,18 @@ Public Class PageLaunchLeft
         '修改登陆方式
         Select Case Settings.Get(Of McLoginType)("LoginType")
             Case McLoginType.Legacy
-                LabLaunchingMethod.Text = "离线登录"
+                LabLaunchingMethod.Text = GetLang("LangLaunchLeftAccountOfflineLogin")
             Case McLoginType.Ms
-                LabLaunchingMethod.Text = "正版登录"
+                LabLaunchingMethod.Text = GetLang("LangLaunchLeftAccountMicrosoftLogin")
             Case McLoginType.Nide
-                LabLaunchingMethod.Text = "统一通行证"
+                LabLaunchingMethod.Text = GetLang("LangLaunchLeftAccountUnifiedPass")
             Case McLoginType.Auth
                 LabLaunchingMethod.Text = "Authlib-Injector"
         End Select
         '初始化页面
         LabLaunchingName.Text = McInstanceSelected.Name
-        LabLaunchingStage.Text = "初始化"
-        LabLaunchingTitle.Text = If(CurrentLaunchOptions?.SaveBatch Is Nothing, "正在启动游戏", "正在导出启动脚本")
+        LabLaunchingStage.Text = GetLang("LangLaunchLeftInit")
+        LabLaunchingTitle.Text = If(CurrentLaunchOptions?.SaveBatch Is Nothing, GetLang("LangLaunchLeftStartingInstance"), GetLang("LangLaunchLeftExportStartingInstanceCommand"))
         LabLaunchingProgress.Text = "0.00 %"
         LabLaunchingProgress.Opacity = 1
         LabLaunchingDownload.Visibility = Visibility.Visible
@@ -327,7 +328,7 @@ UnknownType:
                 PanType.Visibility = Visibility.Collapsed
                 PanTypeOne.Visibility = Visibility.Visible
                 PathTypeOne.Data = (New GeometryConverter).ConvertFromString(Logo.IconButtonShield)
-                LabTypeOne.Text = "正版登录"
+                LabTypeOne.Text = GetLang("LangLaunchLeftAccountMicrosoftLogin")
                 RadioLoginType5.Visibility = Visibility.Visible
                 RadioLoginType0.Visibility = Visibility.Collapsed
             Case 2 '仅离线
@@ -336,7 +337,7 @@ UnknownType:
                 PanType.Visibility = Visibility.Collapsed
                 PanTypeOne.Visibility = Visibility.Visible
                 PathTypeOne.Data = (New GeometryConverter).ConvertFromString(Logo.IconButtonOffline)
-                LabTypeOne.Text = "离线登录"
+                LabTypeOne.Text = GetLang("LangLaunchLeftAccountOfflineLogin")
             Case 3 '统一通行证
                 If Settings.Get(Of String)("CacheNideAccess") = "" Then
                     Type = PageType.Nide
@@ -347,7 +348,7 @@ UnknownType:
                 PanType.Visibility = Visibility.Collapsed
                 PanTypeOne.Visibility = Visibility.Visible
                 PathTypeOne.Data = (New GeometryConverter).ConvertFromString(Logo.IconButtonCard)
-                LabTypeOne.Text = "统一通行证登录"
+                LabTypeOne.Text = GetLang("LangLaunchLeftAccountUnifiedPassLogin")
             Case 4 'Authlib-Injector
                 If Settings.Get(Of String)("CacheAuthAccess") = "" Then
                     Type = PageType.Auth
@@ -359,7 +360,7 @@ UnknownType:
                 PanTypeOne.Visibility = Visibility.Visible
                 PathTypeOne.Data = (New GeometryConverter).ConvertFromString(Logo.IconButtonCard)
                 LabTypeOne.Text = If(McInstanceSelected Is Nothing, Settings.Get(Of String)("CacheAuthServerName"), Settings.Get(Of String)("VersionServerAuthName", Instance:=McInstanceSelected))
-                If LabTypeOne.Text = "" Then LabTypeOne.Text = "第三方登录"
+                If LabTypeOne.Text = "" Then LabTypeOne.Text = GetLang("LangLaunchLeftAccountThirdPartLogin")
             Case Else
                 Logger.Error($"未知的登录页面：{LoginPageType}", LogBehavior.Toast)
                 GoTo UnknownType
@@ -486,7 +487,7 @@ UseDefault:
                 End Try
             Case 4 '自定义
                 If Not FileUtils.Exists(Paths.AppDataThenName & "CustomSkin.png") Then
-                    Hint("未找到离线皮肤自定义文件，可能它已被删除。PCL 将使用默认的 Steve 皮肤！")
+                    Hint(GetLang("LangLaunchLeftSkinNotFound"))
                     Settings.Set("LaunchSkinType", 1)
                     GoTo UseDefault
                 End If
@@ -613,7 +614,7 @@ Finish:
             (FrmMain.PageRight IsNot Nothing AndAlso FrmMain.PageRight.PageState <> MyPageRight.PageStates.ContentStay AndAlso FrmMain.PageRight.PageState <> MyPageRight.PageStates.ContentEnter) Then Return
         '愚人节处理
         If IsAprilEnabled AndAlso Not IsAprilGiveup Then
-            ThemeUnlock(12, False, "隐藏主题 滑稽彩 已解锁！")
+            ThemeUnlock(12, False, GetLang("LangLaunchThemeFunnyUnlock"))
             IsAprilGiveup = True
             Settings.Set("AprilYear", Date.Now.Year)
             FrmLaunchLeft.AprilScaleTrans.ScaleX = 1
@@ -623,9 +624,9 @@ Finish:
             FrmMain.BtnExtraApril.ShowRefresh()
         End If
         '实际的启动
-        If BtnLaunch.Text = "启动游戏" Then
+        If BtnLaunch.Text = GetLang("LangLaunchLeftStartInstance") Then
             McLaunchStart()
-        ElseIf BtnLaunch.Text = "下载游戏" Then
+        ElseIf BtnLaunch.Text = GetLang("LangLaunchLeftDownloadInstance") Then
             FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadInstall)
         End If
     End Sub
@@ -656,28 +657,28 @@ Finish:
         Select Case CurrentState
             Case 0
                 Logger.Info("启动按钮：正在加载 Minecraft 版本")
-                FrmLaunchLeft.BtnLaunch.Text = "正在加载"
+                FrmLaunchLeft.BtnLaunch.Text = GetLang("LangLaunchLeftLoadingInstance")
                 FrmLaunchLeft.BtnLaunch.IsEnabled = False
-                FrmLaunchLeft.LabVersion.Text = "正在加载中，请稍候"
+                FrmLaunchLeft.LabVersion.Text = GetLang("LangLaunchLeftLoadingInstanceTip")
                 FrmLaunchLeft.BtnVersion.IsEnabled = False
                 FrmLaunchLeft.BtnMore.Visibility = Visibility.Collapsed
             Case 1
                 Logger.Info("启动按钮：无 Minecraft 版本，下载已禁用")
-                FrmLaunchLeft.BtnLaunch.Text = "启动游戏"
+                FrmLaunchLeft.BtnLaunch.Text = GetLang("LangLaunchLeftStartInstance")
                 FrmLaunchLeft.BtnLaunch.IsEnabled = False
-                FrmLaunchLeft.LabVersion.Text = "未找到可用的游戏版本"
+                FrmLaunchLeft.LabVersion.Text = GetLang("LangLaunchLeftNoAvailableInstance")
                 FrmLaunchLeft.BtnVersion.IsEnabled = True
                 FrmLaunchLeft.BtnMore.Visibility = Visibility.Collapsed
             Case 2
                 Logger.Info("启动按钮：无 Minecraft 版本，要求下载")
-                FrmLaunchLeft.BtnLaunch.Text = "下载游戏"
+                FrmLaunchLeft.BtnLaunch.Text = GetLang("LangLaunchLeftDownloadInstance")
                 FrmLaunchLeft.BtnLaunch.IsEnabled = True
-                FrmLaunchLeft.LabVersion.Text = "未找到可用的游戏版本"
+                FrmLaunchLeft.LabVersion.Text = GetLang("LangLaunchLeftNoAvailableInstance")
                 FrmLaunchLeft.BtnVersion.IsEnabled = True
                 FrmLaunchLeft.BtnMore.Visibility = Visibility.Collapsed
             Case 3
                 Logger.Info($"启动按钮：Minecraft 版本：{McInstanceSelected.PathVersion}")
-                FrmLaunchLeft.BtnLaunch.Text = "启动游戏"
+                FrmLaunchLeft.BtnLaunch.Text = GetLang("LangLaunchLeftStartInstance")
                 FrmLaunchLeft.BtnVersion.IsEnabled = True
                 FrmLaunchLeft.BtnLaunch.IsEnabled = True
                 FrmLaunchLeft.LabVersion.Text = McInstanceSelected.Name
@@ -689,12 +690,13 @@ ExitRefresh:
         If CurrentState = 3 Then
             FrmLaunchLeft.BtnMore.Visibility = FrmLaunchLeft.BtnVersion.Visibility
         End If
+        SetColumnSpan(BtnVersion, If(FrmLaunchLeft.BtnMore.Visibility.Equals(Visibility.Visible), 1, 2)) ' #4145 多语言界面适配
     End Sub
     '取消按钮
     Private Sub BtnCancel_Click() Handles BtnCancel.Click
         If McLaunchLoaderReal IsNot Nothing Then
             McLaunchLoaderReal.Cancel()
-            McLaunchLog("已取消启动")
+            McLaunchLog(GetLang("LangLaunchLeftStartCancelled"))
             Try
                 If McLaunchWatcher IsNot Nothing Then
                     McLaunchWatcher.Kill()
@@ -725,18 +727,18 @@ ExitRefresh:
                 For Each Loader In McLaunchLoaderReal.GetLoaderList(False)
                     If Loader.State = LoadState.Loading OrElse Loader.State = LoadState.Waiting Then
                         LabLaunchingStage.Text = Loader.Name
-                        IsLaunched = Loader.Name = "等待游戏窗口出现" OrElse Loader.Name = "结束处理"
+                        IsLaunched = Loader.Name = GetLang("LangLaunchLeftWaitForWindow") OrElse Loader.Name = GetLang("LangLaunchLeftAbortTask")
                         Exit Try
                     End If
                 Next
-                LabLaunchingStage.Text = "已完成"
+                LabLaunchingStage.Text = GetLang("LangLaunchLeftFinished")
             Catch ex As Exception
                 Logger.Warn(ex, "获取是否启动完成失败，可能是由于启动状态改变导致集合已修改")
                 Return
             End Try
             LabLaunchingTitle.Text = If(IsLaunched OrElse McLaunchLoaderReal.State = LoadState.Finished,
-                "已启动游戏",
-                If(CurrentLaunchOptions.SaveBatch Is Nothing, "正在启动游戏", "正在导出启动脚本"))
+                GetLang("LangLaunchLeftStarted"),
+                If(CurrentLaunchOptions.SaveBatch Is Nothing, GetLang("LangLaunchLeftStartingInstance"), GetLang("LangLaunchLeftExportStartingInstanceCommand")))
             If AniIsRun("Launch State Page") Then IsLaunched = False '等待页面切换动画完成
             '更新进度
             Dim ActualProgress = McLaunchLoaderReal.Progress

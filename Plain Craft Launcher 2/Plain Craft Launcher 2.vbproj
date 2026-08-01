@@ -120,63 +120,22 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CacheCow.Client, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Resources\CacheCow.Client.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="CacheCow.Client.FileStore, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Resources\CacheCow.Client.FileStore.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="CacheCow.Common, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Resources\CacheCow.Common.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ThrottleDebounce, Version=2.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Resources\ThrottleDebounce.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Imazen.WebP, Version=10.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Resources\Imazen.WebP.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="NAudio, Version=1.7.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Resources\NAudio.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Resources\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Ookii.Dialogs.Wpf, Version=1.0.0.0, Culture=neutral, PublicKeyToken=0c15020868fd6249, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Resources\Ookii.Dialogs.Wpf.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Management" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Resources\System.Net.Http.Formatting.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="System.Net" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xaml">
@@ -206,9 +165,6 @@
     <Compile Include="Controls\MyIconTextButton.xaml.vb">
       <DependentUpon>MyIconTextButton.xaml</DependentUpon>
     </Compile>
-
-
-
     <Compile Include="Controls\MyVirtualizingElement.vb" />
     <Compile Include="Modules\Base\PclLogger.vb" />
     <Compile Include="Modules\Resource\LocalResourceFile.vb" />
@@ -253,6 +209,7 @@
     <Compile Include="Controls\MyTextButton.vb" />
     <Compile Include="GlobalSuppressions.vb" />
     <Compile Include="Modules\Minecraft\ModCrash.vb" />
+    <Compile Include="Modules\Modi18n.vb" />
     <Compile Include="Modules\ModMusic.vb" />
     <Compile Include="Modules\ModDevelop.vb" />
     <Compile Include="Modules\Minecraft\ModWatcher.vb" />
@@ -494,7 +451,6 @@
       <DependentUpon>FormMain.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-
     <Page Include="Pages\PageInstance\MyLocalModItem.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -574,6 +530,66 @@
     <Page Include="Pages\PageInstance\PageInstanceExport.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Resources\Language\en-GB.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\el-GR.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\sk-SK.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\en-US.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Resources\Language\es-ES.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\fr-FR.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\ja-JP.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\ko-KR.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\lzh.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\ru-RU.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\zh-MARS.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\zh-MEME.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\zh-CN.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Resources\Language\zh-HK.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Language\zh-TW.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\PageOther\PageOtherTest.xaml">
       <SubType>Designer</SubType>
@@ -754,162 +770,52 @@
   <ItemGroup>
     <Resource Include="Resources\Font.ttf" />
     <None Include="Resources\Help.zip" />
-    <None Include="Resources\NAudio.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\Heads\LTCat.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Newtonsoft.Json.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Blocks\Anvil.png" />
-    <Resource Include="Images\Blocks\CobbleStone.png" />
-    <Resource Include="Images\Blocks\CommandBlock.png" />
-    <Resource Include="Images\Blocks\Grass.png" />
-    <Resource Include="Images\Blocks\RedstoneBlock.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Blocks\GrassPath.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Blocks\Egg.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\Hao_Tian.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Skins\Steve.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Skins\Alex.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Themes\5.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Themes\6.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Themes\7.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Themes\8.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Themes\9.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Themes\10.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\Patrick.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Themes\11.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Themes\12.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Blocks\GoldBlock.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Themes\13.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Ookii.Dialogs.Wpf.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Themes\42.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Blocks\RedstoneLampOff.png" />
-    <Resource Include="Images\Blocks\RedstoneLampOn.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Blocks\Fabric.png" />
+    <Resource Include="Images\Blocks\*" />
+    <Resource Include="Images\Themes\*" />
+    <Resource Include="Images\Heads\*" />
+    <Resource Include="Images\Skins\*" />
+    <Resource Include="Images\Icons\*" />
+    <Resource Include="Images\ReleaseTypes\*" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\forge-installer.jar" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\Logo.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\transformer.jar" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\ReleaseTypes\Alpha.png" />
-    <Resource Include="Images\ReleaseTypes\Beta.png" />
-    <Resource Include="Images\ReleaseTypes\Release.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Icons\NoIcon.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\PCL2.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\00ll00.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\bangbang93.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\wiki.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Blocks\OptiFabric.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\java-wrapper.jar" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Skins\Ari.png" />
-    <Resource Include="Images\Skins\Efe.png" />
-    <Resource Include="Images\Skins\Kai.png" />
-    <Resource Include="Images\Skins\Makena.png" />
-    <Resource Include="Images\Skins\Noor.png" />
-    <Resource Include="Images\Skins\Sunny.png" />
-    <Resource Include="Images\Skins\Zuri.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Icons\Disabled.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\MCBBS.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Blocks\NeoForge.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\z0z0r4.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Imazen.WebP.dll" />
     <None Include="Resources\libwebp64.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\CacheCow.Client.FileStore.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\CacheCow.Common.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\CacheCow.Client.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\ThrottleDebounce.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\System.Net.Http.Formatting.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\EasyTier.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\lwjgl-unsafe-agent.jar" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CacheCow.Client.FileStore">
+      <Version>2.13.1</Version>
+    </PackageReference>
+    <PackageReference Include="Costura.Fody">
+      <Version>6.2.0</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Imazen.WebP">
+      <Version>11.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="NAudio">
+      <Version>2.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="Ookii.Dialogs.Wpf">
+      <Version>5.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="System.Net.Http">
+      <Version>4.3.4</Version>
+    </PackageReference>
+    <PackageReference Include="System.ValueTuple">
+      <Version>4.6.2</Version>
+    </PackageReference>
+    <PackageReference Include="ThrottleDebounce">
+      <Version>2.0.2</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MeloongCore\Shared\MeloongCore.csproj">
@@ -925,24 +831,6 @@
       <Name>PCLCS</Name>
       <Private>True</Private>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\PCLCS\bin\PCLCS.dll">
-      <LogicalName>PCLCS.dll</LogicalName>
-      <Link>Resources\PCLCS.dll</Link>
-    </None>
-    <None Include="..\PCLCS\bin\MeloongCore.dll">
-      <LogicalName>MeloongCore.dll</LogicalName>
-      <Link>Resources\MeloongCore.dll</Link>
-    </None>
-    <None Include="..\PCLCS\bin\MeloongCore.Wpf.dll">
-      <LogicalName>MeloongCore.Wpf.dll</LogicalName>
-      <Link>Resources\MeloongCore.Wpf.dll</Link>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\Heads\ChongQing.png" />
-
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>
