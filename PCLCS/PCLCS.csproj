@@ -55,7 +55,8 @@
 
 	<!-- 内嵌的资源 -->
 	<ItemGroup>
-		<None Remove="Resource\WikiEntries.txt" />
+		<EmbeddedResource Include="Launch\JavaWrapper.jar" LogicalName="Launch\JavaWrapper.jar" />
+		<EmbeddedResource Include="Launch\LwjglUnsafeAgent.jar" LogicalName="Launch\LwjglUnsafeAgent.jar" />
 		<EmbeddedResource Include="Resource\WikiEntries.txt" LogicalName="Resource\WikiEntries.txt" />
 	</ItemGroup>
 	<ItemGroup>

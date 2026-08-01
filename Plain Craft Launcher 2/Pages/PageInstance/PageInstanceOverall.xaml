@@ -62,18 +62,12 @@
                 </StackPanel>
             </local:MyCard>
             <local:MyCard Margin="0,0,0,15" Title="快捷方式" x:Name="PanFolder">
-                <StackPanel Margin="25,40,25,15">
-                    <Grid Margin="0,2,0,7" Height="35">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
-                        </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnFolderVersion" Text="版本文件夹" MinWidth="140" Padding="13,0" Margin="0,0,20,0" />
-                        <local:MyButton x:Name="BtnFolderSaves" Text="存档文件夹" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" />
-                        <local:MyButton x:Name="BtnFolderMods" Text="Mod 文件夹" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2" />
-                    </Grid>
-                </StackPanel>
+                <WrapPanel Margin="25,30,25,20">
+                    <local:MyButton x:Name="BtnFolderVersion" Text="版本文件夹" MinWidth="140" Padding="13,0" Margin="0,13,20,0" Height="35" />
+                    <local:MyButton x:Name="BtnFolderSaves" Text="存档文件夹" MinWidth="140" Padding="13,0" Margin="0,13,20,0" Height="35"/>
+                    <local:MyButton x:Name="BtnFolderMods" Text="Mod 文件夹" MinWidth="140" Padding="13,0" Margin="0,13,20,0" Height="35"/>
+                    <local:MyButton x:Name="BtnFolderScreen" Text="截图文件夹" MinWidth="140" Padding="13,0" Margin="0,13,20,0" Height="35" />
+                </WrapPanel>
             </local:MyCard>
             <local:MyCard Margin="0,0,0,15" Title="高级管理" x:Name="PanManage">
                 <StackPanel Margin="25,40,25,15">

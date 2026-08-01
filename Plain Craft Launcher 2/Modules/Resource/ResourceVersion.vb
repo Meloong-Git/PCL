@@ -348,7 +348,7 @@ Public Class ResourceVersion
                 .Height = 42
                 .Type = MyListItem.CheckType.Clickable
                 .Tag = Me
-                .Title = If(IsBadDisplay, FileName, Display)
+                .Title = If(IsBadDisplay, FileName, Display).BeforeLastOfAny({".zip", ".jar", ".mrpack", ".litemod"}, True)
                 .Logo = $"{PathImage}ReleaseTypes/{ReleaseType}.png"
                 AddHandler .Click, ClickHandler
                 '描述

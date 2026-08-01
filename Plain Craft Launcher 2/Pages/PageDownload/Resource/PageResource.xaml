@@ -34,6 +34,7 @@
                     <TextBlock VerticalAlignment="Center" Grid.Row="2" HorizontalAlignment="Left" Text="版本" Margin="0,0,18,0" />
                     <local:MyComboBox x:Name="TextSearchVersion" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" IsEditable="True" IsTextSearchEnabled="False">
                         <local:MyComboBoxItem Content="全部 (也可自行输入)" IsSelected="True" />
+                        <local:MyComboBoxItem Content="26.2" />
                         <local:MyComboBoxItem Content="26.1" />
                         <local:MyComboBoxItem Content="1.21.11" />
                         <local:MyComboBoxItem Content="1.21.8" />
@@ -51,7 +52,6 @@
                         <local:MyComboBoxItem Content="Forge" Tag="1" />
                         <local:MyComboBoxItem Content="NeoForge" Tag="16" />
                         <local:MyComboBoxItem Content="Fabric" Tag="4" />
-                        <local:MyComboBoxItem Content="Quilt" Tag="8" />
                         <local:MyComboBoxItem Content="LiteLoader" Tag="2" />
                     </local:MyComboBox>
                     <TextBlock VerticalAlignment="Center" Grid.Column="4" Grid.Row="2" HorizontalAlignment="Left" Text="类型" Margin="0,0,18,0" />

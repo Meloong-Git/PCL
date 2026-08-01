@@ -101,11 +101,12 @@ Public Module ModJava
     End Sub
 
     ''' <summary>
-    ''' 手动触发搜索 Java。
+    ''' 手动触发搜索 Java，强制检查所有 Java。
     ''' </summary>
     Public Sub ManuallySearchJava(Optional CancellationToken As CancellationToken = Nothing)
         RunInThread(
         Sub()
+            Configs.JavaList.Get().ForAll(Sub(java) java.InvalidateChecked()) '重置已检查的状态
             JavaListRefreshWorker.Start(cancellationToken:=CancellationToken)
             JavaListRefreshWorker.WaitIfRunningAsync(cancellationToken:=CancellationToken).Run() 'worker 开始/结束时会自动重载 UI
             If Configs.JavaList.Get().Any Then
@@ -142,7 +143,10 @@ Public Module ModJava
         Dim AddConstraint =
         Sub(Constraint As ValueRange(Of Version))
             JavaRange = JavaRange?.Intersect(Constraint)
-            If JavaRange.IsEmpty Then Logger.Warn($"Java 版本要求冲突（当前追加的要求为 {Constraint}，版本为 {Instance.VersionDisplayName}）")
+            If JavaRange.IsEmpty Then
+                Logger.Warn($"Java 版本要求冲突，若启动失败请在版本设置手动指定 Java：当前追加的要求为 {Constraint}，游戏版本为 {Instance.VersionDisplayName}", LogBehavior.Toast)
+                JavaRange = Constraint
+            End If
         End Sub
 
         '原版 26-：通过版本号判断
@@ -294,7 +298,7 @@ Public Module ModJava
 
                 Case 3 '=============================== 强制指定特定 Java ===============================
 
-                    Dim ChosenJava = Configs.InstanceForcedJava.Get(Instance.Config)
+                    Dim ChosenJava = Configs.JavaForced.Get(Instance.Config)
                     Logger.Info($"版本设置中强制指定的 Java：{Instance.PathVersion} → {ChosenJava}")
                     If ChosenJava Is Nothing Then
                         If TryFixOrHint Then
@@ -305,7 +309,7 @@ Public Module ModJava
                         p?.Skip() : Return Nothing '<==== 设置中未指定 Java
                     End If
                     If Not Configs.JavaList.Get().Contains(ChosenJava) Then
-                        Configs.InstanceForcedJava.Reset(Instance.Config)
+                        Configs.JavaForced.Reset(Instance.Config)
                         UpdateJavaLists()
                         If TryFixOrHint Then
                             SwitchToInstanceSetup(Instance)
@@ -314,7 +318,7 @@ Public Module ModJava
                         p?.Skip() : Return Nothing '<==== 设置中指定的 Java 不在列表中
                     End If
                     If Not ChosenJava.CheckAsync(c).Run() Then
-                        Configs.InstanceForcedJava.Reset(Instance.Config)
+                        Configs.JavaForced.Reset(Instance.Config)
                         UpdateJavaLists()
                         If TryFixOrHint Then
                             SwitchToInstanceSetup(Instance)
@@ -365,9 +369,41 @@ Public Module ModJava
 
                         '电脑中没有合适的 Java，获取 Mojang 提供的 Java 下载列表
                         Logger.Warn($"电脑中没有合适的 Java，开始获取 Mojang 提供的 Java 下载列表")
-                        Dim Components = DownloadJavaList()
-                        c.ThrowIfCancellationRequested()
-                        p?.Set(0.4)
+                        Static DownloadListWorker As New RedoableWorker(Of List(Of JavaDownloadInfo))(
+                        Function(cancellationToken)
+                            '下载 Mojang 提供的 Java 列表
+                            Dim IndexFileStr As String = NetRequestByLoader(DlVersionListOrder(
+                                {"https://piston-meta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"},
+                                {"https://bmclapi2.bangbang93.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"}
+                            ), IsJson:=True)
+                            cancellationToken?.ThrowIfCancellationRequested()
+                            '解析 Java 列表
+                            Dim Results = New List(Of JavaDownloadInfo)
+                            For Each Prop As JProperty In IndexFileStr.DeserializeJson(Of JObject)()("windows-x64")
+                                cancellationToken?.ThrowIfCancellationRequested()
+                                If Prop.Name = "minecraft-java-exe" Then Continue For '不是完整 Java
+                                Try
+                                    Dim Entry = Prop.Value.FirstOrDefault
+                                    If Entry Is Nothing Then Continue For
+                                    Dim JavaName = Entry("version")("name").ToString '可能的名称格式："12"、"8u51-cacert462b08"、"17.0.8.1"、"17.0.1.12.1"、"21.0.7"
+                                    If JavaName.Contains(".") Then
+                                        Dim Parts As String() = JavaName.Split(".")
+                                        Results.Add(New JavaDownloadInfo With {.ComponentName = Prop.Name, .Java = Entry, .JavaVersion = New Version(Val(Parts(0)), Val(Parts(1)), If(Parts.Length >= 3, Val(Parts(2)), 0), If(Parts.Length >= 4, Val(Parts(3)), 0))})
+                                    ElseIf JavaName.StartsWithF("8u51-") Then
+                                        Results.Add(New JavaDownloadInfo With {.ComponentName = Prop.Name, .Java = Entry, .JavaVersion = New Version(8, 0, 51, 0)})
+                                    Else
+                                        Results.Add(New JavaDownloadInfo With {.ComponentName = Prop.Name, .Java = Entry, .JavaVersion = New Version(Val(JavaName.BeforeFirstOfAny({"u", "."})), 0, 0, 0)})
+                                    End If
+                                Catch ex As Exception
+                                    Logger.Warn(ex, $"解析 Mojang 提供的 Java 列表项失败，已跳过（{Prop.Name}）")
+                                End Try
+                            Next
+                            Return Results
+                        End Function)
+                        If Not DownloadListWorker.HasSucceeded Then DownloadListWorker.Start(c, p?.SplitTo(0.4))
+                        DownloadListWorker.WaitIfRunning(cancellationToken:=c)
+                        p?.Set(0.4, skiped:=True)
+                        Dim Components = DownloadListWorker.LastResult
 
                         '确定要下载的目标 Java
                         Dim JavaToDownload As JavaDownloadInfo = If(
@@ -443,7 +479,7 @@ Public Module ModJava
     ''' 从老版本 PCL 迁移版本独立的 Java 设置。
     ''' </summary>
     Private Sub MigrateInstanceJavaSettings(Instance As McInstance, Optional c As CancellationToken = Nothing, Optional p As ProgressProvider = Nothing)
-        If Configs.InstanceMigratedJava.Get(Instance.Config) Then p?.Skip() : Return
+        If Configs.JavaMigrated.Get(Instance.Config) Then p?.Skip() : Return
         If FrmInstanceSetup IsNot Nothing Then RunInUiWait(Sub() FrmInstanceSetup.ComboArgumentJava.IsEnabled = False)
         Try
             Logger.Info($"正在尝试迁移版本独立的 Java 设置（{Instance.Name}）")
@@ -462,10 +498,10 @@ Public Module ModJava
                 Configs.JavaList.Edit(Sub(ByRef List) List.Add(ForcedJava)) '加入列表底部
                 Logger.Info($"已将强制指定的 Java 加入 Java 列表底部：{ForcedJava}")
             End If
-            Configs.InstanceForcedJava.Set(ForcedJava, Instance.Config)
+            Configs.JavaForced.Set(ForcedJava, Instance.Config)
             Settings.Set("VersionArgumentJavaV2", 3, Instance)
             UpdateJavaLists()
-            Configs.InstanceMigratedJava.Set(True, Instance.Config) '完成
+            Configs.JavaMigrated.Set(True, Instance.Config) '完成
             p?.Finish() : Return
 NoForcedJava:
             Dim JavaFound = JavaUtils.SearchFoldersAsync(True, {Instance.PathVersion}, c, p?.SplitTo(1)).Run()
@@ -478,7 +514,7 @@ NoForcedJava:
                 Logger.Info("没有需要迁移的内容，自动选择 Java")
                 Settings.Set("VersionArgumentJavaV2", 0, Instance)
             End If
-            Configs.InstanceMigratedJava.Set(True, Instance.Config) '完成
+            Configs.JavaMigrated.Set(True, Instance.Config) '完成
         Finally
             If FrmInstanceSetup IsNot Nothing Then RunInUiWait(
             Sub()
@@ -498,44 +534,6 @@ NoForcedJava:
         Public Property Java As JObject
         Public Property JavaVersion As Version
     End Class
-
-    ''' <summary>
-    ''' 下载 Mojang 提供的 Java 列表。
-    ''' <para/> 若本次打开程序已经下载过，则会直接返回缓存的结果。
-    ''' </summary>
-    Private Function DownloadJavaList() As List(Of JavaDownloadInfo)
-        'TODO: 写一个更简单的 Lazy，允许重置缓存
-        Static Components As New Lazy(Of List(Of JavaDownloadInfo))(
-        Function()
-            '下载 Mojang 提供的 Java 列表
-            Dim IndexFileStr As String = NetRequestByLoader(DlVersionListOrder(
-                {"https://piston-meta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"},
-                {"https://bmclapi2.bangbang93.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json"}
-            ), IsJson:=True)
-            '解析 Java 列表
-            Dim Results = New List(Of JavaDownloadInfo)
-            For Each Prop As JProperty In IndexFileStr.DeserializeJson(Of JObject)()("windows-x64")
-                If Prop.Name = "minecraft-java-exe" Then Continue For '不是完整 Java
-                Try
-                    Dim Entry = Prop.Value.FirstOrDefault
-                    If Entry Is Nothing Then Continue For
-                    Dim JavaName = Entry("version")("name").ToString '可能的名称格式："12"、"8u51-cacert462b08"、"17.0.8.1"、"17.0.1.12.1"、"21.0.7"
-                    If JavaName.Contains(".") Then
-                        Dim Parts As String() = JavaName.Split(".")
-                        Results.Add(New JavaDownloadInfo With {.ComponentName = Prop.Name, .Java = Entry, .JavaVersion = New Version(Val(Parts(0)), Val(Parts(1)), If(Parts.Length >= 3, Val(Parts(2)), 0), If(Parts.Length >= 4, Val(Parts(3)), 0))})
-                    ElseIf JavaName.StartsWithF("8u51-") Then
-                        Results.Add(New JavaDownloadInfo With {.ComponentName = Prop.Name, .Java = Entry, .JavaVersion = New Version(8, 0, 51, 0)})
-                    Else
-                        Results.Add(New JavaDownloadInfo With {.ComponentName = Prop.Name, .Java = Entry, .JavaVersion = New Version(Val(JavaName.BeforeFirstOfAny({"u", "."})), 0, 0, 0)})
-                    End If
-                Catch ex As Exception
-                    Logger.Warn(ex, $"解析 Mojang 提供的 Java 列表项失败，已跳过（{Prop.Name}）")
-                End Try
-            Next
-            Return Results
-        End Function)
-        Return Components.Value
-    End Function
 
     ''' <summary>
     ''' 构建下载指定 Java 的加载器。

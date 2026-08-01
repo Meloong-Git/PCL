@@ -27,5 +27,8 @@ Public Class PageOtherAbout
     Private Sub BtnDonateOutput_Click(sender As Object, e As EventArgs) Handles BtnDonateOutput.Click
         GeneratePotatoCode()
     End Sub
+    Private Sub BtnAboutUpdate_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnAboutUpdate.Click
+        UpdateCheckByButton()
+    End Sub
 
 End Class

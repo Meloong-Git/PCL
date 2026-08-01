@@ -65,7 +65,7 @@ Public Module ModDownload
 
 #Region "下载资源文件"
         If ShouldIgnoreFileCheck(Instance) Then
-            Logger.Info("已跳过所有 Assets 检查")
+            Logger.Warn("设置要求跳过所有 Assets 检查，文件可能不是最新的", LogBehavior.None)
         Else
             Dim LoadersAssets As New List(Of LoaderBase)
             '获取资源文件索引地址
@@ -78,13 +78,23 @@ Public Module ModDownload
                     If IndexFile Is Nothing Then
                         Task.Output = New List(Of NetFile)
                         Logger.Warn($"未找到版本 {Instance.Name} 的合适的资源索引下载地址，游戏 assets 可能缺失")
-                    ElseIf DownloadAssetIndexInBackground Then
+                        Return
+                    End If
+                    Dim IndexBackgroundFile = PathTemp & "Cache\" & IndexFile.LocalName & "_background"
+                    If FileUtils.Exists(IndexBackgroundFile) AndAlso
+                       FileUtils.GetInfo(IndexBackgroundFile).LastWriteTime.Date > FileUtils.GetInfo(IndexFile.LocalPath).LastWriteTime.Date Then
+                        Logger.Info($"发现后台更新的资源索引缓存文件：{IndexBackgroundFile}")
+                        FileUtils.Move(IndexBackgroundFile, IndexFile.LocalPath)
+                    End If
+                    If DownloadAssetIndexInBackground Then
+                        '允许后台更新索引
                         If IndexFile.Check.Check(IndexFile.LocalPath) Is Nothing Then
                             Task.Output = New List(Of NetFile)
                         Else
                             Task.Output = New List(Of NetFile) From {IndexFile}
                         End If
-                    Else '强制要求重新下载
+                    Else
+                        '强制要求重新下载
                         RealAddressMain = IndexFile.LocalPath
                         TempAddressMain = PathTemp & "Cache\" & IndexFile.LocalName
                         IndexFile.LocalPath = TempAddressMain
@@ -114,28 +124,24 @@ Public Module ModDownload
                 Dim LoadersAssetsUpdate As New List(Of LoaderBase)
                 LoadersAssetsUpdate.Add(New LoaderTask(Of String, List(Of NetFile))("后台分析资源文件索引地址",
                 Sub(Task As LoaderTask(Of String, List(Of NetFile)))
-                    Dim BackAssetsFile As NetFile = DlClientAssetIndexGet(Instance)
-                    If BackAssetsFile Is Nothing Then
+                    Dim IndexFile As NetFile = DlClientAssetIndexGet(Instance)
+                    If IndexFile Is Nothing Then
                         Logger.Warn($"未找到版本 {Instance.Name} 的合适的资源索引下载地址，游戏 assets 可能缺失")
                         Task.Cancel()
                         Throw New OperationCanceledException
                     End If
-                    RealAddressBg = BackAssetsFile.LocalPath
-                    TempAddressBg = PathTemp & "Cache\" & BackAssetsFile.LocalName & "_background"
-                    BackAssetsFile.LocalPath = TempAddressBg
-                    Task.Output = New List(Of NetFile) From {BackAssetsFile}
+                    RealAddressBg = IndexFile.LocalPath
+                    TempAddressBg = PathTemp & "Cache\" & IndexFile.LocalName & "_background"
+                    IndexFile.LocalPath = TempAddressBg
+                    Task.Output = New List(Of NetFile) From {IndexFile}
                     '检查是否需要更新：每天只更新一次
-                    If FileUtils.Exists(RealAddressBg) AndAlso Math.Abs((FileUtils.GetInfo(RealAddressBg).LastWriteTime.Date - Now.Date).TotalDays) < 1 Then
-                        Logger.Info("无需更新资源文件索引，取消")
+                    Dim LastUpdate As Date = FileUtils.GetInfo(RealAddressBg).LastWriteTime.Date
+                    If FileUtils.Exists(RealAddressBg) AndAlso Math.Abs((LastUpdate - Now.Date).TotalDays) < 1 Then
+                        Logger.Info($"无需更新资源文件索引，上次更新于 {LastUpdate}")
                         Task.Cancel()
                     End If
                 End Sub))
                 LoadersAssetsUpdate.Add(New LoaderDownload("后台下载资源文件索引", New List(Of NetFile)))
-                LoadersAssetsUpdate.Add(New LoaderTask(Of List(Of NetFile), String)("后台复制资源文件索引",
-                Sub(Task As LoaderTask(Of List(Of NetFile), String))
-                    FileUtils.Move(TempAddressBg, RealAddressBg)
-                    McLaunchLog("后台更新资源文件索引成功：" & TempAddressBg)
-                End Sub))
                 Dim Updater As New LoaderCombo(Of String)("后台更新资源文件索引", LoadersAssetsUpdate)
                 Logger.Info("开始后台检查资源文件索引")
                 Updater.Start()
@@ -1193,15 +1199,15 @@ Public Module ModDownload
             Urls.Add((Url, If(Url.Contains("modrinth"), 20, 10)))
             Urls.Add((Url, 30))
         End If
-        Dim Exs As String = ""
+        Dim Errors As New List(Of Exception)
         For Each Source In Urls
             Try
                 Return NetRequestByClient(Source.Url, Method, Content, ContentType, Timeout:=Source.Timeout * 1000, Encoding:=Encoding.UTF8, RequireJson:=True).DeserializeJson()
             Catch ex As Exception
-                Exs += ex.Message + vbCrLf
+                Errors.Add(ex)
             End Try
         Next
-        Throw New Exception(Exs)
+        Throw New AggregateException(Errors)
     End Function
 
 #End Region

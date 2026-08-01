@@ -1120,7 +1120,7 @@ Public Class PageDownloadInstall
 #Region "安装"
 
     Private Sub TextSelectName_KeyDown(sender As Object, e As KeyEventArgs) Handles TextSelectName.KeyDown
-        If e.Key = Key.Enter AndAlso BtnStart.IsEnabled Then BtnStart_Click()
+        If e.Key = Key.Enter AndAlso IsInSelectPage AndAlso BtnStart.IsEnabled Then BtnStart_Click()
     End Sub
     Private Sub BtnStart_Click() Handles BtnStart.Click
         '确认版本隔离

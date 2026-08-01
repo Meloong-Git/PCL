@@ -109,29 +109,10 @@ Public Module ModModpack
         End Try
     End Function
 
-    Private Sub ExtractModpackFiles(InstallTemp As String, FileAddress As String, Loader As LoaderBase, ProgressIncrement As Double)
-        '解压文件
-        Dim RetryCount As Integer = 1
-        Dim InitialProgress = Loader.Progress
-Retry:
-        Try
-            Loader.Progress = InitialProgress
-            DirectoryUtils.Delete(InstallTemp)
-            Dim RawProgress As Double = Loader.Progress
-            FileUtils.ExtractToDirectory(FileAddress, InstallTemp, progressHandler:=Sub(Percentage) Loader.Progress = RawProgress + Percentage * ProgressIncrement)
-        Catch ex As Exception
-            Logger.Warn(ex, $"第 {RetryCount} 次解压尝试失败")
-            '完全不知道为啥会出现文件正在被另一进程使用的问题，总之加个重试
-            If RetryCount < 5 Then
-                Thread.Sleep(RetryCount * 2000)
-                If Loader IsNot Nothing AndAlso Loader.LoadingState <> MyLoading.MyLoadingState.Run Then Return
-                RetryCount += 1
-                GoTo Retry
-            Else
-                Throw New Exception("解压整合包文件失败", ex)
-            End If
-        End Try
-        Loader.Progress = InitialProgress + ProgressIncrement
+    Private Sub ExtractModpackFiles(InstallTemp As String, FileAddress As String, Optional c As CancellationToken = Nothing, Optional p As ProgressProvider = Nothing)
+        DirectoryUtils.Delete(InstallTemp)
+        c.ThrowIfCancellationRequested()
+        FileUtils.ExtractToDirectory(FileAddress, InstallTemp, c, p)
     End Sub
     ''' <summary>
     ''' 从整合包的 override 目录复制文件，同时设置 PCL 的配置文件与版本隔离。
@@ -213,7 +194,6 @@ Retry:
                 Logger.Info($"整合包 Fabric 版本：{Id}")
                 TargetVersion.Fabric = Id.Replace("fabric-", "")
             Else
-                'ElseIf Id.StartsWithF("quilt-") Then
                 NotifyIncompatibleLoader(Id)
             End If
         Next
@@ -224,7 +204,7 @@ Retry:
         If OverrideHome <> "" Then
             InstallLoaders.Add(New LoaderTask(Of String, Integer)("解压整合包文件",
             Sub(Task As LoaderTask(Of String, Integer))
-                ExtractModpackFiles(InstallTemp, FileAddress, Task, 0.6)
+                ExtractModpackFiles(InstallTemp, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.6))
                 CopyOverrideDirectory(
                     InstallTemp & ArchiveBaseFolder & If(OverrideHome = "." OrElse OverrideHome = "./", "", OverrideHome), '#5613
                     $"{McFolderSelected}versions\{InstanceName}", Task)
@@ -296,13 +276,15 @@ Retry:
                     Dim TargetFolder As String, Type As ResourceTypes
                     If ModJson("modules").Any Then 'modules 可能返回 null（#1006）
                         Dim ModuleNames = CType(ModJson("modules"), JArray).Select(Function(l) l("name").ToString).ToList
-                        If ModuleNames.Contains("META-INF") OrElse ModuleNames.Contains("mcmod.info") OrElse
-                           ModJson?("FileName")?.ToString.EndsWithF(".jar", True) Then
+                        If ModuleNames.Contains("META-INF") OrElse ModuleNames.Contains("mcmod.info") OrElse ModuleNames.Contains("fabric.mod.json") OrElse
+                            ModJson?("FileName")?.ToString.EndsWithF(".jar", True) Then
                             TargetFolder = "mods" : Type = ResourceTypes.Mod
                         ElseIf ModuleNames.Contains("pack.mcmeta") Then
                             TargetFolder = "resourcepacks" : Type = ResourceTypes.ResourcePack
-                        Else
+                        ElseIf ModuleNames.Contains("shaders") Then
                             TargetFolder = "shaderpacks" : Type = ResourceTypes.Shader
+                        Else
+                            TargetFolder = "saves" : Type = ResourceTypes.Map
                         End If
                     Else
                         TargetFolder = "mods" : Type = ResourceTypes.Mod
@@ -348,6 +330,12 @@ Retry:
                 WriteIni(VersionFolder & "PCL\Setup.ini", "LogoCustom", "True")
                 Logger.Info($"已设置整合包 Logo：{Logo}")
             End If
+            '解压地图文件
+            Dim SaveFolder As String = $"{VersionFolder}saves\"
+            For Each MapFile In DirectoryUtils.EnumerateFiles(SaveFolder, searchPattern:="*.zip")
+                FileUtils.ExtractToDirectory(MapFile, SaveFolder, Task.CreateCancellationToken())
+                FileUtils.Delete(MapFile)
+            Next
             '删除原始整合包文件
             For Each Target As String In {VersionFolder & "原始整合包.zip", VersionFolder & "原始整合包.mrpack"}
                 If FileUtils.Exists(Target) Then
@@ -373,7 +361,6 @@ Retry:
         Loader.Start(Request.VersionFolder)
         LoaderTaskbarAdd(Loader)
         FrmMain.BtnExtraDownload.ShowRefresh()
-        RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.DownloadManager))
         Return Loader
     End Function
 
@@ -404,7 +391,6 @@ Retry:
                     TargetVersion.Fabric = Entry.Value.ToString
                     Logger.Info($"整合包 Fabric 版本：{TargetVersion.Fabric}")
                 Case Else
-                    'Case "quilt-loader" 'eg. 1.0.0
                     NotifyIncompatibleLoader(Entry.Name)
             End Select
         Next
@@ -421,7 +407,7 @@ Retry:
         Dim InstallLoaders As New List(Of LoaderBase)
         InstallLoaders.Add(New LoaderTask(Of String, Integer)("解压整合包文件",
         Sub(Task As LoaderTask(Of String, Integer))
-            ExtractModpackFiles(InstallTemp, FileAddress, Task, 0.5)
+            ExtractModpackFiles(InstallTemp, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.5))
             CopyOverrideDirectory(
                 InstallTemp & ArchiveBaseFolder & "overrides",
                 McFolderSelected & "versions\" & InstanceName, Task)
@@ -456,7 +442,7 @@ Retry:
                 Throw New OperationCanceledException
             End If
             FileList.Add(New NetFile(Urls, TargetPath,
-                New FileChecker With {.ActualSize = File("fileSize").ToObject(Of Long), .Hash = File("hashes")("sha1").ToString}, True))
+                New FileChecker With {.Hash = File("hashes")("sha1").ToString}, True)) 'Modrinth 整合包不应校验文件大小（他们官方自己说的）
         Next
         If FileList.Any Then
             InstallLoaders.Add(New LoaderDownload("下载额外文件", FileList) With {.ProgressWeight = FileList.Count * 1.5}) '每个 Mod 需要 1.5s
@@ -511,7 +497,6 @@ Retry:
         Loader.Start(Request.VersionFolder)
         LoaderTaskbarAdd(Loader)
         FrmMain.BtnExtraDownload.ShowRefresh()
-        RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.DownloadManager))
         Return Loader
     End Function
 
@@ -535,7 +520,7 @@ Retry:
         Dim InstallLoaders As New List(Of LoaderBase)
         InstallLoaders.Add(New LoaderTask(Of String, Integer)("解压整合包文件",
         Sub(Task As LoaderTask(Of String, Integer))
-            ExtractModpackFiles(InstallTemp, FileAddress, Task, 0.6)
+            ExtractModpackFiles(InstallTemp, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.6))
             CopyOverrideDirectory(
                 InstallTemp & ArchiveBaseFolder & "minecraft",
                 McFolderSelected & "versions\" & InstanceName, Task)
@@ -564,7 +549,6 @@ Retry:
         Loader.Start(Request.VersionFolder)
         LoaderTaskbarAdd(Loader)
         FrmMain.BtnExtraDownload.ShowRefresh()
-        RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.DownloadManager))
         Return Loader
     End Function
 
@@ -590,7 +574,7 @@ Retry:
         Dim InstallLoaders As New List(Of LoaderBase)
         InstallLoaders.Add(New LoaderTask(Of String, Integer)("解压整合包文件",
         Sub(Task As LoaderTask(Of String, Integer))
-            ExtractModpackFiles(InstallTemp, FileAddress, Task, 0.55)
+            ExtractModpackFiles(InstallTemp, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.55))
             CopyOverrideDirectory(
                 InstallTemp & ArchiveBaseFolder & ".minecraft",
                 McFolderSelected & "versions\" & InstanceName, Task)
@@ -662,7 +646,6 @@ Retry:
                     Request.NeoForgeVersion = Component("version")
                 Case "net.fabricmc.fabric-loader"
                     Request.FabricVersion = Component("version")
-                    'Case "org.quiltmc.quilt-loader" 'eg. 1.0.0
                 Case Else
                     If UID.StartsWithF("org.lwjgl") Then '#8210
                         Logger.Info($"已跳过 LWJGL 项：{UID}")
@@ -690,7 +673,6 @@ Retry:
         Loader.Start(Request.VersionFolder)
         LoaderTaskbarAdd(Loader)
         FrmMain.BtnExtraDownload.ShowRefresh()
-        RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.DownloadManager))
         Return Loader
     End Function
 
@@ -719,7 +701,7 @@ Retry:
         Dim InstallLoaders As New List(Of LoaderBase)
         InstallLoaders.Add(New LoaderTask(Of String, Integer)("解压整合包文件",
         Sub(Task As LoaderTask(Of String, Integer))
-            ExtractModpackFiles(InstallTemp, FileAddress, Task, 0.6)
+            ExtractModpackFiles(InstallTemp, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.6))
             CopyOverrideDirectory(
                 InstallTemp & ArchiveBaseFolder & "overrides",
                 McFolderSelected & "versions\" & InstanceName, Task)
@@ -738,7 +720,7 @@ Retry:
         Next
         If Not Addons.ContainsKey("game") Then Throw New Exception("该 MCBBS 整合包未提供游戏版本信息，无法安装！")
         If Addons.ContainsKey("quilt") Then
-            Hint("PCL 暂不支持安装需要 Quilt 的整合包！", HintType.Red)
+            Hint("PCL 不支持安装 Quilt 整合包！", HintType.Red)
             Throw New OperationCanceledException
         End If
         Dim Request As New McInstallRequest With {
@@ -769,7 +751,6 @@ Retry:
         Loader.Start(Request.VersionFolder)
         LoaderTaskbarAdd(Loader)
         FrmMain.BtnExtraDownload.ShowRefresh()
-        RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.DownloadManager))
         Return Loader
     End Function
 
@@ -784,7 +765,7 @@ Retry:
         Dim Loader As New LoaderCombo(Of String)("解压压缩包", {
             New LoaderTask(Of String, Integer)("解压压缩包",
             Sub(Task As LoaderTask(Of String, Integer))
-                ExtractModpackFiles(TargetFolder, FileAddress, Task, 0.9)
+                ExtractModpackFiles(TargetFolder, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.9))
                 OpenExplorer(TargetFolder)
                 Thread.Sleep(400) '避免文件争用
                 '查找解压后的 exe 文件
@@ -860,7 +841,7 @@ Retry:
         Dim Loader As New LoaderCombo(Of String)("解压压缩包", {
             New LoaderTask(Of String, Integer)("解压压缩包",
             Sub(Task As LoaderTask(Of String, Integer))
-                ExtractModpackFiles(TargetFolder, FileAddress, Task, 0.95)
+                ExtractModpackFiles(TargetFolder, FileAddress, Task.CreateCancellationToken(), Task.CreateSyncProgressProvider(ToPercentage:=0.95))
                 '加入文件夹列表
                 PageSelectLeft.AddFolder(TargetFolder & ArchiveBaseFolder, PathUtils.GetLastPart(TargetFolder), False)
                 Thread.Sleep(400) '避免文件争用

@@ -83,7 +83,7 @@ Public Class PageInstanceSetup
             Settings.Reset("VersionServerLogin", Instance:=PageInstanceLeft.Instance)
             Settings.Reset("VersionArgumentIndieV2", Instance:=PageInstanceLeft.Instance)
             Settings.Reset("VersionAdvanceAssets", Instance:=PageInstanceLeft.Instance)
-            Configs.InstanceForcedJava.Reset(PageInstanceLeft.Instance.Config)
+            Configs.JavaForced.Reset(PageInstanceLeft.Instance.Config)
             JavaListRefreshWorker.Start()
 
             Logger.Info("已初始化版本独立设置")
@@ -474,7 +474,7 @@ PreFin:
         '========================================== 显示结果 ==========================================
         BtnArgumentJavaSearch.IsEnabled = True
         ComboArgumentJavaSelect.IsEnabled = True
-        Dim SelectedJava As Java = Configs.InstanceForcedJava.Get(PageInstanceLeft.Instance.Config)
+        Dim SelectedJava As Java = Configs.JavaForced.Get(PageInstanceLeft.Instance.Config)
         '更新下拉框文本
         If Not Configs.JavaList.Get().Any() Then
             LabArgumentJava.Text = "未找到 Java，点击以导入已有的 Java"
@@ -492,7 +492,7 @@ PreFin:
                 AddHandler JavaItem.MouseLeftButtonUp, Sub(sender As Object, e As MouseButtonEventArgs) e.Handled = True
                 AddHandler JavaItem.Click,
                 Sub()
-                    Configs.InstanceForcedJava.Set(JavaEntry, PageInstanceLeft.Instance.Config)
+                    Configs.JavaForced.Set(JavaEntry, PageInstanceLeft.Instance.Config)
                     UpdateJavaList()
                     ComboArgumentJavaSelect.IsDropDownOpen = False
                 End Sub

@@ -463,7 +463,8 @@ NextInner:
     End Function
 
     '登录主模块加载器
-    Public McLoginLoader As New LoaderTask(Of McLoginData, McLoginResult)("登录", AddressOf McLoginStart, AddressOf McLoginInput, ThreadPriority.BelowNormal) With {.ReloadTimeout = 1, .ProgressWeight = 15, .Block = False}
+    Public McLoginLoader As New LoaderTask(Of McLoginData, McLoginResult)("登录", AddressOf McLoginStart, AddressOf McLoginInput, ThreadPriority.BelowNormal) With
+        {.ReloadTimeout = 1, .ProgressWeight = 15, .Block = False}
     Public Function McLoginInput() As McLoginData
         Dim LoginData As McLoginData = Nothing
         Dim LoginType = Settings.Get(Of McLoginType)("LoginType")
@@ -1175,6 +1176,7 @@ Retry:
 
 #Region "启动参数"
     Private McLaunchArgument As String
+    Private McLaunchEncoding As Encoding
 
     '主方法
     Private Sub McLaunchArgumentMain(Loader As LoaderTask(Of String, Integer))
@@ -1296,8 +1298,8 @@ NextInstance:
         'LUA
         Dim UseLUA As Boolean =
             Not Settings.Get(Of Boolean)("LaunchAdvanceDisableLUA") AndAlso Not Settings.Get(Of Boolean)("VersionAdvanceDisableLUA", McInstanceSelected) AndAlso
-            McLibListGet(McInstanceSelected, False).Any(Function(e) e.OriginalName = "org.lwjgl:lwjgl:3.4.1")
-        If UseLUA Then Args.Add($"-javaagent:""{ExtractPatch("LUA")}""")
+            McLibListGet(McInstanceSelected, False).Select(Function(e) e.OriginalName).Contains("org.lwjgl:lwjgl:3.4.1")
+        If UseLUA Then Args.Add($"-javaagent:""{LaunchUtils.ExtractPatch("Launch\LwjglUnsafeAgent.jar", PathPure.Value)}""")
         McLaunchLog("使用 LUA：" & UseLUA)
 
 #Region "内存管理"
@@ -1361,14 +1363,34 @@ NextInstance:
         'Log4j 漏洞防御参数
         Args.Add("-Dlog4j2.formatMsgNoLookups=true")
 
-        '编码（#4700、#5892、#5909）
-        If McLaunchJavaSelected.Version.Major > 8 AndAlso Not Args.Any(Function(a) a.StartsWithF("-Dstdout.encoding=")) Then Args.Add("-Dstdout.encoding=UTF-8")
-        If McLaunchJavaSelected.Version.Major > 8 AndAlso Not Args.Any(Function(a) a.StartsWithF("-Dstderr.encoding=")) Then Args.Add("-Dstderr.encoding=UTF-8")
-        If McLaunchJavaSelected.Version.Major >= 18 AndAlso Not Args.Any(Function(a) a.StartsWithF("-Dfile.encoding=")) Then Args.Add("-Dfile.encoding=COMPAT") 'Dfile.encoding 需要放在 Dstdout.encoding 后面（#6934）
+        '编码（#4700、#5892、#5909、#6934、#8950）
+        Dim EncodingName As String
+        Select Case McLaunchJavaSelected.Version.Major
+            Case Is >= 21 'Java 21+ 会固定使用 UTF-8
+                EncodingName = "UTF-8"
+            Case Is >= 18 'Java 18~20 时，启动 MC 时会添加 COMPAT 参数，因此 Java 会回退到 native.encoding
+                EncodingName = McLaunchJavaSelected.NativeEncodingName
+            Case Else 'Java 17- 时，直接使用 file.encoding
+                EncodingName = McLaunchJavaSelected.FileEncodingName
+        End Select
+        Try
+            McLaunchEncoding = Encoding.GetEncoding(If(EncodingName.Equals("GBK", StringComparison.OrdinalIgnoreCase), "GB18030", EncodingName))
+        Catch ex As Exception
+            Dim FallbackEncoding = Encoding.GetEncoding(Globalization.CultureInfo.CurrentCulture.TextInfo.ANSICodePage) '老版本 Java 的编码选择行为
+            McLaunchLog($"无法识别 Java 编码 {If(EncodingName, "Nothing")}，已回退为 {FallbackEncoding.WebName}", LogLevel.Warn)
+            McLaunchEncoding = FallbackEncoding
+        End Try
+        McLaunchLog($"使用编码：{McLaunchEncoding.WebName}")
+        Dim LaunchEncodingName = If(McLaunchEncoding.CodePage = 54936, "GBK", McLaunchEncoding.WebName)
+        Dim StdoutArgName = If(McLaunchJavaSelected.Version.Major < 19, "sun.stdout.encoding", "stdout.encoding") '老版本 Java 应该设置 sun.std
+        Dim StderrArgName = If(McLaunchJavaSelected.Version.Major < 19, "sun.stderr.encoding", "stderr.encoding")
+        If Not Args.Any(Function(a) a.StartsWithF($"-D{StdoutArgName}=")) Then Args.Add($"-D{StdoutArgName}={LaunchEncodingName}")
+        If Not Args.Any(Function(a) a.StartsWithF($"-D{StderrArgName}=")) Then Args.Add($"-D{StderrArgName}={LaunchEncodingName}")
+        If McLaunchJavaSelected.Version.Major >= 18 AndAlso McLaunchJavaSelected.Version.Major < 21 Then Args.Add("-Dfile.encoding=COMPAT") '使用 COMPAT 防止部分 Mod 配置文件不兼容 UTF-8
 
         '为 JLW 添加 -jar，它必须放在最后
         If UseJLW Then
-            Args.Add("-jar") : Args.Add(ExtractPatch("JavaWrapper"))
+            Args.Add("-jar") : Args.Add(LaunchUtils.ExtractPatch("Launch\JavaWrapper.jar", PathPure.Value))
         End If
 
         '再次去重并输出
@@ -1482,7 +1504,7 @@ NextInstance:
         Yield ("${natives_directory}", GetNativesFolder().TrimEnd("\"c))
         Yield ("${library_directory}", PathUtils.ToShortPath(McFolderSelected & "libraries"))
         Yield ("${libraries_directory}", PathUtils.ToShortPath(McFolderSelected & "libraries"))
-        Yield ("${pure_directory}", PathPure.TrimEnd("\"c)) '由 PCL 添加，这会允许在分割参数并去重后再替换路径，防止路径中的特殊字符影响参数分割和去重
+        Yield ("${pure_directory}", PathPure.Value.TrimEnd("\"c)) '由 PCL 添加，这会允许在分割参数并去重后再替换路径，防止路径中的特殊字符影响参数分割和去重
         Yield ("${launcher_name}", "PCL")
         Yield ("${launcher_version}", VersionCode)
         Yield ("${version_name}", McInstanceSelected.Name)
@@ -1997,7 +2019,7 @@ IgnoreCustomSkin:
         '输出 bat
         Try
             Dim CmdString As String =
-                $"{If(McLaunchJavaSelected.Version.Major > 8, "chcp 65001>nul" & vbCrLf, "")}" &
+                $"chcp {If(McLaunchEncoding.CodePage = 54936 AndAlso IsGBKEncoding, 936, McLaunchEncoding.CodePage)}>nul" & vbCrLf &
                 "@echo off" & vbCrLf &
                 $"title 启动 - {McInstanceSelected.Name}" & vbCrLf &
                 "echo 游戏正在启动，请稍候。" & vbCrLf &
@@ -2010,7 +2032,7 @@ IgnoreCustomSkin:
             FileUtils.Write(
                 filePath:=If(CurrentLaunchOptions.SaveBatch, Paths.Base & "PCL\LatestLaunch.bat"),
                 text:=FilterAccessToken(CmdString, "F").Replace("%", "%%"),
-                encoding:=If(McLaunchJavaSelected.Version.Major > 8, Encoding.UTF8, Encoding.Default))
+                encoding:=McLaunchEncoding)
             If CurrentLaunchOptions.SaveBatch IsNot Nothing Then
                 McLaunchLog("导出启动脚本完成，强制结束启动过程")
                 CanceledHint = "导出启动脚本成功！"
@@ -2092,6 +2114,8 @@ IgnoreCustomSkin:
         '设置其他参数
         StartInfo.WorkingDirectory = McInstanceSelected.PathIndie
         StartInfo.UseShellExecute = False
+        StartInfo.StandardOutputEncoding = McLaunchEncoding
+        StartInfo.StandardErrorEncoding = McLaunchEncoding
         StartInfo.RedirectStandardOutput = True
         StartInfo.RedirectStandardError = True
         StartInfo.CreateNoWindow = True

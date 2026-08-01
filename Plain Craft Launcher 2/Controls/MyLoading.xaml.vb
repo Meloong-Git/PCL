@@ -76,8 +76,7 @@ Public Class MyLoading
                     If Ex Is Nothing Then
                         LabText.Text = "未知错误"
                     Else
-                        Ex = Ex.RootException()
-                        LabText.Text = If(Ex.IsBadNetwork(), "网络环境不佳，请稍后再试，或使用 VPN 改善网络环境", Ex.Message)
+                        LabText.Text = Ex.GetDisplay(False)
                     End If
                 Else
                     LabText.Text = TextError

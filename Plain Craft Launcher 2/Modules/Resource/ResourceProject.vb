@@ -502,7 +502,6 @@ Public Class ResourceProject
         '获取 Mod 加载器描述
         Dim ModLoaderDescriptionFull As String, ModLoaderDescriptionPart As String
         Dim ModLoadersForDesc = ModLoaders.Flags().ToList()
-        If Settings.Get(Of Boolean)("ToolDownloadIgnoreQuilt") Then ModLoadersForDesc.Remove(ModLoaders.Quilt)
         Select Case ModLoadersForDesc.Count
             Case 0
                 If ModLoadersForDesc.IsSingle Then
@@ -519,8 +518,7 @@ Public Class ResourceProject
                 Dim NewestDrop As Integer = If(Drops.Any, Drops.First, 9999)
                 If ModLoadersForDesc.Contains(ModLoaders.Forge) AndAlso
                    (NewestDrop < 140 OrElse ModLoadersForDesc.Contains(ModLoaders.Fabric)) AndAlso
-                   (NewestDrop < 200 OrElse ModLoadersForDesc.Contains(ModLoaders.NeoForge)) AndAlso
-                   (NewestDrop < 140 OrElse ModLoadersForDesc.Contains(ModLoaders.Quilt) OrElse Settings.Get(Of Boolean)("ToolDownloadIgnoreQuilt")) Then
+                   (NewestDrop < 200 OrElse ModLoadersForDesc.Contains(ModLoaders.NeoForge)) Then
                     ModLoaderDescriptionFull = "任意"
                     ModLoaderDescriptionPart = ""
                 Else

@@ -64,7 +64,6 @@
                             <RowDefinition Height="7" />
                             <RowDefinition Height="28" />
                             <RowDefinition Height="7" />
-                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="来源" Margin="0,0,25,0" />
                         <local:MyComboBox x:Name="ComboDownloadMod" Grid.Row="0" Grid.ColumnSpan="2" local:SettingService.Key="ToolDownloadMod" Grid.Column="1">
@@ -87,8 +86,6 @@
                             <local:MyComboBoxItem Content="标题显示译名，详情显示文件名" IsSelected="True" />
                             <local:MyComboBoxItem Content="标题显示文件名，详情显示译名" />
                         </local:MyComboBox>
-                        <local:MyCheckBox Margin="0,2,0,4" Text="在显示 Mod 加载器时忽略 Quilt" Grid.Row="6" Height="22" Grid.ColumnSpan="2"
-                                          x:Name="CheckDownloadIgnoreQuilt" local:SettingService.Key="ToolDownloadIgnoreQuilt" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>

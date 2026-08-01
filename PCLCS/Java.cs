@@ -19,6 +19,13 @@ namespace PCLCS;
     /// <para/> 若为 null，则还需要调用 <see cref="CheckAsync"/> 以获取版本号。
     /// </summary>
     public Version? Version = version;
+    /// <summary>Java 的默认字符编码。</summary>
+    [JsonIgnore] public string? FileEncodingName;
+    /// <summary>
+    /// Java 根据系统环境确定的本地字符编码，仅 Java 17+ 可用。
+    /// <para/>若系统开启了 UTF-8，部分 Java 会错误地返回 JDK，因此不能使用 <see cref="Encoding.Default"/>。
+    /// </summary>
+    [JsonIgnore] public string? NativeEncodingName;
 
     /// <summary>
     /// 检查该 Java 是否存在问题，并获取其版本号。
@@ -31,12 +38,12 @@ namespace PCLCS;
             if (!FileUtils.Exists(JavaExePath)) throw new FileNotFoundException("未找到 java.exe 文件", JavaExePath);
 
             // 运行 -version
-            output = (await TaskUtils.RunProgramAsync(JavaExePath, "-version", 15000, cancellationToken: cancellationToken).NoCapture()).Output.Lower();
+            output = (await TaskUtils.RunProgramAsync(JavaExePath, "-XshowSettings:properties -version", 15000, cancellationToken: cancellationToken).NoCapture()).Output.Lower();
             if (output == "") throw new InvalidOperationException("尝试运行该 Java 失败");
             Logger.Trace($"Java 检查输出：{JavaExePath}{Environment.NewLine}{output}");
             if (output.Contains("/lib/ext exists")) throw new InvalidOperationException("无法运行该 Java，请在删除 Java 文件夹中的 /lib/ext 文件夹后再试");
             if (output.Contains("a fatal error") || output.Contains("error: ")) throw new InvalidOperationException("无法运行该 Java，该 Java 或系统存在问题");
-
+           
             // 获取版本号
             var versionString = (output.RegexSeek(@"(?<=version "")[^""]+") ?? output.RegexSeek("(?<=openjdk )[0-9]+"))?.Replace("_", ".").Replace("+", ".").BeforeFirst("-");
             if (string.IsNullOrEmpty(versionString)) throw new InvalidOperationException($"未找到该 Java 的版本号{(output.Length < 500 ? $"\n原始输出为：\n{output}" : "")}");
@@ -46,7 +53,16 @@ namespace PCLCS;
             Version = new Version(segments.Take(4).Join("."));
             if (Version.Major is <= 4 or >= 100) throw new InvalidOperationException($"分析详细信息失败，获取的版本为 {Version}{(output.Length < 500 ? $"\n原始输出为：\n{output}" : "")}");
 
+            // 获取 Java 的相关属性
             if (!output.Contains("64-bit")) throw new InvalidOperationException("该 Java 为 32 位版本，请安装 64 位的 Java");
+            string? GetProperty(string name) {
+                string prefix = name + " = ";
+                string? line = output.Split('\n').Select(l => l.Trim()).FirstOrDefault(l => l.StartsWithF(prefix));
+                return line?[prefix.Length..].Trim();
+            }
+            FileEncodingName = GetProperty("file.encoding");
+            NativeEncodingName = GetProperty("native.encoding") ?? FileEncodingName; // 旧版本没有 native.encoding
+
             Logger.Info($"检查 Java 成功：{this}");
             available = true;
         } catch (Exception ex) {
@@ -59,6 +75,12 @@ namespace PCLCS;
         }
         return available!.Value;
     }
+
+    public void InvalidateChecked() {
+        isChecked = 0;
+        available = null;
+    }
+
     [JsonIgnore] private int isChecked = 0;
     /// <summary>若已进行过检查，表示该检查是否成功。若未检查，则为 null。</summary>
     [JsonIgnore] internal bool? available = null;
@@ -95,8 +117,8 @@ public static class JavaUtils {
         javas = await JavaUtils.CheckAllAsync(javas, cancellationToken, progress).NoCapture();
         javas.Sort((left, right) => {
             // 优先使用带完整 Java 的文件夹列表中的 Java
-            var isLeftInCandidateFolder = JavaUtils.CandidateFolders.Any(folder => PathUtils.IsParentOf(folder, left.Folder));
-            var isRightInCandidateFolder = JavaUtils.CandidateFolders.Any(folder => PathUtils.IsParentOf(folder, right.Folder));
+            var isLeftInCandidateFolder = JavaUtils.CandidateFolders.Value.Any(folder => PathUtils.IsParentOf(folder, left.Folder));
+            var isRightInCandidateFolder = JavaUtils.CandidateFolders.Value.Any(folder => PathUtils.IsParentOf(folder, right.Folder));
             if (isLeftInCandidateFolder != isRightInCandidateFolder) return isLeftInCandidateFolder ? -1 : 1;
             // 其次优先使用主版本号接近 21 的 Java
             var leftDistance = left.Version is null ? int.MaxValue : Math.Abs(left.Version.Major - 21);
@@ -111,36 +133,47 @@ public static class JavaUtils {
     /// <summary>
     /// 存在完整 Java 的文件夹列表。
     /// </summary>
-    internal static readonly List<string> CandidateFolders = [
-        Paths.AppData + @".minecraft\runtime\", // 这也是 PCL 下载 Java 的路径
-        Paths.AppData + @".hmcl\java\",
-        Paths.AppData + @"ATLauncher\runtimes\minecraft\",
-        Paths.AppData + @"ModrinthApp\meta\java_versions\",
-        Paths.AppData + @"PrismLauncher\java\",
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\curseforge\minecraft\Install\runtime\",
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.jdks\",
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.sdkman\candidates\java\",
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\.ftba\bin\runtime\",
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Packages\Microsoft.4297127D64EC6_8wekyb3d8bbwe\LocalCache\Local\runtime\",
-        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + @"\Minecraft Launcher\runtime\",
-        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + @"\Minecraft\runtime\",
-        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\Curse\Minecraft\Install\runtime\",
-        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Java\",
-        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Eclipse Adoptium\",
-        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Amazon Corretto\",
-        Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Zulu\",
-        ..DirectoryUtils.EnumerateDirectories(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Microsoft\", searchPattern: "jdk-*"),
-        // 环境变量
-        ..(Environment.GetEnvironmentVariable("JDK_HOME") + ";" + Environment.GetEnvironmentVariable("JAVA_HOME")).
-            Split(";", true).Select(path => path.Trim(' ', '"'))
-    ];
+    internal static readonly Lazy<List<string>> CandidateFolders = new(() => {
+        List<string> folders = [
+            Paths.AppData + @".minecraft\runtime\", // 这也是 PCL 下载 Java 的路径
+            Paths.AppData + @".hmcl\java\",
+            Paths.AppData + @"ATLauncher\runtimes\minecraft\",
+            Paths.AppData + @"ModrinthApp\meta\java_versions\",
+            Paths.AppData + @"PrismLauncher\java\",
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\curseforge\minecraft\Install\runtime\",
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.jdks\",
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.sdkman\candidates\java\",
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\.ftba\bin\runtime\",
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Packages\Microsoft.4297127D64EC6_8wekyb3d8bbwe\LocalCache\Local\runtime\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + @"\Minecraft Launcher\runtime\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + @"\Minecraft\runtime\",
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\Curse\Minecraft\Install\runtime\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Java\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Eclipse Adoptium\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Amazon Corretto\",
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Zulu\",
+            ..DirectoryUtils.EnumerateDirectories(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + @"\Microsoft\", searchPattern: "jdk-*"),
+            // 环境变量
+            ..(Environment.GetEnvironmentVariable("JDK_HOME") + ";" + Environment.GetEnvironmentVariable("JAVA_HOME")).
+                Split(";", true).Select(path => path.Trim(' ', '"'))
+        ];
+        return folders.Select(f => {
+            try {
+                return PathUtils.ForCompare(f);
+            } catch (Exception ex) {
+                Logger.Warn(ex, $"Java 候选文件夹路径无效（{f}）");
+                return null;
+            }
+        }).Where(f => f is not null).Cast<string>().ToList();
+    });
+    
 
     /// <summary>
     /// 从常见文件夹和环境变量中搜索 Java，并将搜索结果写入设置。
     /// </summary>
     public static async Task RefreshListAsync(CancellationToken c = default, ProgressProvider? p = null) {
         // 搜索
-        List<Java> javaList = await SearchFoldersAsync(true, CandidateFolders, c, p?.SplitTo(0.5)).NoCapture();
+        List<Java> javaList = await SearchFoldersAsync(true, CandidateFolders.Value, c, p?.SplitTo(0.5)).NoCapture();
         // 将新发现的 Java 排在最前，原有列表保留既有顺序排在后面
         var oldJavaList = Configs.JavaList.Get()!;
         oldJavaList = await JavaUtils.CheckAllAsync(oldJavaList, c, p?.SplitTo(0.9)).NoCapture(); // 检查原有列表中的 Java
@@ -169,6 +202,7 @@ public static class JavaUtils {
                         string targetFolder = PathUtils.AddSlashSuffix(PathUtils.ForCompare(PathUtils.RemoveLastPart(file)));
                         // 判断文件夹是否包含重解析点（例如符号链接）
                         static bool HasReparsePoint(FileSystemInfo info) {
+                            if (PathUtils.IsParentOf(Paths.AppData + @".minecraft\runtime\", info.FullName)) return false; // 不筛查 PCL 的下载路径（#8928）
                             do {
                                 if (info.Attributes.HasFlag(FileAttributes.ReparsePoint)) return true;
                                 info = info is FileInfo fileInfo ? fileInfo.Directory : ((DirectoryInfo) info).Parent;
@@ -194,14 +228,14 @@ public static class JavaUtils {
         if (results.All(r => r.HasReparsePoint)) {
             Logger.Warn("找到的所有 Java 都包含重解析点，保留全部结果");
         } else if (results.Any(r => r.HasReparsePoint)) {
-            Logger.Info($"找到以下的 Java 包含重解析点，将它们从列表中排除：{results.Where(r => r.HasReparsePoint).Select(r => r.Folder).Join('、')}");
+            Logger.Warn($"找到的以下 Java 包含重解析点，将它们从列表中排除：{results.Where(r => r.HasReparsePoint).Select(r => r.Folder).Join('、')}");
             results = [..results.Where(r => !r.HasReparsePoint)];
         }
         // 筛除特殊路径
         if (results.All(r => r.IsSpecialPath)) {
             Logger.Warn("找到的所有 Java 都包含特殊路径，保留全部结果");
         } else if (results.Any(r => r.IsSpecialPath)) {
-            Logger.Info($"找到以下的 Java 包含特殊路径，将它们从列表中排除：{results.Where(r => r.IsSpecialPath).Select(r => r.Folder).Join('、')}");
+            Logger.Warn($"找到的以下 Java 包含特殊路径，将它们从列表中排除：{results.Where(r => r.IsSpecialPath).Select(r => r.Folder).Join('、')}");
             results = [..results.Where(r => !r.IsSpecialPath)];
         }
 

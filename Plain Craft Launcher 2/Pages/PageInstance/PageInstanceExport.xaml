@@ -181,6 +181,18 @@
                                 RequireModLoaderOrOptiFine="True" />
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
+                        <StackPanel Margin="30,0,0,0"
+                                Visibility="{Binding Checked, ElementName=CheckOptionsShaderPacks, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <local:MyCheckBox x:Name="CheckOptionsShaderPackSettings">
+                                <local:MyCheckBox.Tag>
+                                    <local:ExportOption
+                                Title="光影包设置"
+                                Description="已选光影包的自定义设置"
+                                ShowRules="shaderpacks/*.txt"
+                                DefaultChecked="True" />
+                                </local:MyCheckBox.Tag>
+                            </local:MyCheckBox>
+                        </StackPanel>
                         <StackPanel Margin="30,0,0,0" x:Name="PanOptionsShaderPacks"
                                 Visibility="{Binding Checked, ElementName=CheckOptionsShaderPacks, Converter={StaticResource BooleanToVisibilityConverter}}">
                         </StackPanel>

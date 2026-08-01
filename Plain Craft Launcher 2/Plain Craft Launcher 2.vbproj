@@ -939,9 +939,14 @@
       <LogicalName>MeloongCore.Wpf.dll</LogicalName>
       <Link>Resources\MeloongCore.Wpf.dll</Link>
     </None>
+    <None Include="..\PCLCS\bin\Microsoft.Win32.Registry.dll">
+      <LogicalName>Microsoft.Win32.Registry.dll</LogicalName>
+      <Link>Resources\Microsoft.Win32.Registry.dll</Link>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Heads\ChongQing.png" />
+    <Resource Include="Images\Heads\HerobrineXia.png" />
 
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />

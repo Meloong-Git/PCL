@@ -284,6 +284,8 @@
                             <local:MyComboBoxItem local:SettingService.Value="15" Content="Minecraft 芝士站（作者：awaEric233）" />
                             <local:MyComboBoxItem local:SettingService.Value="16" Content="整合包推荐引擎（作者：CHMYGZ）" />
                             <local:MyComboBoxItem local:SettingService.Value="17" Content="Bangumi 番剧主页（作者：wzyaeu）" />
+                            <local:MyComboBoxItem local:SettingService.Value="18" Content="Bilibili 热门（作者：wzyaeu）" />
+                            <local:MyComboBoxItem local:SettingService.Value="19" Content="Music 云音乐热门（作者：wzyaeu）" />
                         </local:MyComboBox>
                     </Grid>
                 </StackPanel>

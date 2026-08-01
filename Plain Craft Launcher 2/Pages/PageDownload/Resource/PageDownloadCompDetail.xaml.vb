@@ -175,10 +175,7 @@ GroupDone:
                 If Project.ModLoaders.Flags.Count > 1 AndAlso '工程至少有两个加载器
                     Version.ResourceType = ResourceTypes.Mod AndAlso '是 Mod
                     McVersion.IsFormatFit(VerName) Then '不是 “快照版本” 之类的
-                    For Each Loader In Version.ModLoaders.Flags
-                        If Loader = ModLoaders.Quilt AndAlso Settings.Get(Of Boolean)("ToolDownloadIgnoreQuilt") Then Continue For
-                        Loaders.Add(Loader.ToString & " ")
-                    Next
+                    Loaders.AddRange(Version.ModLoaders.Flags.Select(Function(f) f.ToString & " "))
                 End If
                 If Not Loaders.Any() Then Loaders.Add("") '保底加一个空的，确保它在一张卡片里
                 '实际添加
@@ -329,7 +326,7 @@ GroupDone:
             Loader.Start(McFolderSelected & "versions\" & InstanceName & "\")
             LoaderTaskbarAdd(Loader)
             FrmMain.BtnExtraDownload.ShowRefresh()
-            FrmMain.BtnExtraDownload.Ribble()
+            FrmMain.PageChange(FormMain.PageType.TaskManager)
 
         Catch ex As Exception
             Logger.Error(ex, "下载资源整合包失败")

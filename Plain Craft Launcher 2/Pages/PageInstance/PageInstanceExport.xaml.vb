@@ -76,6 +76,7 @@ Public Class PageInstanceExport
                     If Not SubFolder.EnumerateFileSystemInfos().Any() Then Continue For
                     Dim NewCheckBox As New MyCheckBox With {. _
                         Tag = New ExportOption With {.Title = SubFolder.Name, .DefaultChecked = True, .Rules = StringUtils.LikePatternEscape($"{Folder}/{SubFolder.Name}/")}}
+                    If AcceptCompressedFile Then GetExportOption(NewCheckBox).Description = "文件夹"
                     If Panel Is PanOptionsSaves Then GetExportOption(NewCheckBox).Description = SubFolder.LastWriteTime.ToString("yyyy'/'MM'/'dd HH':'mm")
                     Panel.Children.Add(NewCheckBox)
                 Next
@@ -249,9 +250,22 @@ Public Class PageInstanceExport
             For Each CheckBox In GetAllOptions(False)
                 If Not CheckBox.Checked Then Continue For
                 Dim TargetOption = GetExportOption(CheckBox)
-                If TargetOption.Rules Is Nothing Then Continue For
+                Dim Rules = If(TargetOption.Rules?.Split("|"c).ToList(), New List(Of String))
+
+                '动态 Rules
+                If CheckBox Is CheckOptionsShaderPackSettings Then '光影包设置：只导出勾选的光影包的设置
+                    For Each ShaderPackCheckBox In PanOptionsShaderPacks.Children.OfType(Of MyCheckBox)()
+                        If Not ShaderPackCheckBox.Checked Then Continue For
+                        Dim ShaderPackOption = GetExportOption(ShaderPackCheckBox)
+                        Dim SettingFileName = ShaderPackOption.Rules.TrimEnd("/") & ".txt"
+                        If Not FileUtils.Exists(Path.Combine(PageInstanceLeft.Instance.PathIndie, SettingFileName)) Then Continue For
+                        Rules.Add(StringUtils.LikePatternEscape($"shaderpacks/{SettingFileName}"))
+                    Next
+                End If
+
+                If Not Rules.Any() Then Continue For
                 Yield $"# {TargetOption.Title}"
-                For Each Rule In TargetOption.Rules.Split("|"c)
+                For Each Rule In Rules
                     Yield Rule
                 Next
                 Yield ""
@@ -412,7 +426,7 @@ Public Class PageInstanceExport
         Dim LoaderName As String = $"导出整合包：" & PackName
         For Each OngoingLoader In LoaderTaskbar
             If OngoingLoader.Name <> LoaderName Then Continue For
-            FrmMain.PageChange(FormMain.PageType.DownloadManager)
+            FrmMain.PageChange(FormMain.PageType.TaskManager)
             Return
         Next
 
@@ -608,7 +622,7 @@ Public Class PageInstanceExport
                 Try
                     If ModrinthUploadMode Then Return 'Modrinth 上传模式下，不从 CurseForge 获取信息
                     Dim CurseForgeHashes = Loader.Input.Select(Function(m) m.CurseForgeHash)
-                    Dim CurseForgeRaw As JContainer = DlModRequest("https://api.curseforge.com/v1/fingerprints/432/", HttpMethod.Post,
+                    Dim CurseForgeRaw As JContainer = DlModRequest("https://api.curseforge.com/v1/fingerprints/432", HttpMethod.Post,
                         $"{{""fingerprints"": [{CurseForgeHashes.Join(",")}]}}", "application/json")("data")("exactMatches")
                     For Each ResultJson As JObject In CurseForgeRaw
                         If Not ResultJson.ContainsKey("file") Then Continue For
@@ -712,7 +726,7 @@ Public Class PageInstanceExport
         LoaderTaskbarAdd(MainLoader)
         FrmMain.BtnExtraDownload.ShowRefresh()
         FrmMain.BtnExtraDownload.Ribble()
-        FrmMain.PageChange(FormMain.PageType.DownloadManager)
+        FrmMain.PageChange(FormMain.PageType.TaskManager)
     End Sub
 
 #End Region

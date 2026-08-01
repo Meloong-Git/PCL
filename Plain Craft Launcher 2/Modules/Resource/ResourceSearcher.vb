@@ -179,11 +179,6 @@ Public Class ResourceSearcher
             End If
         End If
 
-        '拒绝 1.13- Quilt（这个版本根本没有 Quilt）
-        If Request.ModLoaders = ModLoaders.Quilt AndAlso CompareVersion(If(Request.GameVersion, "1.15"), "1.14") = -1 Then
-            Throw New Exception("Quilt 不支持 Minecraft " & Request.GameVersion)
-        End If
-
 #End Region
 
 #Region "中文搜索"

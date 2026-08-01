@@ -8,7 +8,8 @@ Public Module ModWatcher
         Dim IsRunning As Boolean = False
         Dim TriggerLauncherShutdown As Boolean = True
         For Each Watcher In McWatcherList
-            If Watcher.State = Watcher.MinecraftState.Loading OrElse Watcher.State = Watcher.MinecraftState.Running Then
+            If Watcher.State = Watcher.MinecraftState.Loading OrElse Watcher.State = Watcher.MinecraftState.Running OrElse
+               (Watcher.State = Watcher.MinecraftState.Crashed AndAlso Not Watcher.GameProcess.HasExited) Then
                 IsRunning = True
                 Exit For
             ElseIf Watcher.State = Watcher.MinecraftState.Crashed OrElse Watcher.State = Watcher.MinecraftState.Canceled Then
@@ -91,7 +92,9 @@ Public Module ModWatcher
             RunInNewThread(
             Sub()
                 Try
-                    Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Crashed OrElse State = MinecraftState.Canceled OrElse Loader.State = LoadState.Canceled
+                    Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Canceled OrElse
+                             (Loader.State = LoadState.Canceled AndAlso State <> MinecraftState.Crashed) OrElse
+                             (State = MinecraftState.Crashed AndAlso GameProcess.HasExited)
                         TimerWindow()
                         TimerLog()
                         '设置窗口标题
@@ -103,6 +106,7 @@ Public Module ModWatcher
                             Thread.Sleep(64)
                         Next
                     Loop
+                    If State = MinecraftState.Crashed Then WatcherStateChanged()
                     WatcherLog("Minecraft 日志监控已退出")
                 Catch ex As Exception
                     Logger.Error(ex, "Minecraft 日志监控主循环出错")
@@ -314,7 +318,7 @@ Public Module ModWatcher
                     Dim str As New StringBuilder(512)
                     GetClassName(hwnd, str, str.Capacity)
                     Dim ClassName As String = str.ToString
-                    If Not (ClassName = "GLFW30" OrElse ClassName = "LWJGL" OrElse ClassName = "SunAwtFrame") Then Return
+                    If Not (ClassName = "GLFW30" OrElse ClassName = "SDL_app" OrElse ClassName = "LWJGL" OrElse ClassName = "SunAwtFrame") Then Return
                     '获取窗口标题名
                     str = New StringBuilder(512)
                     GetWindowText(hwnd, str, str.Capacity)

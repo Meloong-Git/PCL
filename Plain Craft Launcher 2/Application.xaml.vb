@@ -1,6 +1,5 @@
 Imports System.Reflection
 Imports System.Windows.Threading
-Imports Microsoft.Win32
 
 Public Class Application
 
@@ -23,9 +22,7 @@ Public Class Application
             End If
             '检查 .NET Framework 版本
             Try
-                Using ndpKey As RegistryKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\")
-                    If ndpKey?.GetValue("Release") IsNot Nothing AndAlso CInt(ndpKey.GetValue("Release")) < 528040 Then OldEnvironmentAssert()
-                End Using
+                If CInt(RegistryUtils.TryRead("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full", "Release", 999999)) < 528040 Then OldEnvironmentAssert()
             Catch ex As Exception
                 Logger.Warn(ex, "检查 .NET Framework 版本失败")
             End Try
@@ -218,7 +215,7 @@ RetryCacheCheck:
 
     '动态 DLL 加载
     Private Sub New() '这里必须尽早调用，且不能使用任何库，否则加载 MeloongCore 就会导致崩溃
-        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "ThrottleDebounce", "System.Net.Http.Formatting", "PCLCS", "MeloongCore.Wpf", "MeloongCore"}
+        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "ThrottleDebounce", "System.Net.Http.Formatting", "Microsoft.Win32.Registry", "PCLCS", "MeloongCore.Wpf", "MeloongCore"}
         Static LoadedAssemblies As New ConcurrentDictionary(Of String, Lazy(Of Assembly))(StringComparer.Ordinal) '缓存
         AddHandler AppDomain.CurrentDomain.AssemblyResolve,
         Function(sender As Object, Args As ResolveEventArgs) As Assembly
@@ -234,16 +231,14 @@ RetryCacheCheck:
         End Function
     End Sub
     Private Shared Sub ExtractLibwebp() '这个方法会调用 ModBase，进而调用 MeloongCore，所以不能放在 New 里
-        SetDllDirectory(PathPure.TrimEnd("\"c))
+        SetDllDirectory(PathPure.Value.TrimEnd("\"c))
         Try
-            ExtractResources(PathPure & "libwebp.dll", "libwebp64")
+            ExtractResources(PathPure.Value & "libwebp.dll", "libwebp64")
         Catch ex As Exception
             Logger.Warn(ex, "写入 libwebp.dll 失败") '防止同时加载多个图片时，同时写入文件导致文件占用，进而导致崩溃
         End Try
     End Sub
     Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
-
-    '切换窗口
 
     '控件模板事件
     Private Sub MyIconButton_Click(sender As Object, e As EventArgs)
@@ -288,14 +283,6 @@ RetryCacheCheck:
                         FrmLoginAuth.TextPass.Password = If(Dict.Values.Any, Dict.Values(0), "")
                 End Select
         End Select
-    End Sub
-
-    Public Shared ShowingTooltips As New List(Of ToolTip)
-    Private Sub OnTooltipOpened(sender As ToolTip, e As RoutedEventArgs)
-        ShowingTooltips.Add(sender)
-    End Sub
-    Private Sub OnTooltipClosed(sender As ToolTip, e As RoutedEventArgs)
-        ShowingTooltips.Remove(sender)
     End Sub
 
 End Class

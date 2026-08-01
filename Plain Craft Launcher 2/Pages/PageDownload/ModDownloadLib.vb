@@ -368,7 +368,7 @@ pause"
         '添加 Java Wrapper 作为主 Jar
         Dim Arguments As String
         If UseJavaWrapper AndAlso Not Settings.Get(Of Boolean)("LaunchAdvanceDisableJLW") Then
-            Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.TrimEnd("\")}"" -Duser.home=""{BaseMcFolderHome.TrimEnd("\")}"" -cp ""{Target}"" -jar ""{ExtractPatch("JavaWrapper")}"" optifine.Installer"
+            Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.Value.TrimEnd("\")}"" -Duser.home=""{BaseMcFolderHome.TrimEnd("\")}"" -cp ""{Target}"" -jar ""{LaunchUtils.ExtractPatch("Launch\JavaWrapper.jar", PathPure.Value)}"" optifine.Installer"
         Else
             Arguments = $"-Duser.home=""{BaseMcFolderHome.TrimEnd("\")}"" -cp ""{Target}"" optifine.Installer"
         End If
@@ -939,7 +939,7 @@ Retry:
         '添加 Java Wrapper 作为主 Jar
         Dim Arguments As String
         If UseJavaWrapper AndAlso Not Settings.Get(Of Boolean)("LaunchAdvanceDisableJLW") Then
-            Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.TrimEnd("\")}"" -cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" -jar ""{ExtractPatch("JavaWrapper")}"" com.bangbang93.ForgeInstaller ""{McFolder}"
+            Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.Value.TrimEnd("\")}"" -cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" -jar ""{LaunchUtils.ExtractPatch("Launch\JavaWrapper.jar", PathPure.Value)}"" com.bangbang93.ForgeInstaller ""{McFolder}"
         Else
             Arguments = $"-cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" com.bangbang93.ForgeInstaller ""{McFolder}"
         End If
@@ -2159,40 +2159,5 @@ Retry:
     ''' 如果 OptiFine 与 Forge 同时复制原版 JAR，就会导致复制文件时冲突。
     ''' </summary>
     Private VanillaSyncLock As New Object
-
-    ''' <summary>
-    ''' 释放补丁文件并返回完整文件路径。
-    ''' </summary>
-    ''' <param name="Patch">"LUA" 或 "JavaWrapper"。</param>
-    Public Function ExtractPatch(Patch As String) As String
-        Dim PatchPath As String = $"{PathPure}{Patch}.jar"
-        Logger.Info($"选定的 {Patch} 路径：{PatchPath}")
-        Static Lock As New Object
-        SyncLock Lock '避免 OptiFine 和 Forge 安装时同时释放导致冲突
-            Try
-                ExtractResources(PatchPath, Patch)
-            Catch ex As Exception
-                If FileUtils.Exists(PatchPath) Then
-                    '因为未知原因可能变为只读文件（#4243）
-                    Logger.Warn(ex, $"{Patch} 文件释放失败，但文件已存在，将在删除后尝试重新生成")
-                    Try
-                        FileUtils.Delete(PatchPath)
-                        ExtractResources(PatchPath, Patch)
-                    Catch ex2 As Exception
-                        Logger.Warn(ex2, $"{Patch} 文件重新释放失败，将尝试更换文件名重新生成")
-                        PatchPath = $"{PathPure}{Patch}2.jar"
-                        Try
-                            ExtractResources(PatchPath, Patch)
-                        Catch ex3 As Exception
-                            Throw New FileNotFoundException($"释放 {Patch} 最终尝试失败", ex3)
-                        End Try
-                    End Try
-                Else
-                    Throw New FileNotFoundException($"释放 {Patch} 失败", ex)
-                End If
-            End Try
-        End SyncLock
-        Return PatchPath
-    End Function
 
 End Module

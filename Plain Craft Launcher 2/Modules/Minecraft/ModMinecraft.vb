@@ -484,7 +484,7 @@ VersionSearchFinish:
             Return JsonPath
         End Function
         ''' <summary>
-        ''' 该版本的 Json 文本。
+        ''' 该版本的 Json 文本。会抛出异常。
         ''' </summary>
         Public Property JsonText As String
             Get
@@ -2073,7 +2073,7 @@ OnLoaded:
 
         '统一通行证文件
         If Settings.Get(Of Integer)("VersionServerLogin", Instance:=Instance) = 3 Then
-            Dim TargetFile As String = PathPure & "nide8auth.jar"
+            Dim TargetFile As String = PathPure.Value & "nide8auth.jar"
             Try
                 '测试链接：https://auth.mc-user.com:233/00000000000000000000000000000000/
                 Logger.Info("开始获取统一通行证下载信息")
@@ -2093,7 +2093,7 @@ OnLoaded:
 
         'Authlib-Injector 文件
         If Settings.Get(Of Integer)("VersionServerLogin", Instance:=Instance) = 4 Then
-            Dim TargetFile = PathPure & "authlib-injector.jar"
+            Dim TargetFile = PathPure.Value & "authlib-injector.jar"
             Try
                 Logger.Info("开始获取 Authlib-Injector 下载信息")
                 Dim DownloadInfo As JObject = NetRequestByClientRetry(

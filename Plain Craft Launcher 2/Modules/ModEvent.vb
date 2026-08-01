@@ -178,6 +178,8 @@ Public Class CustomEvent
         Logger.Info($"执行自定义事件：{Type}, {Arg}")
         If Arg Is Nothing Then Arg = ""
         Dim Args As String() = Arg.Split("|")
+        Dim Arg0 As String = Arg.BeforeFirst("|")
+        Dim Arg1 As String = Arg.AfterFirst("|")
         Try
             Select Case Type
                 Case EventType.打开网页
@@ -194,16 +196,16 @@ Public Class CustomEvent
                     Sub()
                         Try
                             '确认实际路径
-                            Dim ActualPaths = GetAbsoluteUrls(Args(0), Type)
+                            Dim ActualPaths = GetAbsoluteUrls(Arg0, Type)
                             Dim Location = ActualPaths(0), WorkingDir = ActualPaths(1)
                             Logger.Info($"打开类自定义事件实际路径：{Location}，工作目录：{WorkingDir}")
                             '执行
                             If Type = EventType.打开帮助 Then
                                 PageOtherHelp.EnterHelpPage(Location)
                             Else
-                                If Not EventSafetyConfirm("即将执行：" & Location & If(Args.Length >= 2, " " & Args(1), "")) Then Return
+                                If Not EventSafetyConfirm("即将执行：" & Location & If(Args.Length >= 2, " " & Arg1, "")) Then Return
                                 Dim Info As New ProcessStartInfo With {
-                                    .Arguments = If(Args.Length >= 2, Args(1), ""),
+                                    .Arguments = If(Args.Length >= 2, Arg1, ""),
                                     .FileName = Location,
                                     .WorkingDirectory = WorkingDir
                                 }
@@ -215,19 +217,19 @@ Public Class CustomEvent
                     End Sub)
 
                 Case EventType.启动游戏
-                    If Args(0) = "\current" Then
+                    If Arg0 = "\current" Then
                         If McInstanceSelected Is Nothing Then
                             Hint("请先选择一个 Minecraft 版本！", HintType.Red)
                             Return
                         Else
-                            Args(0) = McInstanceSelected.Name
+                            Arg0 = McInstanceSelected.Name
                         End If
                     End If
                     RunInUi(
                     Sub()
                         If McLaunchStart(New McLaunchOptions With
-                                {.ServerIp = If(Args.Length >= 2, Args(1), Nothing), .Instance = New McInstance(Args(0))}) Then
-                            Hint($"正在启动 {Args(0)}……")
+                                {.ServerIp = If(Args.Length >= 2, Args(1), Nothing), .Instance = New McInstance(Arg0)}) Then
+                            Hint($"正在启动 {Arg0}……")
                         End If
                     End Sub)
 
@@ -264,51 +266,55 @@ Public Class CustomEvent
 
                 Case EventType.弹出窗口
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 弹窗标题|弹窗内容")
-                    MyMsgBox(Args(1).Replace("\n", vbCrLf), Args(0).Replace("\n", vbCrLf), If(Args.Length > 2, Args(2), "确定"))
+                    MyMsgBox(Arg1.BeforeLast("|").Replace("\n", vbCrLf), Arg0.Replace("\n", vbCrLf), If(Args.Length > 2, Arg1.AfterLast("|"), "确定"))
 
                 Case EventType.弹出提示
-                    Hint(Args(0).Replace("\n", vbCrLf), If(Args.Length = 1, HintType.Blue, EnumUtils.FromString(Of HintType)(Args(1))))
+                    Hint(Arg0.Replace("\n", vbCrLf), If(Args.Length = 1, HintType.Blue, EnumUtils.FromString(Of HintType)(Arg1)))
 
                 Case EventType.切换页面
                     RunInUi(Sub() FrmMain.PageChange(
-                                EnumUtils.FromString(Of FormMain.PageType)(Args(0)),
-                                If(Args.Length = 1, FormMain.PageSubType.Default, EnumUtils.FromString(Of FormMain.PageSubType)(Args(1)))))
+                                EnumUtils.FromString(Of FormMain.PageType)(Arg0),
+                                If(Args.Length = 1, FormMain.PageSubType.Default, EnumUtils.FromString(Of FormMain.PageSubType)(Arg1))))
 
                 Case EventType.导入整合包, EventType.安装整合包
                     RunInUi(Sub() ModpackInstall())
 
                 Case EventType.下载文件
-                    Args(0) = Args(0).Replace("\", "/")
-                    If Not (Args(0).StartsWithF("http://", True) OrElse Args(0).StartsWithF("https://", True)) Then
+                    Arg0 = Arg0.Replace("\", "/")
+                    If Not (Arg0.StartsWithF("http://", True) OrElse Arg0.StartsWithF("https://", True)) Then
                         MyMsgBox("EventData 必须为以 http:// 或 https:// 开头的网址。" & vbCrLf & "PCL 不支持其他乱七八糟的下载协议。", "事件执行失败")
                         Return
                     End If
-                    If Not EventSafetyConfirm("即将从该网址下载文件：" & vbCrLf & Args(0)) Then Return
+                    If Not EventSafetyConfirm("即将从该网址下载文件：" & vbCrLf & Arg0) Then Return
                     RunInUi(
                     Sub()
                         Try
                             Select Case Args.Length
                                 Case 1
-                                    PageOtherTest.StartCustomDownload(Args(0), PathUtils.GetLastPart(Args(0)))
+                                    PageOtherTest.StartCustomDownload(Arg0, PathUtils.GetLastPart(Arg0))
                                 Case 2
-                                    PageOtherTest.StartCustomDownload(Args(0), Args(1))
+                                    PageOtherTest.StartCustomDownload(Arg0, Arg1)
                                 Case Else
-                                    PageOtherTest.StartCustomDownload(Args(0), Args(1), Args(2))
+                                    PageOtherTest.StartCustomDownload(Arg0, Arg(1), Args(2))
                             End Select
                         Catch
-                            PageOtherTest.StartCustomDownload(Args(0), "未知")
+                            PageOtherTest.StartCustomDownload(Arg0, "未知")
                         End Try
                     End Sub)
 
                 Case EventType.修改设置, EventType.写入设置
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 UiLauncherTransparent|400")
-                    Settings.SetSafe(Args(0), Args(1), Instance:=McInstanceSelected)
-                    If Args.Length = 2 Then Hint($"已写入设置：{Args(0)} → {Args(1)}", HintType.Green)
+                    Settings.SetSafe(Arg0, Arg1, Instance:=McInstanceSelected)
+                    If Args.Length = 2 Then Hint($"已写入设置：{Arg0} → {Arg1}", HintType.Green)
 
                 Case EventType.修改变量, EventType.写入变量
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 VariableName|SomeValue")
-                    WriteReg("CustomEvent" & Args(0), Args(1))
-                    If Args.Length = 2 Then Hint($"已写入变量：{Args(0)} → {Args(1)}", HintType.Green)
+                    Try
+                        RegistryUtils.Write($"HKEY_CURRENT_USER\Software\{RegFolder}", $"CustomEvent{Arg0}", Arg1)
+                        If Args.Length = 2 Then Hint($"已写入变量：{Arg0} → {Arg1}", HintType.Green)
+                    Catch ex As Exception
+                        Logger.Warn(ex, $"写入变量失败：{Arg0} → {Arg1}", LogBehavior.Toast)
+                    End Try
 
                 Case EventType.加入房间
                     RunInUi(

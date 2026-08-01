@@ -108,6 +108,12 @@ Public Class PageLaunchRight
                     Case 17
                         Logger.Info("Bangumi 番剧主页")
                         Url = "https://bangumi.p.kaphia.qzz.io"
+                    Case 18
+                        Logger.Info("Bilibili 热门")
+                        Url = "https://bilibili.p.kaphia.qzz.io"
+                    Case 19
+                        Logger.Info("Music 云音乐热门")
+                        Url = "https://cloudmusic.p.kaphia.qzz.io"
                 End Select
         End Select
         '联网下载

@@ -109,7 +109,8 @@ Public Class PageInstanceOverall
             Dim OldPath As String = PageInstanceLeft.Instance.PathVersion
             '修改此部分的同时修改快速安装的版本名检测*
             Dim NewName As String = MyMsgBoxInput("重命名版本", "", OldName, New ObjectModel.Collection(Of Validate) From {
-                New ValidateFolderName(McFolderSelected & "versions", IgnoreCase:=False)})
+                New ValidateFolderName(McFolderSelected & "versions", IgnoreList:=New List(Of String) From {OldName})
+            })
             If String.IsNullOrWhiteSpace(NewName) Then Return
             Dim NewPath As String = McFolderSelected & "versions\" & NewName & "\"
             '重新读取版本 JSON 信息，避免 JsonObject 中已被合并的项被重新存储
@@ -157,7 +158,7 @@ Public Class PageInstanceOverall
     End Sub
 
     '版本图标
-    Private Sub ComboDisplayLogo_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboDisplayLogo.SelectionChanged
+    Private Sub ComboDisplayLogo_SelectionChanged() Handles ItemDisplayLogoCustom.PreviewMouseLeftButtonUp, ComboDisplayLogo.SelectionChanged
         If Not (IsLoad AndAlso AniControlEnabled = 0) Then Return
         '选择 自定义 时修改图片
         Try
@@ -224,6 +225,13 @@ Public Class PageInstanceOverall
     'Mod 文件夹
     Private Sub BtnFolderMods_Click() Handles BtnFolderMods.Click
         Dim Folder As String = PageInstanceLeft.Instance.PathIndie & "mods\"
+        DirectoryUtils.Create(Folder)
+        OpenExplorer(Folder)
+    End Sub
+
+    '截图文件夹
+    Private Sub BtnFolderScreen_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnFolderScreen.Click
+        Dim Folder As String = PageInstanceLeft.Instance.PathIndie & "screenshots\"
         DirectoryUtils.Create(Folder)
         OpenExplorer(Folder)
     End Sub
@@ -298,8 +306,11 @@ Public Class PageInstanceOverall
         Try
             Dim IsShiftPressed As Boolean = My.Computer.Keyboard.ShiftKeyDown
             Dim IsHintIndie As Boolean = PageInstanceLeft.Instance.State <> McInstanceState.Error AndAlso PageInstanceLeft.Instance.PathIndie <> McFolderSelected
+            Dim SavesFolder = DirectoryUtils.GetInfo(PageInstanceLeft.Instance.PathIndie & "saves\")
+            Dim SaveEntries = If(SavesFolder.Exists, SavesFolder.EnumerateDirectories.OrderByDescending(Function(Save) Save.LastWriteTime).Select(Function(Save) $"{Save.Name}（上次修改：{StringUtils.FormatTimeSpan(Save.LastWriteTime - Date.Now, False)}）").ToList, New List(Of String))
             Select Case MyMsgBox($"你确定要{If(IsShiftPressed, "永久", "")}删除版本 {PageInstanceLeft.Instance.Name} 吗？" &
-                        If(IsHintIndie, vbCrLf & "由于该版本开启了版本隔离，删除版本时该版本对应的存档、资源包、Mod 等文件也将被一并删除！", ""),
+                        If(IsHintIndie, vbCrLf & "该版本对应的存档、资源包、Mod 等文件也将被一并删除！" &
+                            If(SaveEntries.Any, vbCrLf & vbCrLf & "这会删除以下存档：" & vbCrLf & "· " & SaveEntries.Join(vbCrLf & "· "), ""), ""),
                         "版本删除确认", , "取消",, IsHintIndie OrElse IsShiftPressed)
                 Case 1
                     PageInstanceLeft.Instance.ResetSettingsCache()

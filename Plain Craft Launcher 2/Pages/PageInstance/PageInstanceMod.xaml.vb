@@ -309,7 +309,10 @@ Install:
                 For Each ModFile In FilePathList
                     Dim NewFileName = PathUtils.GetLastPart(ModFile).Replace(".disabled", "").Replace(".old", "")
                     If Not NewFileName.Contains(".") Then NewFileName += ".jar" '#4227
-                    FileUtils.Copy(ModFile, Instance.PathIndie & "mods\" & NewFileName)
+                    NewFileName = Instance.PathIndie & "mods\" & NewFileName
+                    If ModFile = NewFileName Then Continue For '防止安装相同文件导致文件被删除
+                    FileUtils.Delete(NewFileName, True)
+                    FileUtils.Copy(ModFile, NewFileName)
                 Next
                 If FilePathList.IsSingle Then
                     Hint($"已安装 {PathUtils.GetLastPart(FilePathList.First).Replace(".disabled", "").Replace(".old", "")}！", HintType.Green)

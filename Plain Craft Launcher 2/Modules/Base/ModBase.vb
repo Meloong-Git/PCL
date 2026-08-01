@@ -6,12 +6,12 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.13.0.1" '显示用版本名
+    Public Const VersionBaseName As String = "2.13.1.0" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If RELEASE Then
-    Public Const VersionCode As Integer = 406 '正式版
+    Public Const VersionCode As Integer = 408 '正式版
 #Else
-    Public Const VersionCode As Integer = 407 '快照版
+    Public Const VersionCode As Integer = 409 '快照版
 #End If
 
     '版本信息
@@ -465,57 +465,7 @@ Public Module ModBase
 
 #Region "文件"
 
-    '=============================
-    '  注册表
-    '=============================
-
-    ''' <summary>
-    ''' 读取注册表键。如果失败则返回默认值。
-    ''' </summary>
-    Public Function ReadReg(Key As String, Optional DefaultValue As String = "") As String
-        Try
-            Return If(My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, False)?.GetValue(Key), DefaultValue)
-        Catch ex As Exception
-            Logger.Error(ex, $"读取注册表出错：{Key}", LogBehavior.Toast)
-            Return DefaultValue
-        End Try
-    End Function
-    ''' <summary>
-    ''' 写入注册表键。
-    ''' </summary>
-    Public Sub WriteReg(Key As String, Value As String, Optional ThrowException As Boolean = False)
-        Try
-            Dim SubKey As Microsoft.Win32.RegistryKey = My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, True)
-            If SubKey Is Nothing Then SubKey = My.Computer.Registry.CurrentUser.CreateSubKey("Software\" & RegFolder) '如果不存在就创建  
-            SubKey.SetValue(Key, Value)
-        Catch ex As Exception
-            Logger.Warn(ex, $"写入注册表出错：{Key}", If(ThrowException, LogBehavior.Toast, LogBehavior.ToastIfDebug))
-            If ThrowException Then Throw
-        End Try
-    End Sub
-    ''' <summary>
-    ''' 是否存在某个注册表键。
-    ''' </summary>
-    Public Function HasReg(Key As String) As Boolean
-        Return ReadReg(Key, Nothing) IsNot Nothing
-    End Function
-    ''' <summary>
-    ''' 删除注册表键。
-    ''' </summary>
-    Public Sub DeleteReg(Key As String, Optional ThrowException As Boolean = False)
-        Try
-            Dim SubKey As Microsoft.Win32.RegistryKey = My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, True)
-            If SubKey?.GetValue(Key) Is Nothing Then Return
-            SubKey.DeleteValue(Key)
-        Catch ex As Exception
-            Logger.Warn(ex, $"删除注册表出错：{Key}", If(ThrowException, LogBehavior.Toast, LogBehavior.ToastIfDebug))
-            If ThrowException Then Throw
-        End Try
-    End Sub
-
-    '=============================
-    '  ini
-    '=============================
+    'ini
 
     Private ReadOnly IniCache As New ConcurrentDictionary(Of String, ConcurrentDictionary(Of String, String))
     ''' <summary>
@@ -617,7 +567,8 @@ Public Module ModBase
         End Try
     End Sub
 
-    '文件校验
+    '权限检查
+
     ''' <summary>
     ''' 检查是否拥有某一文件夹的 I/O 权限。如果文件夹不存在，会返回 False。
     ''' </summary>
@@ -837,8 +788,8 @@ Public Module ModBase
     ''' <summary>
     ''' 可用于临时存放文件的，不含任何特殊字符的文件夹路径，以“\”结尾。
     ''' </summary>
-    Public PathPure As String = GetPureASCIIDir()
-    Private Function GetPureASCIIDir() As String
+    Public PathPure As Lazy(Of String) = New Lazy(Of String)(
+    Function()
         If Paths.Base.IsAsciiOnly() Then
             Return Paths.Base & "PCL\"
         ElseIf Paths.AppDataThenName.IsAsciiOnly() Then
@@ -848,7 +799,7 @@ Public Module ModBase
         Else
             Return OsDrive & "ProgramData\PCL\"
         End If
-    End Function
+    End Function)
 
     ''' <summary>
     ''' 指示接取到这个异常的函数进行重试。

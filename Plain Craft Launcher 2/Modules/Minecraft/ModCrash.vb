@@ -514,7 +514,6 @@ Done:
             If LogMc.Contains("signer information does not match signer information of other classes in the same package") Then AppendReason(CrashReason.文件或内容校验失败, If(LogMc.RegexSeek("(?<=class "")[^']+(?=""'s signer information)"), "").TrimEnd(vbCrLf))
             If LogMc.Contains("Maybe try a lower resolution resourcepack?") Then AppendReason(CrashReason.材质过大或显卡配置不足)
             If LogMc.Contains("java.lang.NoSuchMethodError: net.minecraft.world.server.ChunkManager$ProxyTicketManager.shouldForceTicks(J)Z") AndAlso LogMc.Contains("OptiFine") Then AppendReason(CrashReason.OptiFine导致无法加载世界)
-            If LogMc.Contains("Unsupported class file major version") Then AppendReason(CrashReason.Java版本不兼容)
             If LogMc.Contains("com.electronwill.nightconfig.core.io.ParsingException: Not enough data available") AndAlso Not CrashReasons.ContainsKey(CrashReason.Mod配置文件导致游戏崩溃) Then AppendReason(CrashReason.NightConfig的Bug)
             If LogMc.Contains("Cannot find launch target fmlclient, unable to launch") Then AppendReason(CrashReason.Forge安装不完整)
             If LogMc.Contains("Invalid paths argument, contained no existing paths") AndAlso LogMc.Contains("libraries\net\minecraftforge\fmlcore") Then AppendReason(CrashReason.Forge安装不完整)
@@ -522,7 +521,9 @@ Done:
             If LogMc.Contains("has been compiled by a more recent version of the Java Runtime (class file version 55.0), this version of the Java Runtime only recognizes class file versions up to") Then AppendReason(CrashReason.Mod需要Java11)
             If LogMc.Contains("java.lang.RuntimeException: java.lang.NoSuchMethodException: no such method: sun.misc.Unsafe.defineAnonymousClass(Class,byte[],Object[])Class/invokeVirtual") Then AppendReason(CrashReason.Mod需要Java11)
             If LogMc.Contains("java.lang.IllegalArgumentException: The requested compatibility level JAVA_11 could not be set. Level is not supported by the active JRE or ASM version") Then AppendReason(CrashReason.Mod需要Java11)
+            If LogMc.Contains("Unsupported class file major version") Then AppendReason(CrashReason.Java版本不兼容)
             If LogMc.Contains("Unsupported major.minor version") Then AppendReason(CrashReason.Java版本不兼容)
+            If LogMc.Contains("Level is not supported by the active JRE or ASM version") Then AppendReason(CrashReason.Java版本不兼容)
             If LogMc.Contains("Invalid maximum heap size") Then AppendReason(CrashReason.使用32位Java导致JVM无法分配足够多的内存)
             If LogMc.Contains("Could not reserve enough space") Then
                 If LogMc.Contains("for 1048576KB object heap") Then
@@ -543,8 +544,8 @@ Done:
             End If
             If LogMc.Contains("Missing or unsupported mandatory dependencies:") Then
                 AppendReason(CrashReason.Mod缺少前置或MC版本错误,
-                    LogMc.RegexSearch("(?<=Missing or unsupported mandatory dependencies:)([\n\r]+\t(.*))+", RegularExpressions.RegexOptions.IgnoreCase).
-                    Select(Function(s) s.Trim((vbCrLf & vbTab & " ").ToCharArray)).Distinct().ToList())
+                LogMc.RegexSearch("(?<=Missing or unsupported mandatory dependencies:)([\n\r]+\t(.*))+", RegularExpressions.RegexOptions.IgnoreCase).
+                Select(Function(s) s.Trim((vbCrLf & vbTab & " ").ToCharArray)).Distinct().ToList())
             End If
         End If
 

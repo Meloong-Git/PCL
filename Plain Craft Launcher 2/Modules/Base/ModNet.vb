@@ -288,7 +288,7 @@ Retry:
         Catch ex As TimeoutException
             Throw New WebException($"连接服务器超时，请稍后再试，或使用 VPN 改善网络环境（{Method}, {Url}，IP：{HostIp}）", WebExceptionStatus.Timeout)
         Catch ex As Exception
-            ex.ThrowIfCanceled()
+            If TypeOf ex IsNot TaskCanceledException Then ex.ThrowIfCanceled() 'GetResultWithTimeout 会抛出 TaskCanceledException
             RecordIPReliability(HostIp, -1)
             If ex.IsBadNetwork Then
                 Throw New WebException($"网络请求失败，请稍后再试，或使用 VPN 改善网络环境（{Method}, {Url}，IP：{HostIp}）", WebExceptionStatus.Timeout)
@@ -1423,8 +1423,8 @@ Retry:
             End Get
             Set(value As Integer)
                 _FailCount = value
-                If State = LoadState.Loading AndAlso value >= Math.Min(10000, Math.Max(FileRemain * 5.5, NetTaskThreadLimit * 5.5 + 3)) Then
-                    Logger.Warn($"由于同加载器中失败次数过多引发强制失败：连续失败了 {value} 次")
+                If State = LoadState.Loading AndAlso value >= Math.Min(10000, Math.Max(FileRemain * 8, NetTaskThreadLimit * 8 + 3)) Then
+                    Logger.Error($"由于同加载器中失败次数过多引发强制失败：连续失败了 {value} 次", LogBehavior.ToastIfDebug)
                     On Error Resume Next
                     Dim ExList As New List(Of Exception)
                     For Each File In Files
@@ -1917,7 +1917,7 @@ FinishExCatch:
     End Class
 
     ''' <summary>
-    ''' 是否有正在进行中、需要在下载管理页面显示的下载任务？
+    ''' 是否有正在进行中、需要在任务管理页面显示的下载任务？
     ''' </summary>
     Public Function HasDownloadingTask(Optional IgnoreCustomDownload As Boolean = False) As Boolean
         Return LoaderTaskbar.Any(
