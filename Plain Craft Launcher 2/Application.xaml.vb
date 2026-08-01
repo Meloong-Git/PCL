@@ -36,6 +36,7 @@ Public Class Application
                 Environment.SetEnvironmentVariable("windir", Environment.GetEnvironmentVariable("SystemRoot"), EnvironmentVariableTarget.User)
                 Dim _unused As New FormattedText("", Globalization.CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Fonts.SystemTypefaces.First, 96, New MyColor, DPI)
             End Try
+            LoadProxy()
             '检查参数调用
             If e.Args.Length > 0 Then
                 If e.Args(0) = "--update" Then

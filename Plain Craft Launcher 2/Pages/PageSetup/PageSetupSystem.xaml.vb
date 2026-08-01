@@ -1,3 +1,5 @@
+Imports MeloongCore.Utils
+
 Public Class PageSetupSystem
 
 
@@ -22,7 +24,6 @@ Public Class PageSetupSystem
         Reload()
         SliderLoad()
         AniControlEnabled -= 1
-
     End Sub
     Public Sub Reload()
         SettingService.RefreshSettings(Me)
@@ -129,5 +130,40 @@ Public Class PageSetupSystem
     End Sub
 
 #End Region
+
+    Private Sub LoadProxyPrefer(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
+        CustomProxyBehavior.SelectedIndex = Settings.Get(Of Integer)("SystemProxyPrefer")
+    End Sub
+
+    Private Sub CustomProxyBehavior_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles CustomProxyBehavior.SelectionChanged
+        '处理可见性状态改变
+        Dim selected = CustomProxyBehavior.SelectedIndex
+        Dim isCustomProxy = selected = 2
+        PanCustomProxy.Visibility = If(isCustomProxy, Visibility.Visible, Visibility.Collapsed)
+        ApplyProxyInformation.Visibility = If(isCustomProxy, Visibility.Visible, Visibility.Collapsed)
+
+        Settings.Set("SystemProxyPrefer", selected)
+    End Sub
+
+    Private Sub BtnApplyProxyInformation_Clicked(sender As Object, e As MouseButtonEventArgs) Handles ApplyProxyInformation.Click
+        Dim proxy = CustomProxyServerAddressText.Text
+        Dim proxyUser = CustomProxyUserText.Text
+        Dim proxyPass = CustomProxyPasswordText.Text
+        Dim proxyBypass = CustomProxyBypassedText.Text
+        Dim parsedProxy As Uri = Nothing
+        If Not Uri.TryCreate(proxy, UriKind.Absolute, parsedProxy) Then
+            MyMsgBox("你输入的代理服务器地址无法被解析，代理服务器必须是一个有效的 URL", "设置代理失败")
+            Return
+        End If
+
+        If Not parsedProxy.Scheme = "http" Then
+            MyMsgBox("你输入的代理服务器地址无法被解析，代理服务器必须以 http 开头", "设置代理失败")
+        End If
+
+        Settings.Set("SystemProxyAddress", proxy)
+        Settings.Set("SystemProxyUser", proxyUser)
+        Settings.Set("SystemProxy", proxyPass)
+        Settings.Set("SystemProxyBypass", proxyBypass)
+    End Sub
 
 End Class

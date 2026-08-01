@@ -1,6 +1,46 @@
 Imports System.Net.Sockets
+Imports MeloongCore.Utils
 
 Public Module ModNet
+
+#Region "系统代理"
+
+    Public ReadOnly AppProxy As New WindowsProxy()
+
+    ''' <summary>
+    ''' 更改代理地址
+    ''' </summary>
+    ''' <param name="proxyAddress">代理服务器地址</param>
+    ''' <param name="bypassList">代理绕过列表</param>
+    ''' <param name="proxyUser"></param>
+    ''' <param name="proxyPassword"></param>
+    Public Sub ChangeProxy(proxyAddress As String, bypassList As String(), Optional proxyUser As String = "", Optional proxyPassword As String = "")
+        Try
+            AppProxy.RefreshOnce(proxyAddress, bypassList)
+            If String.IsNullOrEmpty(proxyUser) OrElse String.IsNullOrEmpty(proxyPassword) Then Return
+            AppProxy.Credentials = New NetworkCredential(proxyUser, proxyPassword)
+        Catch ex As Exception
+            Logger.Error(ex, "更改代理失败", LogBehavior.Toast)
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' 应用代理设置
+    ''' </summary>
+    Public Sub LoadProxy()
+        Select Case Settings.Get(Of Integer)("SystemProxyPrefer")
+            Case 0
+                AppProxy.Disable = True
+            Case 2
+                Dim proxy = Settings.Get("SystemProxyAddress")
+                Dim proxyBypass = Settings.Get("SystemProxyBypass").Split(";")
+                Dim proxyUser = Settings.Get("SystemProxyUser")
+                Dim proxyPassword = Settings.Get("SystemProxyUser")
+                ChangeProxy(proxy, proxyBypass, proxyUser, proxyPassword)
+        End Select
+    End Sub
+
+#End Region
 
 #Region "网络请求"
 
@@ -226,7 +266,9 @@ Retry:
                 If RequestClient Is Nothing Then '延迟初始化，以避免在程序启动前加载 CacheCow 导致 DLL 加载失败
                     RequestClient = CacheCow.Client.ClientExtensions.CreateClient(New CacheCow.Client.FileCacheStore.FileStore(PathTemp & "Cache/Http/"), New HttpClientHandler With {
                         .AutomaticDecompression = DecompressionMethods.Deflate Or DecompressionMethods.GZip,
-                        .UseCookies = False '不设为 False 就不能从 Header 手动传入 Cookies
+                        .UseCookies = False, '不设为 False 就不能从 Header 手动传入 Cookies
+                        .UseProxy = True,
+                        .Proxy = AppProxy
                     })
                 End If
             End SyncLock

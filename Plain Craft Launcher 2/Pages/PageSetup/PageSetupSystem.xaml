@@ -44,9 +44,97 @@
                                         ToolTip="设置下载的速度上限，以避免在下载时导致其他需要联网的程序卡死" />
                         <TextBlock VerticalAlignment="Top" Grid.Row="6" HorizontalAlignment="Left" Text="目标文件夹" Margin="0,5,25,5" />
                         <TextBlock Margin="0,5" HorizontalAlignment="Left" Text="请在 启动 → 版本选择 → 文件夹列表 中更改下载目标文件夹。&#xa;在某个文件夹或游戏版本上右键，即可选择打开对应文件夹。" Grid.Row="6" Grid.Column="1" VerticalAlignment="Center" Opacity="0.5" />
-                        <local:MyCheckBox Margin="0,2,0,4" Text="在正版登录时验证 SSL 证书" Grid.Row="7" Height="22" Grid.ColumnSpan="2"
-                                          x:Name="CheckDownloadCert" local:SettingService.Key="ToolDownloadCert" 
-                                          ToolTip="开启验证可以提高安全性，但可能会导致正版登录失败（见 #3018）。&#xa;若登录因为 “未能为 SSL/TLS 安全通道建立信任关系” 失败，请考虑关闭此选项。" />
+                    </Grid>
+                </StackPanel>
+            </local:MyCard>
+            <local:MyCard Title="网络" Margin="0,15">
+                <StackPanel Margin="25,37,25,15">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="28" />
+                            <RowDefinition Height="7" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="7" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="7" />
+                            <RowDefinition Height="Auto" />
+
+                        </Grid.RowDefinitions>
+
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left"
+                       Text="代理行为偏好" Margin="0,0,25,0" Grid.Row="0"/>
+                        <local:MyComboBox x:Name="CustomProxyBehavior" Grid.Row="0" Grid.Column="2">
+                            <local:MyComboBoxItem Content="不使用代理" />
+                            <local:MyComboBoxItem Content="使用系统代理设置"/>
+                            <local:MyComboBoxItem Content="使用自定义代理设置" />
+                        </local:MyComboBox>
+
+                        <StackPanel x:Name="PanCustomProxy" Grid.Row="2" Grid.ColumnSpan="3"
+                        Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
+                                    <ColumnDefinition Width="1"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="28" />
+                                    <RowDefinition Height="7" />
+                                    <RowDefinition Height="28" />
+                                    <RowDefinition Height="7" />
+                                    <RowDefinition Height="28" />
+                                    <RowDefinition Height="7" />
+                                    <RowDefinition Height="28" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left"
+                               Text="代理服务器地址" Margin="0,0,25,0" Grid.Row="0"/>
+                                <local:MyTextBox x:Name="CustomProxyServerAddressText" Grid.Row="0" Grid.Column="2"
+                                     HintText="以 http:// 开头，例如 http://localhost:7890">
+                                    <local:MyTextBox.ValidateRules>
+                                        <local:ValidateNullable />
+                                        <local:ValidateHttp />
+                                    </local:MyTextBox.ValidateRules>
+                                </local:MyTextBox>
+
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left"
+                               Text="用户名" Margin="0,0,25,0" Grid.Row="2"/>
+                                <local:MyTextBox x:Name="CustomProxyUserText" Grid.Row="2" Grid.Column="2"
+                                     HintText="可选">
+                                    <local:MyTextBox.ValidateRules>
+                                        <local:ValidateNullable />
+                                    </local:MyTextBox.ValidateRules>
+                                </local:MyTextBox>
+
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left"
+                               Text="密码" Margin="0,0,25,0" Grid.Row="4"/>
+                                <local:MyTextBox x:Name="CustomProxyPasswordText" Grid.Row="4" Grid.Column="2"
+                                     HintText="可选">
+                                    <local:MyTextBox.ValidateRules>
+                                        <local:ValidateNullable />
+                                    </local:MyTextBox.ValidateRules>
+                                </local:MyTextBox>
+                                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left"
+                               Text="代理忽略地址" Margin="0,0,25,0" Grid.Row="6"/>
+                                <local:MyTextBox x:Name="CustomProxyBypassedText" Grid.Row="6" Grid.Column="2"
+                                     HintText="以 ; 分割多个地址，例如 172.*;www.baidu.com，使用 * 表示通配符">
+                                    <local:MyTextBox.ValidateRules>
+                                        <local:ValidateNullable />
+                                    </local:MyTextBox.ValidateRules>
+                                </local:MyTextBox>
+                            </Grid>
+                        </StackPanel>
+                        <local:MyCheckBox Margin="0,2,0,4" Text="在正版登录时验证 SSL 证书"
+                              Grid.Row="4" Height="22" Grid.ColumnSpan="3"
+                              x:Name="CheckDownloadCert" local:SettingService.Key="ToolDownloadCert"
+                              ToolTip="开启验证可以提高安全性，但可能会导致正版登录失败（见 #3018）。&#xa;若登录因为 “未能为 SSL/TLS 安全通道建立信任关系” 失败，请考虑关闭此选项。" />
+
+                        <local:MyButton Text="应用代理信息" x:Name="ApplyProxyInformation" Grid.Row="7" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>
@@ -189,7 +277,7 @@
                 </StackPanel>
             </local:MyCard> -->
             <local:MyCard x:Name="CardDebug" Margin="0,0,0,15" Title="调试选项" CanSwap="True" IsSwapped="True">
-                <StackPanel Margin="25,40,25,15">
+                <StackPanel Margin="25,40,25,15" Grid.IsSharedSizeScope="True">
                     <Grid x:Name="PanDebugAnim" Height="22" Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
