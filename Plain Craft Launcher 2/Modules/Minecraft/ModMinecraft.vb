@@ -1379,11 +1379,16 @@ OnLoaded:
                         If Instance.State <> McInstanceState.Error AndAlso
                            ReadIni(Instance.PathVersion & "PCL\Setup.ini", "VersionVanillaName", "Unknown") <> "Unknown" Then
                             '读取版本信息
+                            Dim ReadCachedInfo =
+                            Function(Key As String) As String
+                                Dim Value = ReadIni(Instance.PathVersion & "PCL\Setup.ini", Key, Nothing)
+                                Return If(Value = "", Nothing, Value) '对老版本 Setup.ini 的空值兼容
+                            End Function
                             Dim VersionInfo As New McVersion With {
-                                .Fabric = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "VersionFabric", Nothing),
-                                .Forge = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "VersionForge", Nothing),
-                                .NeoForge = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "VersionNeoForge", Nothing),
-                                .OptiFine = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "VersionOptiFine", Nothing),
+                                .Fabric = ReadCachedInfo("VersionFabric"),
+                                .Forge = ReadCachedInfo("VersionForge"),
+                                .NeoForge = ReadCachedInfo("VersionNeoForge"),
+                                .OptiFine = ReadCachedInfo("VersionOptiFine"),
                                 .HasLiteLoader = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "VersionLiteLoader", False),
                                 .VanillaName = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "VersionVanillaName", "Unknown")
                             }

@@ -11,6 +11,7 @@ Public Module ModDownloadLib
         Dim VersionFolder As String = McFolderSelected & "versions\" & InstanceName & "\"
 
         Dim Loaders As New List(Of LoaderBase)
+        Dim NewInstance As McInstance = Nothing
 
         '下载版本 Json 文件
         If JsonUrl Is Nothing Then
@@ -23,14 +24,19 @@ Public Module ModDownloadLib
         Loaders.Add(New LoaderDownload(McDownloadClientJsonName, New List(Of NetFile) From {
             New NetFile(DlSourceLauncherOrMetaGet(If(JsonUrl, "")), VersionFolder & InstanceName & ".json", New FileChecker With {.IsJson = True})
         }) With {.ProgressWeight = 3})
+        '读取 Json 文件并创建实例
+        Loaders.Add(New LoaderTask(Of String, String)("读取 json 文件",
+            Sub(Task As LoaderTask(Of String, String))
+                NewInstance = New McInstance(VersionFolder)
+                NewInstance.Load()
+            End Sub) With {.ProgressWeight = 0, .Show = False})
 
         '下载支持库文件
         Dim LoadersLib As New List(Of LoaderBase)
         LoadersLib.Add(New LoaderTask(Of String, List(Of NetFile))("分析原版支持库文件（副加载器）",
         Sub(Task As LoaderTask(Of String, List(Of NetFile)))
-            Thread.Sleep(50) '等待 JSON 文件实际写入硬盘（#3710）
             Logger.Info($"开始分析原版支持库文件：{VersionFolder}")
-            Task.Output = McLibNetFilesFromInstance(New McInstance(VersionFolder))
+            Task.Output = McLibNetFilesFromInstance(NewInstance)
         End Sub) With {.ProgressWeight = 1, .Show = False})
         LoadersLib.Add(New LoaderDownload("下载原版支持库文件（副加载器）", New List(Of NetFile)) With {.ProgressWeight = 13, .Show = False})
         Loaders.Add(New LoaderCombo(Of String)(McDownloadClientLibName, LoadersLib) With {.Block = False, .ProgressWeight = 14})
@@ -40,7 +46,7 @@ Public Module ModDownloadLib
         LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))("分析资源文件索引地址（副加载器）",
         Sub(Task As LoaderTask(Of String, List(Of NetFile)))
             Try
-                Dim AssetIndex = DlClientAssetIndexGet(New McInstance(VersionFolder))
+                Dim AssetIndex = DlClientAssetIndexGet(NewInstance)
                 Task.Output = If(AssetIndex Is Nothing, New List(Of NetFile), New List(Of NetFile) From {AssetIndex})
             Catch ex As Exception
                 Throw New Exception("分析资源文件索引地址失败", ex)
@@ -56,7 +62,7 @@ Public Module ModDownloadLib
         End Sub) With {.ProgressWeight = 1, .Show = False})
         LoadersAssets.Add(New LoaderDownload("下载资源文件索引（副加载器）", New List(Of NetFile)) With {.ProgressWeight = 3, .Show = False})
         LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))("分析所需资源文件（副加载器）",
-            Sub(Task) Task.Output = McAssetsFixList(New McInstance(VersionFolder), True, Task)) With {.ProgressWeight = 0.01, .Show = False})
+            Sub(Task) Task.Output = McAssetsFixList(NewInstance, True, Task)) With {.ProgressWeight = 0.01, .Show = False})
         LoadersAssets.Add(New LoaderDownload("下载资源文件（副加载器）", New List(Of NetFile)) With {.ProgressWeight = 14, .Show = False})
         Loaders.Add(New LoaderCombo(Of String)("下载原版资源文件", LoadersAssets) With {.Block = False, .ProgressWeight = 18})
 

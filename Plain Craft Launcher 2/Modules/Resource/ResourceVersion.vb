@@ -185,7 +185,7 @@ Public Class ResourceVersion
                 For Each Loader As ModLoaders In EnumUtils.GetAllFlags(Of ModLoaders)()
                     If RawLoaders.Contains(Loader.ToString.Lower) Then .ModLoaders = .ModLoaders Or Loader
                 Next
-                If .ResourceType.HasFlag(ResourceTypes.Mod) OrElse .ResourceType.HasFlag(ResourceTypes.DataPack) Then
+                If .ResourceType.HasFlagF(ResourceTypes.Mod) OrElse .ResourceType.HasFlagF(ResourceTypes.DataPack) Then
                     If RawLoaders.Intersect({"bukkit", "folia", "paper", "purpur", "spigot"}).Any() Then .ResourceType = ResourceTypes.Plugin 'Veinminer Enchantment 同时支持服务端与 Fabric
                     If RawLoaders.Contains("datapack") Then .ResourceType = ResourceTypes.DataPack
                     If .ModLoaders.Flags().Any() Then .ResourceType = ResourceTypes.Mod

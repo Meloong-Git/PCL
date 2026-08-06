@@ -436,8 +436,8 @@ Public Module ModModpack
             Urls = ResourceVersion.ParseModrinthTrackArguments(Urls,
                 ResourceVersion.DownloadReason.ModPack, TargetVersion.VanillaName, TargetVersion.ModLoaders).ToList 'Modrinth 来源追踪信息
             Urls = Urls.Distinct.ToList()
-            Dim TargetPath As String = $"{McFolderSelected}versions\{InstanceName}\{File("path")}"
-            If Not Path.GetFullPath(TargetPath).StartsWithF(Path.GetFullPath($"{McFolderSelected}versions\{InstanceName}\")) Then
+            Dim TargetPath As String = Path.Combine(McFolderSelected, "versions", InstanceName, File("path").ToString().TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+            If Not PathUtils.IsParentOf($"{McFolderSelected}versions\{InstanceName}\", TargetPath) Then
                 MyMsgBox($"整合包的文件路径超出了版本文件夹，请向整合包作者反馈此问题！{vbCrLf}目标：{Path.GetFullPath(TargetPath)}{vbCrLf}错误的文件：{TargetPath}", "文件路径校验失败", IsWarn:=True)
                 Throw New OperationCanceledException
             End If

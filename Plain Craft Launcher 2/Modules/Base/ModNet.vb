@@ -217,8 +217,7 @@ Retry:
             Optional Content As Object = Nothing, Optional Headers As Dictionary(Of String, String) = Nothing,
             Optional SimulateBrowserHeaders As Boolean = False, Optional Timeout As Integer = 25000, Optional Encoding As Encoding = Nothing) As Byte()
         If RunInUi() AndAlso Not Url.Contains("//127.") Then Throw New Exception("在 UI 线程执行了网络请求")
-        Dim Request As HttpRequestMessage = Nothing, CancelToken As CancellationTokenSource = Nothing,
-            Response As HttpResponseMessage = Nothing, HostIp As String = Nothing
+        Dim Request As HttpRequestMessage = Nothing, CancelToken As CancellationTokenSource = Nothing, Response As HttpResponseMessage = Nothing
         Try
             '构建 RequestClient
             Directory.CreateDirectory(PathTemp & "Cache\Http\")
@@ -255,8 +254,6 @@ Retry:
             Retrier.Attempt(delay:=Function() TimeSpan.FromMilliseconds(200), isRetryAllowed:=Function(ex) TypeOf ex Is FileNotFoundException OrElse TypeOf ex Is IOException, action:=
             Sub(Attempt)
                 CancelToken?.Dispose() : CancelToken = New CancellationTokenSource(Timeout)
-                HostIp = DNSLookup(Request, CancelToken.Token)
-                If HostIp IsNot Nothing Then IPReliability.GetOrAdd(HostIp, -0.01) '预先降低一点，这样快速的重复请求会使用不同的 IP 以提高成功率
                 Dim ClonedRequest As HttpRequestMessage = Request.Clone() 'HttpRequestMessage 只能发送一次，重试时需要克隆一个新的
                 Try
                     Response = RequestClient.SendAsync(ClonedRequest, HttpCompletionOption.ResponseHeadersRead, CancelToken.Token).GetResultWithTimeout(CancelToken, Timeout)
@@ -274,26 +271,22 @@ Retry:
                 End Using
             End Using
             If Not Response.IsSuccessStatusCode Then
-                RecordIPReliability(HostIp, -0.7)
                 Dim ResponseMessage = ResponseBytes.GetString(Encoding)
                 Throw New HttpRequestCodeException(
-                    $"错误码 {Response.StatusCode} ({CInt(Response.StatusCode)})，{Method}，{Url}，{HostIp}" &
+                    $"错误码 {Response.StatusCode} ({CInt(Response.StatusCode)})，{Method}，{Url}" &
                     If(String.IsNullOrEmpty(ResponseMessage), "", vbCrLf & ResponseMessage), Response.StatusCode, ResponseMessage)
             End If
-            '输出
-            RecordIPReliability(HostIp, 0.5)
             Return ResponseBytes
         Catch ex As HttpRequestException
             Throw
         Catch ex As TimeoutException
-            Throw New WebException($"连接服务器超时，请稍后再试，或使用 VPN 改善网络环境（{Method}, {Url}，IP：{HostIp}）", WebExceptionStatus.Timeout)
+            Throw New WebException($"连接服务器超时，请稍后再试，或使用 VPN 改善网络环境（{Method}, {Url}）", WebExceptionStatus.Timeout)
         Catch ex As Exception
             If TypeOf ex IsNot TaskCanceledException Then ex.ThrowIfCanceled() 'GetResultWithTimeout 会抛出 TaskCanceledException
-            RecordIPReliability(HostIp, -1)
             If ex.IsBadNetwork Then
-                Throw New WebException($"网络请求失败，请稍后再试，或使用 VPN 改善网络环境（{Method}, {Url}，IP：{HostIp}）", WebExceptionStatus.Timeout)
+                Throw New WebException($"网络请求失败，请稍后再试，或使用 VPN 改善网络环境（{Method}, {Url}）", WebExceptionStatus.Timeout)
             Else
-                Throw New Exception($"网络请求出现意外异常（{Method}, {Url}，{HostIp}）", ex)
+                Throw New Exception($"网络请求出现意外异常（{Method}, {Url}）", ex)
             End If
         Finally
             Request?.Dispose()
@@ -303,72 +296,6 @@ Retry:
     End Function
     Private RequestClient As HttpClient = Nothing
     Private RequestClientLock As New Object
-
-    ''' <summary>
-    ''' 进行 DNS 解析。它仅在选择的 IP 与系统默认的不一致时才对 URL 中的 Host 进行替换。
-    ''' 返回请求时应使用的 IP。若解析失败，则返回 Nothing。
-    ''' </summary>
-    Private Function DNSLookup(Request As HttpRequestMessage, CancelToken As CancellationToken) As String
-        Dim Host = Request.RequestUri.Host
-        '不对部分有严格 SNI 限制的域名进行 DNS 解析（#8295）
-        If {"mojang.com", "minecraft.net", "minecraftservices.com"}.Any(Function(h) Host.ContainsIgnoreCase(h)) Then Return Nothing
-        '若一分钟内已失败过，则不再重复尝试解析，以减少断网时的 Exception 数量
-        Dim LastFailureTime As Date
-        If DNSFailureRecord.TryGetValue(Host, LastFailureTime) Then
-            If Date.Now - LastFailureTime < New TimeSpan(0, 1, 0) Then
-                Return Nothing
-            Else
-                DNSFailureRecord.Remove(Host)
-            End If
-        End If
-        '初步 DNS 解析
-        Dim Candidates As IPAddress()
-        Try
-            Dim AsyncResult = Dns.BeginGetHostAddresses(Host, Nothing, Nothing)
-            If WaitHandle.WaitAny(New WaitHandle() {AsyncResult.AsyncWaitHandle, CancelToken.WaitHandle}) Then Throw New TimeoutException("DNS 解析超时")
-            Candidates = Dns.EndGetHostAddresses(AsyncResult).Distinct.ToArray
-        Catch ex As Exception
-            Logger.Warn(ex, $"DNS 解析失败（{Host}）")
-            DNSFailureRecord(Host) = Date.Now
-            Return Nothing
-        End Try
-        If Not Candidates.Any Then
-            Logger.Info($"DNS 解析无结果（{Host}）")
-            Return Nothing
-        End If
-        '若同时存在 IPv4 和 IPv6 地址，仅选择其中一类（因为 GFW 可能只屏蔽了 IPv4 或 IPv6）
-        Dim Reliabilities = Candidates.ToDictionary(Function(i) i, Function(i) IPReliability.GetOrDefault(i.ToString, 0))
-        Dim IPv4Targets = Candidates.Where(Function(i) i.AddressFamily = AddressFamily.InterNetwork).ToArray
-        Dim IPv6Targets = Candidates.Where(Function(i) i.AddressFamily = AddressFamily.InterNetworkV6).ToArray
-        If IPv4Targets.Any AndAlso IPv6Targets.Any Then
-            Dim IPv4Reliability = IPv4Targets.Max(Function(i) Reliabilities(i))
-            Dim IPv6Reliability = IPv6Targets.Max(Function(i) Reliabilities(i))
-            If Host = "api.modrinth.com" Then IPv6Reliability -= 0.1 '让 Modrinth 优先使用 IPv4 地址（#6887）
-            Logger.Trace(Function() $"DNS IPv4/IPv6 选择（{Host}），IPv4 {IPv4Reliability:0.000}，IPv6 {IPv6Reliability:0.000}")
-            Candidates = If(IPv4Reliability >= IPv6Reliability, IPv4Targets, IPv6Targets)
-        End If
-        '选择可靠度最高的 IP
-        Dim Target As IPAddress = Candidates.MaxBy(Function(i) Reliabilities(i))
-        Request.Headers.Host = Request.RequestUri.Authority
-        Request.RequestUri = (New UriBuilder(Request.RequestUri) With {.Host = If(Target.AddressFamily = AddressFamily.InterNetworkV6, $"[{Target}]", Target.ToString)}).Uri
-        Return Target.ToString
-    End Function
-    Private DNSFailureRecord As New ConcurrentDictionary(Of String, Date)
-    ''' <summary>
-    ''' 记录每个 IP 地址的请求可靠度。
-    ''' 通常取值 -1 ~ +0.5，越高越好。未尝试过的 IP 应视为 0。
-    ''' </summary>
-    Private IPReliability As New ConcurrentDictionary(Of String, Double)
-    ''' <summary>
-    ''' 根据请求结果，记录 IP 地址的可靠度。
-    ''' </summary>
-    Private Sub RecordIPReliability(IP As String, Result As Double)
-        If IP Is Nothing Then Return
-        IPReliability.AddOrUpdate(IP,
-            Function() Result * 0.5,
-            Function(k, v) v * 0.5 + Result * 0.5
-        )
-    End Sub
 
 #End Region
 
@@ -976,7 +903,7 @@ StartThread:
             Logger.Log($"{LocalName}：开始，起始点 {Th.DownloadStart}，{Th.Source.Url}", If(Th.DownloadStart = 0, LogLevel.Info, LogLevel.Trace))
             Dim ResultStream As Stream = Nothing, HttpRequest As HttpRequestMessage = Nothing,
                 Response As HttpResponseMessage = Nothing, ResponseStream As Stream = Nothing,
-                CancelToken As CancellationTokenSource = Nothing, HostIp As String = Nothing
+                CancelToken As CancellationTokenSource = Nothing
             '部分下载源真的特别慢，并且只需要一个请求，例如 Ping 为 20s，如果增长太慢，就会造成类似 2.5s 5s 7.5s 10s 12.5s... 的极大延迟
             '延迟过长会导致某些特别慢的链接迟迟不被掐死
             Dim Timeout As Integer = Math.Min(Math.Max(ConnectAverage, 15000) * (1 + Th.Source.FailCount), 30000)
@@ -987,7 +914,6 @@ StartThread:
                 HttpRequest = New HttpRequestMessage(HttpMethod.Get, Th.Source.Url)
                 SecretHeadersSign(Th.Source.Url, HttpRequest, SimulateBrowserHeaders)
                 CancelToken = New CancellationTokenSource(Timeout)
-                HostIp = DNSLookup(HttpRequest, CancelToken.Token) 'DNS 预解析
                 If Not Th.IsFirstThread Then HttpRequest.Headers.Range = New Headers.RangeHeaderValue(Th.DownloadStart, Nothing)
                 Dim ContentLength As Long = 0
                 Response = ThreadClient.SendAsync(HttpRequest, HttpCompletionOption.ResponseHeadersRead, CancelToken.Token).GetResultWithTimeout(CancelToken, Timeout)
@@ -1119,15 +1045,13 @@ SourceBreak:
                     '本线程完成
                     Th.State = NetState.Finished
                     Logger.Trace(Function() $"{LocalName}：完成，已下载 {Th.DownloadDone}（{Th.DownloadStart}~{Th.DownloadEnd}）")
-                    RecordIPReliability(HostIp, 0.5)
                 End If
             Catch ex As Exception
                 If ex.IsBadNetwork OrElse TypeOf ex Is TaskCanceledException Then
-                    Logger.Info(New TimeoutException($"{LocalName}：超时（{Timeout}ms），{ex.Message}，IP：{If(String.IsNullOrEmpty(HostIp), "自动", "")}"))
+                    Logger.Info(New TimeoutException($"{LocalName}：超时（{Timeout}ms），{ex.Message}"))
                 Else
-                    Logger.Info(ex, $"{LocalName}：出错，IP：{HostIp}")
+                    Logger.Info(ex, $"{LocalName}：出错")
                 End If
-                RecordIPReliability(HostIp, -0.7)
                 SourceFail(Th, ex, False)
             Finally
                 '释放资源

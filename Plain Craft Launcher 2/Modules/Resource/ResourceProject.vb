@@ -87,7 +87,7 @@ Public Class ResourceProject
         Get
             If Not LoadedDatabase Then
                 LoadedDatabase = True
-                If Types.HasFlag(ResourceTypes.Mod) OrElse Types.HasFlag(ResourceTypes.DataPack) Then
+                If Types.HasFlagF(ResourceTypes.Mod) OrElse Types.HasFlagF(ResourceTypes.DataPack) Then
                     _WikiEntry = WikiEntry.All.Value.FirstOrDefault(Function(c) c.Slugs.GetOrDefault(Platform) = Slug)
                 End If
             End If
@@ -415,7 +415,7 @@ Public Class ResourceProject
         If Not MissingProjectIds.Any() Then Return
         '联网获取剩余的工程对象
         Dim Projects As JArray
-        If Platform.HasFlag(ResourcePlatforms.CurseForge) Then
+        If Platform.HasFlagF(ResourcePlatforms.CurseForge) Then
             Projects = DlModRequest("https://api.curseforge.com/v1/mods",
                 HttpMethod.Post, "{""modIds"": [" & MissingProjectIds.Join(","c) & "]}", "application/json")("data")
         Else

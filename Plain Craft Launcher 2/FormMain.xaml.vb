@@ -11,11 +11,11 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
-            If LastVersion < 408 Then 'Release 2.13.1.0
+            If LastVersion < 408 Then 'Release 2.13.1.1
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：版本设置中，添加打开截图文件夹的快捷方式"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：导出整合包时，可以勾选导出光影设置文件"))
-                FeatureCount += 21
-                BugCount += 22
+                FeatureCount += 23
+                BugCount += 28
             End If
             If LastVersion < 406 Then 'Release 2.13.0.1
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：重做 Java 管理与相关设置，允许调整 Java 优先级、指定 Java 版本范围等"))
@@ -93,6 +93,11 @@ Public Class FormMain
             '3：BUG+ IMP* FEAT-
             '2：BUG* IMP-
             '1：BUG-
+            If LastVersion < 410 Then 'Snapshot 2.13.1.1
+                If LastVersion = 409 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：更新 Mod 时可能更新成另一个 Mod 加载器的版本"))
+                FeatureCount += 2
+                BugCount += 6
+            End If
             If LastVersion < 409 Then 'Snapshot 2.13.1.0
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：版本设置中，添加打开截图文件夹的快捷方式"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：导出整合包时，可以勾选导出光影设置文件"))
@@ -781,7 +786,7 @@ Public Class FormMain
         If PanMsg.Children.Any Then
             If e.Key = Key.Enter Then
                 CType(PanMsg.Children(0), Object).Btn1_Click()
-            ElseIf e.Key = Key.Escape Then
+            ElseIf e.Key = Key.Escape OrElse (e.Key = Key.W AndAlso Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) Then
                 Dim Msg As Object = PanMsg.Children(0)
                 If TypeOf Msg IsNot MyMsgInput AndAlso TypeOf Msg IsNot MyMsgSelect AndAlso Msg.Btn3.Visibility = Visibility.Visible Then
                     Msg.Btn3_Click()
@@ -821,6 +826,11 @@ Public Class FormMain
         If e.Key = Key.F5 Then
             If TypeOf PageLeft Is IRefreshable Then CType(PageLeft, IRefreshable).Refresh()
             If TypeOf PageRight Is IRefreshable Then CType(PageRight, IRefreshable).Refresh()
+            Return
+        End If
+        'Ctrl + w 关闭程序
+        If e.Key = Key.W AndAlso Keyboard.Modifiers.HasFlag(ModifierKeys.Control) Then
+            EndProgram(True)
             Return
         End If
         '调用启动游戏
