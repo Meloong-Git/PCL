@@ -89,7 +89,7 @@ Public Class PageLaunchRight
                         Url = "https://files.mcimirror.top/PCL"
                     Case 11
                         Logger.Info("主页预设：杂志主页")
-                        Url = "http://118.195.192.193:26995/d/magazine-homepage-pcl/Custom.xaml"
+                        Url = "https://gh-proxy.com/https://github.com/CreeperIsASpy/Magazine-Homepage-PCL/raw/main/output/Custom.xaml"
                     Case 12
                         Logger.Info("主页预设：PCL GitHub 仪表盘")
                         Url = "https://ddf.pcl-community.top/Custom.xaml"
