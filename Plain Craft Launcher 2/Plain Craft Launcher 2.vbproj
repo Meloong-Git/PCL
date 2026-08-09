@@ -1,0 +1,953 @@
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{4499F2D2-18EF-4238-B1F0-7BD547AFF925}</ProjectGuid>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{F184B08F-C81C-45F6-A57F-5ABD9991F28F}</ProjectTypeGuids>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>PCL</RootNamespace>
+    <AssemblyName>Plain Craft Launcher 2</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <MyType>Custom</MyType>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <TargetCulture>zh-CN</TargetCulture>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>false</DefineTrace>
+    <IncrementalBuild>true</IncrementalBuild>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>Plain Craft Launcher 2.xml</DocumentationFile>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036,42314</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Optimize>false</Optimize>
+    <WarningLevel>1</WarningLevel>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <DefineConstants>SNAPSHOT</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Snapshot|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>false</DefineTrace>
+    <IncrementalBuild>false</IncrementalBuild>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>Plain Craft Launcher 2.xml</DocumentationFile>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036,42314</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
+    <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
+    <WarningLevel>1</WarningLevel>
+    <DefineConstants>SNAPSHOT</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionExplicit>On</OptionExplicit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionCompare>Binary</OptionCompare>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionStrict>Off</OptionStrict>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OptionInfer>On</OptionInfer>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Images\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>CE7A815CD81401B559C8649A3EEA43B75ECB8FC5</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>Plain Craft Launcher 2_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>false</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>Plain Craft Launcher 2.xml</DocumentationFile>
+    <Optimize>true</Optimize>
+    <WarningLevel>1</WarningLevel>
+    <NoWarn>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036,42314</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>BasicDesignGuidelineRules.ruleset</CodeAnalysisRuleSet>
+    <DefineConstants>RELEASE</DefineConstants>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="CacheCow.Client, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\CacheCow.Client.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="CacheCow.Client.FileStore, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\CacheCow.Client.FileStore.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="CacheCow.Common, Version=2.13.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\CacheCow.Common.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ThrottleDebounce, Version=2.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\ThrottleDebounce.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Imazen.WebP, Version=10.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\Imazen.WebP.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="NAudio, Version=1.7.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\NAudio.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Ookii.Dialogs.Wpf, Version=1.0.0.0, Culture=neutral, PublicKeyToken=0c15020868fd6249, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\Ookii.Dialogs.Wpf.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\System.Net.Http.Formatting.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="Application.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="Controls\Behaviors\ClipboardInterceptor.vb" />
+    <Compile Include="Controls\Behaviors\Interfaces.vb" />
+    <Compile Include="Controls\Behaviors\LazyLoadBehavior.vb" />
+    <Compile Include="Controls\MyComboBox.vb" />
+    <Compile Include="Controls\MyComboBoxItem.vb" />
+    <Compile Include="Controls\MyCard.vb" />
+    <Compile Include="Controls\MyExtraTextButton.xaml.vb">
+      <DependentUpon>MyExtraTextButton.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyImage.vb" />
+    <Compile Include="Controls\MyPageRight.vb" />
+    <Compile Include="Controls\MyPageLeft.vb" />
+    <Compile Include="Controls\MyIconTextButton.xaml.vb">
+      <DependentUpon>MyIconTextButton.xaml</DependentUpon>
+    </Compile>
+
+
+
+    <Compile Include="Controls\MyVirtualizingElement.vb" />
+    <Compile Include="Modules\Base\PclLogger.vb" />
+    <Compile Include="Modules\Resource\LocalResourceFile.vb" />
+    <Compile Include="Modules\Resource\ResourceProject.vb" />
+    <Compile Include="Modules\Resource\ResourceVersion.vb" />
+    <Compile Include="Modules\Resource\ResourceSearcher.vb" />
+    <Compile Include="Modules\Minecraft\ModJava.vb" />
+    <Compile Include="Modules\Resource\LocalResourceLoaders.vb" />
+    <Compile Include="Modules\Minecraft\ModModpack.vb" />
+    <Compile Include="Modules\ThirdParty\DragHelper.vb" />
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageInstance\MyLocalModItem.xaml.vb">
+      <DependentUpon>MyLocalModItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modules\ModEvent.vb" />
+    <Compile Include="Controls\MyExtraButton.xaml.vb">
+      <DependentUpon>MyExtraButton.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyHint.xaml.vb">
+      <DependentUpon>MyHint.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyLoading.xaml.vb">
+      <DependentUpon>MyLoading.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyMenuItem.vb" />
+    <Compile Include="Controls\MyMsg\MyMsgInput.xaml.vb">
+      <DependentUpon>MyMsgInput.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyMsg\MyMsgSelect.xaml.vb">
+      <DependentUpon>MyMsgSelect.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyScrollBar.vb" />
+    <Compile Include="Controls\MyScrollViewer.vb" />
+    <Compile Include="Controls\MySearchBox.xaml.vb">
+      <DependentUpon>MySearchBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyTextBox.vb" />
+    <Compile Include="Controls\MyTextButton.vb" />
+    <Compile Include="GlobalSuppressions.vb" />
+    <Compile Include="Modules\Minecraft\ModCrash.vb" />
+    <Compile Include="Modules\ModMusic.vb" />
+    <Compile Include="Modules\ModDevelop.vb" />
+    <Compile Include="Modules\Minecraft\ModWatcher.vb" />
+    <Compile Include="Modules\ModSecret.vb" />
+    <Compile Include="Pages\PageDownload\Resource\PageResource.xaml.vb">
+      <DependentUpon>PageResource.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadDataPack.xaml.vb">
+      <DependentUpon>PageDownloadDataPack.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadPack.xaml.vb">
+      <DependentUpon>PageDownloadPack.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadShader.xaml.vb">
+      <DependentUpon>PageDownloadShader.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadResourcePack.xaml.vb">
+      <DependentUpon>PageDownloadResourcePack.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\ModDownloadLib.vb" />
+    <Compile Include="Pages\PageDownload\Resource\MyResourceItem.xaml.vb">
+      <DependentUpon>MyResourceItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadMod.xaml.vb">
+      <DependentUpon>PageDownloadMod.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\PageDownloadInstall.xaml.vb">
+      <DependentUpon>PageDownloadInstall.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\Resource\PageDownloadCompDetail.xaml.vb">
+      <DependentUpon>PageDownloadCompDetail.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\MyMsgLogin.xaml.vb">
+      <DependentUpon>MyMsgLogin.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLoginAuth.xaml.vb">
+      <DependentUpon>PageLoginAuth.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLoginAuthSkin.xaml.vb">
+      <DependentUpon>PageLoginAuthSkin.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLoginMs.xaml.vb">
+      <DependentUpon>PageLoginMs.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLoginMsSkin.xaml.vb">
+      <DependentUpon>PageLoginMsSkin.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLoginNideSkin.xaml.vb">
+      <DependentUpon>PageLoginNideSkin.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLink\PageLinkMain.xaml.vb">
+      <DependentUpon>PageLinkMain.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageOther\PageOtherHelpDetail.xaml.vb">
+      <DependentUpon>PageOtherHelpDetail.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageInstance\PageInstanceExport.xaml.vb">
+      <DependentUpon>PageInstanceExport.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageInstance\PageInstanceLeft.xaml.vb">
+      <DependentUpon>PageInstanceLeft.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageInstance\PageInstanceMod.xaml.vb">
+      <DependentUpon>PageInstanceMod.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageInstance\PageInstanceModDisabled.xaml.vb">
+      <DependentUpon>PageInstanceModDisabled.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageInstance\PageInstanceOverall.xaml.vb">
+      <DependentUpon>PageInstanceOverall.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageInstance\PageInstanceSetup.xaml.vb">
+      <DependentUpon>PageInstanceSetup.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyDropShadow.vb" />
+    <Compile Include="Modules\Base\ModLoader.vb" />
+    <Compile Include="Modules\Base\ModNet.vb" />
+    <Compile Include="Modules\Base\ModValidate.vb" />
+    <Compile Include="Modules\Minecraft\ModDownload.vb" />
+    <Compile Include="Modules\Minecraft\ModLaunch.vb" />
+    <Compile Include="Modules\Minecraft\ModMinecraft.vb" />
+    <Compile Include="Pages\PageOther\PageOtherTest.xaml.vb">
+      <DependentUpon>PageOtherTest.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\MySkin.xaml.vb">
+      <DependentUpon>MySkin.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLoginNide.xaml.vb">
+      <DependentUpon>PageLoginNide.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLoginLegacy.xaml.vb">
+      <DependentUpon>PageLoginLegacy.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageSelectRight.xaml.vb">
+      <DependentUpon>PageSelectRight.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageSelectLeft.xaml.vb">
+      <DependentUpon>PageSelectLeft.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLaunchLeft.xaml.vb">
+      <DependentUpon>PageLaunchLeft.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageLaunch\PageLaunchRight.xaml.vb">
+      <DependentUpon>PageLaunchRight.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageOther\PageOtherAbout.xaml.vb">
+      <DependentUpon>PageOtherAbout.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageOther\PageOtherHelp.xaml.vb">
+      <DependentUpon>PageOtherHelp.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageDownload\PageDownloadLeft.xaml.vb">
+      <DependentUpon>PageDownloadLeft.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageOther\PageOtherLeft.xaml.vb">
+      <DependentUpon>PageOtherLeft.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageSetup\PageSetupLeft.xaml.vb">
+      <DependentUpon>PageSetupLeft.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageSetup\Settings.vb" />
+    <Compile Include="Pages\PageSetup\PageSetupLaunch.xaml.vb">
+      <DependentUpon>PageSetupLaunch.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageSetup\PageSetupSystem.xaml.vb">
+      <DependentUpon>PageSetupSystem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageSetup\PageSetupLink.xaml.vb">
+      <DependentUpon>PageSetupLink.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageSetup\PageSetupUI.xaml.vb">
+      <DependentUpon>PageSetupUI.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageSetup\SettingService.vb" />
+    <Compile Include="Pages\PageSpeedLeft.xaml.vb">
+      <DependentUpon>PageSpeedLeft.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\PageSpeedRight.xaml.vb">
+      <DependentUpon>PageSpeedRight.xaml</DependentUpon>
+    </Compile>
+    <Page Include="Controls\MyExtraTextButton.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\MyExtraButton.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyHint.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyListItem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyButton.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyCheckBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyIconButton.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyLoading.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyMsg\MyMsgInput.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\MyMsg\MyMsgSelect.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyMsg\MyMsgText.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyRadioBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyIconTextButton.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\MySearchBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MySlider.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\MyRadioButton.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="FormMain.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="Application.xaml.vb">
+      <DependentUpon>Application.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Controls\MyListItem.xaml.vb">
+      <DependentUpon>MyListItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyButton.xaml.vb">
+      <DependentUpon>MyButton.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyCheckBox.xaml.vb">
+      <DependentUpon>MyCheckBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyIconButton.xaml.vb">
+      <DependentUpon>MyIconButton.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyMsg\MyMsgText.xaml.vb">
+      <DependentUpon>MyMsgText.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyRadioBox.xaml.vb">
+      <DependentUpon>MyRadioBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyResizer.vb" />
+    <Compile Include="Controls\MySlider.xaml.vb">
+      <DependentUpon>MySlider.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\MyRadioButton.xaml.vb">
+      <DependentUpon>MyRadioButton.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="FormMain.xaml.vb">
+      <DependentUpon>FormMain.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+
+    <Page Include="Pages\PageInstance\MyLocalModItem.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageDownload\Resource\MyResourceItem.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageDownload\Resource\PageResource.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageDownload\Resource\PageDownloadDataPack.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageDownload\Resource\PageDownloadPack.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageDownload\Resource\PageDownloadShader.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageDownload\Resource\PageDownloadResourcePack.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageDownload\Resource\PageDownloadMod.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageDownload\PageDownloadInstall.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageDownload\Resource\PageDownloadCompDetail.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\MyMsgLogin.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLoginAuth.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLoginAuthSkin.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLoginMs.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLoginMsSkin.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLoginNideSkin.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <None Include="app.manifest" />
+    <None Include="Resources\Custom.xaml">
+      <SubType>Designer</SubType>
+    </None>
+    <Page Include="Pages\PageLink\PageLinkMain.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageOther\PageOtherHelpDetail.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageInstance\PageInstanceExport.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageOther\PageOtherTest.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\MySkin.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLoginNide.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLoginLegacy.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageSelectRight.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageSelectLeft.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLaunchLeft.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageLaunch\PageLaunchRight.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageOther\PageOtherAbout.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageOther\PageOtherHelp.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageDownload\PageDownloadLeft.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageOther\PageOtherLeft.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageSetup\PageSetupLeft.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageSetup\PageSetupLaunch.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\PageSetup\PageSetupSystem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageSetup\PageSetupLink.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageSetup\PageSetupUI.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageSpeedLeft.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageSpeedRight.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageInstance\PageInstanceLeft.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageInstance\PageInstanceMod.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageInstance\PageInstanceModDisabled.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageInstance\PageInstanceOverall.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageInstance\PageInstanceSetup.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="MeloongCore" />
+    <Import Include="MeloongCore.Extensions" />
+    <Import Include="MeloongCore.Wpf" />
+    <Import Include="MeloongCore.Wpf.Extensions" />
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="Newtonsoft.Json" />
+    <Import Include="Newtonsoft.Json.Linq" />
+    <Import Include="PCLCS" />
+    <Import Include="System" />
+    <Import Include="System.Collections.Concurrent" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.IO" />
+    <Import Include="System.IO.Compression" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Net" />
+    <Import Include="System.Net.Http" />
+    <Import Include="System.Text" />
+    <Import Include="System.Threading" />
+    <Import Include="System.Threading.Tasks" />
+    <Import Include="System.Xml.Linq" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Windows" />
+    <Import Include="System.Windows.Controls" />
+    <Import Include="System.Windows.Data" />
+    <Import Include="System.Windows.Documents" />
+    <Import Include="System.Windows.Input" />
+    <Import Include="System.Windows.Media" />
+    <Import Include="System.Windows.Media.Imaging" />
+    <Import Include="ThrottleDebounce" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Modules\Base\ModAnimation.vb" />
+    <Compile Include="Modules\Base\MyBitmap.vb" />
+    <Compile Include="Modules\ModMain.vb" />
+    <Compile Include="Modules\Base\ModBase.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="My Project\MyExtensions\MyWpfExtension.vb">
+      <VBMyExtensionTemplateID>Microsoft.VisualBasic.WPF.MyExtension</VBMyExtensionTemplateID>
+      <VBMyExtensionTemplateVersion>1.0.0.0</VBMyExtensionTemplateVersion>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="My Project\app.manifest" />
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 和 x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Font.ttf" />
+    <None Include="Resources\Help.zip" />
+    <None Include="Resources\NAudio.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\LTCat.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Newtonsoft.Json.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Blocks\Anvil.png" />
+    <Resource Include="Images\Blocks\CobbleStone.png" />
+    <Resource Include="Images\Blocks\CommandBlock.png" />
+    <Resource Include="Images\Blocks\Grass.png" />
+    <Resource Include="Images\Blocks\RedstoneBlock.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Blocks\GrassPath.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Blocks\Egg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\Hao_Tian.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Skins\Steve.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Skins\Alex.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Themes\5.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Themes\6.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Themes\7.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Themes\8.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Themes\9.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Themes\10.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\Patrick.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Themes\11.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Themes\12.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Blocks\GoldBlock.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Themes\13.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ookii.Dialogs.Wpf.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Themes\42.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Blocks\RedstoneLampOff.png" />
+    <Resource Include="Images\Blocks\RedstoneLampOn.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Blocks\Fabric.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\forge-installer.jar" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\Logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\transformer.jar" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\ReleaseTypes\Alpha.png" />
+    <Resource Include="Images\ReleaseTypes\Beta.png" />
+    <Resource Include="Images\ReleaseTypes\Release.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Icons\NoIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\PCL2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\00ll00.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\bangbang93.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\wiki.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Blocks\OptiFabric.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\java-wrapper.jar" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Skins\Ari.png" />
+    <Resource Include="Images\Skins\Efe.png" />
+    <Resource Include="Images\Skins\Kai.png" />
+    <Resource Include="Images\Skins\Makena.png" />
+    <Resource Include="Images\Skins\Noor.png" />
+    <Resource Include="Images\Skins\Sunny.png" />
+    <Resource Include="Images\Skins\Zuri.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Icons\Disabled.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\MCBBS.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Blocks\NeoForge.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\z0z0r4.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Imazen.WebP.dll" />
+    <None Include="Resources\libwebp64.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CacheCow.Client.FileStore.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CacheCow.Common.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CacheCow.Client.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ThrottleDebounce.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\System.Net.Http.Formatting.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\EasyTier.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\lwjgl-unsafe-agent.jar" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MeloongCore\Shared\MeloongCore.csproj">
+      <Project>{d22bbf3c-2177-0208-4e29-8466aa41ac6f}</Project>
+      <Name>MeloongCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MeloongCore\Wpf\MeloongCore.Wpf.csproj">
+      <Project>{2dffe2a0-1101-816b-d240-f644b2d74a68}</Project>
+      <Name>MeloongCore.Wpf</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PCLCS\PCLCS.csproj">
+      <Project>{32de4aaf-f4d6-42c5-9604-19236de96c69}</Project>
+      <Name>PCLCS</Name>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\PCLCS\bin\PCLCS.dll">
+      <LogicalName>PCLCS.dll</LogicalName>
+      <Link>Resources\PCLCS.dll</Link>
+    </None>
+    <None Include="..\PCLCS\bin\MeloongCore.dll">
+      <LogicalName>MeloongCore.dll</LogicalName>
+      <Link>Resources\MeloongCore.dll</Link>
+    </None>
+    <None Include="..\PCLCS\bin\MeloongCore.Wpf.dll">
+      <LogicalName>MeloongCore.Wpf.dll</LogicalName>
+      <Link>Resources\MeloongCore.Wpf.dll</Link>
+    </None>
+    <None Include="..\PCLCS\bin\Microsoft.Win32.Registry.dll">
+      <LogicalName>Microsoft.Win32.Registry.dll</LogicalName>
+      <Link>Resources\Microsoft.Win32.Registry.dll</Link>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Heads\ChongQing.png" />
+    <Resource Include="Images\Heads\HerobrineXia.png" />
+
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+</Project>

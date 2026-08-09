@@ -1,0 +1,3 @@
+[submodule "MeloongCore"]
+	path = MeloongCore
+	url = https://github.com/Meloong-Git/MeloongCore.git

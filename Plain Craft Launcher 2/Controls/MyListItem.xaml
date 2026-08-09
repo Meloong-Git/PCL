@@ -1,0 +1,27 @@
+<Grid x:Class="MyListItem"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="PanBack"
+            RenderTransformOrigin="0.5,0.5" Background="{StaticResource ColorBrushSemiTransparent}" Height="42">
+    <Grid.RenderTransform>
+        <ScaleTransform ScaleX="1" ScaleY="1" />
+    </Grid.RenderTransform>
+    <Grid.ColumnDefinitions>
+        <ColumnDefinition x:Name="ColumnCheck" Width="2"/>
+        <ColumnDefinition x:Name="ColumnPaddingLeft" Width="0" />
+        <ColumnDefinition x:Name="ColumnLogo" Width="4" />
+        <ColumnDefinition Width="1*"/>
+        <ColumnDefinition x:Name="ColumnPaddingRight" Width="4" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+        <RowDefinition Height="1*" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="1*" />
+    </Grid.RowDefinitions>
+    <!--<Border x:Name="RectBack" CornerRadius="3" RenderTransformOrigin="0.5,0.5" SnapsToDevicePixels="True" IsHitTestVisible="False" Opacity="0" Grid.ColumnSpan="4" Background="{DynamicResource ColorBrush7}" BorderBrush="{DynamicResource ColorBrush6}" BorderThickness="1" />-->
+    <!--<StackPanel VerticalAlignment="Center">-->
+    <TextBlock Grid.Row="1" SnapsToDevicePixels="False" UseLayoutRounding="False" HorizontalAlignment="Left" x:Name="LabTitle" IsHitTestVisible="False" Grid.Column="3" Text="{Binding Title, ElementName=PanBack}" TextTrimming="CharacterEllipsis" FontSize="{Binding FontSize, ElementName=PanBack}" Foreground="{Binding Foreground, ElementName=PanBack}" Margin="4,0,0,0" />
+    <!--<TextBlock Grid.Row="2" SnapsToDevicePixels="False" UseLayoutRounding="False" HorizontalAlignment="Left" x:Name="LabInfo" IsHitTestVisible="False" Grid.Column="2" TextTrimming="CharacterEllipsis" Visibility="Collapsed" FontSize="12" Foreground="{StaticResource ColorBrushGray2}" Margin="4,0,0,0" />-->
+    <!--</StackPanel>-->
+</Grid>

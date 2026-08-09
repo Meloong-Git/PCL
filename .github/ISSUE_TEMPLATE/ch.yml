@@ -1,0 +1,32 @@
+name: "优化建议"
+description: "对已有功能的小幅度优化或改进建议"
+labels: [· 优化, 新提交]
+body:
+- type: checkboxes
+  id: "yml-1"
+  attributes:
+    label: "检查项"
+    description: "请逐个检查下列项目，并勾选确认。"
+    options:
+    - label: "我已在 [Issues 页面](https://github.com/Meloong-Git/PCL/issues?q=is%3Aissue+) 和 [常见&难检反馈及问题列表](https://github.com/Meloong-Git/PCL/discussions/1930) 中搜索，确认了这一建议未被提交过。"
+      required: true
+    - label: "我已查看 [功能投票页面](https://github.com/Meloong-Git/PCL/discussions/categories/%E5%8A%9F%E8%83%BD%E6%8A%95%E7%A5%A8/)，确认了这一建议未在投票列表中。"
+      required: true
+- type: textarea
+  id: "yml-2"
+  attributes:
+    label: 描述
+    description: "详细描述具体需要优化哪些地方，要改成怎样的。"
+  validations:
+    required: true
+- type: textarea
+  id: "yml-3"
+  attributes:
+    label: 原因
+    description: "详细描述你为什么需要这项优化，这有助于开发者评估它的优先度。"
+    value: |
+      （示例）
+      这项优化让我可以更方便地xxxx。
+      如果没有这项优化，我每次都必须xxxx，让操作变得很麻烦。
+  validations:
+    required: true

@@ -1,0 +1,37 @@
+name: "综合 Bug 反馈"
+description: "遇见了没有细分选项的其他 Bug"
+labels: [· Bug, 新提交]
+body:
+- type: checkboxes
+  id: "yml-1"
+  attributes:
+    label: "检查项"
+    description: "请逐个检查下列项目，并勾选确认。"
+    options:
+    - label: "我已在 [Issues 页面](https://github.com/Meloong-Git/PCL/issues?q=is%3Aissue+) 和 [常见&难检反馈及问题列表](https://github.com/Meloong-Git/PCL/discussions/1930) 中搜索，确认了这一 Bug 未被提交过。"
+      required: true
+- type: textarea
+  id: "yml-2"
+  attributes:
+    label: 描述
+    description: "详细描述该 Bug 的具体表现。"
+  validations:
+    required: true
+- type: textarea
+  id: "yml-3"
+  attributes:
+    label: 重现步骤
+    description: "详细描述要怎么操作才能再次触发这个 Bug。"
+    value: |
+      1、点击xxxx
+      2、往下滚，然后点击xxxx
+  validations:
+    required: true
+- type: textarea
+  id: "yml-4"
+  attributes:
+    label: 日志与附件
+    description: "上传 PCL 文件夹中的 Log1~5.txt。[日志在哪？](https://shimo.im/docs/qKPttVvXKqPD8YDC#anchor-fvZW)"
+    placeholder: "先点击这个文本框，然后再将文件直接拖拽到文本框中以上传。"
+  validations:
+    required: true

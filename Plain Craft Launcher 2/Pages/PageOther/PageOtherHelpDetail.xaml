@@ -1,0 +1,24 @@
+<local:MyPageRight x:Class="PageOtherHelpDetail"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:PCL"
+    PanScroll="PanBack">
+    <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <StackPanel x:Name="PanCustom" Margin="25,25,25,10">
+            <StackPanel.Resources>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource BasedOnTextBlock}">
+                    <Setter Property="TextWrapping" Value="Wrap"/>
+                </Style>
+                <Style TargetType="local:MyCard">
+                    <Setter Property="Margin" Value="0,0,0,15"/>
+                </Style>
+                <Style TargetType="Image">
+                    <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality"/>
+                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                </Style>
+            </StackPanel.Resources>
+        </StackPanel>
+    </local:MyScrollViewer>
+</local:MyPageRight>

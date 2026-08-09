@@ -1,0 +1,12 @@
+<local:MyPageRight x:Class="PageOtherTest"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:PCL"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    PanScroll="PanBack">
+    <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+        <TextBlock Text="为便于维护，开源内容中不包含百宝箱功能……" HorizontalAlignment="Center" FontSize="15" Height="30" VerticalAlignment="Center" />
+    </local:MyScrollViewer>
+</local:MyPageRight>

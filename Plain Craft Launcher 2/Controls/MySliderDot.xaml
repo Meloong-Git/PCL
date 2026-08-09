@@ -1,0 +1,19 @@
+<Border x:Class="MySliderDot"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignWidth="16" d:DesignHeight="162" 
+             FocusVisualStyle="{x:Null}"
+             MinWidth="16" UseLayoutRounding="False" SnapsToDevicePixels="False" BorderBrush="{DynamicResource ColorBrush1}" Name="PanBack" Background="{StaticResource ColorBrushSemiTransparent}" Focusable="True">
+    <Grid x:Name="PanMain" MinWidth="16" MaxWidth="16" RenderTransformOrigin="0.5,0.5">
+        <Line IsHitTestVisible="False" Width="0" Name="LineBack" Stroke="{StaticResource ColorBrushGray5}" StrokeThickness="1.5" Y2="10000" X1="2" X2="2" VerticalAlignment="Bottom" Height="0" SnapsToDevicePixels="True" Margin="0,0,0,1" />
+        <Line IsHitTestVisible="False" Width="0" Name="LineFore" Stroke="{Binding ElementName=PanBack, Path=BorderBrush}" StrokeThickness="1.5" Y2="10000" X1="2" X2="2" Height="0" VerticalAlignment="Top" SnapsToDevicePixels="True" Margin="0,1,0,0" />
+        <Ellipse IsHitTestVisible="True" VerticalAlignment="Top" Height="16" Stroke="White" StrokeThickness="1.5" Fill="{DynamicResource ColorBrush3}" Name="ShapeDot" Width="16" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5" Opacity="0.8">
+            <Ellipse.RenderTransform>
+                <ScaleTransform ScaleX="2.3" ScaleY="2.3" />
+            </Ellipse.RenderTransform>
+        </Ellipse>
+    </Grid>
+</Border>

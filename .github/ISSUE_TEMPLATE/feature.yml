@@ -1,0 +1,33 @@
+name: "新功能提案"
+description: "对已有功能的大幅度修改，或添加一个新内容或选项"
+labels: [· 新功能, 新提交]
+body:
+- type: checkboxes
+  id: "yml-1"
+  attributes:
+    label: "检查项"
+    description: "请逐个检查下列项目，并勾选确认。"
+    options:
+    - label: "我已在 [Issues 页面](https://github.com/Meloong-Git/PCL/issues?q=is%3Aissue+) 和 [常见&难检反馈及问题列表](https://github.com/Meloong-Git/PCL/discussions/1930) 中搜索，确认了这一提案未被提交过。"
+      required: true
+    - label: "我已查看 [功能投票页面](https://github.com/Meloong-Git/PCL/discussions/categories/%E5%8A%9F%E8%83%BD%E6%8A%95%E7%A5%A8/)，确认了这一提案未在投票列表中。"
+      required: true
+    - label: "我知晓还没做的新功能真的太多了，忙不过来，所以新功能提案几乎不会被处理，也不建议再提交新功能提案 qwq……"
+      required: true
+- type: textarea
+  id: "yml-2"
+  attributes:
+    label: 描述
+    description: "详细描述你想添加的功能具体是怎样的。"
+  validations:
+    required: true
+- type: textarea
+  id: "yml-3"
+  attributes:
+    label: 原因
+    description: "详细描述你为什么需要这项功能，这有助于开发者评估它的优先度。"
+    value: |
+      （示例）
+      我需要这个功能来xxxx。很多人都有xxxx的需求，但如果没有这个功能，就不能xxxx了。
+  validations:
+    required: true

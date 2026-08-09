@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 主页预设反馈
+    url: https://github.com/Meloong-Git/PCL/discussions/categories/自定义主页
+    about: 提交与预设的主页（设置 → 个性化 → 主页预设）中的具体内容相关的反馈
+  - name: 帮助文档反馈
+    url: https://github.com/LTCatt/PCL2Help/issues
+    about: 提交与 PCL 帮助文档（更多 → 帮助）中的具体内容相关的反馈
+  - name: 提问
+    url: https://github.com/Meloong-Git/PCL/discussions/new?category=%E6%8F%90%E9%97%AE
+    about: 我想问一些 PCL 相关的问题……
+  - name: 讨论
+    url: https://github.com/Meloong-Git/PCL/discussions/new?category=%E8%AE%A8%E8%AE%BA
+    about: 我想讨论一些 PCL 相关的事情……
