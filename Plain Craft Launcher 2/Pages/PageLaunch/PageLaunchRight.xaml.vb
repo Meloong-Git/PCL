@@ -1,3 +1,4 @@
+Imports System.Windows.Forms
 Imports System.Windows.Threading
 
 Public Class PageLaunchRight
@@ -10,6 +11,20 @@ Public Class PageLaunchRight
         PanHint.Visibility =
             (BuildType <> BuildTypes.Release AndAlso VersionBranchMain = "Official" AndAlso
              CurrentRank < DonationRank.Rank23 AndAlso Not Settings.Get(Of Boolean)("HintSnapshot")).ToVisibility
+    End Sub
+
+    Private Sub LabLog_SelectAll(sender As Object, e As RoutedEventArgs)
+        LabLog.SelectAll()
+    End Sub
+
+    Private Sub LabLog_Copy(sender As Object, e As RoutedEventArgs)
+        If LabLog.SelectionLength <= 0 Then Return
+        Try
+            Forms.Clipboard.Clear()
+            Forms.Clipboard.SetDataObject(LabLog.SelectedText, True)
+        Catch ex As Exception
+            Logger.Warn(ex, "复制启动日志失败", LogBehavior.Toast)
+        End Try
     End Sub
 
 #Region "主页"

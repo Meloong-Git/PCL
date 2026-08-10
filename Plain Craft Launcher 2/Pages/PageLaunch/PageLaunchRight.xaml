@@ -11,7 +11,17 @@
             <StackPanel x:Name="PanCustom">
             </StackPanel>
             <local:MyCard Margin="0,0,0,15" Title="启动日志" x:Name="PanLog">
-                <TextBlock x:Name="LabLog" Margin="20,38,20,18" TextTrimming="None" TextWrapping="Wrap" />
+                <TextBox x:Name="LabLog" Margin="20,38,20,18" TextWrapping="Wrap"
+                         IsReadOnly="True" AcceptsReturn="True"
+                         Background="Transparent" BorderThickness="0"
+                         Padding="0" VerticalContentAlignment="Top">
+                    <TextBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="全选" Click="LabLog_SelectAll" />
+                            <MenuItem Header="复制" Click="LabLog_Copy" />
+                        </ContextMenu>
+                    </TextBox.ContextMenu>
+                </TextBox>
             </local:MyCard>
         </StackPanel>
     </local:MyScrollViewer>
