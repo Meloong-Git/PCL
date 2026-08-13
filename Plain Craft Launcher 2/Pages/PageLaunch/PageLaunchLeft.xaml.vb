@@ -692,19 +692,7 @@ ExitRefresh:
     End Sub
     '取消按钮
     Private Sub BtnCancel_Click() Handles BtnCancel.Click
-        If McLaunchLoaderReal IsNot Nothing Then
-            McLaunchLoaderReal.Cancel()
-            McLaunchLog("已取消启动")
-            Try
-                If McLaunchWatcher IsNot Nothing Then
-                    McLaunchWatcher.Kill()
-                ElseIf McLaunchProcess IsNot Nothing Then
-                    If Not McLaunchProcess.HasExited Then McLaunchProcess.Kill()
-                End If
-            Catch ex As Exception
-                Logger.Error(ex, "取消启动结束进程失败", LogBehavior.Toast)
-            End Try
-        End If
+        McLaunchCancel()
     End Sub
     '版本设置按钮
     Private Sub BtnMore_Click() Handles BtnMore.Click

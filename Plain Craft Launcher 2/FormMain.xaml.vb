@@ -803,8 +803,14 @@ Public Class FormMain
         ' 在没有弹窗时：继续检查……
         '==========================
 
-        '按 ESC 返回上一级
-        If e.Key = Key.Escape Then TriggerPageBack()
+        '按 ESC：启动中则取消启动，否则返回上一级
+        If e.Key = Key.Escape Then
+            If McLaunchLoader.State = LoadState.Loading Then
+                McLaunchCancel()
+            Else
+                TriggerPageBack()
+            End If
+        End If
         '更改隐藏版本可见性
         If e.Key = Key.F11 AndAlso PageCurrent = FormMain.PageType.InstanceSelect Then
             FrmSelectRight.ShowHidden = Not FrmSelectRight.ShowHidden
