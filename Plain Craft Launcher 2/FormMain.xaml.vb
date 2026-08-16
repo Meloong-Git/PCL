@@ -1049,6 +1049,7 @@ Public Class FormMain
             '安装整合包
             If {"zip", "rar", "mrpack"}.Any(Function(t) t = Extension) Then '部分压缩包是 zip 格式但后缀为 rar，总之试一试
                 Logger.Info("文件为压缩包，尝试作为整合包安装")
+                Hint("检测到压缩包拖入，正在准备安装……")
                 Try
                     ModpackInstall(FilePath)
                     RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.TaskManager))
