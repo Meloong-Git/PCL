@@ -15,6 +15,8 @@ Public Class PageSetupLaunch
         Static Reloaded As Boolean = False
         If Reloaded Then Return
         Reloaded = True
+        
+        SliderLoad()
 
         '内存自动刷新
         Dim timer As New Threading.DispatcherTimer With {.Interval = New TimeSpan(0, 0, 0, 1)}
@@ -510,6 +512,17 @@ PreFin:
         McInstanceSelected.Load()
         PageInstanceLeft.Instance = McInstanceSelected
         FrmMain.PageChange(FormMain.PageType.InstanceSetup, FormMain.PageSubType.InstanceSetup)
+    End Sub
+    
+    Private Sub SliderLoad()
+        SliderTokenExpiresInCustom.GetHintText =
+            Function(Value As Integer)
+                If Value = 0 Then
+                    Return "10分钟"
+                Else
+                    Return Value & "小时"
+                End If
+            End Function
     End Sub
 
 End Class

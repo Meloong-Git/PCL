@@ -27,6 +27,8 @@
                             <RowDefinition Height="28" />
                             <RowDefinition Height="9" />
                             <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="28" />
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="默认版本隔离" Margin="0,0,25,0" />
                         <local:MyComboBox local:SettingService.Key="LaunchArgumentIndieV2" x:Name="ComboArgumentIndieV2"
@@ -104,6 +106,8 @@
                                 </local:MyTextBox.ValidateRules>
                             </local:MyTextBox>
                         </Grid>
+                        <TextBlock VerticalAlignment="Center" Grid.Row="12" HorizontalAlignment="Left" Text="账号令牌有效期" Margin="0,0,25,0" />
+                        <local:MySlider Grid.Row="12" Grid.Column="1" x:Name="SliderTokenExpiresInCustom" local:SettingService.Key="TokenExpiresInCustom" ToolTip="设置账号登录令牌将在多久后失效&#xa;如果设置时间过长，游戏启动一段时间后可能因为令牌过期而无法加入正版服务器&#xa;如果设置时间过短，对于网络不流畅的用户，可能影响每次启动游戏时的体验" MaxValue="24" Value="12"/>
                     </Grid>
                 </StackPanel>
             </local:MyCard>

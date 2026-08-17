@@ -1031,9 +1031,11 @@ Retry:
         End Try
 
         Dim ResultJson As JObject = Result.DeserializeJson()
+        Dim TokenExpiresIn As Integer = Settings.Get("TokenExpiresInCustom") * 3600 + 600
+        TokenExpiresIn = Math.Min(TokenExpiresIn, ResultJson("expires_in").ToObject(Of Integer) - 1200)
         Return (
             ResultJson("access_token").ToString,
-            ResultJson("expires_in").ToObject(Of Integer) + GetUnixTimestampUtc() - 1200) '提前 20 分钟视作过期
+            TokenExpiresIn + GetUnixTimestampUtc())
     End Function
     '微软登录步骤 5：验证微软账号是否持有 MC，这也会刷新 XGP
     Private Sub MsLoginStep5(AccessToken As String)
