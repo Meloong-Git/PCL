@@ -1481,17 +1481,22 @@ NextInstance:
                 Args.Add($"--quickPlayMultiplayer") : Args.Add(Server)
             Else
                 '老版本
-                If Server.StartsWith("[") AndAlso Server.Contains("]") Then
+                Dim ParsedAddress As IPAddress = Nothing
+                If IPAddress.TryParse(Server, ParsedAddress) Then
+                    '不带端口号的 IP 地址
+                    Args.Add("--server") : Args.Add(Server)
+                    Args.Add("--port") : Args.Add("25565")
+                ElseIf Server.StartsWith("[") AndAlso Server.Contains("]") AndAlso IPAddress.TryParse(Server.Substring(1, Server.IndexOf("]"c) - 1), ParsedAddress) Then
                     '带方括号的 IPv6 地址
                     Dim AddressEnd = Server.IndexOf("]"c)
                     Args.Add("--server") : Args.Add(Server.Substring(1, AddressEnd - 1))
                     Args.Add("--port") : Args.Add(If(Server.Length > AddressEnd + 1 AndAlso Server(AddressEnd + 1) = ":"c, Server.Substring(AddressEnd + 2), "25565"))
-                ElseIf Server.IndexOf(":"c) >= 0 AndAlso Server.IndexOf(":"c) = Server.LastIndexOf(":"c) Then
+                ElseIf Server.Contains(":") Then
                     '域名或 IPv4 地址包含端口号
                     Args.Add("--server") : Args.Add(Server.Split(":")(0))
                     Args.Add("--port") : Args.Add(Server.Split(":")(1))
                 Else
-                    '不包含端口号，或为不带方括号的 IPv6 地址
+                    '不包含端口号
                     Args.Add("--server") : Args.Add(Server)
                     Args.Add("--port") : Args.Add("25565")
                 End If
