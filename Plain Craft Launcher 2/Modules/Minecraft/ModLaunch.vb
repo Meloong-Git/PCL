@@ -1482,7 +1482,7 @@ NextInstance:
             Else
                 '老版本
                 Dim ParsedAddress As IPAddress = Nothing
-                If IPAddress.TryParse(Server, ParsedAddress) Then
+                If Not Server.StartsWith("[") AndAlso IPAddress.TryParse(Server, ParsedAddress) Then
                     '不带端口号的 IP 地址
                     Args.Add("--server") : Args.Add(Server)
                     Args.Add("--port") : Args.Add("25565")
