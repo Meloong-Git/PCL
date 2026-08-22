@@ -280,9 +280,9 @@ Public Class CustomEvent
                     RunInUi(Sub() ModpackInstall())
 
                 Case EventType.下载文件
-                    Arg0 = Arg0.Replace("\", "/")
+                    Arg0 = ValidateHttp.NormalizeUrl(Arg0.Replace("\", "/"))
                     If Not (Arg0.StartsWithF("http://", True) OrElse Arg0.StartsWithF("https://", True)) Then
-                        MyMsgBox("EventData 必须为以 http:// 或 https:// 开头的网址。" & vbCrLf & "PCL 不支持其他乱七八糟的下载协议。", "事件执行失败")
+                        MyMsgBox("EventData 必须为有效的网址。" & vbCrLf & "若未指定协议头，PCL 将默认使用 HTTPS。", "事件执行失败")
                         Return
                     End If
                     If Not EventSafetyConfirm("即将从该网址下载文件：" & vbCrLf & Arg0) Then Return

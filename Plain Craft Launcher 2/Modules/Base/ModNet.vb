@@ -1414,6 +1414,7 @@ FinishExCatch:
                     For Each File As NetFile In Files
                         If File Is Nothing Then Throw New ArgumentException("存在空文件请求！")
                         For Each Source As NetSource In File.Sources
+                            Source.Url = ValidateHttp.NormalizeUrl(Source.Url)
                             If Not (Source.Url.StartsWithF("https://", True) OrElse Source.Url.StartsWithF("http://", True)) Then
                                 Source.Ex = New ArgumentException("输入的下载链接不正确：" & Source.Url)
                                 Source.IsFailed = True

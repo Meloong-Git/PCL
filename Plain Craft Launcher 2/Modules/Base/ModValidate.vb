@@ -100,16 +100,28 @@ Public Class ValidateRegex
 End Class
 
 ''' <summary>
-''' 必须是一个完整网址。
+''' 必须是一个网址。若未显式指定协议头，则默认视为 HTTPS。
 ''' </summary>
 Public Class ValidateHttp
     Inherits Validate
     Public Sub New()
     End Sub '用于 XAML 初始化
     Public Overrides Function Validate(Str As String) As String
-        If Str.EndsWithF("/") Then Str = Str.Substring(0, Str.Length - 1)
-        If Not Str.RegexCheck("^(http[s]?)\://") Then Return "输入的网址无效！"
+        If String.IsNullOrEmpty(Str) Then Return ""
+        Dim Normalized = NormalizeUrl(Str)
+        If Normalized.EndsWithF("/") Then Normalized = Normalized.Substring(0, Normalized.Length - 1)
+        If Not Normalized.RegexCheck("^(http[s]?)\://") Then Return "输入的网址无效！"
         Return ""
+    End Function
+
+    ''' <summary>
+    ''' 规范化 URL：若未显式指定协议头，则默认添加 https:// 前缀。
+    ''' 若已显式指定 http:// 或 https://，则保持原样。
+    ''' </summary>
+    Public Shared Function NormalizeUrl(Str As String) As String
+        If String.IsNullOrEmpty(Str) Then Return Str
+        If Str.StartsWithF("https://", True) OrElse Str.StartsWithF("http://", True) Then Return Str
+        Return "https://" & Str
     End Function
 End Class
 
