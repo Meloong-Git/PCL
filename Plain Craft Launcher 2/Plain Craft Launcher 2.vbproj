@@ -352,6 +352,8 @@
     <Compile Include="Pages\PageSelectLeft.xaml.vb">
       <DependentUpon>PageSelectLeft.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PageSelectRightCategory.vb" />
+    <Compile Include="Pages\PageSelectLeftDrag.vb" />
     <Compile Include="Pages\PageLaunch\PageLaunchLeft.xaml.vb">
       <DependentUpon>PageLaunchLeft.xaml</DependentUpon>
     </Compile>

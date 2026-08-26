@@ -109,6 +109,9 @@ Public Class PageSelectRight
                 PanEmpty.Visibility = Visibility.Collapsed
             End If
 
+            '渲染用户自定义分类卡片与新建分类按钮（在系统分类卡之后）
+            RenderCustomCategoryCards()
+
         Catch ex As Exception
             Logger.Error(ex, "将版本列表转换显示时失败")
         End Try

@@ -80,6 +80,7 @@ Public Class PageSelectLeft
                                                     ContMenu.IsOpen = True
                                                 End Sub
                 NewItem.Buttons = {NewIconButton}
+                EnableFolderItemDrag(NewItem)
                 FrmSelectLeft.PanList.Children.Add(NewItem)
                 Logger.Info($"有效的 Minecraft 文件夹：{Folder.Name} > {Folder.Location}")
             Next

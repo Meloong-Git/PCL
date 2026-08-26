@@ -1245,6 +1245,157 @@ ExitDataLoad:
     ''' </summary>
     Public McInstanceList As New Dictionary(Of McInstanceCardType, List(Of McInstance))
 
+    ''' <summary>
+    ''' 用户自定义分类。Key 为分类名（与 <see cref="McCustomCategory.Name"/> 相同，禁止重名）。
+    ''' </summary>
+    Public McCustomCategories As New Dictionary(Of String, McCustomCategory)
+
+    ''' <summary>
+    ''' 用户自定义分类。
+    ''' 一个版本可以同时属于多个自定义分类（与系统自动分类并存）。
+    ''' </summary>
+    Public Class McCustomCategory
+        ''' <summary>分类显示名。必须唯一，用作字典 Key。</summary>
+        Public Name As String = ""
+        ''' <summary>包含的实例名（= 版本文件夹名），顺序敏感，会随拖拽变位。</summary>
+        Public InstanceNames As New List(Of String)
+        ''' <summary>当分类下的实例名对应的版本文件夹不存在时，是否丢弃。</summary>
+        Public Sub TrimMissingInstances(AvailableNames As IEnumerable(Of String))
+            Dim Live = New HashSet(Of String)(AvailableNames)
+            InstanceNames = InstanceNames.Where(Function(n) Live.Contains(n)).ToList()
+        End Sub
+        ''' <summary>分类下是否有任何实例。</summary>
+        Public ReadOnly Property HasInstances As Boolean
+            Get
+                Return InstanceNames IsNot Nothing AndAlso InstanceNames.Count > 0
+            End Get
+        End Property
+    End Class
+
+    ''' <summary>
+    ''' 从指定 .minecraft 文件夹加载自定义分类。读不到则视为空字典。
+    ''' </summary>
+    Public Sub LoadCustomCategories(Folder As String)
+        McCustomCategories.Clear()
+        Try
+            Dim Count As Integer = ReadIni(Folder & "PCL.ini", "CustomCategoryCount", 0)
+            For i = 1 To Count
+                Dim CatName As String = ReadIni(Folder & "PCL.ini", $"CustomCategoryName{i}", "")
+                If String.IsNullOrEmpty(CatName) Then Continue For
+                If McCustomCategories.ContainsKey(CatName) Then Continue For '重名时丢弃后者，避免破坏字典
+                Dim OrderRaw As String = ReadIni(Folder & "PCL.ini", $"CustomCategoryOrder{i}", "")
+                Dim Names As New List(Of String)
+                For Each n As String In OrderRaw.Split(":"c)
+                    If Not String.IsNullOrEmpty(n) Then Names.Add(n)
+                Next
+                '去重并保留顺序
+                Names = Names.Distinct().ToList()
+                McCustomCategories(CatName) = New McCustomCategory With {.Name = CatName, .InstanceNames = Names}
+            Next
+        Catch ex As Exception
+            Logger.Warn(ex, "加载自定义分类失败")
+            McCustomCategories.Clear()
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' 将当前自定义分类保存到指定 .minecraft 文件夹。
+    ''' </summary>
+    Public Sub SaveCustomCategories(Folder As String)
+        Try
+            WriteIni(Folder & "PCL.ini", "CustomCategoryCount", McCustomCategories.Count)
+            Dim Index As Integer = 0
+            For Each Pair As KeyValuePair(Of String, McCustomCategory) In McCustomCategories.ToList
+                Index += 1
+                Dim Cat As McCustomCategory = Pair.Value
+                WriteIni(Folder & "PCL.ini", $"CustomCategoryName{Index}", Cat.Name)
+                WriteIni(Folder & "PCL.ini", $"CustomCategoryOrder{Index}", If(Cat.InstanceNames.Count > 0, Cat.InstanceNames.Join(":") & ":", ""))
+            Next
+        Catch ex As Exception
+            Logger.Error(ex, "保存自定义分类失败")
+        End Try
+    End Sub
+
+    ''' <summary>
+    ''' 在当前 Minecraft 文件夹下新建一个空的自定义分类。返回是否成功（重名时返回 False）。
+    ''' </summary>
+    Public Function CreateCustomCategory(Folder As String, CategoryName As String) As Boolean
+        CategoryName = CategoryName?.Trim()
+        If String.IsNullOrEmpty(CategoryName) Then Return False
+        If McCustomCategories.ContainsKey(CategoryName) Then Return False
+        McCustomCategories(CategoryName) = New McCustomCategory With {.Name = CategoryName}
+        SaveCustomCategories(Folder)
+        Return True
+    End Function
+
+    ''' <summary>
+    ''' 删除一个自定义分类（其下所有实例名关联一并解除）。
+    ''' </summary>
+    Public Function DeleteCustomCategory(Folder As String, CategoryName As String) As Boolean
+        If Not McCustomCategories.ContainsKey(CategoryName) Then Return False
+        McCustomCategories.Remove(CategoryName)
+        SaveCustomCategories(Folder)
+        Return True
+    End Function
+
+    ''' <summary>
+    ''' 重命名一个自定义分类。返回是否成功（重名时返回 False）。
+    ''' </summary>
+    Public Function RenameCustomCategory(Folder As String, OldName As String, NewName As String) As Boolean
+        NewName = NewName?.Trim()
+        If String.IsNullOrEmpty(NewName) Then Return False
+        If OldName = NewName Then Return True
+        If Not McCustomCategories.ContainsKey(OldName) Then Return False
+        If McCustomCategories.ContainsKey(NewName) Then Return False
+        Dim Cat As McCustomCategory = McCustomCategories(OldName)
+        McCustomCategories.Remove(OldName)
+        Cat.Name = NewName
+        McCustomCategories(NewName) = Cat
+        SaveCustomCategories(Folder)
+        Return True
+    End Function
+
+    ''' <summary>
+    ''' 在分类中加入一个版本。已存在则不重复加。返回是否实际修改了数据。
+    ''' </summary>
+    Public Function AddInstanceToCategory(Folder As String, CategoryName As String, InstanceName As String) As Boolean
+        If String.IsNullOrEmpty(InstanceName) Then Return False
+        If Not McCustomCategories.ContainsKey(CategoryName) Then Return False
+        Dim List As List(Of String) = McCustomCategories(CategoryName).InstanceNames
+        If List.Contains(InstanceName) Then Return False
+        List.Add(InstanceName)
+        SaveCustomCategories(Folder)
+        Return True
+    End Function
+
+    ''' <summary>
+    ''' 从分类中移除一个版本。返回是否实际修改了数据。
+    ''' </summary>
+    Public Function RemoveInstanceFromCategory(Folder As String, CategoryName As String, InstanceName As String) As Boolean
+        If Not McCustomCategories.ContainsKey(CategoryName) Then Return False
+        Dim List As List(Of String) = McCustomCategories(CategoryName).InstanceNames
+        If Not List.Contains(InstanceName) Then Return False
+        List.Remove(InstanceName)
+        SaveCustomCategories(Folder)
+        Return True
+    End Function
+
+    ''' <summary>
+    ''' 在自定义分类内调整某个实例的位置（拖拽换位用）。
+    ''' </summary>
+    Public Sub MoveInstanceInCategory(Folder As String, CategoryName As String, SourceIndex As Integer, NewIndex As Integer)
+        If Not McCustomCategories.ContainsKey(CategoryName) Then Return
+        Dim List As List(Of String) = McCustomCategories(CategoryName).InstanceNames
+        If SourceIndex < 0 OrElse SourceIndex >= List.Count Then Return
+        If NewIndex < 0 Then NewIndex = 0
+        If NewIndex >= List.Count Then NewIndex = List.Count - 1
+        If SourceIndex = NewIndex Then Return
+        Dim Item As String = List(SourceIndex)
+        List.RemoveAt(SourceIndex)
+        List.Insert(NewIndex, Item)
+        SaveCustomCategories(Folder)
+    End Sub
+
 #End Region
 
 #Region "版本列表加载"
@@ -1305,6 +1456,15 @@ Reload:
                 McInstanceList = InitMcInstanceListWithoutCache(PathMc)
             End If
             IsFirstMcInstanceListLoad = False
+
+            '加载用户自定义分类（独立于版本列表缓存）
+            LoadCustomCategories(PathMc)
+            '清理分类中已不存在的实例名
+            Dim AvailableNames = McInstanceList.Values.SelectMany(Function(l) l).Select(Function(i) i.Name).ToHashSet()
+            For Each Cat In McCustomCategories.Values.ToList
+                Cat.TrimMissingInstances(AvailableNames)
+            Next
+            SaveCustomCategories(PathMc)
 
             '改变当前选择的版本
 OnLoaded:
