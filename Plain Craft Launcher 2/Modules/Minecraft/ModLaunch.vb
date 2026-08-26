@@ -1,3 +1,5 @@
+Imports System.Security.Cryptography
+Imports System.Text
 Public Module ModLaunch
 
 #Region "开始"
@@ -673,18 +675,60 @@ LoginFinish:
             Settings.Set("Login" & Input.Token & "Pass", "")
         End Try
     End Sub
+
+    Private Function GetMD5Bytes(input As String) As Byte()
+        Using md5 As MD5 = MD5.Create()
+            Return md5.ComputeHash(Encoding.UTF8.GetBytes(input))
+        End Using
+    End Function
+
+    ''' <summary>将16字节的MD5哈希值格式化为标准UUID字符串</summary>
+    Private Function FormatUuid(bytes As Byte()) As String
+        If bytes.Length <> 16 Then
+            Throw New ArgumentException("字节数组长度必须为16")
+        End If
+        Dim hex As String = BitConverter.ToString(bytes).Replace("-", "").ToLower()
+        Return hex.Substring(0, 8) & "-" &
+           hex.Substring(8, 4) & "-" &
+           hex.Substring(12, 4) & "-" &
+           hex.Substring(16, 4) & "-" &
+           hex.Substring(20, 12)
+    End Function
+    ''' UUID
+    Private Function GenerateStandardOfflineUuid(username As String) As String
+        Dim input As String = "OfflinePlayer:" & username
+        Dim md5Bytes As Byte() = GetMD5Bytes(input)
+        md5Bytes(6) = (md5Bytes(6) And &HF) Or &H30
+        md5Bytes(8) = (md5Bytes(8) And &H3F) Or &H80
+        Return FormatUuid(md5Bytes)
+    End Function
+
+    ''' AccessToken
+    Private Function GenerateJwtAccessToken(uuid As String, username As String) As String
+        Dim header As String = "eyJhbGciOiJIUzI1NiJ9"
+        Dim payload As String = "{" &
+            """sub"":""" & uuid & """," &
+             """name"":""" & username & """," &
+             """exp"":9999999999" &
+            "}"
+        Dim payloadBase64 As String = Convert.ToBase64String(Encoding.UTF8.GetBytes(payload)).TrimEnd("="c)
+        Dim signature As String = "abc123def456ghi789jkl012mno345pqr678stu901vwx234y"
+        Return header & "." & payloadBase64 & "." & signature
+    End Function
     Private Sub McLoginLegacyStart(Data As LoaderTask(Of McLoginLegacy, McLoginResult))
         Dim Input As McLoginLegacy = Data.Input
         McLaunchLog("登录方式：离线（" & Input.UserName & "）")
         Data.Progress = 0.1
+        Dim standardUuid As String = GenerateStandardOfflineUuid(Input.UserName)
+        Dim jwtAccessToken As String = GenerateJwtAccessToken(standardUuid, Input.UserName)
         With Data.Output
             .Name = Input.UserName
-            .Uuid = McLoginLegacyUuidWithCustomSkin(Input.UserName, Input.SkinType, Input.SkinName)
+            .Uuid = standardUuid
             .Type = "Legacy"
         End With
         '将结果扩展到所有项目中
-        Data.Output.AccessToken = Data.Output.Uuid
-        Data.Output.ClientToken = Data.Output.Uuid
+        Data.Output.AccessToken = jwtAccessToken
+        Data.Output.ClientToken = standardUuid
         '保存启动记录
         Dim Names As New List(Of String)
         If Not Settings.Get(Of String)("LoginLegacyName") = "" Then Names.AddRange(Settings.Get(Of String)("LoginLegacyName").ToString.Split("¨"))
@@ -1889,7 +1933,15 @@ NextInstance:
             If McLoginLoader.Input.Type = McLoginType.Legacy AndAlso Settings.Get(Of Integer)("LaunchSkinType") = 4 AndAlso FileUtils.Exists(Paths.AppDataThenName & "CustomSkin.png") Then
                 Dim MetaFileAddress As String = PathTemp & "pack.mcmeta"
                 Dim PackPicAddress As String = PathTemp & "pack.png"
-                Dim PackFormat As Integer
+                Dim PackFormat As Object
+
+
+
+                'MsgBox("版本号: " & McInstanceSelected.Version.Vanilla.ToString() & vbCrLf & "大版本号: " &
+                'McInstanceSelected.Version.Vanilla.Major.ToString() & vbCrLf & "小版本号: " & McInstanceSelected.Version.Vanilla.Minor.ToString())
+
+
+
                 Select Case McInstanceSelected.Version.Vanilla.Major
                     Case 0, 1, 2, 3, 4, 5
                         '更早的版本没有资源包
@@ -1911,6 +1963,7 @@ NextInstance:
                         PackFormat = 7
                     Case 18
                         If McInstanceSelected.Version.Vanilla.Minor <= 2 Then
+                            'MsgBox(McInstanceSelected.Version.Vanilla.Minor & vbCrLf & "WTF")
                             PackFormat = 8
                         Else
                             PackFormat = 9
@@ -1927,6 +1980,28 @@ NextInstance:
                         Else
                             PackFormat = 17
                         End If
+                    Case 21
+                        Dim versionStr As String = McInstanceSelected.Version.Vanilla.ToString()
+                        If versionStr.StartsWith("21.0.10") Then
+                            PackFormat = "88.0"
+                        ElseIf versionStr.StartsWith("21.0.11") Then
+                            PackFormat = "94.1"
+                        ElseIf versionStr.StartsWith("21.0.0") Or versionStr.StartsWith("21.0.1") Then
+                            PackFormat = 48 ' 1.21 - 1.21.1
+                        ElseIf versionStr.StartsWith("21.0.2") Or versionStr.StartsWith("21.0.3") Then
+                            PackFormat = 57 ' 1.21.2 - 1.21.3
+                        ElseIf versionStr.StartsWith("21.0.4") Then
+                            PackFormat = 61 ' 1.21.4
+                        ElseIf versionStr.StartsWith("21.0.5") Then
+                            PackFormat = 71 ' 1.21.5
+                        ElseIf versionStr.StartsWith("21.0.6") Then
+                            PackFormat = 15 ' 1.21.6
+                        ElseIf versionStr.StartsWith("21.0.7") Or versionStr.StartsWith("21.0.8") Then
+                            PackFormat = 81 ' 1.21.7 - 1.21.8
+                        Else
+                            McLaunchLog("未知版本 尚未支持离线皮肤")
+                            GoTo IgnoreCustomSkin
+                        End If
                     Case Else '快照版是 9999
                         PackFormat = 17
                         'https://zh.minecraft.wiki/w/数据包#数据包版本
@@ -1934,8 +2009,23 @@ NextInstance:
                 McLaunchLog("正在构建自定义皮肤资源包，格式为：" & PackFormat)
                 '准备文件
                 Dim Bit As New MyBitmap(PathImage & "Heads/Logo.png")
+                Dim PackFormatJson As String
+                If TypeOf PackFormat Is String Then
+                    PackFormatJson = """" & PackFormat.ToString() & """"  ' 字符串加引号 → "88.0"
+                Else
+                    PackFormatJson = PackFormat.ToString()               ' 数字不加引号 → 48
+                End If
                 Bit.Save(PackPicAddress)
-                FileUtils.Write(MetaFileAddress, "{""pack"":{""pack_format"":" & PackFormat & ",""description"":""PCL 自定义离线皮肤资源包""}}")
+                'FileUtils.Write(MetaFileAddress, "{""pack"":{""pack_format"":" & PackFormatJson & ",""supported_formats"":[15, 255],""min_format"": 15,""max_format"": 255,""description"":""PCL 自定义离线皮肤资源包"",""""}}")
+                FileUtils.Write(MetaFileAddress, "{" & vbCrLf &
+                "    ""pack"": {" & vbCrLf &
+                "        ""description"": ""PCL 自定义离线皮肤资源包""," & vbCrLf &
+                "        ""pack_format"": 15," & vbCrLf &
+                "        ""supported_formats"": [15,255]," & vbCrLf &
+                "        ""min_format"": 15," & vbCrLf &
+                "        ""max_format"": 255" & vbCrLf &
+                "    }" & vbCrLf &
+                "}")
                 Dim Skin As New MyBitmap(Paths.AppDataThenName & "CustomSkin.png")
                 If (McInstanceSelected.Version.Vanilla.Major = 6 OrElse McInstanceSelected.Version.Vanilla.Major = 7) AndAlso Skin.Pic.Height = 64 Then
                     McLaunchLog("该 Minecraft 版本不支持双层皮肤，已进行裁剪")
@@ -1949,7 +2039,7 @@ NextInstance:
                     '1.19.3+ 使用复杂版本的替换
                     For Each SkinName In {"alex", "ari", "efe", "kai", "makena", "noor", "steve", "sunny", "zuri"}
                         FilesToCompress.Add(
-                                $"assets/minecraft/textures/entity/player/{If(Settings.Get(Of Boolean)("LaunchSkinSlim"), "slim", "wide")}/{SkinName}.png",
+                                $"assets/minecraft/textures/entity/player/{If(Settings.Get(Of Boolean)("LaunchSkinSlim"), "slim", "slim")}/{SkinName}.png",
                                 Paths.Base & "PCL\CustomSkin_Cliped.png")
                     Next
                 Else
