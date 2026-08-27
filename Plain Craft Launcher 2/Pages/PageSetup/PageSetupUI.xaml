@@ -240,10 +240,12 @@
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
                         </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnCustomRefresh" Grid.Column="0" MinWidth="140" Text="刷新主页" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
-                        <local:MyButton x:Name="BtnCustomFile" Grid.Column="1" MinWidth="140" Text="生成教学文件" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
-                        <local:MyButton x:Name="BtnCustomTutorial" Grid.Column="2" MinWidth="140" Text="查看教程" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnCustomRefresh" Grid.Column="0" Height="32" MinWidth="140" Text="刷新主页" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" />
+                        <local:MyButton x:Name="BtnCustomFile" Grid.Column="1" Height="32" MinWidth="140" Text="生成教学文件" Padding="13,0" Margin="0,0,20,0" />
+                        <local:MyButton x:Name="BtnCustomTutorial" Grid.Column="2" Height="32" MinWidth="140" Text="查看教程" Padding="13,0" Margin="0,0,20,0" />
+                        <local:MyButton x:Name="BtnCustomOpen" Grid.Column="3" Height="32" MinWidth="140" Text="打开主页文件夹" Padding="13,0" Margin="0,0,20,0" />
                     </Grid>
                     <Grid x:Name="PanCustomNet" Visibility="Collapsed" Margin="0,10,0,5">
                         <Grid.ColumnDefinitions>
