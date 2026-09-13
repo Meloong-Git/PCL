@@ -170,8 +170,9 @@ Public Module ModModpack
         If InstanceName Is Nothing Then
             InstanceName = If(Json("name"), "")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
-            If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
-            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
+            Dim NameError As String = Validate.Validate(InstanceName)
+            If NameError <> "" Then InstanceName = ""
+            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", NameError, "", New Collection(Of Validate) From {Validate})
             If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         End If
 
@@ -398,8 +399,9 @@ Public Module ModModpack
         If InstanceName Is Nothing Then
             InstanceName = If(Json("name"), "")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
-            If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
-            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
+            Dim NameError As String = Validate.Validate(InstanceName)
+            If NameError <> "" Then InstanceName = ""
+            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", NameError, "", New Collection(Of Validate) From {Validate})
             If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         End If
         '解压
@@ -512,8 +514,9 @@ Public Module ModModpack
         '获取版本名
         Dim InstanceName As String = If(Json("name"), "")
         Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
-        If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
-        If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
+        Dim NameError As String = Validate.Validate(InstanceName)
+        If NameError <> "" Then InstanceName = ""
+        If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", NameError, "", New Collection(Of Validate) From {Validate})
         If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         '解压
         Dim InstallTemp As String = RequestTaskTempFolder()
@@ -565,8 +568,9 @@ Public Module ModModpack
         '获取版本名
         Dim InstanceName As String = If(PackInstance.RegexSeek("(?<=\nname\=)[^\n]+"), "")
         Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
-        If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
-        If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
+        Dim NameError As String = Validate.Validate(InstanceName)
+        If NameError <> "" Then InstanceName = ""
+        If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", NameError, "", New Collection(Of Validate) From {Validate})
         If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         '解压
         Dim InstallTemp As String = RequestTaskTempFolder()
@@ -691,8 +695,9 @@ Public Module ModModpack
         If InstanceName Is Nothing Then
             InstanceName = If(Json("name"), "")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
-            If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
-            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
+            Dim NameError As String = Validate.Validate(InstanceName)
+            If NameError <> "" Then InstanceName = ""
+            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", NameError, "", New Collection(Of Validate) From {Validate})
             If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         End If
         '解压
