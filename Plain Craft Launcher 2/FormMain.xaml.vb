@@ -803,8 +803,14 @@ Public Class FormMain
         ' 在没有弹窗时：继续检查……
         '==========================
 
-        '按 ESC 返回上一级
-        If e.Key = Key.Escape Then TriggerPageBack()
+        '按 ESC：启动中则取消启动，否则返回上一级
+        If e.Key = Key.Escape Then
+            If McLaunchLoader.State = LoadState.Loading Then
+                McLaunchCancel()
+            Else
+                TriggerPageBack()
+            End If
+        End If
         '更改隐藏版本可见性
         If e.Key = Key.F11 AndAlso PageCurrent = FormMain.PageType.InstanceSelect Then
             FrmSelectRight.ShowHidden = Not FrmSelectRight.ShowHidden
@@ -1049,6 +1055,7 @@ Public Class FormMain
             '安装整合包
             If {"zip", "rar", "mrpack"}.Any(Function(t) t = Extension) Then '部分压缩包是 zip 格式但后缀为 rar，总之试一试
                 Logger.Info("文件为压缩包，尝试作为整合包安装")
+                Hint("检测到压缩包拖入，正在准备安装……")
                 Try
                     ModpackInstall(FilePath)
                     RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.TaskManager))

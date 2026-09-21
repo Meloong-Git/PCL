@@ -27,6 +27,8 @@
                             <RowDefinition Height="28" />
                             <RowDefinition Height="9" />
                             <RowDefinition Height="28" />
+                            <RowDefinition Height="9" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="默认版本隔离" Margin="0,0,25,0" />
                         <local:MyComboBox local:SettingService.Key="LaunchArgumentIndieV2" x:Name="ComboArgumentIndieV2"
@@ -104,6 +106,9 @@
                                 </local:MyTextBox.ValidateRules>
                             </local:MyTextBox>
                         </Grid>
+                        <local:MyCheckBox Margin="0,8,0,4" Text="在正版登录时验证 SSL 证书" Grid.Row="12" Height="22" Grid.ColumnSpan="2"
+                                          x:Name="CheckDownloadCert" local:SettingService.Key="ToolDownloadCert"
+                                          ToolTip="开启验证可以提高安全性，但可能会导致正版登录失败（见 #3018）。&#xa;若登录因为 “未能为 SSL/TLS 安全通道建立信任关系” 失败，请考虑关闭此选项。" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>

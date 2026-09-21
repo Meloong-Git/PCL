@@ -306,6 +306,19 @@ Refresh:
                  "你可以在生成教学文件后直接刷新主页，对照着进行修改，更有助于理解。" & vbCrLf &
                  "直接将主页文件拖进 PCL 窗口也可以快捷加载。", "主页自定义教程")
     End Sub
+    Private Sub BtnCustomOpen_Click(sender As Object, e As EventArgs) Handles BtnCustomOpen.Click
+        Try
+            Dim CustomPath As String = Paths.Base & "PCL\Custom.xaml"
+            If FileUtils.Exists(CustomPath) Then
+                OpenExplorer(CustomPath)
+            Else
+                OpenExplorer(Paths.Base & "PCL\")
+                Hint("未找到 Custom.xaml，已打开 PCL 文件夹。", HintType.Blue)
+            End If
+        Catch ex As Exception
+            Logger.Error(ex, "打开主页文件失败")
+        End Try
+    End Sub
     Public Shared Sub OnMainPageTypeChanged()
         If FrmSetupUI Is Nothing Then Return
         Select Case CInt(Settings.Get(Of Integer)("UiCustomType"))

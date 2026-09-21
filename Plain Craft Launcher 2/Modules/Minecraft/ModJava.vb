@@ -251,6 +251,11 @@ Public Module ModJava
                 '1.18+：Java 17+
                 AddConstraint(ValueRange(Of Version).AtLeast(New Version(17, 0)))
             End If
+            If Instance.Version.Fabric <> "未知版本" AndAlso
+               CompareVersion(Instance.Version.Fabric, "0.17.0") < 0 Then
+                'Fabric Loader 0.16.x 及更早版本的 Mixin/ASM 不兼容 Java 25
+                AddConstraint(ValueRange(Of Version).LessThan(New Version(25, 0)))
+            End If
         End If
 
         'LiteLoader 检测
