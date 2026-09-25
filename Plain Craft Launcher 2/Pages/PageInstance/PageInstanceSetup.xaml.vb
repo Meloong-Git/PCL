@@ -324,12 +324,11 @@ PreFin:
 #Region "服务器"
 
     '当第三方登录更改时，清空版本列表缓存以更新版本分类
-    'TODO: 这会不会导致拖拽改变第三方登录的时候版本列表缓存没有更新？
     Public Shared Sub OnVersionServerLoginChanged(Type As Integer)
-        If FrmInstanceSetup Is Nothing Then Return
         WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "")
-        If PageInstanceLeft.Instance Is Nothing Then Return
-        PageInstanceLeft.Instance = New McInstance(PageInstanceLeft.Instance.Name).Load()
+        If FrmInstanceSetup IsNot Nothing AndAlso PageInstanceLeft.Instance IsNot Nothing Then
+            PageInstanceLeft.Instance = New McInstance(PageInstanceLeft.Instance.Name).Load()
+        End If
         LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
     End Sub
 
