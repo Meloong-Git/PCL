@@ -13,7 +13,7 @@ Public Class MyMsgText
             MyConverter = Converter
             LabTitle.Text = Converter.Title
             LabCaption.Text = Converter.Text
-            '单击正文即可复制（#1114）
+            '#1114
             LabCaption.ToolTip = "单击复制内容"
             LabCaption.Cursor = Cursors.Hand
             AddHandler LabCaption.MouseLeftButtonDown,
