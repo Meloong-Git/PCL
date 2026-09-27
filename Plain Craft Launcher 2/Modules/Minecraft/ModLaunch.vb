@@ -1424,7 +1424,12 @@ NextInstance:
         If McInstanceSelected.JsonObject("minecraftArguments")?.ToString.Any Then
             Dim BasicString As String = McInstanceSelected.JsonObject("minecraftArguments").ToString
             McLaunchLog($"旧版游戏参数：" & BasicString)
-            BasicString += " --height ${resolution_height} --width ${resolution_width}" '总是添加宽高选项，之后去重的时候会覆盖 MC 自带的
+            '13w23b（2013-06-08 00:32）起才支持 --width 与 --height，13w23a（00:04）及更早的版本不支持（#9404）
+            If McInstanceSelected.ReleaseTime >= New Date(2013, 6, 8, 0, 20, 0) Then
+                BasicString += " --height ${resolution_height} --width ${resolution_width}"
+            Else
+                McLaunchLog("Minecraft 版本不支持 --width 与 --height 选项，已跳过窗口大小设置")
+            End If
             Arg &= " " & BasicString
         End If
         '新版 MC：从版本 JSON 获取参数
