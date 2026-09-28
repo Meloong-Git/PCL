@@ -901,7 +901,7 @@ Public Class FormMain
     Private Sub HandleDrag(sender As Object, e As DragEventArgs)
         Try
             If e.Handled AndAlso (e.Effects <> DragDropEffects.None) Then Return
-            e.Handled = True
+            '不能设 e.Handled，否则 WPF 不会把 Effects 回传给 OLE
             '缓存
             Static PrevData As IDataObject, PrevEffects As DragDropEffects
             If e.Data Is PrevData Then
@@ -914,8 +914,8 @@ Public Class FormMain
                 Dim Str As String = e.Data.GetData(DataFormats.Text)
                 If Str.StartsWithF("authlib-injector:yggdrasil-server:") Then
                     e.Effects = DragDropEffects.Copy
-                ElseIf Str.StartsWithF("file:///") Then
-                    e.Effects = DragDropEffects.Copy
+                ElseIf GetDragFilePath(Str) IsNot Nothing Then
+                    e.Effects = DragDropEffects.Link
                 End If
             ElseIf e.Data.GetDataPresent(DataFormats.FileDrop) Then
                 Dim Files As String() = e.Data.GetData(DataFormats.FileDrop)
@@ -982,11 +982,16 @@ Public Class FormMain
                             '正在主页，需要刷新左边栏
                             FrmLaunchLeft.RefreshPage(True, False)
                         End If
-                    ElseIf Str.StartsWithF("file:///") Then
+                    Else
                         '文件拖拽（例如从浏览器下载窗口拖入）
-                        Dim FilePath = Net.WebUtility.UrlDecode(Str).Substring("file:///".Length).Replace("/", "\")
+                        Dim FilePath = GetDragFilePath(Str)
+                        If FilePath Is Nothing Then
+                            Logger.Warn($"拖拽的文本不是有效路径：{Str}")
+                            Hint("无法识别拖入的路径文本！")
+                            Return
+                        End If
                         e.Handled = True
-                        e.Effects = DragDropEffects.Copy
+                        e.Effects = DragDropEffects.Link
                         FileDrag(New List(Of String) From {FilePath})
                     End If
                 Catch ex As Exception
@@ -1008,6 +1013,21 @@ Public Class FormMain
             Logger.Error(ex, "接取拖拽事件失败")
         End Try
     End Sub
+    '部分程序拖拽只给路径文本(#9331)
+    Private Shared Function GetDragFilePath(Raw As String) As String
+        If String.IsNullOrWhiteSpace(Raw) Then Return Nothing
+        Dim Str As String = Raw.Trim()
+        If Str.Contains(vbCr) OrElse Str.Contains(vbLf) Then Return Nothing
+        If Str.StartsWithF("file:", True) Then
+            Str = StringUtils.UrlUnescape(Str.Substring(5)).TrimStart("/"c).Replace("/"c, "\"c)
+        End If
+        If Str.RegexSeek("^[A-Za-z]:[\\/]") Is Nothing Then Return Nothing
+        If FileUtils.Exists(Str) OrElse DirectoryUtils.Exists(Str) Then Return Str
+        Dim Fixed As String = Encoding.UTF8.GetString(Encoding.GetEncoding(936).GetBytes(Str))
+        If Fixed <> Str AndAlso (FileUtils.Exists(Fixed) OrElse DirectoryUtils.Exists(Fixed)) Then Return Fixed
+        Return Nothing
+    End Function
+
     Private Sub FileDrag(FilePathList As IEnumerable(Of String))
         RunInNewThread(
         Sub()
