@@ -446,6 +446,7 @@ PreFin:
         TextArgumentWindowHeight.Visibility = IsVisibie
         LabArgumentWindowMiddle.Visibility = IsVisibie
         TextArgumentWindowWidth.Visibility = IsVisibie
+        CardArgument.TriggerForceResize()
     End Sub
 
     '可见性选择直接关闭的警告
