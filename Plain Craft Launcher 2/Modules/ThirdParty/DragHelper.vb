@@ -106,7 +106,6 @@ Public Class DragHelper
     Private Const WM_DROPFILES As UInteger = &H233
     Private Const MSGFLT_ALLOW As UInteger = 1
     Private Const MSGFLT_ADD As UInteger = 1
-    Private Const MAX_PATH As Integer = 260
 
     Private Shared Sub ChangeMessageFilter(handle As IntPtr)
         Dim ver As Version = Environment.OSVersion.Version
@@ -138,9 +137,11 @@ Public Class DragHelper
         ReDim dropFilePaths(CInt(fileCount) - 1)
 
         For i As UInteger = 0 To CInt(fileCount) - 1
-            Dim sb As New StringBuilder(MAX_PATH)
-            Dim result As UInteger = DragQueryFile(wParam, i, sb, sb.Capacity)
-            If result > 0 Then dropFilePaths(i) = sb.ToString()
+            Dim Length As UInteger = DragQueryFile(wParam, i, Nothing, 0)
+            If Length = 0 Then Continue For
+            Dim sb As New StringBuilder(CInt(Length) + 1)
+            DragQueryFile(wParam, i, sb, sb.Capacity)
+            dropFilePaths(i) = sb.ToString()
         Next
 
         DragQueryPoint(wParam, dropPoint)
