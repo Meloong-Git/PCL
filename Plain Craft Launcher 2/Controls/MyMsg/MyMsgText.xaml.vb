@@ -13,14 +13,6 @@ Public Class MyMsgText
             MyConverter = Converter
             LabTitle.Text = Converter.Title
             LabCaption.Text = Converter.Text
-            '#1114
-            LabCaption.ToolTip = "单击复制内容"
-            LabCaption.Cursor = Cursors.Hand
-            AddHandler LabCaption.MouseLeftButtonDown,
-                Sub(sender As Object, e As MouseButtonEventArgs)
-                    e.Handled = True
-                    ClipboardSet(Converter.Text, SuccessHint:="已复制内容！")
-                End Sub
             Btn1.Text = Converter.Button1
             If Converter.IsWarn Then
                 Btn1.ColorType = MyButton.ColorState.Red
