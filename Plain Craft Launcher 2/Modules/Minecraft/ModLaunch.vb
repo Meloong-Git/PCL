@@ -142,10 +142,15 @@ Public Module ModLaunch
             LaunchLoader.Start()
             '任务栏进度条
             LoaderTaskbarAdd(LaunchLoader)
-            Do While LaunchLoader.State = LoadState.Loading
-                FrmLaunchLeft.Dispatcher.Invoke(AddressOf FrmLaunchLeft.LaunchingRefresh)
-                Thread.Sleep(100)
-            Loop
+            LoaderTaskbarHideProgress = True
+            Try
+                Do While LaunchLoader.State = LoadState.Loading
+                    FrmLaunchLeft.Dispatcher.Invoke(AddressOf FrmLaunchLeft.LaunchingRefresh)
+                    Thread.Sleep(100)
+                Loop
+            Finally
+                LoaderTaskbarHideProgress = False
+            End Try
             FrmLaunchLeft.Dispatcher.Invoke(AddressOf FrmLaunchLeft.LaunchingRefresh)
             '成功与失败处理
             Select Case LaunchLoader.State
