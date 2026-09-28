@@ -1021,22 +1021,20 @@ Public Module ModBase
     ''' <summary>
     ''' 设置剪贴板。将在另一线程运行，且不会抛出异常。
     ''' </summary>
-    Public Sub ClipboardSet(Text As String, Optional ShowSuccessHint As Boolean = True)
+    Public Sub ClipboardSet(Text As String, Optional ShowSuccessHint As Boolean = True, Optional SuccessHint As String = "")
         RunInThread(
         Sub()
-            Try
-                Retrier.Attempt(delay:=Function(Attempt) TimeSpan.FromMilliseconds(200), maxAttempts:=4, isRetryAllowed:=Function(ex) True, action:=
-                Sub()
-                    RunInUi(
-                    Sub()
-                        My.Computer.Clipboard.Clear()
-                        If Not String.IsNullOrEmpty(Text) Then My.Computer.Clipboard.SetText(Text)
-                    End Sub)
-                End Sub)
-                If ShowSuccessHint Then Hint("已成功复制！", HintType.Green)
-            Catch ex As Exception
-                Logger.Error(ex, "可能由于剪贴板被其他程序占用，文本复制失败", LogBehavior.Toast)
-            End Try
+            RunInUi(
+            Sub()
+                Try
+                    My.Computer.Clipboard.Clear()
+                    If Not String.IsNullOrEmpty(Text) Then My.Computer.Clipboard.SetText(Text)
+                    If ShowSuccessHint Then Hint(If(String.IsNullOrEmpty(SuccessHint), "已成功复制！", SuccessHint), HintType.Green)
+                Catch ex As Exception
+                    Logger.Error(ex, behavior:=LogBehavior.None)
+                    Hint("复制失败，可能由于剪贴板被其他程序占用！", HintType.Red)
+                End Try
+            End Sub)
         End Sub)
     End Sub
     ''' <summary>
