@@ -72,7 +72,7 @@ public static class Versions {
     /// <summary>
     /// Minecraft 本地实例信息缓存的版本号。
     /// </summary>
-    public const int McInstanceCacheVersion = 38;
+    public const int McInstanceCacheVersion = 39;
     /// <summary>
     /// Java 相关配置的版本号。
     /// </summary>
