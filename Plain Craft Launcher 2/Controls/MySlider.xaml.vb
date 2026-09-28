@@ -42,7 +42,6 @@ Public Class MySlider
                     RaiseEvent PreviewChange(Me, e)
                     If e.Handled Then
                         _Value = OldValue
-                        DragStop()
                         Return
                     End If
                 End If
@@ -84,6 +83,7 @@ Public Class MySlider
         DragControl = Me
         RefreshColor()
         FrmMain.DragDoing()
+        If FrmMain.PanMsg.Children.Count > 0 Then Return
         AniStart({
                  AaScaleTransform(ShapeDot, 1.3 - CType(ShapeDot.RenderTransform, ScaleTransform).ScaleX, 40,, New AniEaseOutFluent)
             }, "MySlider Scale " & Uuid)
@@ -91,6 +91,10 @@ Public Class MySlider
         AniStop("MySlider KeyPopup " & Uuid)
     End Sub
     Public Sub DragDoing()
+        If FrmMain.PanMsg.Children.Count > 0 Then
+            Popup.IsOpen = False
+            Return
+        End If
         Dim Percent As Double = ((Mouse.GetPosition(PanMain).X - ShapeDot.Width / 2) / (ActualWidth - ShapeDot.Width)).Clamp(0, 1)
         Dim NewValue As Integer = Percent * MaxValue
         If Not NewValue = Value Then
