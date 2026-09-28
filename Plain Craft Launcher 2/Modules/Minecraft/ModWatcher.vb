@@ -1,3 +1,5 @@
+Imports System.Runtime.InteropServices
+
 Public Module ModWatcher
 
     '对全体的监视
@@ -260,10 +262,12 @@ Public Module ModWatcher
         ''' </summary>
         Private IsWindowFinished As Boolean = False
         Private WindowHandle As IntPtr
+        Private Parents As New Dictionary(Of Integer, Integer)
         Private Sub TimerWindow()
             Try
                 If GameProcess.HasExited Then Return
                 If IsWindowFinished Then Return
+                RefreshParentMap()
                 '获取全部窗口，检查是否有新增的
                 Dim MinecraftWindow As KeyValuePair(Of IntPtr, String)? = Nothing
                 Try
@@ -329,12 +333,7 @@ Public Module ModWatcher
                     '获取窗口关联的进程
                     Dim ProcessId As Integer
                     GetWindowThreadProcessId(hwnd, ProcessId)
-                    Try
-                        If Process.GetProcessById(ProcessId).StartTime < GameProcess.StartTime Then Return '需要是此后启动的进程
-                    Catch ex As Exception
-                        Logger.Warn(ex, "枚举 Minecraft 窗口进程失败")
-                        Return
-                    End Try
+                    If Not IsGameProcess(ProcessId) Then Return'需要属于游戏进程树
                     '返回
                     Result = New KeyValuePair(Of IntPtr, String)(hwnd, WindowText)
                 End Sub, 0)
@@ -347,6 +346,40 @@ Public Module ModWatcher
         Private Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (hWnd As Integer, str As String) As Boolean
         Private Declare Function ShowWindow Lib "user32" (hWnd As IntPtr, cmdWindow As UInteger) As Boolean
         Private Declare Function GetWindowThreadProcessId Lib "user32" (hWnd As IntPtr, ByRef lpdwProcessId As Integer) As Integer
+        Private Const TH32CS_SNAPPROCESS As Integer = &H2
+        Private Structure PROCESSENTRY32
+            Public dwSize As Integer, cntUsage As Integer, th32ProcessID As Integer
+            Public th32DefaultHeapID As IntPtr
+            Public th32ModuleID As Integer, cntThreads As Integer, th32ParentProcessID As Integer
+            Public pcPriClassBase As Integer, dwFlags As Integer
+            <MarshalAs(UnmanagedType.ByValTStr, SizeConst:=260)> Public szExeFile As String
+        End Structure
+        Private Declare Function CreateToolhelp32Snapshot Lib "kernel32" (dwFlags As Integer, th32ProcessID As Integer) As IntPtr
+        Private Declare Function Process32First Lib "kernel32" (hSnapshot As IntPtr, ByRef lppe As PROCESSENTRY32) As Boolean
+        Private Declare Function Process32Next Lib "kernel32" (hSnapshot As IntPtr, ByRef lppe As PROCESSENTRY32) As Boolean
+        Private Declare Function CloseHandle Lib "kernel32" (hObject As IntPtr) As Boolean
+        Private Sub RefreshParentMap()
+            Parents = New Dictionary(Of Integer, Integer)
+            Dim Entry As New PROCESSENTRY32 With {.dwSize = Marshal.SizeOf(GetType(PROCESSENTRY32))}
+            Dim Snapshot As IntPtr = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
+            Try
+                If Process32First(Snapshot, Entry) Then
+                    Do : Parents(Entry.th32ProcessID) = Entry.th32ParentProcessID : Loop While Process32Next(Snapshot, Entry)
+                End If
+            Catch ex As Exception
+                Logger.Warn(ex, "枚举 Minecraft 窗口进程失败")
+            Finally
+                CloseHandle(Snapshot)
+            End Try
+        End Sub
+        Private Function IsGameProcess(CandidateId As Integer) As Boolean
+            For i = 1 To 16
+                If CandidateId = GameProcess.Id Then Return True
+                If CandidateId <= 4 OrElse Not Parents.ContainsKey(CandidateId) Then Return False
+                CandidateId = Parents(CandidateId)
+            Next
+            Return False
+        End Function
 
         '崩溃处理
         Private Sub Crashed()
