@@ -368,8 +368,49 @@ PreFin:
         TextServerAuthRegister.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
         LabServerAuthServer.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
         TextServerAuthServer.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
+        BtnServerAuthApiLocator.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
         BtnServerAuthLittle.Visibility = If(Type = 4, Visibility.Visible, Visibility.Collapsed)
         CardServer.TriggerForceResize()
+    End Sub
+
+    'New 一个 HttpClient
+    Private ReadOnly RequestClient As New HttpClient() With {
+        .Timeout = TimeSpan.FromSeconds(10)
+    }
+    Private Sub BtnServerAuthApiLocator_Click(sender As Object, e As MouseButtonEventArgs)
+        If String.IsNullOrWhiteSpace(TextServerAuthServer.Text) Then Return
+        Dispatcher.BeginInvoke(
+            Async Sub()
+                Hint("正在检查 Yggdrasil 服务器地址")
+                Try
+                    Dim OriginAddress = TextServerAuthServer.Text
+                    OriginAddress = If(OriginAddress.StartsWith("http"), OriginAddress, "https://" & OriginAddress)
+                    Using Request As New HttpRequestMessage(HttpMethod.Head, OriginAddress)
+                        SecretHeadersSign(OriginAddress, Request)
+                        Using Response = Await RequestClient.SendAsync(Request)
+                            Dim Address = Response.Headers.GetValues("x-authlib-injector-api-location").
+                                FirstOrDefault()
+                            If Not String.IsNullOrEmpty(Address) AndAlso Address <> OriginAddress Then
+                                If Address.StartsWith("/") Then
+                                    Address = New Uri(New Uri(OriginAddress), Address).
+                                    ToString()
+                                End If
+                                If MyMsgBox(
+                                $"验证服务器提供了新的地址：{Address} {vbCrLf}{vbCrLf}是否替换为验证服务器提供的地址？", "地址验证",
+                                Button1:="确定",
+                                Button2:="取消") = 2 Then Return
+
+                                TextServerAuthServer.Text = Address
+                            End If
+                        End Using
+                    End Using
+                    Hint("检查 API 地址成功", HintType.Green)
+                Catch ex As InvalidOperationException
+                    Hint("验证服务器未提供地址，无法检查", HintType.Red)
+                Catch ex As Exception
+                    Logger.Error(ex, "检查地址失败，请检查网络连接，然后再试一次", LogBehavior.Toast)
+                End Try
+            End Sub)
     End Sub
 
     'LittleSkin
