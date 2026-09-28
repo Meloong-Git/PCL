@@ -1663,12 +1663,33 @@ Retry:
 
 #Region "Fabric 下载菜单"
 
+    Public Sub FabricDownloadListItemPreload(Stack As StackPanel, Entries As JArray, OnClick As MyListItem.ClickEventHandler)
+        '如果只有一个版本，则不特别列出
+        If Entries.Count <= 1 Then Return
+        '获取当前稳定版
+        Dim StableVersion As JObject = Nothing
+        For Each Entry As JObject In Entries
+            If Entry("stable").ToObject(Of Boolean) Then
+                StableVersion = Entry
+                Exit For
+            End If
+        Next
+        If StableVersion Is Nothing Then
+            Logger.Info("未找到 Fabric 的当前稳定版")
+            Return
+        End If
+        '显示
+        Stack.Children.Add(FabricDownloadListItem(StableVersion, OnClick).Init())
+        '添加间隔
+        Stack.Children.Add(New TextBlock With {.Text = "全部版本 (" & Entries.Count & ")", .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 13, 0, 4)})
+    End Sub
+
     Public Function FabricDownloadListItem(Entry As JObject, OnClick As MyListItem.ClickEventHandler) As MyVirtualizingElement(Of MyListItem)
         Return New MyVirtualizingElement(Of MyListItem)(
         Function()
             Dim NewItem As New MyListItem With {
                 .Title = Entry("version").ToString.Replace("+build", ""), .SnapsToDevicePixels = True, .Height = 42, .Type = MyListItem.CheckType.Clickable, .Tag = Entry,
-                .Info = If(Entry("stable").ToObject(Of Boolean), "稳定版", "测试版"),
+                .Info = If(Entry("stable").ToObject(Of Boolean), "当前稳定版", "其他版本"),
                 .Logo = PathImage & "Blocks/Fabric.png"
             }
             AddHandler NewItem.Click, OnClick

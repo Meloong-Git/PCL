@@ -132,6 +132,8 @@ Public Class MyCard
                 ForgeDownloadListItemPreload(Stack, Stack.Tag, AddressOf ForgeSave_Click, True)
             Case 8
                 PageDownloadResourceDetail.ResourceFilesCardPreload(Stack, Stack.Tag)
+            Case 12
+                FabricDownloadListItemPreload(Stack, Stack.Tag, AddressOf FrmDownloadInstall.Fabric_Selected)
         End Select
         '实现控件虚拟化
         For Each Data As Object In Stack.Tag
