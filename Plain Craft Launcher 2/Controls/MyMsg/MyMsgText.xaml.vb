@@ -19,8 +19,7 @@ Public Class MyMsgText
             AddHandler LabCaption.MouseLeftButtonDown,
                 Sub(sender As Object, e As MouseButtonEventArgs)
                     e.Handled = True
-                    ClipboardSet(Converter.Text, False)
-                    Hint("已复制内容！", HintType.Green)
+                    ClipboardSet(Converter.Text, SuccessHint:="已复制内容！")
                 End Sub
             Btn1.Text = Converter.Button1
             If Converter.IsWarn Then
