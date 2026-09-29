@@ -231,7 +231,7 @@ Retry:
             End SyncLock
             '构建请求
             Url = SecretCdnSign(Url)
-            Request = New HttpRequestMessage(Method, Url)
+            Request = New HttpRequestMessage(Method, FormatUrlHost(Url))
             If Content IsNot Nothing AndAlso Request.Method <> HttpMethod.Get AndAlso Request.Method <> HttpMethod.Head Then '写入 Content
                 If TypeOf Content Is HttpContent Then
                     Request.Content = DirectCast(Content, HttpContent).Clone()
@@ -911,7 +911,7 @@ StartThread:
             Try
                 Dim HttpDataCount As Integer = 0
                 If SourcesOnce.Contains(Th.Source) AndAlso Th <> Th.Source.SingleThread Then GoTo SourceBreak
-                HttpRequest = New HttpRequestMessage(HttpMethod.Get, Th.Source.Url)
+                HttpRequest = New HttpRequestMessage(HttpMethod.Get, FormatUrlHost(Th.Source.Url))
                 SecretHeadersSign(Th.Source.Url, HttpRequest, SimulateBrowserHeaders)
                 CancelToken = New CancellationTokenSource(Timeout)
                 If Not Th.IsFirstThread Then HttpRequest.Headers.Range = New Headers.RangeHeaderValue(Th.DownloadStart, Nothing)
