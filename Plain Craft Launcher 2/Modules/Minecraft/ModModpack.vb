@@ -151,6 +151,28 @@ Public Module ModModpack
             "不兼容的加载器", "取消", $"不安装 {LoaderName} 并继续") = 1 Then Throw New OperationCanceledException
     End Sub
 
+    '#8864
+    Public Sub ImportInstanceIcon(VersionFolder As String)
+        Dim SetupFile As String = VersionFolder & "PCL\Setup.ini"
+        If CType(ReadIni(SetupFile, "LogoCustom", False), Boolean) AndAlso
+           Not CType(ReadIni(SetupFile, "LogoAuto", False), Boolean) Then Return
+        Try
+            For Each Extension As String In {"png", "jpg", "jpeg", "bmp", "gif", "webp", "apng"}
+                Dim SourceFile As String = $"{VersionFolder}icon.{Extension}"
+                If Not FileUtils.Exists(SourceFile) Then Continue For
+                Dim Source As New MyBitmap(SourceFile)
+                FileUtils.Copy(SourceFile, VersionFolder & "PCL\Logo.png")
+                WriteIni(SetupFile, "Logo", "PCL\Logo.png")
+                WriteIni(SetupFile, "LogoCustom", True)
+                WriteIni(SetupFile, "LogoAuto", True)
+                Logger.Info($"已导入整合包图标：{SourceFile}")
+                Return
+            Next
+        Catch ex As Exception
+            Logger.Warn(ex, $"导入整合包图标失败（{VersionFolder}）")
+        End Try
+    End Sub
+
 #Region "不同类型整合包的安装方法"
 
     'CurseForge
