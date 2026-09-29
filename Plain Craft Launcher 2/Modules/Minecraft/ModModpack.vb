@@ -277,7 +277,7 @@ Public Module ModModpack
                     If ModJson("modules").Any Then 'modules 可能返回 null（#1006）
                         Dim ModuleNames = CType(ModJson("modules"), JArray).Select(Function(l) l("name").ToString).ToList
                         If ModuleNames.Contains("META-INF") OrElse ModuleNames.Contains("mcmod.info") OrElse ModuleNames.Contains("fabric.mod.json") OrElse
-                            ModJson?("FileName")?.ToString.EndsWithF(".jar", True) Then
+                            ModJson?("fileName")?.ToString.EndsWithF(".jar", True) Then
                             TargetFolder = "mods" : Type = ResourceTypes.Mod
                         ElseIf ModuleNames.Contains("pack.mcmeta") Then
                             TargetFolder = "resourcepacks" : Type = ResourceTypes.ResourcePack
