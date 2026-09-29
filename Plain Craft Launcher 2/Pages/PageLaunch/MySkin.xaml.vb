@@ -244,6 +244,7 @@ Retry:
                             {"Minecon2013", "Minecon 2013 参与者披风"}, {"Minecon2015", "Minecon 2015 参与者披风"}, {"Minecon2016", "Minecon 2016 参与者披风"},
                             {"Cherry Blossom", "樱花披风"}, {"15th Anniversary", "15 周年纪念披风"}, {"Purple Heart", "紫色心形披风"},
                             {"Follower's", "追随者披风"}, {"MCC 15th Year", "MCC 15 周年披风"}, {"Minecraft Experience", "村民救援披风"},
+                            {"MoonlightTrail", "Moonlight Trail披风"},
                             {"Mojang Office", "Mojang 办公室披风"}, {"Home", "家园披风"}, {"Menace", "入侵披风"}, {"Yearn", "渴望披风"},
                             {"Common", "普通披风"}, {"Pan", "薄煎饼披风"}, {"Founder's", "创始人披风"}, {"Copper", "铜披风"}, {"Zombie Horse", "僵尸马披风"}, {"Builder", "建造者披风"}, {"Crafter", "工匠披风"}
                         }
