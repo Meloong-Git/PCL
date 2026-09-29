@@ -639,7 +639,10 @@ Public Class MyListItem
             SetResourceReference(ForegroundProperty, "ColorBrush1")
         End If
         ColumnPaddingRight.Width = New GridLength(MinPaddingRight)
-        If CustomEventService.GetEventType(Me) = CustomEvent.EventType.打开帮助 AndAlso Not (Title <> "" AndAlso Info <> "") Then '#3266
+        '联网帮助允许省略 Info，点击后再下载；本地帮助仍自动补全标题和描述。
+        Dim IsOnlineHelp = CustomEventService.GetEventData(Me)?.StartsWithF("http", True) = True
+        If CustomEventService.GetEventType(Me) = CustomEvent.EventType.打开帮助 AndAlso
+           (Title = "" OrElse (Info = "" AndAlso Not IsOnlineHelp)) Then '#3266 #8947
             Try
                 Dim Entry As New HelpEntry(CustomEvent.GetAbsoluteUrls(CustomEventService.GetEventData(Me), CustomEventService.GetEventType(Me))(0))
                 Entry.SetToListItem(Me)

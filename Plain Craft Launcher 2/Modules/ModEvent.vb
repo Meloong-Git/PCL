@@ -347,7 +347,7 @@ Public Class CustomEvent
         '网页确认
         If RelativeUrl.StartsWithF("http", True) Then
             If RunInUi() Then
-                Throw New Exception("能打开联网帮助页面的 MyListItem 必须手动设置 Title、Info 属性！")
+                Throw New Exception("能打开联网帮助页面的 MyListItem 必须手动设置 Title 属性！")
             End If
             '获取文件名
             Dim RawFileName As String
