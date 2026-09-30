@@ -18,7 +18,7 @@ Public Module LocalResourceLoaders
                 Finally
                     RunInUiWait(Sub() If FrmInstanceMod IsNot Nothing Then FrmInstanceMod.Load.Text = "正在加载 Mod 列表")
                 End Try
-                FrmInstanceMod.LoaderRun(LoaderFolderRunType.UpdateOnly)
+                LoaderFolderRun(Loader, Loader.Input, LoaderFolderRunType.UpdateOnly)
             End If
 
             '获取 Mod 文件夹下的可用文件列表
