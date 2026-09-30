@@ -201,6 +201,12 @@ Public Class PageLaunchRight
         End If
     End Sub
 
+    Public Sub RefreshReplaceArguments()
+        If FrmMain.PageCurrent.Page <> FormMain.PageType.Launch Then Return
+        LoadedContentHash = Nothing
+        Refresh()
+    End Sub
+
     ''' <summary>
     ''' 清空主页缓存信息。
     ''' </summary>

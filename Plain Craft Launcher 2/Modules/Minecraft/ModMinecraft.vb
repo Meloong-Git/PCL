@@ -184,8 +184,10 @@ Public Module ModMinecraft
             If ReferenceEquals(_McInstanceSelectedLast, value) Then Return
             _McInstanceSelected = value '由于有可能是 Nothing，导致无法初始化，才得这样弄一圈
             _McInstanceSelectedLast = value
+            If value IsNot Nothing AndAlso Not value.IsLoaded Then value.Load()
             '更新 MC 文件夹所选取的 Minecraft 版本
             Logger.Info($"当前选择的 Minecraft 版本：{If(value?.PathVersion, "无")}")
+            RunInUi(AddressOf FrmLaunchRight.RefreshReplaceArguments)
             WriteIni(McFolderSelected & "PCL.ini", "Version", If(value?.Name, ""))
             If value Is Nothing Then Return
             '重置缓存的下载文件夹
