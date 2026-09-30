@@ -15,7 +15,8 @@
                     <StackPanel Orientation="Horizontal" Height="35">
                         <local:MyButton x:Name="BtnIntroWeb"   MinWidth="140" Text="转到 CurseForge" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
                         <local:MyButton x:Name="BtnIntroWiki"  MinWidth="140" Text="转到 MC 百科" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
-                        <local:MyButton x:Name="BtnIntroCopy"  MinWidth="140" Text="复制名称" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnIntroCopy"  MinWidth="140" Text="复制名称" Padding="13,0" Margin="0,0,20,0" HorizontalAlignment="Left"
+                                        ToolTip="左键复制英文名称&#x0a;右键复制译名（若有）" />
                     </StackPanel>
                 </StackPanel>
             </local:MyCard>

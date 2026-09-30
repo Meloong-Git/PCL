@@ -499,8 +499,13 @@ GroupDone:
     Private Sub BtnIntroWiki_Click(sender As Object, e As EventArgs) Handles BtnIntroWiki.Click
         OpenWebsite("https://www.mcmod.cn/class/" & Project.WikiId & ".html")
     End Sub
+    '#9090
     Private Sub BtnIntroCopy_Click(sender As Object, e As EventArgs) Handles BtnIntroCopy.Click
-        ClipboardSet(ResourceItem.LabTitle.Text & ResourceItem.LabTitleRaw.Text)
+        ClipboardSet(Project.RawName)
+    End Sub
+    Private Sub BtnIntroCopy_RightClick(sender As Object, e As MouseButtonEventArgs) Handles BtnIntroCopy.PreviewMouseRightButtonUp
+        ClipboardSet(Project.TranslatedName.BeforeFirst(" (").BeforeFirst(" - ").Trim)
+        e.Handled = True
     End Sub
 
     'Mod / 数据包 互相跳转
