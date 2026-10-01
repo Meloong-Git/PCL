@@ -99,12 +99,13 @@ Public Class ResourceSearcher
             Dim Address As String = $"https://api.modrinth.com/v2/search?limit={RESULT_PAGE_SIZE}&index=relevance"
             If Not String.IsNullOrEmpty(SearchText) Then Address += "&query=" & StringUtils.UrlEscape(SearchText)
             If Storage.ModrinthOffset > 0 Then Address += "&offset=" & Storage.ModrinthOffset
-            'facets=[["categories:'game-mechanics'"],["categories:'forge',categories:'fabric'"],["versions:1.19.3"],["project_type:mod"]]
+            'facets=[["categories:'game-mechanics'"],["loaders:forge","loaders:fabric"],["versions:1.19.3"],["project_type:mod"]]
             Dim Facets As New List(Of String)
             Facets.Add($"[""project_type:{Type.ToString.Lower}""]")
             If Not String.IsNullOrEmpty(Tag) Then Facets.Add($"[""categories:'{Tag.AfterLast("/")}'""]")
             If ModLoaders <> ModLoaders.None AndAlso Not IgnoreModLoaderFilter Then
-                Facets.Add($"[""categories:'{ModLoaders.Flags.Select(Function(f) f.ToString.Lower).Join("',categories:'")}'""]")
+                Dim LoaderFacets = ModLoaders.Flags.Select(Function(f) $"""loaders:{f.ToString.Lower}""").Join(",")
+                Facets.Add("[" & LoaderFacets & "]")
             End If
             If Not String.IsNullOrEmpty(GameVersion) Then Facets.Add($"[""versions:'{GameVersion}'""]")
             Address += "&facets=[" & String.Join(",", Facets) & "]"
