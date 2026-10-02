@@ -407,7 +407,7 @@ EndHint:
     Public FrmLoginMs As PageLoginMs
     Public FrmLoginMsSkin As PageLoginMsSkin
 
-    '版本设置页面声明
+    '实例设置页面声明
     Public FrmInstanceLeft As PageInstanceLeft
     Public FrmInstanceOverall As PageInstanceOverall
     Public FrmInstanceMod As PageInstanceMod

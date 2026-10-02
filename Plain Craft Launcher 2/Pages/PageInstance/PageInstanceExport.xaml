@@ -255,7 +255,7 @@
                         <local:MyCheckBox x:Name="CheckOptionsJava">
                             <local:MyCheckBox.Tag>
                                 <local:ExportOption 
-                                Title="版本文件夹中的 Java"
+                                Title="实例文件夹中的 Java"
                                 DefaultChecked="True" />
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>

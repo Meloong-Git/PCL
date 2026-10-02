@@ -2,7 +2,7 @@ Imports System.Windows.Threading
 
 Public Class PageLaunchLeft
 
-    '加载当前版本
+    '加载当前实例
     Private IsLoad As Boolean = False
     Private IsLoadFinished As Boolean = False
     Public Sub PageLaunchLeft_Loaded() Handles Me.Loaded
@@ -20,7 +20,7 @@ Public Class PageLaunchLeft
         AddHandler McFolderListLoader.LoadingStateChanged, AddressOf RefreshButtonsUI
         RefreshButtonsUI()
 
-        '加载版本
+        '加载实例
         RunInNewThread(
         Sub()
             '自动整合包安装：准备
@@ -62,27 +62,27 @@ Public Class PageLaunchLeft
                     End If
                 End Try
             End If
-            '确认 Minecraft 版本存在
+            '确认 Minecraft 实例存在
             Dim Selection As String = ReadIni(McFolderSelected & "PCL.ini", "Version")
             Dim Instance As McInstance = If(Selection = "", Nothing, New McInstance(Selection))
             If Instance Is Nothing OrElse Not Instance.PathVersion.StartsWithF(McFolderSelected) OrElse Not Instance.Check() Then
-                '无效的版本
-                Logger.Info($"当前选择的 Minecraft 版本无效：{If(Instance Is Nothing, "null", Instance.PathVersion)}", If(IsNothing(Instance), LogBehavior.None, LogBehavior.ToastIfDebug))
+                '无效的实例
+                Logger.Info($"当前选择的 Minecraft 实例无效：{If(Instance Is Nothing, "null", Instance.PathVersion)}", If(IsNothing(Instance), LogBehavior.None, LogBehavior.ToastIfDebug))
                 If Not McInstanceListLoader.State = LoadState.Finished Then LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\", WaitForExit:=True)
                 If Not McInstanceList.Any() OrElse McInstanceList.First.Value(0).Logo.Contains("RedstoneBlock") Then
                     Instance = Nothing
-                    Logger.Info("无可用 Minecraft 版本")
+                    Logger.Info("无可用 Minecraft 实例")
                 Else
                     Instance = McInstanceList.First.Value(0)
-                    Logger.Info($"自动选择 Minecraft 版本：{Instance.PathVersion}")
+                    Logger.Info($"自动选择 Minecraft 实例：{Instance.PathVersion}")
                 End If
             End If
             RunInUi(
             Sub()
-                McInstanceSelected = Instance '绕这一圈是为了避免 McVersionCheck 触发第二次版本改变
+                McInstanceSelected = Instance '绕这一圈是为了避免 McVersionCheck 触发第二次实例改变
                 IsLoadFinished = True
                 RefreshButtonsUI()
-                RefreshPage(False, False) '有可能选择的版本变化了，需要重新刷新
+                RefreshPage(False, False) '有可能选择的实例变化了，需要重新刷新
                 If McLoginAble() = "" Then McLoginLoader.Start() '自动登录
                 '用于自动化测试生成的程序是否可以正常运行
                 If Environment.CommandLine.Contains("--test") Then
@@ -294,7 +294,7 @@ Public Class PageLaunchLeft
         Dim LoginPageType As Integer
         If McInstanceSelected IsNot Nothing Then
             LoginPageType = Settings.Get(Of Integer)("VersionServerLogin", Instance:=McInstanceSelected)
-            '缓存当前版本的页面种类，下一次打开 McInstanceSelected 为空时才能加载出正确的页面
+            '缓存当前实例的页面种类，下一次打开 McInstanceSelected 为空时才能加载出正确的页面
             Settings.Set("LoginPageType", LoginPageType)
         Else
             LoginPageType = Settings.Get(Of Integer)("LoginPageType")
@@ -602,7 +602,7 @@ Finish:
 
 #End Region
 
-    '版本选择按钮
+    '实例选择按钮
     Private Sub BtnVersion_Click() Handles BtnVersion.Click
         If McLaunchLoader.State = LoadState.Loading Then Return
         FrmMain.PageChange(FormMain.PageType.InstanceSelect)
@@ -655,28 +655,28 @@ Finish:
         BtnLaunchState = CurrentState
         Select Case CurrentState
             Case 0
-                Logger.Info("启动按钮：正在加载 Minecraft 版本")
+                Logger.Info("启动按钮：正在加载 Minecraft 实例")
                 FrmLaunchLeft.BtnLaunch.Text = "正在加载"
                 FrmLaunchLeft.BtnLaunch.IsEnabled = False
                 FrmLaunchLeft.LabVersion.Text = "正在加载中，请稍候"
                 FrmLaunchLeft.BtnVersion.IsEnabled = False
                 FrmLaunchLeft.BtnMore.Visibility = Visibility.Collapsed
             Case 1
-                Logger.Info("启动按钮：无 Minecraft 版本，下载已禁用")
+                Logger.Info("启动按钮：无 Minecraft 实例，下载已禁用")
                 FrmLaunchLeft.BtnLaunch.Text = "启动游戏"
                 FrmLaunchLeft.BtnLaunch.IsEnabled = False
-                FrmLaunchLeft.LabVersion.Text = "未找到可用的游戏版本"
+                FrmLaunchLeft.LabVersion.Text = "未找到可用的游戏实例"
                 FrmLaunchLeft.BtnVersion.IsEnabled = True
                 FrmLaunchLeft.BtnMore.Visibility = Visibility.Collapsed
             Case 2
-                Logger.Info("启动按钮：无 Minecraft 版本，要求下载")
+                Logger.Info("启动按钮：无 Minecraft 实例，要求下载")
                 FrmLaunchLeft.BtnLaunch.Text = "下载游戏"
                 FrmLaunchLeft.BtnLaunch.IsEnabled = True
-                FrmLaunchLeft.LabVersion.Text = "未找到可用的游戏版本"
+                FrmLaunchLeft.LabVersion.Text = "未找到可用的游戏实例"
                 FrmLaunchLeft.BtnVersion.IsEnabled = True
                 FrmLaunchLeft.BtnMore.Visibility = Visibility.Collapsed
             Case 3
-                Logger.Info($"启动按钮：Minecraft 版本：{McInstanceSelected.PathVersion}")
+                Logger.Info($"启动按钮：Minecraft 实例：{McInstanceSelected.PathVersion}")
                 FrmLaunchLeft.BtnLaunch.Text = "启动游戏"
                 FrmLaunchLeft.BtnVersion.IsEnabled = True
                 FrmLaunchLeft.BtnLaunch.IsEnabled = True
@@ -694,7 +694,7 @@ ExitRefresh:
     Private Sub BtnCancel_Click() Handles BtnCancel.Click
         McLaunchCancel()
     End Sub
-    '版本设置按钮
+    '实例设置按钮
     Private Sub BtnMore_Click() Handles BtnMore.Click
         If McLaunchLoader.State = LoadState.Loading Then Return
         McInstanceSelected.Load()

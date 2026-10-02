@@ -17,7 +17,7 @@ Public Class ResourceVersion
     '描述性字段
 
     ''' <summary>
-    ''' 版本描述名。
+    ''' 实例描述名。
     ''' 并非文件名或版本号，是由上传者完全自定义的字段。
     ''' </summary>
     Public Display As String
@@ -40,7 +40,7 @@ Public Class ResourceVersion
     ''' </summary>
     Public ModLoaders As ModLoaders = ModLoaders.None
     ''' <summary>
-    ''' 支持的游戏版本列表。类型包括："26.1.5"，"26.1"，"26.1 预览版"，"1.18.5"，"1.18"，"1.18 预览版"，"21w15a"，"未知版本"。
+    ''' 支持的游戏版本列表。类型包括："26.1.5"，"26.1"，"26.1 预览版"，"1.18.5"，"1.18"，"1.18 预览版"，"21w15a"，"未知实例"。
     ''' </summary>
     Public GameVersions As List(Of String)
 
@@ -154,7 +154,7 @@ Public Class ResourceVersion
                     .GameVersions = .GameVersions.SortByComparison(AddressOf CompareVersionGE).ToList
                     If .ResourceType = ResourceTypes.ModPack Then .GameVersions = { .GameVersions(0)}.ToList '整合包理应只 “支持” 一个版本
                 Else
-                    .GameVersions = New List(Of String) From {"未知版本"}
+                    .GameVersions = New List(Of String) From {"未知实例"}
                 End If
                 'ModLoaders
                 .ModLoaders = ModLoaders.None
@@ -213,7 +213,7 @@ Public Class ResourceVersion
                 ElseIf RawVersions.Any(Function(v) v.RegexCheck("[0-9]{2}w[0-9]{2}[a-z]")) Then
                     .GameVersions = RawVersions.Where(Function(v) v.RegexCheck("[0-9]{2}w[0-9]{2}[a-z]")).ToList
                 Else
-                    .GameVersions = New List(Of String) From {"未知版本"}
+                    .GameVersions = New List(Of String) From {"未知实例"}
                 End If
 #End Region
             End If

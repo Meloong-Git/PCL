@@ -39,7 +39,7 @@
                 <StackPanel Margin="20,17">
                     <TextBlock Margin="0,0,0,9" HorizontalAlignment="Center" Text="尚未安装 Mod" FontSize="19" UseLayoutRounding="True" SnapsToDevicePixels="True" Foreground="{DynamicResource ColorBrush3}" />
                     <Rectangle HorizontalAlignment="Stretch" Height="2" Fill="{DynamicResource ColorBrush3}" />
-                    <TextBlock Margin="10,10,10,0" Text="你可以下载新的 Mod，或者从已经下载好的文件安装 Mod。&#xa;如果你已经安装了 Mod，可能是版本隔离设置有误，请在设置中调整版本隔离选项。" TextWrapping="Wrap" />
+                    <TextBlock Margin="10,10,10,0" Text="你可以下载新的 Mod，或者从已经下载好的文件安装 Mod。&#xa;如果你已经安装了 Mod，可能是实例隔离设置有误，请在设置中调整实例隔离选项。" TextWrapping="Wrap" />
                     <Grid Margin="15,20,0,5" Height="35" HorizontalAlignment="Center">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />

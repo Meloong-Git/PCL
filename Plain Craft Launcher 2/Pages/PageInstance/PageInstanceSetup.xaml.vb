@@ -7,7 +7,7 @@ Public Class PageInstanceSetup
         PanBack.ScrollToHome()
         RefreshRam(False)
 
-        '由于各个版本不同，每次都需要重新加载
+        '由于各个实例不同，每次都需要重新加载
         AniControlEnabled += 1
         Reload()
         AniControlEnabled -= 1
@@ -26,7 +26,7 @@ Public Class PageInstanceSetup
             Try
                 If String.IsNullOrWhiteSpace(Str) Then Return "不能为空"
                 Dim Range = ValueRange(Of Version).FromString(Str, Function(s) StringUtils.ParseVersionWithDefaults(s))
-                If Range.IsEmpty Then Return "范围下限的版本号比上限更高，导致该范围无法匹配到任何版本"
+                If Range.IsEmpty Then Return "范围下限的版本号比上限更高，导致该范围无法匹配到任何实例"
                 If Range.HasLower AndAlso Range.Lower.Major <= 1 AndAlso (Range.Lower.Minor > 0 OrElse Range.Lower.Build > 0 OrElse Range.Lower.Revision > 0) Then Return "不应使用 1.x 格式进行匹配（例如，若想匹配 Java 17，应填写 17 而非 1.17）"
                 If Range.HasUpper AndAlso Range.Upper.Major <= 1 AndAlso (Range.Upper.Minor > 0 OrElse Range.Upper.Build > 0 OrElse Range.Upper.Revision > 0) Then Return "不应使用 1.x 格式进行匹配（例如，若想匹配 Java 17，应填写 17 而非 1.17）"
                 If Range.HasUpper AndAlso Range.Upper.Major <= 4 Then Return "该范围所要求的 Java 版本过低"
@@ -70,7 +70,7 @@ Public Class PageInstanceSetup
             OnVersionRamTypeChanged(Settings.Get(Of Integer)("VersionRamType", Instance:=PageInstanceLeft.Instance))
 
         Catch ex As Exception
-            Logger.Error(ex, "重载版本独立设置时出错")
+            Logger.Error(ex, "重载实例独立设置时出错")
         End Try
     End Sub
 
@@ -86,10 +86,10 @@ Public Class PageInstanceSetup
             Configs.JavaForced.Reset(PageInstanceLeft.Instance.Config)
             JavaListRefreshWorker.Start()
 
-            Logger.Info("已初始化版本独立设置")
-            Hint("已初始化版本独立设置！", HintType.Green, False)
+            Logger.Info("已初始化实例独立设置")
+            Hint("已初始化实例独立设置！", HintType.Green, False)
         Catch ex As Exception
-            Logger.Error(ex, "初始化版本独立设置失败", LogBehavior.Alert)
+            Logger.Error(ex, "初始化实例独立设置失败", LogBehavior.Alert)
         End Try
 
         Reload()
@@ -247,7 +247,7 @@ Public Class PageInstanceSetup
         ' 修改下方代码时需要一并修改 PageSetupLaunch
         '------------------------------------------
 
-        '使用当前版本的设置
+        '使用当前实例的设置
         Dim RamGive As Double
         If Settings.Get(Of Integer)("VersionRamType", Instance:=Instance) = 0 Then
             '自动配置
@@ -259,7 +259,7 @@ Public Class PageInstanceSetup
             Dim RamTarget3 As Double '安装过多附加组件需要的内存
             If Instance IsNot Nothing AndAlso Not Instance.IsLoaded Then Instance.Load()
             If Instance IsNot Nothing AndAlso Instance.Modable Then
-                '可安装 Mod 的版本
+                '可安装 Mod 的实例
                 Dim ModDir = DirectoryUtils.GetInfo(Instance.PathIndie & "mods\")
                 Dim ModCount As Integer = If(ModDir.Exists, ModDir.GetFiles.Count(Function(f) {".jar", ".zip", ".litemod"}.Contains(f.Extension.Lower)), 0)
                 RamMininum = 0.5 + ModCount / 150
@@ -323,8 +323,8 @@ PreFin:
 
 #Region "服务器"
 
-    '当第三方登录更改时，清空版本列表缓存以更新版本分类
-    'TODO: 这会不会导致拖拽改变第三方登录的时候版本列表缓存没有更新？
+    '当第三方登录更改时，清空实例列表缓存以更新实例分类
+    'TODO: 这会不会导致拖拽改变第三方登录的时候实例列表缓存没有更新？
     Public Shared Sub OnVersionServerLoginChanged(Type As Integer)
         If FrmInstanceSetup Is Nothing Then Return
         WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "")
@@ -407,10 +407,10 @@ PreFin:
                     HintArgumentJava.Theme = MyHint.Themes.Blue
                 ElseIf JavaWorker.LastResult Is Nothing Then
                     If ComboArgumentJava.SelectedIndex = 0 Then
-                        HintArgumentJava.Text = $"你的电脑上没有可供该版本使用的 Java，PCL 会在启动游戏时自动下载。"
+                        HintArgumentJava.Text = $"你的电脑上没有可供该实例使用的 Java，PCL 会在启动游戏时自动下载。"
                         HintArgumentJava.Theme = MyHint.Themes.Yellow
                     Else
-                        HintArgumentJava.Text = $"该版本的版本文件夹中没有发现任何 Java！{vbCrLf}请点击此处打开版本文件夹，然后将 Java 文件夹复制进去。"
+                        HintArgumentJava.Text = $"该实例的文件夹中没有发现任何 Java！{vbCrLf}请点击此处打开实例文件夹，然后将 Java 文件夹复制进去。"
                         HintArgumentJava.Theme = MyHint.Themes.Red
                     End If
                 Else
@@ -531,12 +531,12 @@ PreFin:
 
 #End Region
 
-    '版本隔离
+    '实例隔离
     Private Sub ComboArgumentIndieV2_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboArgumentIndieV2.SelectionChanged
         If AniControlEnabled <> 0 Then Return
         Static IsReverting As Boolean = False
         If IsReverting Then Return
-        If MyMsgBox("调整版本隔离设置后，你需要游戏存档、Mod 等文件手动迁移到新的游戏文件夹中。" & vbCrLf &
+        If MyMsgBox("调整实例隔离设置后，你需要游戏存档、Mod 等文件手动迁移到新的游戏文件夹中。" & vbCrLf &
                     "如果发现存档消失，把这项设置改回来就能恢复。" & vbCrLf &
                     "如果你不会迁移存档，不建议修改这项设置！",
                     "警告", "我知道我在做什么", "取消", IsWarn:=True) = 2 Then

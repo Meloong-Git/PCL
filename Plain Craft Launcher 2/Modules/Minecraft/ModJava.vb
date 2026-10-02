@@ -14,7 +14,7 @@ Public Module ModJava
                     Dim OldJavaList = Settings.Get(Of String)("LaunchArgumentJavaAll").DeserializeJson(Of JArray).
                                       Select(Function(JavaObject) New Java(JavaObject("Path").ToString)).ToList()
                     OldJavaList = JavaUtils.SortAsync(OldJavaList).Run()
-                    Logger.Info($"已从老版本设置中发现 {OldJavaList.Count} 个 Java")
+                    Logger.Info($"已从老实例设置中发现 {OldJavaList.Count} 个 Java")
                     '强制选择的 Java
                     Dim SelectedJavaSetting = Settings.Get(Of String)("LaunchArgumentJavaSelect")
                     Dim SelectedJava = If(SelectedJavaSetting.StartsWithF("{"), SelectedJavaSetting.DeserializeJson(Of JObject)()("Path").ToString, "")
@@ -22,7 +22,7 @@ Public Module ModJava
                     If Match IsNot Nothing Then
                         OldJavaList.Remove(Match)
                         OldJavaList.Insert(0, Match)
-                        Logger.Info($"已将老版本设置中强制选择的 Java 置顶：{Match}")
+                        Logger.Info($"已将老实例设置中强制选择的 Java 置顶：{Match}")
                     End If
                     Configs.JavaList.Set(New ConcurrentList(Of Java)(OldJavaList))
                     '完成迁移
@@ -127,13 +127,13 @@ Public Module ModJava
     ''' </summary>
     Public Function GetJavaRequirement(Instance As McInstance) As (Range As ValueRange(Of Version), RecommendedComponent As String)
 
-        '版本设置已经强制指定了 Java 版本要求
+        '实例设置已经强制指定了 Java 版本要求
         If Settings.Get(Of Integer)("VersionArgumentJavaV2", Instance) = 1 Then
             Try
                 Dim Range = ValueRange(Of Version).FromString(Settings.Get(Of String)("VersionArgumentJavaRange", Instance), Function(s) StringUtils.ParseVersionWithDefaults(s))
                 Return (Range, Nothing)
             Catch ex As Exception
-                Logger.Warn($"版本设置中指定的 Java 版本范围有误（{Settings.Get(Of String)("VersionArgumentJavaRange", Instance)}），这可能是因为首次修改此设置，尚未初始化")
+                Logger.Warn($"实例设置中指定的 Java 版本范围有误（{Settings.Get(Of String)("VersionArgumentJavaRange", Instance)}），这可能是因为首次修改此设置，尚未初始化")
             End Try
         End If
 
@@ -144,7 +144,7 @@ Public Module ModJava
         Sub(Constraint As ValueRange(Of Version))
             JavaRange = JavaRange?.Intersect(Constraint)
             If JavaRange.IsEmpty Then
-                Logger.Warn($"Java 版本要求冲突，若启动失败请在版本设置手动指定 Java：当前追加的要求为 {Constraint}，游戏版本为 {Instance.VersionDisplayName}", LogBehavior.Toast)
+                Logger.Warn($"Java 版本要求冲突，若启动失败请在实例设置手动指定 Java：当前追加的要求为 {Constraint}，游戏版本为 {Instance.VersionDisplayName}", LogBehavior.Toast)
                 JavaRange = Constraint
             End If
         End Sub
@@ -251,7 +251,7 @@ Public Module ModJava
                 '1.18+：Java 17+
                 AddConstraint(ValueRange(Of Version).AtLeast(New Version(17, 0)))
             End If
-            If Instance.Version.Fabric <> "未知版本" AndAlso
+            If Instance.Version.Fabric <> "未知实例" AndAlso
                CompareVersion(Instance.Version.Fabric, "0.17.0") < 0 Then
                 'Fabric Loader 0.16.x 及更早版本的 Mixin/ASM 不兼容 Java 25
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(25, 0)))
@@ -284,19 +284,19 @@ Public Module ModJava
             Dim Instance As McInstance = If(Target.Is(Of McInstance), Target.As(Of McInstance), Nothing)
             Select Case If(Instance Is Nothing, 0, Settings.Get(Of Integer)("VersionArgumentJavaV2", Instance))
 
-                Case 2 '============================= 使用版本文件夹中的 Java =============================
+                Case 2 '============================= 使用实例文件夹中的 Java =============================
 
-                    '查找版本文件夹下的 Java
-                    Logger.Info($"版本设置要求使用版本文件夹中的 Java：{Instance.PathVersion}")
+                    '查找实例文件夹下的 Java
+                    Logger.Info($"实例设置要求使用实例文件夹中的 Java：{Instance.PathVersion}")
                     Dim JavaFound = JavaUtils.SearchFoldersAsync(True, {Instance.PathVersion}, c, p?.SplitTo(1)).Run().FirstOrDefault()
                     If JavaFound IsNot Nothing Then
-                        Logger.Info($"已发现版本文件夹中的 Java：{JavaFound}")
+                        Logger.Info($"已发现实例文件夹中的 Java：{JavaFound}")
                         Return JavaFound
                     End If
                     '未能找到
                     If TryFixOrHint Then
                         SwitchToInstanceSetup(Instance)
-                        MyMsgBox($"该版本的版本设置选择了 {vbLQ}使用版本文件夹中的 Java{vbRQ}，但版本文件夹里没能找到 Java。{vbCrLf}请先修改启动选项中的 Java 设置，或在版本文件夹中放一个 Java，然后再试。",
+                        MyMsgBox($"该实例的实例设置选择了 {vbLQ}使用实例文件夹中的 Java{vbRQ}，但实例文件夹里没能找到 Java。{vbCrLf}请先修改启动选项中的 Java 设置，或在实例文件夹中放一个 Java，然后再试。",
                             "未找到 Java", IsWarn:=True, ForceWait:=True)
                     End If
                     Return Nothing
@@ -304,11 +304,11 @@ Public Module ModJava
                 Case 3 '=============================== 强制指定特定 Java ===============================
 
                     Dim ChosenJava = Configs.JavaForced.Get(Instance.Config)
-                    Logger.Info($"版本设置中强制指定的 Java：{Instance.PathVersion} → {ChosenJava}")
+                    Logger.Info($"实例设置中强制指定的 Java：{Instance.PathVersion} → {ChosenJava}")
                     If ChosenJava Is Nothing Then
                         If TryFixOrHint Then
                             SwitchToInstanceSetup(Instance)
-                            MyMsgBox($"该版本的版本设置选择了 {vbLQ}使用指定的 Java{vbRQ}，但还没有指定任何 Java。{vbCrLf}请先选择你想使用的 Java，然后再试。",
+                            MyMsgBox($"该实例的实例设置选择了 {vbLQ}使用指定的 Java{vbRQ}，但还没有指定任何 Java。{vbCrLf}请先选择你想使用的 Java，然后再试。",
                                 "未选择 Java", IsWarn:=True, ForceWait:=True)
                         End If
                         p?.Skip() : Return Nothing '<==== 设置中未指定 Java
@@ -318,7 +318,7 @@ Public Module ModJava
                         UpdateJavaLists()
                         If TryFixOrHint Then
                             SwitchToInstanceSetup(Instance)
-                            Logger.Error("版本设置中指定的 Java 不在 Java 列表中，请重新选择一个 Java！", LogBehavior.Alert)
+                            Logger.Error("实例设置中指定的 Java 不在 Java 列表中，请重新选择一个 Java！", LogBehavior.Alert)
                         End If
                         p?.Skip() : Return Nothing '<==== 设置中指定的 Java 不在列表中
                     End If
@@ -327,9 +327,9 @@ Public Module ModJava
                         UpdateJavaLists()
                         If TryFixOrHint Then
                             SwitchToInstanceSetup(Instance)
-                            Logger.Error("版本设置中指定的 Java 已无法使用，请重新选择一个 Java，然后再试。", LogBehavior.Alert)
+                            Logger.Error("实例设置中指定的 Java 已无法使用，请重新选择一个 Java，然后再试。", LogBehavior.Alert)
                         Else
-                            Logger.Error("版本设置中指定的 Java 已无法使用，请重新选择一个 Java！", LogBehavior.Toast)
+                            Logger.Error("实例设置中指定的 Java 已无法使用，请重新选择一个 Java！", LogBehavior.Toast)
                         End If
                         p?.Finish() : Return Nothing '<==== 指定的 Java 存在异常
                     End If
@@ -511,8 +511,8 @@ Public Module ModJava
 NoForcedJava:
             Dim JavaFound = JavaUtils.SearchFoldersAsync(True, {Instance.PathVersion}, c, p?.SplitTo(1)).Run()
             If JavaFound.Any() Then
-                '从版本文件夹中发现了 Java
-                Logger.Info($"在版本文件夹中发现了 Java，将版本独立设置改为优先使用版本文件夹的 Java：{JavaFound}")
+                '从实例文件夹中发现了 Java
+                Logger.Info($"在实例文件夹中发现了 Java，将版本独立设置改为优先使用实例文件夹的 Java：{JavaFound}")
                 Settings.Set("VersionArgumentJavaV2", 2, Instance)
             Else
                 '自动选择

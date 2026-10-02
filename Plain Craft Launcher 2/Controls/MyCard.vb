@@ -148,11 +148,11 @@ Public Class MyCard
                     '不能使用 AddressOf，这导致了 #535，原因完全不明，疑似是编译器 Bug
                     Stack.Children.Add(McDownloadListItem(Data, Sub(sender, e) FrmDownloadInstall.MinecraftSelected(sender, e), False))
                 Case 8
-                    '若存在重复的版本名，则显示文件名而非版本名（#1344）
+                    '若存在重复的实例名，则显示文件名而非实例名（#1344）
                     Stack.Children.Add(CType(Data, ResourceVersion).ToListItem(
                         AddressOf FrmDownloadResourceDetail.Save_Click, IsBadDisplay:=HasDuplicates))
                 Case 9
-                    '若存在重复的版本名，则显示文件名而非版本名（#1344）
+                    '若存在重复的实例名，则显示文件名而非实例名（#1344）
                     Stack.Children.Add(CType(Data, ResourceVersion).ToListItem(
                         AddressOf FrmDownloadResourceDetail.Install_Click, AddressOf FrmDownloadResourceDetail.Save_Click, IsBadDisplay:=HasDuplicates))
                 Case 10
