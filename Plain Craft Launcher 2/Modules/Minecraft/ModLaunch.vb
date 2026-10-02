@@ -6,7 +6,7 @@ Public Module ModLaunch
     Public Class McLaunchOptions
         ''' <summary>
         ''' 强制指定在启动后进入的服务器 IP。
-        ''' 默认值：Nothing。使用版本设置的值。
+        ''' 默认值：Nothing。使用实例设置的值。
         ''' </summary>
         Public ServerIp As String = Nothing
         ''' <summary>
@@ -15,7 +15,7 @@ Public Module ModLaunch
         ''' </summary>
         Public SaveBatch As String = Nothing
         ''' <summary>
-        ''' 强行指定启动的 MC 版本。
+        ''' 强行指定启动的 MC 实例。
         ''' 默认值：Nothing。使用 McInstanceCurrent。
         ''' </summary>
         Public Instance As McInstance = Nothing
@@ -36,29 +36,29 @@ Public Module ModLaunch
             Hint("已有游戏正在启动中！", HintType.Red)
             Return False
         End If
-        '强制切换需要启动的版本
+        '强制切换需要启动的实例
         If CurrentLaunchOptions.Instance IsNot Nothing AndAlso McInstanceSelected <> CurrentLaunchOptions.Instance Then
-            McLaunchLog("在启动前切换到版本 " & CurrentLaunchOptions.Instance.Name)
-            '检查版本是否存在
+            McLaunchLog("在启动前切换到实例 " & CurrentLaunchOptions.Instance.Name)
+            '检查实例是否存在
             Try
                 CurrentLaunchOptions.Instance.GetJsonPath()
             Catch
-                Hint($"无法启动 {CurrentLaunchOptions.Instance.Name}：当前 Minecraft 文件夹中尚未安装该版本！", HintType.Red)
+                Hint($"无法启动 {CurrentLaunchOptions.Instance.Name}：当前 Minecraft 文件夹中尚未安装该实例！", HintType.Red)
                 Return False
             End Try
-            '检查版本
+            '检查实例
             CurrentLaunchOptions.Instance.Load()
             If CurrentLaunchOptions.Instance.State = McInstanceState.Error Then
                 Hint($"无法启动 {CurrentLaunchOptions.Instance.Name}：{CurrentLaunchOptions.Instance.Info}", HintType.Red)
                 Return False
             End If
-            '切换版本
+            '切换实例
             McInstanceSelected = CurrentLaunchOptions.Instance
             FrmLaunchLeft.RefreshButtonsUI()
             FrmLaunchLeft.RefreshPage(False, False)
         End If
         FrmMain.AprilGiveup()
-        '禁止进入版本选择页面（否则就可以在启动中切换 McInstanceSelected 了）
+        '禁止进入实例选择页面（否则就可以在启动中切换 McInstanceSelected 了）
         FrmMain.PageStack = FrmMain.PageStack.Where(Function(p) p.Page <> FormMain.PageType.InstanceSelect).ToList
         '实际启动加载器
         McLaunchLoader.Start(Options, IsForceRestart:=True)
@@ -246,8 +246,8 @@ NextInner:
         '检查路径
         If McInstanceSelected.PathIndie.Contains("!") OrElse McInstanceSelected.PathIndie.Contains(";") Then Throw New Exception("游戏路径中不可包含 ! 或 ;（" & McInstanceSelected.PathIndie & "）")
         If McInstanceSelected.PathVersion.Contains("!") OrElse McInstanceSelected.PathVersion.Contains(";") Then Throw New Exception("游戏路径中不可包含 ! 或 ;（" & McInstanceSelected.PathVersion & "）")
-        '检查版本
-        If McInstanceSelected Is Nothing Then Throw New Exception("未选择 Minecraft 版本！")
+        '检查实例
+        If McInstanceSelected Is Nothing Then Throw New Exception("未选择 Minecraft 实例！")
         McInstanceSelected.Load()
         If McInstanceSelected.State = McInstanceState.Error Then Throw New Exception("Minecraft 存在问题：" & McInstanceSelected.Info)
         '检查输入信息
@@ -2091,7 +2091,7 @@ IgnoreCustomSkin:
             End Try
         End If
         If CustomCommandVersion <> "" Then
-            McLaunchLog("正在执行版本自定义命令：" & CustomCommandVersion)
+            McLaunchLog("正在执行实例自定义命令：" & CustomCommandVersion)
             Dim CustomProcess As Process = Nothing
             Try
                 CustomProcess = StartProcess(New ProcessStartInfo With {
@@ -2107,7 +2107,7 @@ IgnoreCustomSkin:
                     Loop
                 End If
             Catch ex As Exception
-                Logger.Error(ex, "执行版本自定义命令失败", LogBehavior.Toast)
+                Logger.Error(ex, "执行实例自定义命令失败", LogBehavior.Toast)
             Finally
                 If CustomProcess IsNot Nothing AndAlso Not CustomProcess.HasExited AndAlso Loader.IsCanceled Then
                     McLaunchLog("由于取消启动，已强制结束自定义命令 CMD 进程") '#1183
@@ -2177,8 +2177,8 @@ IgnoreCustomSkin:
         McLaunchLog("版本继承：" & If(McInstanceSelected.InheritName = "", "无", McInstanceSelected.InheritName))
         McLaunchLog("分配的内存：" & PageInstanceSetup.GetRam(McInstanceSelected) & " GB（" & Math.Round(PageInstanceSetup.GetRam(McInstanceSelected) * 1024) & " MB）")
         McLaunchLog("MC 文件夹：" & McFolderSelected)
-        McLaunchLog("版本文件夹：" & McInstanceSelected.PathVersion)
-        McLaunchLog("版本隔离：" & (McInstanceSelected.PathIndie = McInstanceSelected.PathVersion))
+        McLaunchLog("实例文件夹：" & McInstanceSelected.PathVersion)
+        McLaunchLog("实例隔离：" & (McInstanceSelected.PathIndie = McInstanceSelected.PathVersion))
         McLaunchLog("HMCL 格式：" & McInstanceSelected.IsHmclFormatJson)
         McLaunchLog("Java 信息：" & If(McLaunchJavaSelected IsNot Nothing, McLaunchJavaSelected.ToString, "无可用 Java"))
         McLaunchLog("Natives 文件夹：" & GetNativesFolder())

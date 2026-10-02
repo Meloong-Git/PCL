@@ -12,14 +12,14 @@ Public Class FormMain
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
             If LastVersion < 408 Then 'Release 2.13.1.1
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：版本设置中，添加打开截图文件夹的快捷方式"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：实例设置中，添加打开截图文件夹的快捷方式"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：导出整合包时，可以勾选导出光影设置文件"))
                 FeatureCount += 23
                 BugCount += 28
             End If
             If LastVersion < 406 Then 'Release 2.13.0.1
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：重做 Java 管理与相关设置，允许调整 Java 优先级、指定 Java 版本范围等"))
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：导出整合包时允许自动导出版本文件夹中的 Java"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：导出整合包时允许自动导出实例文件夹中的 Java"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：重做弹出提示的样式以及动画，以更符合现代 UI 审美"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：可能无法安装 OptiFine 26.1.2"))
                 FeatureCount += 35
@@ -99,7 +99,7 @@ Public Class FormMain
                 BugCount += 6
             End If
             If LastVersion < 409 Then 'Snapshot 2.13.1.0
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：版本设置中，添加打开截图文件夹的快捷方式"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：实例设置中，添加打开截图文件夹的快捷方式"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：导出整合包时，可以勾选导出光影设置文件"))
                 FeatureCount += 21
                 BugCount += 22
@@ -108,7 +108,7 @@ Public Class FormMain
                 If LastVersion = 405 Then
                     FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：使用部分主页预设时崩溃"))
                     FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法删除部分文件夹"))
-                    FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：版本设置中指定的 Java 无法被保存"))
+                    FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：实例设置中指定的 Java 无法被保存"))
                     FeatureCount += 1
                     BugCount += 3
                 End If
@@ -116,7 +116,7 @@ Public Class FormMain
             End If
             If LastVersion < 405 Then 'Snapshot 2.13.0.0
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：重做 Java 管理与相关设置，允许调整 Java 优先级、指定 Java 版本范围等"))
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：导出整合包时允许自动导出版本文件夹中的 Java"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：导出整合包时允许自动导出实例文件夹中的 Java"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：重做弹出提示的样式以及动画，以更符合现代 UI 审美"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：可能无法安装 OptiFine 26.1.2"))
                 FeatureCount += 35
@@ -160,7 +160,7 @@ Public Class FormMain
             End If
             If LastVersion < 386 Then 'Snapshot 2.12.6
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：Minecraft 使用 Java 25+ 时的一个性能问题"))
-                If LastVersion = 384 OrElse LastVersion = 385 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法正常重命名游戏版本"))
+                If LastVersion = 384 OrElse LastVersion = 385 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法正常重命名游戏实例"))
                 If LastVersion = 385 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法显示 Modrinth 整合包的版本列表"))
                 BugCount += 1
             End If
@@ -196,7 +196,7 @@ Public Class FormMain
             End If
             If LastVersion < 378 Then 'Snapshot 2.12.1
                 If LastVersion >= 377 Then
-                    FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：在版本列表中存在 OptiFine 时可能无法加载版本列表"))
+                    FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：在实例列表中存在 OptiFine 时可能无法加载实例列表"))
                     BugCount += 2
                 End If
             End If
@@ -276,16 +276,16 @@ Public Class FormMain
             '触发降级
             DowngradeSub(LastVersion)
         End If
-        '版本隔离设置迁移
+        '实例隔离设置迁移
         If Not Settings.HasSaved("LaunchArgumentIndieV2") Then
             If Settings.HasSaved("LaunchArgumentIndie") Then
-                Logger.Info("从老 PCL 迁移版本隔离")
+                Logger.Info("从老 PCL 迁移实例隔离")
                 Settings.Set("LaunchArgumentIndieV2", Settings.Get(Of Integer)("LaunchArgumentIndie"))
             ElseIf HasIniKey("Setup", "LaunchVersionSelect") Then
-                Logger.Info("从老 PCL 升级，但此前未调整版本隔离，使用老的版本隔离默认值")
+                Logger.Info("从老 PCL 升级，但此前未调整实例隔离，使用老的实例隔离默认值")
                 Settings.Set("LaunchArgumentIndieV2", Settings.GetDefault("LaunchArgumentIndie"))
             Else
-                Logger.Info("全新的 PCL，使用新的版本隔离默认值")
+                Logger.Info("全新的 PCL，使用新的实例隔离默认值")
                 Settings.Set("LaunchArgumentIndieV2", Settings.GetDefault("LaunchArgumentIndieV2"))
             End If
         End If
@@ -811,7 +811,7 @@ Public Class FormMain
                 TriggerPageBack()
             End If
         End If
-        '更改隐藏版本可见性
+        '更改隐藏实例可见性
         If e.Key = Key.F11 AndAlso PageCurrent = FormMain.PageType.InstanceSelect Then
             FrmSelectRight.ShowHidden = Not FrmSelectRight.ShowHidden
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
@@ -872,7 +872,7 @@ Public Class FormMain
                 '更新当前选用的 Java
                 PageInstanceLeft.ReloadCurrentJava()
             ElseIf PageCurrent = PageType.InstanceSelect Then
-                '版本选择
+                '实例选择
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\")
             End If
         Catch ex As Exception
@@ -955,8 +955,8 @@ Public Class FormMain
                         End If
                         If AuthlibServer = "https://littleskin.cn/api/yggdrasil" Then
                             'LittleSkin
-                            If MyMsgBox($"是否要在版本 {Target.Name} 中开启 LittleSkin 登录？" & vbCrLf &
-                                        "你可以在 版本设置 → 设置 → 服务器选项 中修改登录方式。", "第三方登录开启确认", "确定", "取消") = 2 Then
+                            If MyMsgBox($"是否要在实例 {Target.Name} 中开启 LittleSkin 登录？" & vbCrLf &
+                                        "你可以在 实例设置 → 设置 → 服务器选项 中修改登录方式。", "第三方登录开启确认", "确定", "取消") = 2 Then
                                 Return
                             End If
                             Settings.Set("VersionServerLogin", 4, Instance:=Target)
@@ -965,9 +965,9 @@ Public Class FormMain
                             Settings.Set("VersionServerAuthName", "LittleSkin 登录", Instance:=Target)
                         Else
                             '第三方 Authlib 服务器
-                            If MyMsgBox($"是否要在版本 {Target.Name} 中开启第三方登录？" & vbCrLf &
+                            If MyMsgBox($"是否要在实例 {Target.Name} 中开启第三方登录？" & vbCrLf &
                                         $"登录服务器：{AuthlibServer}" & vbCrLf & vbCrLf &
-                                        "你可以在 版本设置 → 设置 → 服务器选项 中修改登录方式。", "第三方登录开启确认", "确定", "取消") = 2 Then
+                                        "你可以在 实例设置 → 设置 → 服务器选项 中修改登录方式。", "第三方登录开启确认", "确定", "取消") = 2 Then
                                 Return
                             End If
                             Settings.Set("VersionServerLogin", 4, Instance:=Target)
@@ -1183,7 +1183,7 @@ Public Class FormMain
         ''' </summary>
         Other = 4
         ''' <summary>
-        ''' 版本选择。这是一个副页面。
+        ''' 实例选择。这是一个副页面。
         ''' </summary>
         InstanceSelect = 5
         ''' <summary>
@@ -1191,7 +1191,7 @@ Public Class FormMain
         ''' </summary>
         TaskManager = 6
         ''' <summary>
-        ''' 版本设置。这是一个副页面。
+        ''' 实例设置。这是一个副页面。
         ''' </summary>
         InstanceSetup = 7
         ''' <summary>
@@ -1235,11 +1235,11 @@ Public Class FormMain
     Private Function PageNameGet(Stack As PageStackData) As String
         Select Case Stack.Page
             Case PageType.InstanceSelect
-                Return "版本选择"
+                Return "实例选择"
             Case PageType.TaskManager
                 Return "任务管理"
             Case PageType.InstanceSetup
-                Return "版本设置 - " & If(PageInstanceLeft.Instance Is Nothing, "未知版本", PageInstanceLeft.Instance.Name)
+                Return "实例设置 - " & If(PageInstanceLeft.Instance Is Nothing, "未知实例", PageInstanceLeft.Instance.Name)
             Case PageType.ResourceDetail
                 Return CType(Stack.Additional(0), ResourceProject).TranslatedName
             Case PageType.HelpDetail
@@ -1455,7 +1455,7 @@ Public Class FormMain
                 Case PageType.Other '更多
                     If FrmOtherLeft Is Nothing Then FrmOtherLeft = New PageOtherLeft
                     PageChangeAnim(FrmOtherLeft, FrmOtherLeft.PageGet(SubType))
-                Case PageType.InstanceSelect '版本选择
+                Case PageType.InstanceSelect '实例选择
                     If FrmSelectLeft Is Nothing Then FrmSelectLeft = New PageSelectLeft
                     If FrmSelectRight Is Nothing Then FrmSelectRight = New PageSelectRight
                     PageChangeAnim(FrmSelectLeft, FrmSelectRight)
@@ -1463,7 +1463,7 @@ Public Class FormMain
                     If FrmSpeedLeft Is Nothing Then FrmSpeedLeft = New PageSpeedLeft
                     If FrmSpeedRight Is Nothing Then FrmSpeedRight = New PageSpeedRight
                     PageChangeAnim(FrmSpeedLeft, FrmSpeedRight)
-                Case PageType.InstanceSetup '版本设置
+                Case PageType.InstanceSetup '实例设置
                     If FrmInstanceLeft Is Nothing Then FrmInstanceLeft = New PageInstanceLeft
                     PageChangeAnim(FrmInstanceLeft, FrmInstanceLeft.PageGet(SubType))
                 Case PageType.ResourceDetail '社区资源详情

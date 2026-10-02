@@ -16,7 +16,7 @@ Public Class PageSelectRight
 
     '窗口属性
     ''' <summary>
-    ''' 是否显示隐藏的 Minecraft 版本。
+    ''' 是否显示隐藏的 Minecraft 实例。
     ''' </summary>
     Public ShowHidden As Boolean = False
 
@@ -28,13 +28,13 @@ Public Class PageSelectRight
             PanMain.Children.Clear()
 
             For Each Card As KeyValuePair(Of McInstanceCardType, List(Of McInstance)) In McInstanceList.ToArray
-                '确认是否为隐藏版本显示状态
+                '确认是否为隐藏实例显示状态
                 If Card.Key = McInstanceCardType.Hidden Xor ShowHidden Then Continue For
 #Region "确认卡片名称"
                 Dim CardName As String = ""
                 Select Case Card.Key
                     Case McInstanceCardType.OriginalLike
-                        CardName = "常规版本"
+                        CardName = "常规实例"
                     Case McInstanceCardType.API
                         Dim IsForgeExists As Boolean = False
                         Dim IsNeoForgeExists As Boolean = False
@@ -49,24 +49,24 @@ Public Class PageSelectRight
                         If If(IsLiteExists, 1, 0) + If(IsForgeExists, 1, 0) + If(IsFabricExists, 1, 0) + If(IsNeoForgeExists, 1, 0) > 1 Then
                             CardName = "可安装 Mod"
                         ElseIf IsForgeExists Then
-                            CardName = "Forge 版本"
+                            CardName = "Forge 实例"
                         ElseIf IsNeoForgeExists Then
-                            CardName = "NeoForge 版本"
+                            CardName = "NeoForge 实例"
                         ElseIf IsLiteExists Then
-                            CardName = "LiteLoader 版本"
+                            CardName = "LiteLoader 实例"
                         Else
-                            CardName = "Fabric 版本"
+                            CardName = "Fabric 实例"
                         End If
                     Case McInstanceCardType.Error
-                        CardName = "错误的版本"
+                        CardName = "错误的实例"
                     Case McInstanceCardType.Hidden
-                        CardName = "隐藏的版本"
+                        CardName = "隐藏的实例"
                     Case McInstanceCardType.Rubbish
-                        CardName = "不常用版本"
+                        CardName = "不常用实例"
                     Case McInstanceCardType.Star
                         CardName = "收藏夹"
                     Case McInstanceCardType.Fool
-                        CardName = "愚人节版本"
+                        CardName = "愚人节实例"
                     Case Else
                         Throw New ArgumentException("未知的卡片种类（" & Card.Key & "）")
                 End Select
@@ -96,12 +96,12 @@ Public Class PageSelectRight
                 PanEmpty.Visibility = Visibility.Visible
                 PanBack.Visibility = Visibility.Collapsed
                 If ShowHidden Then
-                    LabEmptyTitle.Text = "无隐藏版本"
-                    LabEmptyContent.Text = "没有版本被隐藏，你可以在版本设置的版本分类选项中隐藏版本。" & vbCrLf & "再次按下 F11 即可退出隐藏版本查看模式。"
+                    LabEmptyTitle.Text = "无隐藏实例"
+                    LabEmptyContent.Text = "没有实例被隐藏，你可以在实例设置的实例分类选项中隐藏实例。" & vbCrLf & "再次按下 F11 即可退出隐藏实例查看模式。"
                     BtnEmptyDownload.Visibility = Visibility.Collapsed
                 Else
-                    LabEmptyTitle.Text = "无可用版本"
-                    LabEmptyContent.Text = "未找到任何版本的游戏，请先下载任意版本的游戏。" & vbCrLf & "若有已存在的游戏，请在左边的列表中选择添加文件夹，选择 .minecraft 文件夹将其导入。"
+                    LabEmptyTitle.Text = "无可用实例"
+                    LabEmptyContent.Text = "未找到任何实例的游戏，请先下载任意游戏实例。" & vbCrLf & "若有已存在的游戏，请在左边的列表中选择添加文件夹，选择 .minecraft 文件夹将其导入。"
                     BtnEmptyDownload.Visibility = If(Settings.Get(Of Boolean)("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow, Visibility.Collapsed, Visibility.Visible)
                 End If
             Else
@@ -110,7 +110,7 @@ Public Class PageSelectRight
             End If
 
         Catch ex As Exception
-            Logger.Error(ex, "将版本列表转换显示时失败")
+            Logger.Error(ex, "将实例列表转换显示时失败")
         End Try
     End Sub
     Public Shared Sub McInstanceListContent(sender As MyListItem, e As EventArgs)
@@ -167,11 +167,11 @@ Public Class PageSelectRight
     Public Shared Sub Item_Click(sender As MyListItem, e As EventArgs)
         Dim Instance As McInstance = sender.Tag
         If New McInstance(Instance.PathVersion).Check Then
-            '正常版本
+            '正常实例
             McInstanceSelected = Instance
             FrmMain.PageBack()
         Else
-            '错误版本
+            '错误实例
             PageInstanceOverall.OpenInstanceFolder(Instance)
         End If
     End Sub
@@ -187,14 +187,14 @@ Public Class PageSelectRight
             Dim IsHintIndie As Boolean = Instance.State <> McInstanceState.Error AndAlso Instance.PathIndie <> McFolderSelected
             Dim SavesFolder = DirectoryUtils.GetInfo(Instance.PathIndie & "saves\")
             Dim SaveEntries = If(IsHintIndie AndAlso SavesFolder.Exists, SavesFolder.EnumerateDirectories.OrderByDescending(Function(Save) Save.LastWriteTime).Select(Function(Save) $"{Save.Name}（上次修改：{StringUtils.FormatTimeSpan(Save.LastWriteTime - Date.Now, False)}）").ToList, New List(Of String))
-            Select Case MyMsgBox($"你确定要{If(IsShiftPressed, "永久", "")}删除版本 {Instance.Name} 吗？" &
-                        If(IsHintIndie, vbCrLf & "该版本对应的存档、资源包、Mod 等文件也将被一并删除！", "") &
+            Select Case MyMsgBox($"你确定要{If(IsShiftPressed, "永久", "")}删除实例 {Instance.Name} 吗？" &
+                        If(IsHintIndie, vbCrLf & "该实例对应的存档、资源包、Mod 等文件也将被一并删除！", "") &
                         If(SaveEntries.Any, vbCrLf & vbCrLf & "这会删除以下存档：" & vbCrLf & "· " & SaveEntries.Join(vbCrLf & "· "), ""),
-                        "版本删除确认", , "取消",, True)
+                        "实例删除确认", , "取消",, True)
                 Case 1
                     Instance.ResetSettingsCache()
                     DirectoryUtils.Delete(Instance.PathVersion, Not IsShiftPressed)
-                    Hint("版本 " & Instance.Name & " 已删除！", HintType.Green)
+                    Hint("实例 " & Instance.Name & " 已删除！", HintType.Green)
                 Case 2
                     Return
             End Select
@@ -208,7 +208,7 @@ Public Class PageSelectRight
                     Card.Title = Card.Title.Replace(Parent.Children.Count - 1, Parent.Children.Count - 2) '有一个占位符
                     Parent.Children.Remove(Item)
                     If McInstanceSelected IsNot Nothing AndAlso Instance.PathVersion = McInstanceSelected.PathVersion Then
-                        '删除当前版本就更改选择
+                        '删除当前实例就更改选择
                         McInstanceSelected = MyVirtualizingElement.TryInit(Parent.Children(0)).Tag
                     End If
                     LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.UpdateOnly, MaxDepth:=1, ExtraPath:="versions\")
@@ -221,9 +221,9 @@ Public Class PageSelectRight
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             End If
         Catch ex As OperationCanceledException
-            Logger.Warn(ex, $"删除版本 {Instance.Name} 被主动取消")
+            Logger.Warn(ex, $"删除实例 {Instance.Name} 被主动取消")
         Catch ex As Exception
-            Logger.Error(ex, $"删除版本 {Instance.Name} 失败", LogBehavior.Alert)
+            Logger.Error(ex, $"删除实例 {Instance.Name} 失败", LogBehavior.Alert)
         End Try
     End Sub
 

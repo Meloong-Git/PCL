@@ -30,20 +30,20 @@
                             <RowDefinition Height="9" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="默认版本隔离" Margin="0,0,25,0" />
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="默认实例隔离" Margin="0,0,25,0" />
                         <local:MyComboBox local:SettingService.Key="LaunchArgumentIndieV2" x:Name="ComboArgumentIndieV2"
                                           Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="1"
-                                          ToolTip="当安装新版本时，据此自动设置新版本的隔离选项。&#xa;若想调整已有版本的隔离策略，请前往它的版本设置。">
+                                          ToolTip="当安装新实例时，据此自动设置新实例的隔离选项。&#xa;若想调整已有实例的隔离策略，请前往它的实例设置。">
                             <local:MyComboBoxItem Content="关闭" 
-                                                  ToolTip="所有版本均使用同一档案，存档、Mod、资源包等均为公用。&#xa;若存在多个安装了 Mod 的版本，可能会导致 Mod 冲突。" />
-                            <local:MyComboBoxItem Content="隔离可安装 Mod 的版本" 
-                                                  ToolTip="可安装 Mod 的版本（例如 Forge、Fabric）均互相独立以避免 Mod 冲突，其他版本（例如原版）则不会被隔离。" />
+                                                  ToolTip="所有实例均使用同一档案，存档、Mod、资源包等均为公用。&#xa;若存在多个安装了 Mod 的实例，可能会导致 Mod 冲突。" />
+                            <local:MyComboBoxItem Content="隔离可安装 Mod 的实例" 
+                                                  ToolTip="可安装 Mod 的实例（例如 Forge、Fabric）均互相独立以避免 Mod 冲突，其他实例（例如原版）则不会被隔离。" />
                             <local:MyComboBoxItem Content="隔离非正式版" 
-                                                  ToolTip="将 Minecraft 快照、预发布版、远古版本、愚人节版本与其他版本进行隔离。" />
-                            <local:MyComboBoxItem Content="隔离可安装 Mod 的版本与非正式版"
-                                                  ToolTip="将可安装 Mod 的版本、Minecraft 快照、预发布版、远古版本、愚人节版本与其他版本进行隔离。" />
-                            <local:MyComboBoxItem Content="隔离所有版本" 
-                                                  ToolTip="不同版本之间的存档、Mod、资源包等均不互通。&#xa;这会导致不同原版版本间的存档不能共用，所以一般不推荐。" />
+                                                  ToolTip="将 Minecraft 快照、预发布版、远古实例、愚人节实例与其他实例进行隔离。" />
+                            <local:MyComboBoxItem Content="隔离可安装 Mod 的实例与非正式版"
+                                                  ToolTip="将可安装 Mod 的实例、Minecraft 快照、预发布版、远古实例、愚人节实例与其他实例进行隔离。" />
+                            <local:MyComboBoxItem Content="隔离所有实例" 
+                                                  ToolTip="不同实例之间的存档、Mod、资源包等均不互通。&#xa;这会导致不同原版实例间的存档不能共用，所以一般不推荐。" />
                         </local:MyComboBox>
                         <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="游戏窗口标题" Margin="0,0,25,0" />
                         <local:MyTextBox local:SettingService.Key="LaunchArgumentTitle" 
@@ -258,13 +258,13 @@
                     <local:MyTextBox local:SettingService.Key="LaunchAdvanceGame" x:Name="TextAdvanceGame" Grid.Row="2" Grid.ColumnSpan="2" Grid.Column="1" ToolTip="文本框中的内容将会被直接拼合在启动参数的末尾。&#xa;例如，输入 --demo 则会以试玩模式启动游戏。&#xa;&#xa;支持 Minecraft 版本 JSON 中的字符串替换标记，例如 ${library_directory}。&#xa;也支持使用 PCL 的替换标记，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。" />
                     <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="启动前执行命令" Margin="0,0,25,0" />
                     <local:MyTextBox local:SettingService.Key="LaunchAdvanceRun" x:Name="TextAdvanceRun" Grid.Row="4" Grid.ColumnSpan="2" Grid.Column="1" HintText=""
-                                     ToolTip="在 MC 启动前执行特定命令或程序，语法与 Windows 的命令提示符一致。&#xa;&#xa;你可以用替换标记来动态改变其内容或实现相对路径，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。例如：&#xa; · &quot;{verpath}test.exe&quot; ：运行版本文件夹下的 test.exe 程序&#xa; · &quot;{java}java.exe&quot; -jar &quot;{verpath}test.jar&quot; ：用 Java 运行版本文件夹下的 test.jar&#xa; · notepad &quot;{verindie}options.txt&quot; ：使用记事本打开该版本的设置文件&#xa;&#xa;涉及路径的操作最好都打上双引号，以避免路径中的空格导致运行失败。&#xa;执行命令时，命令行所在的目录是当前的 .minecraft 文件夹。" />
+                                     ToolTip="在 MC 启动前执行特定命令或程序，语法与 Windows 的命令提示符一致。&#xa;&#xa;你可以用替换标记来动态改变其内容或实现相对路径，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。例如：&#xa; · &quot;{verpath}test.exe&quot; ：运行实例文件夹下的 test.exe 程序&#xa; · &quot;{java}java.exe&quot; -jar &quot;{verpath}test.jar&quot; ：用 Java 运行实例文件夹下的 test.jar&#xa; · notepad &quot;{verindie}options.txt&quot; ：使用记事本打开该实例的设置文件&#xa;&#xa;涉及路径的操作最好都打上双引号，以避免路径中的空格导致运行失败。&#xa;执行命令时，命令行所在的目录是当前的 .minecraft 文件夹。" />
                     <local:MyCheckBox local:SettingService.Key="LaunchAdvanceRunWait" x:Name="CheckAdvanceRunWait" Grid.Row="5" Grid.Column="1" Visibility="Collapsed"
                                       Text="等待命令执行完成后再继续启动" Margin="0,8,0,7" />
                     <StackPanel VerticalAlignment="Center" Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,25,0">
                         <TextBlock Text="Java 列表" VerticalAlignment="Center" />
                         <local:MyIconButton Height="23" Margin="0,1,0,0" VerticalAlignment="Center" Theme="Black" CanClick="False"
-                            ToolTip="启动游戏时，PCL 会选择列表中第一个兼容当前 Minecraft 的 Java。&#xa;点击选项右侧的箭头可以进行排序，以控制优先选择哪个 Java。&#xa;若想无视兼容性，强制使用某个 Java，请在版本独立设置中修改。" ToolTipService.InitialShowDelay="0" Opacity="0.3"
+                            ToolTip="启动游戏时，PCL 会选择列表中第一个兼容当前 Minecraft 的 Java。&#xa;点击选项右侧的箭头可以进行排序，以控制优先选择哪个 Java。&#xa;若想无视兼容性，强制使用某个 Java，请在实例独立设置中修改。" ToolTipService.InitialShowDelay="0" Opacity="0.3"
                             Logo="M512 1008C238.7 1008 16 785.2 16 512S238.7 16 512 16 1008 238.7 1008 512 785.2 1008 512 1008z m0-896c-220.8 0-400 179.2-400 400s179.2 400 400 400 400-179.2 400-400S732.8 112 512 112z M514.5 638.7c-26.2 0-48-21.7-48-48 0-52.4 32-100.4 81.9-120.9 26.8-11.5 51.2-39.6 44.8-76.8-5.1-27.5-32-51.8-62.7-56.9-26.2-4.4-51.8 2.5-70.4 18.5-16 13.4-24.3 32-24.3 51.2 0 26.2-21.7 48-48 48s-48-21.7-48-48c0-47.3 21.1-92.8 58.2-124.1a182.4 182.4 0 0 1 147.8-39.6c71.0 11.5 129.2 66.5 142.0 133.7 14.0 76.8-27.5 151.6-101.7 183.0-14.0 5.7-23.0 18.5-23.0 32.6 0 26.2-21.7 48-48 48zM514.5 793.6c-15.3 0-30.0-6.4-40.9-16.6-10.8-10.8-16.6-25.6-16.6-40.9s5.7-30.0 16.6-40.9c2.5-2.5 5.7-5.1 8.9-7.0s6.4-3.8 9.6-5.1a57.7 57.7 0 0 1 80 53.1 57.6 57.6 0 0 1-57.6 57.6z" />
                     </StackPanel>
                     <Grid x:Name="PanAdvanceJava" Grid.ColumnSpan="2" Grid.Row="7" Grid.Column="1" HorizontalAlignment="Stretch">
@@ -292,12 +292,12 @@
                         <local:MyCheckBox Height="28" Text="禁用 LWJGL Unsafe Agent" local:SettingService.Key="LaunchAdvanceDisableLUA" ToolTip="是否使用 LWJGL Unsafe Agent 修复 LWJGL 3.4.1 的一个性能问题。&#xa;详见：https://github.com/HMCL-dev/lwjgl-unsafe-agent" />
                         <local:MyCheckBox Height="28" Text="使用高性能显卡" local:SettingService.Key="LaunchAdvanceGraphicCard" ToolTip="自动在 Windows 设置 → 系统 → 屏幕 → 显示卡 中将 PCL 和 Java 改为使用高性能显卡。&#xa;如果同时有集成显卡和独立显卡，这能确保 MC 使用独立显卡进行渲染，以大幅提高帧率。" />
                     </StackPanel>
-                    <local:MyHint Text="版本独立设置中还有更多高级选项可供调整。" Margin="0,5,0,10" Theme="Blue" Grid.Row="11" Grid.ColumnSpan="2"
+                    <local:MyHint Text="实例独立设置中还有更多高级选项可供调整。" Margin="0,5,0,10" Theme="Blue" Grid.Row="11" Grid.ColumnSpan="2"
                                   CanClose="True" RelativeSetup="HintMoreAdvancedSetup" />
                 </Grid>
             </local:MyCard>
             <local:MyExtraTextButton HorizontalAlignment="Center" Margin="0,-5,0,15"
-                x:Name="BtnSwitch" Text="版本独立设置"
+                x:Name="BtnSwitch" Text="实例独立设置"
                 LogoScale="0.9" Logo="M73 584L920 584 608 896C579 925 579 972 608 1001 637 1030 683 1030 712 1001L1149 565C1164 550 1170 531 1170 511 1170 492 1164 472 1149 457L712 21C683-7 637-7 608 21 579 50 579 97 608 126L920 438 73 438C33 438 0 471 0 511 0 551 33 584 73 584Z" />
         </StackPanel>
     </local:MyScrollViewer>

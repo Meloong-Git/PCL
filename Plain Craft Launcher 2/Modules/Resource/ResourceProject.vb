@@ -453,7 +453,7 @@ Public Class ResourceProject
     ''' 将当前工程信息实例化为控件。
     ''' </summary>
     Public Function ToResourceItem(ShowMcVersionDesc As Boolean, ShowLoaderDesc As Boolean) As MyVirtualizingElement(Of MyResourceItem)
-        '获取版本描述
+        '获取实例描述
         Dim GameVersionDescription As String
         If Drops Is Nothing OrElse Not Drops.Any() Then
             GameVersionDescription = "仅快照版本" '#5412

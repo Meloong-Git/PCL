@@ -164,10 +164,10 @@ Public Class PageLaunchRight
                 If Version.Length > 1000 Then Throw New Exception($"获取的主页版本过长（{Version.Length} 字符）")
                 Dim CurrentVersion As String = Settings.Get(Of String)("CacheSavedPageVersion")
                 If Version <> "" AndAlso CurrentVersion <> "" AndAlso Version = CurrentVersion Then
-                    Logger.Info($"当前缓存的主页已为最新，当前版本：{Version}，检查源：{VersionAddress}")
+                    Logger.Info($"当前缓存的主页已为最新，当前实例：{Version}，检查源：{VersionAddress}")
                     Return
                 End If
-                Logger.Info($"需要下载联网主页，当前版本：{Version}，检查源：{VersionAddress}")
+                Logger.Info($"需要下载联网主页，当前实例：{Version}，检查源：{VersionAddress}")
             Catch exx As Exception
                 Logger.Warn(exx, $"联网获取主页版本失败")
                 Logger.Info($"无法检查联网主页版本，将直接下载，检查源：{VersionAddress}")

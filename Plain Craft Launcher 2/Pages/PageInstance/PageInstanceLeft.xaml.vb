@@ -2,7 +2,7 @@ Public Class PageInstanceLeft
     Implements IRefreshable
 
     ''' <summary>
-    ''' 当前显示设置的 MC 版本。
+    ''' 当前显示设置的 MC 实例。
     ''' </summary>
     Public Shared Instance As McInstance = Nothing
 
@@ -51,7 +51,7 @@ Public Class PageInstanceLeft
                 If FrmInstanceExport Is Nothing Then FrmInstanceExport = New PageInstanceExport
                 Return FrmInstanceExport
             Case Else
-                Throw New Exception("未知的版本设置子页面种类：" & ID)
+                Throw New Exception("未知的实例设置子页面种类：" & ID)
         End Select
     End Function
 
@@ -109,14 +109,14 @@ Public Class PageInstanceLeft
     End Sub
 
     Public Sub Reset(sender As Object, e As EventArgs)
-        If MyMsgBox("是否要初始化该版本的版本独立设置？该操作不可撤销。", "初始化确认",, "取消", IsWarn:=True) = 1 Then
+        If MyMsgBox("是否要初始化该实例的实例独立设置？该操作不可撤销。", "初始化确认",, "取消", IsWarn:=True) = 1 Then
             If IsNothing(FrmInstanceSetup) Then FrmInstanceSetup = New PageInstanceSetup
             FrmInstanceSetup.Reset()
             ItemSetup.Checked = True
         End If
     End Sub
 
-    '加载当前版本将要选择的 Java
+    '加载当前实例将要选择的 Java
     Public Shared CurrentJavaWorker As New RedoableWorker(Of Java)(Function(c, p) SelectOrDownloadJava(PageInstanceLeft.Instance, False, c, p))
     Public Shared Sub ReloadCurrentJava() Handles Me.Loaded
         If AniControlEnabled <> 0 Then Return

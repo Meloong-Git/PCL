@@ -27,13 +27,13 @@ Public Class PageInstanceOverall
         ComboDisplayType.SelectedIndex = ReadIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "DisplayType", McInstanceCardType.Auto)
         BtnDisplayStar.Text = If(PageInstanceLeft.Instance.IsStar, "从收藏夹中移除", "加入收藏夹")
         BtnFolderMods.Visibility = If(PageInstanceLeft.Instance.Modable, Visibility.Visible, Visibility.Collapsed)
-        '刷新版本显示
+        '刷新实例显示
         PanDisplayItem.Children.Clear()
         InstanceHeaderItem = PageInstanceLeft.Instance.ToListItem().Init()
         InstanceHeaderItem.IsHitTestVisible = False
         PanDisplayItem.Children.Add(InstanceHeaderItem)
         FrmMain.PageNameRefresh()
-        '刷新版本图标
+        '刷新实例图标
         ComboDisplayLogo.SelectedIndex = 0
         Dim Logo As String = ReadIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "Logo", "")
         Dim LogoCustom As Boolean = ReadIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "LogoCustom", "False")
@@ -51,7 +51,7 @@ Public Class PageInstanceOverall
 
 #Region "卡片：个性化"
 
-    '版本分类
+    '实例分类
     Private Sub ComboDisplayType_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboDisplayType.SelectionChanged
         If Not (IsLoad AndAlso AniControlEnabled = 0) Then Return
         If ComboDisplayType.SelectedIndex <> 1 Then
@@ -65,14 +65,14 @@ Public Class PageInstanceOverall
                 WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '要求刷新缓存
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             Catch ex As Exception
-                Logger.Error(ex, $"修改版本分类失败（{PageInstanceLeft.Instance.Name}）")
+                Logger.Error(ex, $"修改实例分类失败（{PageInstanceLeft.Instance.Name}）")
             End Try
             Reload() '更新 “打开 Mod 文件夹” 按钮
         Else
             '改为隐藏
             Try
                 If Not Settings.Get(Of Boolean)("HintHide") Then
-                    If MyMsgBox("确认要从版本列表中隐藏该版本吗？隐藏该版本后，它将不再出现于 PCL 显示的版本列表中。" & vbCrLf & "此后，在版本列表页面按下 F11 才可以查看被隐藏的版本。", "隐藏版本提示",, "取消") <> 1 Then
+                    If MyMsgBox("确认要从实例列表中隐藏该实例吗？隐藏该实例后，它将不再出现于 PCL 显示的实例列表中。" & vbCrLf & "此后，在实例列表页面按下 F11 才可以查看被隐藏的实例。", "隐藏实例提示",, "取消") <> 1 Then
                         ComboDisplayType.SelectedIndex = 0
                         Return
                     End If
@@ -82,7 +82,7 @@ Public Class PageInstanceOverall
                 WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '要求刷新缓存
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             Catch ex As Exception
-                Logger.Error(ex, $"隐藏版本 {PageInstanceLeft.Instance.Name} 失败")
+                Logger.Error(ex, $"隐藏实例 {PageInstanceLeft.Instance.Name} 失败")
             End Try
         End If
     End Sub
@@ -91,24 +91,24 @@ Public Class PageInstanceOverall
     Private Sub BtnDisplayDesc_Click(sender As Object, e As EventArgs) Handles BtnDisplayDesc.Click
         Try
             Dim OldInfo As String = ReadIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "CustomInfo")
-            Dim NewInfo As String = MyMsgBoxInput("更改描述", "修改版本的描述文本，留空则使用 PCL 的默认描述。", OldInfo, New ObjectModel.Collection(Of Validate), "默认描述")
+            Dim NewInfo As String = MyMsgBoxInput("更改描述", "修改实例的描述文本，留空则使用 PCL 的默认描述。", OldInfo, New ObjectModel.Collection(Of Validate), "默认描述")
             If NewInfo IsNot Nothing AndAlso OldInfo <> NewInfo Then WriteIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "CustomInfo", NewInfo)
             PageInstanceLeft.Instance = New McInstance(PageInstanceLeft.Instance.Name).Load()
             Reload()
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
         Catch ex As Exception
-            Logger.Error(ex, $"版本 {PageInstanceLeft.Instance.Name} 描述更改失败", LogBehavior.Alert)
+            Logger.Error(ex, $"实例 {PageInstanceLeft.Instance.Name} 描述更改失败", LogBehavior.Alert)
         End Try
     End Sub
 
-    '重命名版本
+    '重命名实例
     Private Sub BtnDisplayRename_Click(sender As Object, e As EventArgs) Handles BtnDisplayRename.Click
         Try
             '确认输入的新名称
             Dim OldName As String = PageInstanceLeft.Instance.Name
             Dim OldPath As String = PageInstanceLeft.Instance.PathVersion
-            '修改此部分的同时修改快速安装的版本名检测*
-            Dim NewName As String = MyMsgBoxInput("重命名版本", "", OldName, New ObjectModel.Collection(Of Validate) From {
+            '修改此部分的同时修改快速安装的实例名检测*
+            Dim NewName As String = MyMsgBoxInput("重命名实例", "", OldName, New ObjectModel.Collection(Of Validate) From {
                 New ValidateFolderName(McFolderSelected & "versions", IgnoreList:=New List(Of String) From {OldName})
             })
             If String.IsNullOrWhiteSpace(NewName) Then Return
@@ -127,14 +127,14 @@ Public Class PageInstanceOverall
             '清理 ini 缓存
             PageInstanceLeft.Instance.ResetSettingsCache()
             '重命名 jar 文件与 natives 文件夹
-            '不能进行遍历重命名，否则在版本名很短的时候容易误伤其他文件（#6443）
+            '不能进行遍历重命名，否则在实例名很短的时候容易误伤其他文件（#6443）
             If DirectoryUtils.Exists($"{NewPath}{OldName}-natives") Then DirectoryUtils.Move($"{NewPath}{OldName}-natives", $"{NewPath}{NewName}-natives")
             If FileUtils.Exists($"{NewPath}{OldName}.jar") Then FileUtils.Move($"{NewPath}{OldName}.jar", $"{NewPath}{NewName}.jar")
-            '替换版本设置文件中的路径
+            '替换实例设置文件中的路径
             If FileUtils.Exists(NewPath & "PCL\Setup.ini") Then
                 FileUtils.Write(NewPath & "PCL\Setup.ini", FileUtils.ReadAsString(NewPath & "PCL\Setup.ini").Replace(OldPath, NewPath))
             End If
-            '更改已选中的版本
+            '更改已选中的实例
             If ReadIni(McFolderSelected & "PCL.ini", "Version") = OldName Then
                 WriteIni(McFolderSelected & "PCL.ini", "Version", NewName)
             End If
@@ -144,7 +144,7 @@ Public Class PageInstanceOverall
                 FileUtils.Delete(NewPath & PathUtils.GetLastPart(OldJsonPath))
                 FileUtils.Write(NewPath & NewName & ".json", JsonObject.ToString)
             Catch ex As Exception
-                Logger.Warn(ex, "重命名版本 json 失败")
+                Logger.Warn(ex, "重命名实例 json 失败")
             End Try
             '刷新与提示
             Hint("重命名成功！", HintType.Green)
@@ -153,11 +153,11 @@ Public Class PageInstanceOverall
             Reload()
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
         Catch ex As Exception
-            Logger.Error(ex, "重命名版本失败", LogBehavior.Alert)
+            Logger.Error(ex, "重命名实例失败", LogBehavior.Alert)
         End Try
     End Sub
 
-    '版本图标
+    '实例图标
     Private Sub ComboDisplayLogo_SelectionChanged() Handles ItemDisplayLogoCustom.PreviewMouseLeftButtonUp, ComboDisplayLogo.SelectionChanged
         If Not (IsLoad AndAlso AniControlEnabled = 0) Then Return
         '选择 自定义 时修改图片
@@ -173,7 +173,7 @@ Public Class PageInstanceOverall
                 FileUtils.Delete(PageInstanceLeft.Instance.PathVersion & "PCL\Logo.png")
             End If
         Catch ex As Exception
-            Logger.Error(ex, $"更改自定义版本图标失败（{PageInstanceLeft.Instance.Name}）")
+            Logger.Error(ex, $"更改自定义实例图标失败（{PageInstanceLeft.Instance.Name}）")
         End Try
         '进行更改
         Try
@@ -186,7 +186,7 @@ Public Class PageInstanceOverall
             Reload()
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
         Catch ex As Exception
-            Logger.Error(ex, $"更改版本图标失败（{PageInstanceLeft.Instance.Name}）")
+            Logger.Error(ex, $"更改实例图标失败（{PageInstanceLeft.Instance.Name}）")
         End Try
     End Sub
 
@@ -199,7 +199,7 @@ Public Class PageInstanceOverall
             McInstanceListForceRefresh = True
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
         Catch ex As Exception
-            Logger.Error(ex, $"版本 {PageInstanceLeft.Instance.Name} 收藏状态更改失败", LogBehavior.Alert)
+            Logger.Error(ex, $"实例 {PageInstanceLeft.Instance.Name} 收藏状态更改失败", LogBehavior.Alert)
         End Try
     End Sub
 
@@ -207,7 +207,7 @@ Public Class PageInstanceOverall
 
 #Region "卡片：快捷方式"
 
-    '版本文件夹
+    '实例文件夹
     Private Sub BtnFolderVersion_Click() Handles BtnFolderVersion.Click
         OpenInstanceFolder(PageInstanceLeft.Instance)
     End Sub
@@ -269,7 +269,7 @@ Public Class PageInstanceOverall
         Try
             '忽略文件检查提示
             If ShouldIgnoreFileCheck(PageInstanceLeft.Instance) Then
-                Hint("请先关闭 [版本设置 → 设置 → 高级启动选项 → 关闭文件校验]，然后再尝试补全文件！", HintType.Blue)
+                Hint("请先关闭 [实例设置 → 设置 → 高级启动选项 → 关闭文件校验]，然后再尝试补全文件！", HintType.Blue)
                 Return
             End If
             '重复任务检查
@@ -300,7 +300,7 @@ Public Class PageInstanceOverall
         End Try
     End Sub
 
-    '删除版本
+    '删除实例
     '修改此代码时，同时修改 PageSelectRight 中的代码
     Private Sub BtnManageDelete_Click(sender As Object, e As EventArgs) Handles BtnManageDelete.Click
         Try
@@ -308,23 +308,23 @@ Public Class PageInstanceOverall
             Dim IsHintIndie As Boolean = PageInstanceLeft.Instance.State <> McInstanceState.Error AndAlso PageInstanceLeft.Instance.PathIndie <> McFolderSelected
             Dim SavesFolder = DirectoryUtils.GetInfo(PageInstanceLeft.Instance.PathIndie & "saves\")
             Dim SaveEntries = If(IsHintIndie AndAlso SavesFolder.Exists, SavesFolder.EnumerateDirectories.OrderByDescending(Function(Save) Save.LastWriteTime).Select(Function(Save) $"{Save.Name}（上次修改：{StringUtils.FormatTimeSpan(Save.LastWriteTime - Date.Now, False)}）").ToList, New List(Of String))
-            Select Case MyMsgBox($"你确定要{If(IsShiftPressed, "永久", "")}删除版本 {PageInstanceLeft.Instance.Name} 吗？" &
-                        If(IsHintIndie, vbCrLf & "该版本对应的存档、资源包、Mod 等文件也将被一并删除！" &
+            Select Case MyMsgBox($"你确定要{If(IsShiftPressed, "永久", "")}删除实例 {PageInstanceLeft.Instance.Name} 吗？" &
+                        If(IsHintIndie, vbCrLf & "该实例对应的存档、资源包、Mod 等文件也将被一并删除！" &
                             If(SaveEntries.Any, vbCrLf & vbCrLf & "这会删除以下存档：" & vbCrLf & "· " & SaveEntries.Join(vbCrLf & "· "), ""), ""),
-                        "版本删除确认", , "取消",, IsHintIndie OrElse IsShiftPressed)
+                        "实例删除确认", , "取消",, IsHintIndie OrElse IsShiftPressed)
                 Case 1
                     PageInstanceLeft.Instance.ResetSettingsCache()
                     DirectoryUtils.Delete(PageInstanceLeft.Instance.PathVersion, Not IsShiftPressed)
-                    Hint("已删除版本 " & PageInstanceLeft.Instance.Name & "！", HintType.Green)
+                    Hint("已删除实例 " & PageInstanceLeft.Instance.Name & "！", HintType.Green)
                 Case 2
                     Return
             End Select
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
             FrmMain.PageBack()
         Catch ex As OperationCanceledException
-            Logger.Warn(ex, $"删除版本 {PageInstanceLeft.Instance.Name} 被主动取消")
+            Logger.Warn(ex, $"删除实例 {PageInstanceLeft.Instance.Name} 被主动取消")
         Catch ex As Exception
-            Logger.Error(ex, $"删除版本 {PageInstanceLeft.Instance.Name} 失败", LogBehavior.Alert)
+            Logger.Error(ex, $"删除实例 {PageInstanceLeft.Instance.Name} 失败", LogBehavior.Alert)
         End Try
     End Sub
 

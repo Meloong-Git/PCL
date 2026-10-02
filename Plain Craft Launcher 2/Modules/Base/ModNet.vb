@@ -1474,7 +1474,7 @@ FinishExCatch:
         Private Sub CheckExistingFiles(Files As List(Of NetFile), FolderList As List(Of String))
             Try
                 Logger.Trace(Function() $"文件检查开始，本线程负责 {Files.Count} 个文件，首个文件为 {Files.FirstOrDefault?.LocalName}")
-                '列出 MC 文件夹中的各个版本文件夹
+                '列出 MC 文件夹中的各个实例文件夹
                 Dim VersionFolders As New List(Of String)
                 For Each McFolder In FolderList
                     For Each VersionFolder In DirectoryUtils.EnumerateDirectories(McFolder & "versions\")
@@ -1545,7 +1545,7 @@ FinishExCatch:
                     Next
                     Return Nothing
                 Case "versions\"
-                    '版本 jar 或 json：查找 MC 文件夹下的各个版本文件夹
+                    '版本 jar 或 json：查找 MC 文件夹下的各个实例文件夹
                     For Each VersionFolder In VersionFolders
                         For Each Candidate In DirectoryUtils.EnumerateFiles(VersionFolder, searchPattern:="*." & PathUtils.GetLastPart(File.LocalPath).AfterLast(".").Lower)
                             If CheckCandidate(Candidate, File.Check) Then Return Candidate

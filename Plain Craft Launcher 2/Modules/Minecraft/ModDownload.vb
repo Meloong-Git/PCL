@@ -357,7 +357,7 @@ Public Module ModDownload
         ''' </summary>
         Public FileName As String
         ''' <summary>
-        ''' 对应的版本名称，如“1.13.2-OptiFine_HD_U_E6”。
+        ''' 对应的实例名称，如“1.13.2-OptiFine_HD_U_E6”。
         ''' </summary>
         Public InstanceName As String
         ''' <summary>
@@ -567,7 +567,7 @@ Public Module ModDownload
         ''' </summary>
         Public Version As Version
         ''' <summary>
-        ''' 可读的非格式化版本名。
+        ''' 可读的非格式化实例名。
         ''' Forge：如 “50.1.9”、“14.22.1.2478”（Legacy）。
         ''' NeoForge：如 “20.4.30-beta”、“47.1.99”（Legacy）。
         ''' </summary>
@@ -606,7 +606,7 @@ Public Module ModDownload
         ''' </summary>
         Public Category As String
         ''' <summary>
-        ''' 用于下载的文件版本名。可能在 Version 的基础上添加了分支。
+        ''' 用于下载的文件实例名。可能在 Version 的基础上添加了分支。
         ''' </summary>
         Public FileVersion As String
 

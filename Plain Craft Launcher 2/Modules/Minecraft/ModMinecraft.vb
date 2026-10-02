@@ -169,11 +169,11 @@ Public Module ModMinecraft
 
 #End Region
 
-#Region "版本处理"
+#Region "实例处理"
 
     Private _McInstanceSelected As McInstance
     ''' <summary>
-    ''' 当前的 Minecraft 版本。
+    ''' 当前的 Minecraft 实例。
     ''' </summary>
     Public Property McInstanceSelected As McInstance
         Get
@@ -185,7 +185,7 @@ Public Module ModMinecraft
             _McInstanceSelected = value '由于有可能是 Nothing，导致无法初始化，才得这样弄一圈
             _McInstanceSelectedLast = value
             '更新 MC 文件夹所选取的 Minecraft 版本
-            Logger.Info($"当前选择的 Minecraft 版本：{If(value?.PathVersion, "无")}")
+            Logger.Info($"当前选择的 Minecraft 实例：{If(value?.PathVersion, "无")}")
             WriteIni(McFolderSelected & "PCL.ini", "Version", If(value?.Name, ""))
             If value Is Nothing Then Return
             '重置缓存的下载文件夹
@@ -218,44 +218,44 @@ Public Module ModMinecraft
     Public Class McInstance
 
         ''' <summary>
-        ''' 版本文件夹路径，以 \ 结尾。
+        ''' 实例文件夹路径，以 \ 结尾。
         ''' </summary>
         Public ReadOnly Property PathVersion As String
         ''' <summary>
-        ''' 应用版本隔离后，该版本所对应的 Minecraft 根文件夹，以 \ 结尾。
+        ''' 应用实例隔离后，该实例所对应的 Minecraft 根文件夹，以 \ 结尾。
         ''' </summary>
         Public ReadOnly Property PathIndie As String
             Get
                 If Not Settings.HasSaved("VersionArgumentIndieV2", Instance:=Me) Then
                     If Not IsLoaded Then Load()
-                    '决定该版本是否应该被隔离
+                    '决定该实例是否应该被隔离
                     Dim ShouldBeIndie =
                     Function() As Boolean
-                        '从老的版本独立设置中迁移：-1 未决定，0 使用全局设置，1 手动开启，2 手动关闭
+                        '从老的实例独立设置中迁移：-1 未决定，0 使用全局设置，1 手动开启，2 手动关闭
                         If Settings.HasSaved("VersionArgumentIndie", Instance:=Me) AndAlso Settings.Get(Of Integer)("VersionArgumentIndie", Instance:=Me) > 0 Then
-                            Logger.Info($"版本隔离初始化（{Name}）：从老的版本独立设置中迁移")
+                            Logger.Info($"实例隔离初始化（{Name}）：从老的实例独立设置中迁移")
                             Return Settings.Get(Of Integer)("VersionArgumentIndie", Instance:=Me) = 1
                         End If
-                        '若版本文件夹下包含 mods 或 saves 文件夹，则自动开启版本隔离
+                        '若实例文件夹下包含 mods 或 saves 文件夹，则自动开启实例隔离
                         Dim ModFolder = DirectoryUtils.GetInfo(PathVersion & "mods\")
                         Dim SaveFolder = DirectoryUtils.GetInfo(PathVersion & "saves\")
                         If (ModFolder.Exists AndAlso ModFolder.EnumerateFiles.Any) OrElse (SaveFolder.Exists AndAlso SaveFolder.EnumerateDirectories.Any) Then
-                            Logger.Info($"版本隔离初始化（{Name}）：版本文件夹下存在 mods 或 saves 文件夹，自动开启")
+                            Logger.Info($"实例隔离初始化（{Name}）：实例文件夹下存在 mods 或 saves 文件夹，自动开启")
                             Return True
                         End If
                         '根据全局的默认设置决定是否隔离
                         Dim IsRelease As Boolean = State <> McInstanceState.Fool AndAlso State <> McInstanceState.Old AndAlso State <> McInstanceState.Snapshot
-                        Logger.Info($"版本隔离初始化（{Name}）：从全局默认设置中（{Settings.Get(Of Integer)("LaunchArgumentIndieV2")}）判断，State {State}，IsRelease {IsRelease}，Modable {Modable}")
+                        Logger.Info($"实例隔离初始化（{Name}）：从全局默认设置中（{Settings.Get(Of Integer)("LaunchArgumentIndieV2")}）判断，State {State}，IsRelease {IsRelease}，Modable {Modable}")
                         Select Case Settings.Get(Of Integer)("LaunchArgumentIndieV2")
                             Case 0 '关闭
                                 Return False
-                            Case 1 '仅隔离可安装 Mod 的版本
+                            Case 1 '仅隔离可安装 Mod 的实例
                                 Return Modable
                             Case 2 '仅隔离非正式版
                                 Return Not IsRelease
-                            Case 3 '隔离非正式版与可安装 Mod 的版本
+                            Case 3 '隔离非正式版与可安装 Mod 的实例
                                 Return Not IsRelease OrElse Modable
-                            Case Else '隔离所有版本
+                            Case Else '隔离所有实例
                                 Return True
                         End Select
                     End Function
@@ -266,7 +266,7 @@ Public Module ModMinecraft
         End Property
 
         ''' <summary>
-        ''' 该版本的版本文件夹名称。
+        ''' 该实例的文件夹名称。
         ''' </summary>
         Public ReadOnly Property Name As String
             Get
@@ -279,26 +279,26 @@ Public Module ModMinecraft
         ''' <summary>
         ''' 显示的描述文本。
         ''' </summary>
-        Public Info As String = "该版本未被加载，请向作者反馈此问题"
+        Public Info As String = "该实例未被加载，请向作者反馈此问题"
 
         ''' <summary>
-        ''' 该版本的列表检查原始结果，不受自定义影响。
+        ''' 该实例的列表检查原始结果，不受自定义影响。
         ''' </summary>
         Public State As McInstanceState = McInstanceState.Error
         ''' <summary>
-        ''' 显示的版本图标。
+        ''' 显示的实例图标。
         ''' </summary>
         Public Logo As String
         ''' <summary>
-        ''' 是否为收藏的版本。
+        ''' 是否为收藏的实例。
         ''' </summary>
         Public IsStar As Boolean = False
         ''' <summary>
-        ''' 强制版本分类，0 为未启用，1 为隐藏，2 及以上为其他普通分类。
+        ''' 强制实例分类，0 为未启用，1 为隐藏，2 及以上为其他普通分类。
         ''' </summary>
         Public DisplayType As McInstanceCardType = McInstanceCardType.Auto
         ''' <summary>
-        ''' 该版本是否可以安装 Mod。
+        ''' 该实例是否可以安装 Mod。
         ''' </summary>
         Public ReadOnly Property Modable As Boolean
             Get
@@ -670,7 +670,7 @@ Recheck:
         End Sub
 
         ''' <summary>
-        ''' 从版本名，或版本文件夹的完整路径初始化。
+        ''' 从实例名，或实例文件夹的完整路径初始化。
         ''' </summary>
         Public Sub New(NameOrFullPath As String)
             NameOrFullPath = PathUtils.RemoveExtendedPrefix(NameOrFullPath)
@@ -781,7 +781,7 @@ Recheck:
                 End Select
 #End Region
 ExitDataLoad:
-                '确定版本图标
+                '确定实例图标
                 Logo = ReadIni(PathVersion & "PCL\Setup.ini", "Logo", "")
                 If Logo = "" OrElse Not CType(ReadIni(PathVersion & "PCL\Setup.ini", "LogoCustom", False), Boolean) Then
                     Select Case State
@@ -807,7 +807,7 @@ ExitDataLoad:
                             Logo = PathImage & "Blocks/RedstoneBlock.png"
                     End Select
                 End If
-                '确定版本描述
+                '确定实例描述
                 Dim CustomInfo As String = ReadIni(PathVersion & "PCL\Setup.ini", "CustomInfo")
                 If CustomInfo <> "" Then
                     Info = CustomInfo
@@ -909,7 +909,7 @@ ExitDataLoad:
                 '标题
                 NewItem.Inlines.Clear()
                 NewItem.Inlines.Add(New Run(Name))
-                If ReadIni(PathVersion & "PCL\Setup.ini", "CustomInfo") <> "" Then '如果版本设置了自定义描述，在标题后面以淡灰色显示其版本号
+                If ReadIni(PathVersion & "PCL\Setup.ini", "CustomInfo") <> "" Then '如果实例设置了自定义描述，在标题后面以淡灰色显示其版本号
                     NewItem.Inlines.Add(New Run("  |  " & VersionDisplayName()) With {.Foreground = New MyColor(215, 215, 215), .FontSize = 12})
                 End If
                 'Logo
@@ -920,7 +920,7 @@ ExitDataLoad:
                         NewItem.Logo = Logo
                     End If
                 Catch ex As Exception
-                    Logger.Error(ex, "加载版本图标失败", LogBehavior.Toast)
+                    Logger.Error(ex, "加载实例图标失败", LogBehavior.Toast)
                     NewItem.Logo = "pack://application:,,,/images/Blocks/RedstoneBlock.png"
                 End Try
                 Return NewItem
@@ -1008,7 +1008,7 @@ ExitDataLoad:
         'OptiFine
 
         ''' <summary>
-        ''' 该版本是否通过 JSON 安装了 OptiFine。
+        ''' 该实例是否通过 JSON 安装了 OptiFine。
         ''' </summary>
         Public ReadOnly Property HasOptiFine As Boolean
             Get
@@ -1049,7 +1049,7 @@ ExitDataLoad:
         'Forge/NeoForge
 
         ''' <summary>
-        ''' 该版本是否安装了 Forge。
+        ''' 该实例是否安装了 Forge。
         ''' </summary>
         Public ReadOnly Property HasForge As Boolean
             Get
@@ -1057,7 +1057,7 @@ ExitDataLoad:
             End Get
         End Property
         ''' <summary>
-        ''' 该版本是否安装了 NeoForge。
+        ''' 该实例是否安装了 NeoForge。
         ''' </summary>
         Public ReadOnly Property HasNeoForge As Boolean
             Get
@@ -1065,7 +1065,7 @@ ExitDataLoad:
             End Get
         End Property
         ''' <summary>
-        ''' 该版本是否安装了 Forge 或 NeoForge。
+        ''' 该实例是否安装了 Forge 或 NeoForge。
         ''' </summary>
         Public ReadOnly Property HasForgelike As Boolean
             Get
@@ -1105,7 +1105,7 @@ ExitDataLoad:
         'Fabric
 
         ''' <summary>
-        ''' 该版本是否安装了 Fabric。
+        ''' 该实例是否安装了 Fabric。
         ''' </summary>
         Public ReadOnly Property HasFabric As Boolean
             Get
@@ -1120,7 +1120,7 @@ ExitDataLoad:
         'LiteLoader
 
         ''' <summary>
-        ''' 该版本是否安装了 LiteLoader。
+        ''' 该实例是否安装了 LiteLoader。
         ''' </summary>
         Public HasLiteLoader As Boolean = False
 
@@ -1149,7 +1149,7 @@ ExitDataLoad:
             Return False
         End Function
         ''' <summary>
-        ''' 将版本名转换为 Drop 序数。
+        ''' 将实例名转换为 Drop 序数。
         ''' 若无法转换则返回 209。
         ''' </summary>
         Public Shared Function VersionToDrop(VanillaName As String) As Integer
@@ -1172,7 +1172,7 @@ ExitDataLoad:
             End If
         End Function
         ''' <summary>
-        ''' 将版本名转换为可比较的三段式原版版本号。
+        ''' 将实例名转换为可比较的三段式原版版本号。
         ''' 对老版本格式，例如 1.20.3，会被转换为 20.0.3。
         ''' 对愚人节版本，返回其基于的正式版版本号。
         ''' 若没有版本号，例如旧快照，则为 9999.0.0。
@@ -1211,7 +1211,7 @@ ExitDataLoad:
     End Class
 
     ''' <summary>
-    ''' 根据版本名获取对应的愚人节版本描述。非愚人节版本会返回空字符串。
+    ''' 根据实例名获取对应的愚人节实例描述。非愚人节版本会返回空字符串。
     ''' </summary>
     Public Function GetMcFoolName(Name As String) As String
         Name = Name.Lower
@@ -1241,26 +1241,26 @@ ExitDataLoad:
     End Function
 
     ''' <summary>
-    ''' 当前按卡片分类的所有版本列表。
+    ''' 当前按卡片分类的所有实例列表。
     ''' </summary>
     Public McInstanceList As New Dictionary(Of McInstanceCardType, List(Of McInstance))
 
 #End Region
 
-#Region "版本列表加载"
+#Region "实例列表加载"
 
     ''' <summary>
-    ''' 是否要求本次加载强制刷新版本列表。
+    ''' 是否要求本次加载强制刷新实例列表。
     ''' </summary>
     Public McInstanceListForceRefresh As Boolean = False
     ''' <summary>
-    ''' 是否为本次打开 PCL 后第一次加载版本列表。
+    ''' 是否为本次打开 PCL 后第一次加载实例列表。
     ''' 这会清理所有 .pclignore 文件，而非跳过这些对应版本。
     ''' </summary>
     Private IsFirstMcInstanceListLoad As Boolean = True
 
     ''' <summary>
-    ''' 加载 Minecraft 文件夹的版本列表。
+    ''' 加载 Minecraft 文件夹的实例列表。
     ''' </summary>
     Public McInstanceListLoader As New LoaderTask(Of String, Integer)("Minecraft Instance List", AddressOf InitMcInstanceList) With {.ReloadTimeout = 1}
     Private Sub InitMcInstanceList(Loader As LoaderTask(Of String, Integer))
@@ -1278,7 +1278,7 @@ ExitDataLoad:
                         FolderList.Add(Folder.Name)
                     Next
                 Catch ex As Exception
-                    Throw New Exception("无法读取版本文件夹，可能是由于没有权限（" & PathMc & "versions）", ex)
+                    Throw New Exception("无法读取实例文件夹，可能是由于没有权限（" & PathMc & "versions）", ex)
                 End Try
             End If
             '不可用
@@ -1337,11 +1337,11 @@ OnLoaded:
         Catch ex As Exception
             If Loader.IsCanceled OrElse ex.IsCanceled Then Return '#5617
             WriteIni(PathMc & "PCL.ini", "InstanceCache", "") '要求下次重新加载
-            Logger.Error(ex, "加载 .minecraft 版本列表失败")
+            Logger.Error(ex, "加载 .minecraft 实例列表失败")
         End Try
     End Sub
 
-    '获取版本列表
+    '获取实例列表
     Private Function InitMcInstanceListWithCache(Folder As String) As Dictionary(Of McInstanceCardType, List(Of McInstance))
         Dim Results As New Dictionary(Of McInstanceCardType, List(Of McInstance))
         Try
@@ -1442,7 +1442,7 @@ OnLoaded:
             End If
             If (VersionFolderInfo.Name = "cache" OrElse VersionFolderInfo.Name = "BLClient" OrElse VersionFolderInfo.Name = "PCL") AndAlso
                 Not FileUtils.Exists(VersionFolderInfo.FullName & "\" & VersionFolderInfo.Name & ".json") Then
-                Logger.Info($"跳过可能不是版本文件夹的项目：{VersionFolderInfo.FullName}")
+                Logger.Info($"跳过可能不是实例文件夹的项目：{VersionFolderInfo.FullName}")
                 Continue For
             End If
             Dim VersionFolder As String = VersionFolderInfo.FullName & "\"
@@ -1466,10 +1466,10 @@ OnLoaded:
 #Region "将版本分类到各个卡片"
         Try
 
-            '未经过自定义的版本列表
+            '未经过自定义的实例列表
             Dim InstanceListOriginal As New Dictionary(Of McInstanceCardType, List(Of McInstance))
 
-            '单独列出收藏的版本
+            '单独列出收藏的实例
             Dim InstanceStar As New List(Of McInstance)
             For Each Instance As McInstance In InstanceList.ToList
                 If Not Instance.IsStar Then Continue For
@@ -1561,7 +1561,7 @@ OnLoaded:
 
         Catch ex As Exception
             Results.Clear()
-            Logger.Error(ex, "分类版本列表失败")
+            Logger.Error(ex, "分类实例列表失败")
         End Try
 #End Region
 #Region "对卡片与版本进行排序"
@@ -1622,7 +1622,7 @@ OnLoaded:
     ''' <param name="CardType">卡片的名称。</param>
     Private Sub McInstanceFilter(ByRef InstanceList As List(Of McInstance), ByRef Target As Dictionary(Of McInstanceCardType, List(Of McInstance)), Formula As McInstanceState(), CardType As McInstanceCardType)
         Dim KeepList = InstanceList.Where(Function(v) Formula.Contains(v.State)).ToList
-        '加入版本列表，并从剩余中删除
+        '加入实例列表，并从剩余中删除
         If KeepList.Any Then
             Target.Add(CardType, KeepList)
             InstanceList = InstanceList.Except(KeepList).ToList()
@@ -1636,14 +1636,14 @@ OnLoaded:
     ''' <param name="KeepList">传入需要增加入的列表。</param>
     Private Sub McInstanceFilter(ByRef InstanceList As List(Of McInstance), Formula As McInstanceState(), ByRef KeepList As List(Of McInstance))
         KeepList.AddRange(InstanceList.Where(Function(v) Formula.Contains(v.State)))
-        '加入版本列表，并从剩余中删除
+        '加入实例列表，并从剩余中删除
         If KeepList.Any Then
             InstanceList = InstanceList.Except(KeepList).ToList()
         End If
     End Sub
     Public Enum McInstanceCardType
         Star = -1
-        Auto = 0 '仅用于强制版本分类的自动
+        Auto = 0 '仅用于强制实例分类的自动
         Hidden = 1
         API = 2
         OriginalLike = 3
@@ -2416,7 +2416,7 @@ OnLoaded:
     End Sub
 
     ''' <summary>
-    ''' 比较两个版本名；等同 Left >= Right。
+    ''' 比较两个实例名；等同 Left >= Right。
     ''' 无法比较两个预发布版的大小。
     ''' 支持的格式：未知版本, 1.13.2, 1.7.10-pre4, 1.8_pre, 1.14 Pre-Release 2, 1.14.4 C6
     ''' </summary>
@@ -2424,7 +2424,7 @@ OnLoaded:
         Return CompareVersion(Left, Right) >= 0
     End Function
     ''' <summary>
-    ''' 比较两个版本名，若 Left 较新则返回 1，相同则返回 0，Right 较新则返回 -1；等同 Left - Right。
+    ''' 比较两个实例名，若 Left 较新则返回 1，相同则返回 0，Right 较新则返回 -1；等同 Left - Right。
     ''' 无法比较两个预发布版的大小。
     ''' 支持的格式：未知版本, 26.1-snapshot-1，1.13.2, 1.7.10-pre4, 1.8_pre, 1.14 Pre-Release 2, 1.14.4 C6
     ''' </summary>
@@ -2482,7 +2482,7 @@ NextEntry:
         Return 0
     End Function
     ''' <summary>
-    ''' 比较两个版本名的排序器。
+    ''' 比较两个实例名的排序器。
     ''' </summary>
     Public Class VersionComparer
         Implements IComparer(Of String)
