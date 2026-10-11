@@ -1869,6 +1869,12 @@ NextInstance:
                 '将最后两位改为大写，前面的部分保留
                 RequiredLang = RequiredLang.Substring(0, RequiredLang.Length - 2) & RequiredLang.Substring(RequiredLang.Length - 2).Upper
             End If
+            '13w16a ~ 13w23b：只有 en_US.lang，会 NPE 崩溃
+            If McInstanceSelected.State = McInstanceState.Snapshot AndAlso
+               McInstanceSelected.ReleaseTime >= New Date(2013, 4, 21) AndAlso
+               McInstanceSelected.ReleaseTime < New Date(2013, 6, 13) Then
+                RequiredLang = "en_US"
+            End If
             If CurrentLang = RequiredLang Then
                 McLaunchLog($"需要的语言为 {RequiredLang}，当前语言为 {CurrentLang}，无需修改")
             Else
