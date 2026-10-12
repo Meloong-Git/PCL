@@ -414,6 +414,17 @@ NextPage:
             Next
             RawResults = New List(Of ResourceProject)(SearchResults)
 
+            '获取所选 MC 版本支持的加载器
+            If Not String.IsNullOrEmpty(Request.GameVersion) Then
+                Dim PageResults = RawResults.GetRange(0, Math.Min(RESULT_PAGE_SIZE, RawResults.Count))
+                Dim LoaderThreads As New List(Of Thread)
+                For Each Project In PageResults
+                    LoaderThreads.Add(RunInNewThread(Sub() Project.LoadersOfVersion = Project.GetLoadersForVersion(Request.GameVersion), "Loaders of Version"))
+                Next
+                LoaderThreads.ForEach(Sub(t) t.Join())
+                If Task.IsCanceled Then Return
+            End If
+
             '仅保留兼容 Forge 的 Mod，或老版本中没有标注任何 Mod Loader 的 Mod
             If IgnoreModLoaderFilter Then
                 RawResults.KeepIf(Function(p) p.ModLoaders = ModLoaders.None OrElse p.ModLoaders.HasFlagF(ModLoaders.Forge))
