@@ -42,7 +42,7 @@
                         <local:MySlider x:Name="SliderDownloadSpeed" Grid.Row="5" local:SettingService.Key="ToolDownloadSpeed" MaxValue="42" Value="42" Grid.Column="1"
                                         ToolTip="设置下载的速度上限，以避免在下载时导致其他需要联网的程序卡死" />
                         <TextBlock VerticalAlignment="Top" Grid.Row="6" HorizontalAlignment="Left" Text="目标文件夹" Margin="0,5,25,5" />
-                        <TextBlock Margin="0,5" HorizontalAlignment="Left" Text="请在 启动 → 版本选择 → 文件夹列表 中更改下载目标文件夹。&#xa;在某个文件夹或游戏版本上右键，即可选择打开对应文件夹。" Grid.Row="6" Grid.Column="1" VerticalAlignment="Center" Opacity="0.5" />
+                        <TextBlock Margin="0,5" HorizontalAlignment="Left" Text="请在 启动 → 实例选择 → 文件夹列表 中更改下载目标文件夹。&#xa;在某个文件夹或游戏实例上右键，即可选择打开对应文件夹。" Grid.Row="6" Grid.Column="1" VerticalAlignment="Center" Opacity="0.5" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>

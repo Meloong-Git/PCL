@@ -17,7 +17,7 @@ Public Class ResourceVersion
     '描述性字段
 
     ''' <summary>
-    ''' 版本描述名。
+    ''' 实例描述名。
     ''' 并非文件名或版本号，是由上传者完全自定义的字段。
     ''' </summary>
     Public Display As String
@@ -40,7 +40,7 @@ Public Class ResourceVersion
     ''' </summary>
     Public ModLoaders As ModLoaders = ModLoaders.None
     ''' <summary>
-    ''' 支持的游戏版本列表。类型包括："26.1.5"，"26.1"，"26.1 预览版"，"1.18.5"，"1.18"，"1.18 预览版"，"21w15a"，"未知版本"。
+    ''' 支持的游戏版本列表。类型包括："26.1.5"，"26.1"，"26.1 预览版"，"1.18.5"，"1.18"，"1.18 预览版"，"21w15a"，"未知实例"。
     ''' </summary>
     Public GameVersions As List(Of String)
 

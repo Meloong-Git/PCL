@@ -115,7 +115,7 @@ Public Module ModModpack
         FileUtils.ExtractToDirectory(FileAddress, InstallTemp, c, p)
     End Sub
     ''' <summary>
-    ''' 从整合包的 override 目录复制文件，同时设置 PCL 的配置文件与版本隔离。
+    ''' 从整合包的 override 目录复制文件，同时设置 PCL 的配置文件与实例隔离。
     ''' 对路径末尾是否为 \ 没有要求。
     ''' </summary>
     Private Sub CopyOverrideDirectory(OverridesFolder As String, VersionFolder As String, Loader As LoaderBase)
@@ -132,12 +132,12 @@ Public Module ModModpack
         Dim OverridesIni As String = $"{OverridesFolder}PCL\Setup.ini"
         Dim VersionIni As String = $"{VersionFolder}PCL\Setup.ini"
         If FileUtils.Exists(OverridesIni) Then
-            WriteIni(OverridesIni, "VersionArgumentIndie", 1) '开启版本隔离
+            WriteIni(OverridesIni, "VersionArgumentIndie", 1) '开启实例隔离
             WriteIni(OverridesIni, "VersionArgumentIndieV2", True)
             WriteIni(OverridesIni, "IsStar", False)
             FileUtils.Copy(OverridesIni, VersionIni) '覆写已有的 ini
         Else
-            WriteIni(VersionIni, "VersionArgumentIndie", 1) '开启版本隔离
+            WriteIni(VersionIni, "VersionArgumentIndie", 1) '开启实例隔离
             WriteIni(VersionIni, "VersionArgumentIndieV2", True)
         End If
         IniClearCache(VersionIni) '重置缓存，避免被安装过程中写入的 ini 覆盖
@@ -166,12 +166,12 @@ Public Module ModModpack
         End Try
         If Json("minecraft") Is Nothing OrElse Json("minecraft")("version") Is Nothing Then Throw New Exception("CurseForge 整合包未提供 Minecraft 版本信息")
 
-        '获取版本名
+        '获取实例名
         If InstanceName Is Nothing Then
             InstanceName = If(Json("name"), "")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
             If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
-            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
+            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入实例名称", "", "", New Collection(Of Validate) From {Validate})
             If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         End If
 
@@ -394,12 +394,12 @@ Public Module ModModpack
                     NotifyIncompatibleLoader(Entry.Name)
             End Select
         Next
-        '获取版本名
+        '获取实例名
         If InstanceName Is Nothing Then
             InstanceName = If(Json("name"), "")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
             If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
-            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
+            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入实例名称", "", "", New Collection(Of Validate) From {Validate})
             If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         End If
         '解压
@@ -438,7 +438,7 @@ Public Module ModModpack
             Urls = Urls.Distinct.ToList()
             Dim TargetPath As String = Path.Combine(McFolderSelected, "versions", InstanceName, File("path").ToString().TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
             If Not PathUtils.IsParentOf($"{McFolderSelected}versions\{InstanceName}\", TargetPath) Then
-                MyMsgBox($"整合包的文件路径超出了版本文件夹，请向整合包作者反馈此问题！{vbCrLf}目标：{Path.GetFullPath(TargetPath)}{vbCrLf}错误的文件：{TargetPath}", "文件路径校验失败", IsWarn:=True)
+                MyMsgBox($"整合包的文件路径超出了实例文件夹，请向整合包作者反馈此问题！{vbCrLf}目标：{Path.GetFullPath(TargetPath)}{vbCrLf}错误的文件：{TargetPath}", "文件路径校验失败", IsWarn:=True)
                 Throw New OperationCanceledException
             End If
             FileList.Add(New NetFile(Urls, TargetPath,
@@ -509,11 +509,11 @@ Public Module ModModpack
         Catch ex As Exception
             Throw New Exception("HMCL 整合包安装信息存在问题", ex)
         End Try
-        '获取版本名
+        '获取实例名
         Dim InstanceName As String = If(Json("name"), "")
         Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
         If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
-        If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
+        If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入实例名称", "", "", New Collection(Of Validate) From {Validate})
         If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         '解压
         Dim InstallTemp As String = RequestTaskTempFolder()
@@ -562,11 +562,11 @@ Public Module ModModpack
         Catch ex As Exception
             Throw New Exception("MMC 整合包安装信息存在问题", ex)
         End Try
-        '获取版本名
+        '获取实例名
         Dim InstanceName As String = If(PackInstance.RegexSeek("(?<=\nname\=)[^\n]+"), "")
         Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
         If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
-        If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
+        If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入实例名称", "", "", New Collection(Of Validate) From {Validate})
         If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         '解压
         Dim InstallTemp As String = RequestTaskTempFolder()
@@ -612,7 +612,7 @@ Public Module ModModpack
                         WriteIni(SetupFile, "LogoCustom", True)
                         WriteIni(SetupFile, "Logo", "PCL\Logo.png")
                         FileUtils.Copy($"{InstallTemp}{ArchiveBaseFolder}{Logo}.png", $"{McFolderSelected}versions\{InstanceName}\PCL\Logo.png")
-                        Logger.Info($"迁移 MultiMC 版本独立设置：版本图标（{Logo}.png）")
+                        Logger.Info($"迁移 MultiMC 版本独立设置：实例图标（{Logo}.png）")
                     End If
                     'JVM 参数
                     Dim JvmArgs As String = ReadIni(MmcSetupFile, "JvmArgs", "")
@@ -687,12 +687,12 @@ Public Module ModModpack
         Catch ex As Exception
             Throw New Exception("MCBBS 整合包安装信息存在问题", ex)
         End Try
-        '获取版本名
+        '获取实例名
         If InstanceName Is Nothing Then
             InstanceName = If(Json("name"), "")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
             If Validate.Validate(InstanceName) <> "" Then InstanceName = ""
-            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入版本名称", "", "", New Collection(Of Validate) From {Validate})
+            If InstanceName = "" Then InstanceName = MyMsgBoxInput("输入实例名称", "", "", New Collection(Of Validate) From {Validate})
             If String.IsNullOrEmpty(InstanceName) Then Throw New OperationCanceledException
         End If
         '解压
@@ -830,7 +830,7 @@ Public Module ModModpack
         Next
         If Match Is Nothing Then Throw New Exception("文件结构不匹配，这可能不是 Minecraft 客户端压缩包？") '没有匹配
         Dim ArchiveBaseFolder As String = Match.Value.Replace("/", "\").TrimStart("\") '格式例如：包裹文件夹\.minecraft\（最短为空字符串）
-        Logger.Info($"检测到压缩包的 .minecraft 根目录：{ArchiveBaseFolder}，命中的版本名：{Match.Groups(1).Value}")
+        Logger.Info($"检测到压缩包的 .minecraft 根目录：{ArchiveBaseFolder}，命中的实例名：{Match.Groups(1).Value}")
         '获取解压路径
         MyMsgBox("接下来请选择一个空文件夹，它会被安装到这个文件夹里。", "安装", "继续", ForceWait:=True)
         Dim TargetFolder As String = Dialogs.SelectFolder("选择安装目标（必须是一个空文件夹）", False).FirstOrDefault

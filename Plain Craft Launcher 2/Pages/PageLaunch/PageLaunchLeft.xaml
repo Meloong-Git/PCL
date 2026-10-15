@@ -24,8 +24,8 @@
         <Grid.RenderTransform>
             <ScaleTransform />
         </Grid.RenderTransform>
-        <local:MyButton Grid.Row="3" Grid.Column="2" x:Name="BtnVersion" Height="35" Margin="0,10,10,0" Text="版本选择" IsEnabled="False" />
-        <local:MyButton Grid.Row="3" Grid.Column="3" x:Name="BtnMore" Visibility="Collapsed" Height="35" Margin="0,10,10,0" TextPadding="36" Text="版本设置" />
+        <local:MyButton Grid.Row="3" Grid.Column="2" x:Name="BtnVersion" Height="35" Margin="0,10,10,0" Text="实例选择" IsEnabled="False" />
+        <local:MyButton Grid.Row="3" Grid.Column="3" x:Name="BtnMore" Visibility="Collapsed" Height="35" Margin="0,10,10,0" TextPadding="36" Text="实例设置" />
         <Grid Grid.ColumnSpan="5" Grid.Row="1" Margin="20,0" VerticalAlignment="Center" x:Name="PanLogin" />
         <Grid Grid.ColumnSpan="5" Margin="20,24,20,-4" Name="PanTypeOne">
             <Border HorizontalAlignment="Center" VerticalAlignment="Center" Background="{StaticResource ColorBrushSemiTransparent}" CornerRadius="13" MinHeight="27" MaxHeight="27">
@@ -63,7 +63,7 @@
                 </TransformGroup>
             </Grid.RenderTransform>
             <local:MyButton x:Name="BtnLaunch" Height="54" Margin="20,0" Text="正在加载" ColorType="Highlight" Padding="30,0,30,15" IsEnabled="False" />
-            <TextBlock x:Name="LabVersion" Text="正在加载版本列表，请稍候" Margin="35,0,35,10" IsHitTestVisible="False" VerticalAlignment="Bottom" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{DynamicResource ColorBrushGray3}" RenderTransformOrigin="0.5,-0.2">
+            <TextBlock x:Name="LabVersion" Text="正在加载实例列表，请稍候" Margin="35,0,35,10" IsHitTestVisible="False" VerticalAlignment="Bottom" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="11" Foreground="{DynamicResource ColorBrushGray3}" RenderTransformOrigin="0.5,-0.2">
                 <TextBlock.RenderTransform>
                     <ScaleTransform ScaleX="{Binding RealRenderTransform.ScaleX, ElementName=BtnLaunch, Mode=OneWay}" ScaleY="{Binding RealRenderTransform.ScaleY, ElementName=BtnLaunch, Mode=OneWay}" />
                 </TextBlock.RenderTransform>

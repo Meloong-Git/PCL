@@ -22,7 +22,7 @@ Public Class PageInstanceExport
     End Sub
     Private Sub PageInstanceExport_Loaded() Handles Me.Loaded
         AniControlEnabled += 1
-        If CurrentInstance <> PageInstanceLeft.Instance.PathVersion Then RefreshAll() '切换到了另一个版本，重置页面
+        If CurrentInstance <> PageInstanceLeft.Instance.PathVersion Then RefreshAll() '切换到了另一个实例，重置页面
         CustomEventService.SetEventData(BtnAdvancedHelp,
             If(BuildType = BuildTypes.Release, "指南/整合包制作 - Public.json", "指南/整合包制作 - Snapshot.json"))
         AniControlEnabled -= 1
@@ -330,7 +330,7 @@ Public Class PageInstanceExport
             ConfigLines.Add("Name:" & TextExportName.Text)
             ConfigLines.Add("Version:" & TextExportVersion.Text)
             ConfigLines.Add("")
-            ConfigLines.Add($"# 当版本设置中选择了 {vbLQ}使用版本文件夹中的 Java{vbRQ} 时，是否打包版本文件夹中的 Java。")
+            ConfigLines.Add($"# 当实例设置中选择了 {vbLQ}使用实例文件夹中的 Java{vbRQ} 时，是否打包实例文件夹中的 Java。")
             ConfigLines.Add("IncludeJava:" & CheckOptionsJava.Checked)
             ConfigLines.Add("")
             ConfigLines.Add("# 是否打包正式版 PCL，以便没有启动器的玩家安装整合包。")
@@ -537,11 +537,11 @@ Public Class PageInstanceExport
             '复制 Java
             If IncludeJava Then
                 Dim JavaToExport = SelectOrDownloadJava(McVersion, False, Loader.CreateCancellationToken, Loader.CreateSyncProgressProvider(0.85, 0.93))
-                If JavaToExport Is Nothing Then Throw New FileNotFoundException("版本文件夹中没有找到可导出的 Java。")
+                If JavaToExport Is Nothing Then Throw New FileNotFoundException("实例文件夹中没有找到可导出的 Java。")
                 Dim JavaFolder = PathUtils.RemoveLastPart(JavaToExport.Folder)
                 Dim DestFolder As String = Path.Combine(OverridesFolder, JavaFolder.AfterFirst(McVersion.PathVersion, True))
                 DirectoryUtils.Copy(JavaFolder, DestFolder)
-                Logger.Info($"已复制版本文件夹中的 Java：{JavaFolder} → {DestFolder}")
+                Logger.Info($"已复制实例文件夹中的 Java：{JavaFolder} → {DestFolder}")
             End If
             Loader.Progress = 0.95
             '复制追加内容到根目录
@@ -562,7 +562,7 @@ Public Class PageInstanceExport
                 End If
             Next
             Loader.Progress = 0.97
-            '复制 PCL 版本设置
+            '复制 PCL 实例设置
             If DirectoryUtils.Exists(McVersion.PathVersion & "PCL\") Then DirectoryUtils.Copy(McVersion.PathVersion & "PCL\", OverridesFolder & "PCL\")
             WriteIni(OverridesFolder & "PCL\Setup.ini", "IsStar", False)
             '复制 PCL 本体（正式版）
@@ -752,12 +752,12 @@ Public Class PageInstanceExport
             BtnExport.IsEnabled = True
             HintJava.Visibility = Visibility.Visible
             HintJava.Theme = MyHint.Themes.Yellow
-            HintJava.Text = $"该版本设置要求 {vbLQ}使用指定的 Java{vbRQ}，这在导出后很可能会失效。建议修改为 {vbLQ}使用版本文件夹中的 Java{vbRQ}。"
+            HintJava.Text = $"该实例设置要求 {vbLQ}使用指定的 Java{vbRQ}，这在导出后很可能会失效。建议修改为 {vbLQ}使用实例文件夹中的 Java{vbRQ}。"
         ElseIf JavaType = 2 AndAlso JavaWorker.HasSucceeded AndAlso JavaWorker.LastResult Is Nothing Then
             BtnExport.IsEnabled = False
             HintJava.Visibility = Visibility.Visible
             HintJava.Theme = MyHint.Themes.Red
-            HintJava.Text = $"该版本设置要求 {vbLQ}使用版本文件夹中的 Java{vbRQ}，但版本文件夹中没能找到任何 Java。"
+            HintJava.Text = $"该实例设置要求 {vbLQ}使用实例文件夹中的 Java{vbRQ}，但实例文件夹中没能找到任何 Java。"
         Else
             BtnExport.IsEnabled = True
             HintJava.Visibility = Visibility.Collapsed

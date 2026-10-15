@@ -331,7 +331,7 @@
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="3" Grid.Column="6" Text="新功能投票" x:Name="CheckHiddenOtherVote" local:SettingService.Key="UiHiddenOtherVote" />
                         <TextBlock Grid.Row="4" VerticalAlignment="Center" HorizontalAlignment="Left" Text="特定功能" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="2" Text="邮箱隐藏" x:Name="CheckLauncherEmail" local:SettingService.Key="UiLauncherEmail" ToolTip="隐藏第三方登录的账号邮箱显示，以避免隐私泄露。&#xa;此选项的更改将在重启启动器后生效。" />
-                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="3" Text="版本管理" x:Name="CheckHiddenFunctionSelect" local:SettingService.Key="UiHiddenFunctionSelect" ToolTip="隐藏启动按钮下方的版本选择与版本设置入口。" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="3" Text="实例管理" x:Name="CheckHiddenFunctionSelect" local:SettingService.Key="UiHiddenFunctionSelect" ToolTip="隐藏启动按钮下方的实例选择与实例设置入口。" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="4" Text="Mod 更新" x:Name="CheckHiddenFunctionModUpdate" local:SettingService.Key="UiHiddenFunctionModUpdate" ToolTip="禁止在 Mod 管理页面更新 Mod。" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="5" Text="功能隐藏" x:Name="CheckHiddenFunctionHidden" local:SettingService.Key="UiHiddenFunctionHidden" ToolTip="仅隐藏本选项卡，设置的禁用内容依然有效。&#xa;可以在保留个性化设置页面的情况下避免隐藏设置被修改。" />
                     </Grid>

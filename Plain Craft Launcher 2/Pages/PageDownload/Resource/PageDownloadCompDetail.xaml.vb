@@ -293,11 +293,11 @@ GroupDone:
             Dim File As ResourceVersion = sender.Tag
             Dim LoaderName As String = $"{Project.Platform} 整合包下载：{Project.TranslatedName} "
 
-            '获取版本名
+            '获取实例名
             Dim PackName As String = Project.TranslatedName.Replace(".zip", "").Replace(".rar", "").Replace(".mrpack", "").Replace("\", "＼").Replace("/", "／").Replace("|", "｜").Replace(":", "：").Replace("<", "＜").Replace(">", "＞").Replace("*", "＊").Replace("?", "？").Replace("""", "").Replace("： ", "：")
             Dim Validate As New ValidateFolderName(McFolderSelected & "versions")
             If Validate.Validate(PackName) <> "" Then PackName = ""
-            Dim InstanceName As String = MyMsgBoxInput("输入版本名称", "", PackName, New Collection(Of Validate) From {Validate})
+            Dim InstanceName As String = MyMsgBoxInput("输入实例名称", "", PackName, New Collection(Of Validate) From {Validate})
             If String.IsNullOrEmpty(InstanceName) Then Return
 
             '构造步骤加载器

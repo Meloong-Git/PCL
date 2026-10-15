@@ -387,7 +387,7 @@ Public Class PageDownloadInstall
     End Sub
 
     ''' <summary>
-    ''' 获取版本图标。
+    ''' 获取实例图标。
     ''' </summary>
     Private Function GetSelectLogo() As String
         If SelectedFabric IsNot Nothing Then
@@ -405,9 +405,9 @@ Public Class PageDownloadInstall
         End If
     End Function
 
-    '版本名处理
+    '实例名处理
     ''' <summary>
-    ''' 获取默认版本名。
+    ''' 获取默认实例名。
     ''' </summary>
     Private Function GetSelectName() As String
         Dim Name As String = VanillaName
@@ -925,7 +925,7 @@ Public Class PageDownloadInstall
             For Each Part As String In FabricApiName.BeforeFirst("]").TrimStart("[").Split("/")
                 If Part = TargetName Then Return True
             Next
-            '将版本名分割语素（例如 1.16.4/5）
+            '将实例名分割语素（例如 1.16.4/5）
             Dim Lefts = FabricApiName.BeforeFirst("]").RegexSearch("[a-z/]+|[0-9/]+").ToList
             Dim Rights = TargetName.BeforeFirst("]").RegexSearch("[a-z/]+|[0-9/]+").ToList
             '对每段进行判断
@@ -1123,12 +1123,12 @@ Public Class PageDownloadInstall
         If e.Key = Key.Enter AndAlso IsInSelectPage AndAlso BtnStart.IsEnabled Then BtnStart_Click()
     End Sub
     Private Sub BtnStart_Click() Handles BtnStart.Click
-        '确认版本隔离
+        '确认实例隔离
         If (SelectedForge IsNot Nothing OrElse SelectedNeoForge IsNot Nothing OrElse SelectedFabric IsNot Nothing) AndAlso
            (Settings.Get(Of Integer)("LaunchArgumentIndieV2") = 0 OrElse Settings.Get(Of Integer)("LaunchArgumentIndieV2") = 2) Then
-            If MyMsgBox("你尚未开启版本隔离，多个 MC 版本会共用同一个 Mod 文件夹。" & vbCrLf &
+            If MyMsgBox("你尚未开启实例隔离，多个 MC 版本会共用同一个 Mod 文件夹。" & vbCrLf &
                         "因此，游戏可能会因为读取到与当前版本不符的 Mod 而崩溃。" & vbCrLf &
-                        "推荐先在 设置 → 启动选项 → 默认版本隔离 中开启版本隔离！", "版本隔离提示", "取消下载", "继续") = 1 Then
+                        "推荐先在 设置 → 启动选项 → 默认实例隔离 中开启实例隔离！", "实例隔离提示", "取消下载", "继续") = 1 Then
                 Return
             End If
         End If

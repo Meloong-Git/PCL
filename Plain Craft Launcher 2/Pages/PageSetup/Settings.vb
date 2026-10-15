@@ -229,7 +229,7 @@ Public Class Settings
 
         ''' <summary>
         ''' 读取过的设置的缓存，若从未读取过则为 Nothing。
-        ''' 若为版本独立设置，键为版本路径；否则，键为空字符串。
+        ''' 若为实例独立设置，键为实例路径；否则，键为空字符串。
         ''' </summary>
         Public ValueCache As New ConcurrentDictionary(Of String, Object)
         Public Function GetCache(Instance As McInstance)
@@ -266,7 +266,7 @@ Public Class Settings
                         Logger.Warn(ex, $"写入注册表失败（{Key} → {Value}）", LogBehavior.Toast)
                     End Try
                 Case Sources.Instance
-                    If Instance Is Nothing Then Throw New Exception($"保存版本独立设置 {Key} 时未提供目标版本")
+                    If Instance Is Nothing Then Throw New Exception($"保存实例独立设置 {Key} 时未提供目标实例")
                     WriteIni(Instance.PathVersion & "PCL\Setup.ini", Key, Value)
             End Select
         End Sub
@@ -333,7 +333,7 @@ Public Class Settings
                     GotValue = RegistryUtils.TryRead($"HKEY_CURRENT_USER\Software\{RegFolder}", Key, DefaultValue)
                 Case Sources.Instance
                     If Instance Is Nothing Then
-                        Throw New Exception($"读取版本设置 {Key} 时未提供目标版本")
+                        Throw New Exception($"读取实例设置 {Key} 时未提供目标实例")
                     Else
                         GotValue = ReadIni(Instance.PathVersion & "PCL\Setup.ini", Key, DefaultValue)
                     End If
@@ -395,7 +395,7 @@ Public Class Settings
                         Logger.Warn(ex, $"删除注册表失败（{Key}）", LogBehavior.Toast)
                     End Try
                 Case Sources.Instance
-                    If Instance Is Nothing Then Throw New Exception($"重置版本设置 {Key} 时未提供目标版本")
+                    If Instance Is Nothing Then Throw New Exception($"重置实例设置 {Key} 时未提供目标实例")
                     DeleteIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
             End Select
             '触发改变事件
@@ -428,7 +428,7 @@ Public Class Settings
                     Return False
                 End Try
             Case Else 'Source.Instance
-                If Instance Is Nothing Then Throw New Exception($"判断版本设置 {Key} 是否存在时未提供目标版本")
+                If Instance Is Nothing Then Throw New Exception($"判断实例设置 {Key} 是否存在时未提供目标实例")
                 Return HasIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
         End Select
     End Function

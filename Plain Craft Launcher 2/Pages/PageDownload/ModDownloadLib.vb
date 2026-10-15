@@ -4,7 +4,7 @@ Public Module ModDownloadLib
 
     ''' <summary>
     ''' 获取下载某个 Minecraft 版本的加载器列表。
-    ''' 它必须安装到 McFolderSelected，但是可以自定义版本名（不过自定义的版本名不会修改 Json 中的 id 项）。
+    ''' 它必须安装到 McFolderSelected，但是可以自定义实例名（不过自定义的实例名不会修改 Json 中的 id 项）。
     ''' </summary>
     Private Function McDownloadClientLoader(Id As String, Optional JsonUrl As String = Nothing, Optional InstanceName As String = Nothing) As List(Of LoaderBase)
         InstanceName = If(InstanceName, Id)
@@ -197,7 +197,7 @@ echo 服务端已停止。
 pause"
                 FileUtils.Write(VersionFolder & "Launch Server.bat", Bat,
                         encoding:=If(Encoding.Default.Equals(Encoding.UTF8), Encoding.UTF8, Encoding.GetEncoding("GB18030")))
-                '删除版本 JSON
+                '删除实例 JSON
                 FileUtils.Delete(VersionFolder & Id & ".json")
             End Sub) With {.ProgressWeight = 0.5, .Show = False})
             '下载服务端文件
@@ -1100,7 +1100,7 @@ Retry:
         Dim VersionFolder As String = $"{McFolder}versions\{NewInstanceName}\"
         Dim DisplayName As String = $"{LoaderName} {Inherit} - {LoaderVersion}"
         Dim Loaders As New List(Of LoaderBase)
-        Dim LibVersionFolder As String = $"{McFolderSelected}versions\{NewInstanceName}\" '作为 Lib 文件目标的版本文件夹
+        Dim LibVersionFolder As String = $"{McFolderSelected}versions\{NewInstanceName}\" '作为 Lib 文件目标的实例文件夹
 
         '获取 Forge 下载信息
         If Info Is Nothing Then
@@ -1241,7 +1241,7 @@ Retry:
                     '解压并获取信息
                     Installer = FileUtils.OpenZip(InstallerAddress)
                     Dim Json As JObject = Installer.GetEntry("install_profile.json").Open().ReadString().DeserializeJson()
-                    '新建目标版本文件夹
+                    '新建目标实例文件夹
                     DirectoryUtils.Create(VersionFolder)
                     Task.Progress = 0.04
                     '释放 launcher_installer.json
@@ -1285,7 +1285,7 @@ Retry:
                         Logger.Info($"有多个疑似的新增版本，无法确定：{DeltaList.Select(Function(d) d.Name).Join(";")}")
                     Else
                         '没有新增文件夹
-                        Logger.Info("未找到新增的版本文件夹")
+                        Logger.Info("未找到新增的实例文件夹")
                     End If
                 Catch ex As Exception
                     Throw New Exception($"安装新 {LoaderName} 版本失败", ex)
@@ -1310,7 +1310,7 @@ Retry:
                     Task.Progress = 0.2
                     Dim Json As JObject = Installer.GetEntry("install_profile.json").Open().ReadString().DeserializeJson()
                     Task.Progress = 0.4
-                    '新建版本文件夹
+                    '新建实例文件夹
                     DirectoryUtils.Create(VersionFolder)
                     Task.Progress = 0.5
                     If Json("install") Is Nothing Then
@@ -1646,7 +1646,7 @@ Retry:
         Dim Loaders As New List(Of LoaderBase)
 
         '下载 Json
-        MinecraftName = MinecraftName.Replace("∞", "infinite") '放在 ID 后面避免影响版本文件夹名称
+        MinecraftName = MinecraftName.Replace("∞", "infinite") '放在 ID 后面避免影响实例文件夹名称
         Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("获取 Fabric 主文件下载地址",
         Sub(Task As LoaderTask(Of String, List(Of NetFile)))
             Task.Output = New List(Of NetFile) From {New NetFile({
@@ -1710,7 +1710,7 @@ Retry:
     Public Class McInstallRequest
 
         ''' <summary>
-        ''' 必填。安装目标版本名称。
+        ''' 必填。安装目标实例名称。
         ''' </summary>
         Public NewInstanceName As String
         ''' <summary>
@@ -1816,15 +1816,15 @@ Retry:
         Try
             If Loader.State <> LoadState.Failed AndAlso Loader.State <> LoadState.Canceled Then Return
             Thread.Sleep(1000) '防止存在尚未完全释放的文件，导致清理失败（例如整合包安装）
-            '删除版本文件夹
+            '删除实例文件夹
             If DirectoryUtils.Exists(Loader.Input & "saves\") OrElse DirectoryUtils.Exists(Loader.Input & "versions\") Then
-                Logger.Warn($"由于版本已被独立启动，不清理版本文件夹：{Loader.Input}")
+                Logger.Warn($"由于版本已被独立启动，不清理实例文件夹：{Loader.Input}")
             Else
-                Logger.Warn($"由于下载失败或取消，清理版本文件夹：{Loader.Input}")
+                Logger.Warn($"由于下载失败或取消，清理实例文件夹：{Loader.Input}")
                 DirectoryUtils.Delete(Loader.Input)
             End If
         Catch ex As Exception
-            Logger.Warn(ex, "下载失败或取消后清理版本文件夹失败")
+            Logger.Warn(ex, "下载失败或取消后清理实例文件夹失败")
         End Try
     End Sub
 
@@ -1965,7 +1965,7 @@ Retry:
             DirectoryUtils.Copy(TempMcFolder & "libraries", McFolderSelected & "libraries")
             Task.Progress = 0.8
             '创建 Mod 和资源包文件夹
-            Dim ModsFolder = New McInstance(VersionFolder).PathIndie & "mods\" '版本隔离信息在此时被决定
+            Dim ModsFolder = New McInstance(VersionFolder).PathIndie & "mods\" '实例隔离信息在此时被决定
             If DirectoryUtils.Exists(ModsTempFolder) Then
                 DirectoryUtils.Copy(ModsTempFolder, ModsFolder)
             ElseIf Modable Then

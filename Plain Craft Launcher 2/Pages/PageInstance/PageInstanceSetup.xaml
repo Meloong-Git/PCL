@@ -7,7 +7,7 @@
     PanScroll="PanBack">
     <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
         <StackPanel x:Name="PanMain" Margin="25,25,25,25">
-            <local:MyHint Text="这些设置只对该游戏版本生效，不影响其他版本。" Theme="Blue" Margin="0,0,0,15"
+            <local:MyHint Text="这些设置只对该游戏实例生效，不影响其他实例。" Theme="Blue" Margin="0,0,0,15"
                           CanClose="True" RelativeSetup="HintIndieSetup"  />
             <local:MyCard x:Name="CardArgument" Margin="0,0,0,15" Title="启动选项">
                 <StackPanel Margin="25,40,25,21">
@@ -27,12 +27,12 @@
                             <RowDefinition Height="28" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="版本隔离" Margin="0,0,25,0" />
+                        <TextBlock Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left" Text="实例隔离" Margin="0,0,25,0" />
                         <local:MyComboBox x:Name="ComboArgumentIndieV2" Grid.Row="0" Grid.ColumnSpan="2" Grid.Column="1">
                             <local:MyComboBoxItem Content="开启" ToolTipService.InitialShowDelay="0"
-                                                  ToolTip="与其他版本的存档、Mod 等文件相互独立，互不干涉。&#xa;这会使你无法跨版本共享存档，但可以规避 Mod 冲突问题。"/>
+                                                  ToolTip="与其他实例的存档、Mod 等文件相互独立，互不干涉。&#xa;这会使你无法跨实例共享存档，但可以规避 Mod 冲突问题。"/>
                             <local:MyComboBoxItem Content="关闭" ToolTipService.InitialShowDelay="0"
-                                                  ToolTip="与其余关闭隔离的版本共享存档、Mod 等文件。&#xa;若存在多个安装了 Mod 的版本，可能会由于 Mod 冲突而导致崩溃。"/>
+                                                  ToolTip="与其余关闭隔离的实例共享存档、Mod 等文件。&#xa;若存在多个安装了 Mod 的实例，可能会由于 Mod 冲突而导致崩溃。"/>
                         </local:MyComboBox>
                         <TextBlock Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left" Text="游戏窗口标题" Margin="0,0,25,0" />
                         <local:MyTextBox x:Name="TextArgumentTitle" Grid.Row="2" Grid.ColumnSpan="2" local:SettingService.Key="VersionArgumentTitle" Grid.Column="1" ToolTip="自定义游戏窗口的标题，若留空则跟随全局设置的值。&#xa;你可以用替换标记来动态改变其内容，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。" HintText="跟随全局设置" MaxLength="100" />
@@ -59,10 +59,10 @@
                                                   ToolTip="由 PCL 自动分析需要的 Java 版本，如果没有合适的 Java 则自动下载。" />
                                 <local:MyComboBoxItem Content="自动选择指定版本的 Java" 
                                                   ToolTip="手动输入一个 Java 版本范围，PCL 将选择符合该范围的 Java，如果没有合适的 Java 则自动下载。&#xa;适合部分 Mod 需要特定 Java 版本才能启动的情况。" />
-                                <local:MyComboBoxItem Content="使用版本文件夹中的 Java"
-                                                  ToolTip="手动在当前版本的文件夹中放置 Java 后，PCL 将自动搜索并使用该 Java。&#xa;适合整合包自带 Java 的情况。" />
+                                <local:MyComboBoxItem Content="使用实例文件夹中的 Java"
+                                                  ToolTip="手动在当前实例的文件夹中放置 Java 后，PCL 将自动搜索并使用该 Java。&#xa;适合整合包自带 Java 的情况。" />
                                 <local:MyComboBoxItem Content="使用指定的 Java"
-                                                  ToolTip="手动指定所使用的 Java 的绝对路径。&#xa;若将该版本打包到其他电脑，此设置可能会失效。" />
+                                                  ToolTip="手动指定所使用的 Java 的绝对路径。&#xa;若将该实例打包到其他电脑，此设置可能会失效。" />
                             </local:MyComboBox>
                             <local:MyTextBox x:Name="TextArgumentJavaRange" local:SettingService.Key="VersionArgumentJavaRange"
                                              Grid.Column="1" Margin="7,0,0,0" Width="200"
@@ -253,12 +253,12 @@
                     </local:MyComboBox>
                     <TextBlock Grid.Row="6" VerticalAlignment="Center" HorizontalAlignment="Left" Text="启动前执行命令" Margin="0,0,25,3" />
                     <local:MyTextBox x:Name="TextAdvanceRun" Grid.Row="6" Grid.ColumnSpan="2" local:SettingService.Key="VersionAdvanceRun" Grid.Column="1" HintText="" Margin="0,0,0,3"
-                                     ToolTip="该项不会覆盖全局设置：启动时会先执行全局设置的命令，再执行版本设置的命令。&#xa;&#xa;在 MC 启动前执行特定命令或程序，语法与 Windows 的命令提示符一致。&#xa;&#xa;你可以用替换标记来动态改变其内容或实现相对路径，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。例如：&#xa; · &quot;{verpath}test.exe&quot; ：运行版本文件夹下的 test.exe 程序&#xa; · &quot;{java}java.exe&quot; -jar &quot;{verpath}test.jar&quot; ：用 Java 运行版本文件夹下的 test.jar&#xa; · notepad &quot;{verindie}options.txt&quot; ：使用记事本打开该版本的设置文件&#xa;&#xa;涉及路径的操作最好都打上双引号，以避免路径中的空格导致运行失败。&#xa;执行命令时，命令行所在的目录是当前的 .minecraft 文件夹。" />
+                                     ToolTip="该项不会覆盖全局设置：启动时会先执行全局设置的命令，再执行实例设置的命令。&#xa;&#xa;在 MC 启动前执行特定命令或程序，语法与 Windows 的命令提示符一致。&#xa;&#xa;你可以用替换标记来动态改变其内容或实现相对路径，在 更多 → 帮助 中搜索 “替换标记” 以了解用法。例如：&#xa; · &quot;{verpath}test.exe&quot; ：运行实例文件夹下的 test.exe 程序&#xa; · &quot;{java}java.exe&quot; -jar &quot;{verpath}test.jar&quot; ：用 Java 运行实例文件夹下的 test.jar&#xa; · notepad &quot;{verindie}options.txt&quot; ：使用记事本打开该实例的设置文件&#xa;&#xa;涉及路径的操作最好都打上双引号，以避免路径中的空格导致运行失败。&#xa;执行命令时，命令行所在的目录是当前的 .minecraft 文件夹。" />
                     <local:MyCheckBox Grid.Row="7" Grid.Column="1" x:Name="CheckAdvanceRunWait" local:SettingService.Key="VersionAdvanceRunWait" Visibility="Collapsed"
                                       Text="等待命令执行完成后再继续启动" Margin="0,5,0,0" />
                     <StackPanel Margin="0,12,0,4" Grid.Row="8" Grid.ColumnSpan="2" HorizontalAlignment="Left">
                         <local:MyCheckBox Height="28" Text="禁止更新 Mod" x:Name="CheckAdvanceDisableModUpdate" local:SettingService.Key="VersionAdvanceDisableModUpdate"
-                                          ToolTip="禁止为此版本更新 Mod，以防止整合包玩家误操作" />
+                                          ToolTip="禁止为此实例更新 Mod，以防止整合包玩家误操作" />
                         <local:MyCheckBox Height="28" Text="关闭文件校验" x:Name="CheckAdvanceAssetsV2" local:SettingService.Key="VersionAdvanceAssetsV2"
                                           ToolTip="完全不更改 assets；不校验 libraries、第三方登录库与版本主 jar 文件是否被修改。&#xa;如果你没有修改相关文件，请勿勾选此项。" />
                         <local:MyCheckBox Height="28" Text="禁用 Java Launch Wrapper" x:Name="CheckAdvanceDisableJLW" local:SettingService.Key="VersionAdvanceDisableJLW"

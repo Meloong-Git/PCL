@@ -293,12 +293,12 @@ Public Class PageInstanceMod
             Hint("请先将文件从回收站还原，再尝试安装！", HintType.Red)
             Return True
         End If
-        '获取并检查目标版本
+        '获取并检查目标实例
         Dim Instance As McInstance = McInstanceSelected
         If FrmMain.PageCurrent = FormMain.PageType.InstanceSetup Then Instance = PageInstanceLeft.Instance
         If FrmMain.PageCurrent = FormMain.PageType.InstanceSelect OrElse Instance Is Nothing OrElse Not Instance.Modable Then
-            '正在选择版本，或当前版本不能安装 Mod
-            Hint("若要安装 Mod，请先选择一个可以安装 Mod 的版本！")
+            '正在选择实例，或当前实例不能安装 Mod
+            Hint("若要安装 Mod，请先选择一个可以安装 Mod 的实例！")
         ElseIf Not (FrmMain.PageCurrent = FormMain.PageType.InstanceSetup AndAlso FrmMain.PageCurrentSub = FormMain.PageSubType.InstanceMod) Then
             '未处于 Mod 管理页面
             If MyMsgBox($"是否要将这{If(FilePathList.IsSingle, "个", "些")}文件作为 Mod 安装到 {Instance.Name}？", "Mod 安装确认", "确定", "取消") = 1 Then GoTo Install
@@ -334,7 +334,7 @@ Install:
     ''' 下载 Mod。
     ''' </summary>
     Private Sub BtnManageDownload_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnManageDownload.Click, BtnHintDownload.Click
-        '预设置当前版本和搜索框内容
+        '预设置当前实例和搜索框内容
         PageResource.TargetInstance = PageInstanceLeft.Instance
         PageResource.TargetName = SearchBox.Text
         FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadMod)

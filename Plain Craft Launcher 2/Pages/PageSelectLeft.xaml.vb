@@ -131,7 +131,7 @@ Public Class PageSelectLeft
         Catch ex As Exception
             Logger.Error(ex, "构建 Minecraft 文件夹列表 UI 出错")
         Finally
-            LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\") '刷新版本列表
+            LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\") '刷新实例列表
         End Try
     End Sub
     Private McFolderListLast As List(Of McFolder)
@@ -218,25 +218,25 @@ Public Class PageSelectLeft
                 '提示
                 If IsReplace Then Return
                 If ShowHint Then Hint("文件夹 " & DisplayName & " 已添加！", HintType.Green)
-                '检查是否为根目录整合包，自动关闭版本隔离
+                '检查是否为根目录整合包，自动关闭实例隔离
                 '1. 根目录中存在数个 Mod
                 Dim ModFolder = DirectoryUtils.GetInfo(FolderPath & "mods\")
                 If Not (ModFolder.Exists AndAlso ModFolder.EnumerateFiles.Count >= 3) Then Return
-                '2. 版本数较少，可能为整合包
+                '2. 实例数较少，可能为整合包
                 Dim VersionFolderInfo = DirectoryUtils.GetInfo(FolderPath & "versions\")
                 If Not (VersionFolderInfo.Exists AndAlso VersionFolderInfo.EnumerateDirectories.Count <= 3) Then Return
-                '3. 能够找到可安装 Mod 的版本
+                '3. 能够找到可安装 Mod 的实例
                 For Each VersionFolder In VersionFolderInfo.EnumerateDirectories
                     Dim Instance As New McInstance(VersionFolder.FullName)
                     Instance.Load()
                     If Not Instance.Modable Then Continue For
-                    '4. 该版本的隔离文件夹下不存在 mods
+                    '4. 该实例的隔离文件夹下不存在 mods
                     Dim ModIndieFolder = DirectoryUtils.GetInfo(Instance.PathVersion & "mods\")
                     If ModIndieFolder.Exists AndAlso ModIndieFolder.EnumerateFiles.Any Then Return
                     '满足以上全部条件则视为根目录整合包
                     Settings.Set("VersionArgumentIndie", 2, Instance:=Instance)
                     Settings.Set("VersionArgumentIndieV2", False, Instance:=Instance)
-                    Logger.Warn($"已自动关闭单版本隔离：{Instance.Name}")
+                    Logger.Warn($"已自动关闭单实例隔离：{Instance.Name}")
                 Next
             Catch ex As Exception
                 Logger.Error(ex, "向文件夹列表中添加新文件夹失败")
@@ -270,7 +270,7 @@ Public Class PageSelectLeft
             Dim Target As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
             '若为 “移除”，则提醒是否删除 PCL 的配置文件
             If Target.Type = McFolder.Types.Custom Then
-                Select Case MyMsgBox("是否需要清理 PCL 在该文件夹中的配置文件？" & vbCrLf & "这包括各个版本的独立设置（如自定义图标、第三方登录配置）等，对游戏本身没有影响。", "配置文件清理", "删除", "保留", "取消")
+                Select Case MyMsgBox("是否需要清理 PCL 在该文件夹中的配置文件？" & vbCrLf & "这包括各个实例的独立设置（如自定义图标、第三方登录配置）等，对游戏本身没有影响。", "配置文件清理", "删除", "保留", "取消")
                     Case 1
                         '删除配置文件
                         FileUtils.Delete(Target.Location & "PCL.ini")
@@ -296,9 +296,9 @@ Public Class PageSelectLeft
         Dim DeleteText As String = If((Target.Type = McFolder.Types.Vanilla OrElse Target.Type = McFolder.Types.RenamedVanilla) AndAlso Target.Location = Paths.Base & ".minecraft\" AndAlso McFolderList.IsSingle, "清空", "删除")
         If MyMsgBox("你确定要" & DeleteText & "这个文件夹吗？" & vbCrLf &
                     "目标文件夹：" & Target.Location & vbCrLf & vbCrLf &
-                    "该文件夹中的游戏存档、游戏版本，以及 MC 之外的其他文件，都会永久丢失，不可恢复！", "警告", "取消", "确认", "取消") <> 2 Then Return
+                    "该文件夹中的游戏存档、游戏实例，以及 MC 之外的其他文件，都会永久丢失，不可恢复！", "警告", "取消", "确认", "取消") <> 2 Then Return
         If MyMsgBoxInput("删除确认",
-                         "该文件夹中的游戏存档、游戏版本，以及 MC 之外的其他文件，都会永久丢失，不可恢复！" & vbCrLf &
+                         "该文件夹中的游戏存档、游戏实例，以及 MC 之外的其他文件，都会永久丢失，不可恢复！" & vbCrLf &
                          "目标文件夹：" & Target.Location & vbCrLf & vbCrLf &
                          "如果确实要删除，请在下面输入【Potato】这个单词以继续。",
                          ValidateRules:=New ObjectModel.Collection(Of Validate) From {New ValidateSame("Potato", $"请输入 {vbLQ}Potato{vbRQ}", IgnoreCase:=True)},
@@ -399,7 +399,7 @@ Public Class PageSelectLeft
         '更换
         McFolderSelected = CType(sender.Tag, McFolder).Location
         McFolderListLoader.Start(IsForceRestart:=True)
-        LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\") '刷新版本列表
+        LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\") '刷新实例列表
     End Sub
 
 End Class

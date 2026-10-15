@@ -6,7 +6,7 @@ Public Class PageSetupLaunch
         RefreshRam(False)
         BtnSwitch.Visibility = If(McInstanceSelected Is Nothing, Visibility.Collapsed, Visibility.Visible)
 
-        'Java 可能在版本设置被修改，所以总是重新加载（反正其他的 Refresh 也不太吃性能）
+        'Java 可能在实例设置被修改，所以总是重新加载（反正其他的 Refresh 也不太吃性能）
         AniControlEnabled += 1
         Refresh()
         AniControlEnabled -= 1
@@ -287,7 +287,7 @@ Public Class PageSetupLaunch
             Dim RamTarget3 As Double '放一百万个材质和 Mod 和光影需要的内存
             If Instance IsNot Nothing AndAlso Not Instance.IsLoaded Then Instance.Load()
             If Instance IsNot Nothing AndAlso Instance.Modable Then
-                '可安装 Mod 的版本
+                '可安装 Mod 的实例
                 Dim ModDir = DirectoryUtils.GetInfo(Instance.PathIndie & "mods\")
                 Dim ModCount As Integer = If(ModDir.Exists, ModDir.GetFiles.Count(Function(f) {".jar", ".zip", ".litemod"}.Contains(f.Extension.Lower)), 0)
                 RamMininum = 0.5 + ModCount / 150
@@ -471,10 +471,10 @@ PreFin:
         End If
     End Sub
 
-    '版本隔离提示
+    '实例隔离提示
     Private Sub ComboArgumentIndie_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboArgumentIndieV2.SelectionChanged
         If AniControlEnabled <> 0 Then Return
-        MyMsgBox("本设置仅会对之后新安装的版本生效。" & vbCrLf & "如果要修改已安装的版本的隔离方式，请在它的版本独立设置中调整。")
+        MyMsgBox("本设置仅会对之后新安装的实例生效。" & vbCrLf & "如果要修改已安装的实例的隔离方式，请在它的实例独立设置中调整。")
     End Sub
 
 #End Region
@@ -505,7 +505,7 @@ PreFin:
 
 #End Region
 
-    '切换到版本独立设置
+    '切换到实例独立设置
     Private Sub BtnSwitch_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnSwitch.Click
         McInstanceSelected.Load()
         PageInstanceLeft.Instance = McInstanceSelected
