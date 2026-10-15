@@ -27,7 +27,20 @@ Public Class PageSelectRight
             '加载 UI
             PanMain.Children.Clear()
 
-            For Each Card As KeyValuePair(Of McInstanceCardType, List(Of McInstance)) In McInstanceList.ToArray
+            '根据搜索框内容筛选版本
+            Dim FilterText As String = If(SearchBox Is Nothing, "", SearchBox.Text.Trim())
+            Dim ShowingList As Dictionary(Of McInstanceCardType, List(Of McInstance))
+            If String.IsNullOrEmpty(FilterText) Then
+                ShowingList = McInstanceList
+            Else
+                ShowingList = New Dictionary(Of McInstanceCardType, List(Of McInstance))
+                For Each Card As KeyValuePair(Of McInstanceCardType, List(Of McInstance)) In McInstanceList.ToArray
+                    Dim Matches As List(Of McInstance) = Card.Value.Where(Function(i) InstanceMatches(i, FilterText)).ToList
+                    If Matches.Any Then ShowingList.Add(Card.Key, Matches)
+                Next
+            End If
+
+            For Each Card As KeyValuePair(Of McInstanceCardType, List(Of McInstance)) In ShowingList.ToArray
                 '确认是否为隐藏版本显示状态
                 If Card.Key = McInstanceCardType.Hidden Xor ShowHidden Then Continue For
 #Region "确认卡片名称"
@@ -95,7 +108,11 @@ Public Class PageSelectRight
             If PanMain.Children.Count = 0 Then
                 PanEmpty.Visibility = Visibility.Visible
                 PanBack.Visibility = Visibility.Collapsed
-                If ShowHidden Then
+                If Not String.IsNullOrWhiteSpace(SearchBox.Text) Then
+                    LabEmptyTitle.Text = "无匹配版本"
+                    LabEmptyContent.Text = "没有标题或描述包含该关键词的版本，请尝试更换筛选内容。"
+                    BtnEmptyDownload.Visibility = Visibility.Collapsed
+                ElseIf ShowHidden Then
                     LabEmptyTitle.Text = "无隐藏版本"
                     LabEmptyContent.Text = "没有版本被隐藏，你可以在版本设置的版本分类选项中隐藏版本。" & vbCrLf & "再次按下 F11 即可退出隐藏版本查看模式。"
                     BtnEmptyDownload.Visibility = Visibility.Collapsed
@@ -113,6 +130,17 @@ Public Class PageSelectRight
             Logger.Error(ex, "将版本列表转换显示时失败")
         End Try
     End Sub
+
+    ''' <summary>
+    ''' 判断某个版本是否匹配筛选关键词（匹配标题与描述）。
+    ''' </summary>
+    Private Shared Function InstanceMatches(Instance As McInstance, FilterText As String) As Boolean
+        Dim Name As String = If(Instance.Name, "")
+        Dim Info As String = If(Instance.Info, "")
+        Return Name.IndexOf(FilterText, StringComparison.OrdinalIgnoreCase) >= 0 OrElse
+               Info.IndexOf(FilterText, StringComparison.OrdinalIgnoreCase) >= 0
+    End Function
+
     Public Shared Sub McInstanceListContent(sender As MyListItem, e As EventArgs)
         Dim Instance As McInstance = sender.Tag
         '注册点击事件
@@ -178,6 +206,12 @@ Public Class PageSelectRight
 
     Private Sub BtnDownload_Click(sender As Object, e As EventArgs) Handles BtnEmptyDownload.Click
         FrmMain.PageChange(FormMain.PageType.Download, FormMain.PageSubType.DownloadInstall)
+    End Sub
+
+    '筛选关键词变化时重建版本列表
+    Private Sub SearchBox_TextChanged(sender As Object, e As EventArgs) Handles SearchBox.TextChanged
+        If McInstanceList Is Nothing Then Return
+        McInstanceListUI(Nothing)
     End Sub
 
     '修改此代码时，同时修改 PageInstanceOverall 中的代码
