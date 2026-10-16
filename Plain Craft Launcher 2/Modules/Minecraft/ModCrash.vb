@@ -867,13 +867,20 @@ NextStack:
             Button2Action:=If(IsManualAnalyze OrElse DirectFile Is Nothing, Nothing,
             Sub()
                 '弹窗选择：查看输出
+                Dim FilePath As String
                 If FileUtils.Exists(DirectFile.Value.Key) Then
-                    StartProcess(DirectFile.Value.Key)
+                    FilePath = DirectFile.Value.Key
                 Else
-                    Dim FilePath As String = PathTemp & "Crash.txt"
+                    FilePath = PathTemp & "Crash.txt"
                     FileUtils.Write(FilePath, DirectFile.Value.Value.Join(vbCrLf))
-                    StartProcess(FilePath)
                 End If
+                Try
+                    StartProcess(FilePath)
+                Catch ex As Exception
+                    Logger.Warn(ex, $"使用系统默认程序打开日志文件失败（{FilePath}）")
+                    Hint("使用系统默认程序打开日志文件失败", HintType.Red)
+                    OpenExplorer(FilePath) 
+                End Try
             End Sub))
             Case 3
                 '弹窗选择：导出错误报告
