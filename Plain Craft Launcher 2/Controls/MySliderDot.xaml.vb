@@ -136,34 +136,27 @@ Public Class MySliderDot
 
     '按键改变
 
-    'Public Property ValueByKey As UInteger = 1
-    'Private Sub MySlider_MouseEnter() Handles Me.MouseEnter
-    '    Focus() '确保按键能改变值
-    'End Sub
-    'Private Sub MySlider_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
-    '    '拒绝一边拖动一边用按键改变
-    '    If ReferenceEquals(Me, DragControl) Then Exit Sub
-    '    '改变值
-    '    If e.Key = Key.Left Then
-    '        ChangeByKey = True
-    '        Value -= ValueByKey
-    '        ChangeByKey = False
-    '        e.Handled = True
-    '    ElseIf e.Key = Key.Right Then
-    '        ChangeByKey = True
-    '        Value += ValueByKey
-    '        ChangeByKey = False
-    '        e.Handled = True
-    '    Else
-    '        Exit Sub
-    '    End If
-    '    '更新 Popup
-    '    If GetHintText IsNot Nothing Then
-    '        TextHint.Text = GetHintText.DynamicInvoke(Value)
-    '        Popup.IsOpen = True
-    '        AniStop("MySlider KeyPopup " & Uuid)
-    '        AniStart(AaCode(Sub() Popup.IsOpen = False, 700 * AniSpeed), "MySlider KeyPopup " & Uuid)
-    '    End If
-    'End Sub
+    Public Property ValueByKey As UInteger = 1
+    Private Sub MySlider_MouseEnter() Handles Me.MouseEnter
+        Focus() '确保按键能改变值
+    End Sub
+    Private Sub MySlider_KeyDown(sender As Object, e As KeyEventArgs) Handles Me.KeyDown
+        '拒绝一边拖动一边用按键改变
+        If ReferenceEquals(Me, DragControl) Then Exit Sub
+        '改变值
+        If e.Key = Key.Left Then
+            ChangeByKey = True
+            Value -= CInt(ValueByKey)
+            ChangeByKey = False
+            e.Handled = True
+        ElseIf e.Key = Key.Right Then
+            ChangeByKey = True
+            Value += CInt(ValueByKey)
+            ChangeByKey = False
+            e.Handled = True
+        Else
+            Exit Sub
+        End If
+    End Sub
 
 End Class
