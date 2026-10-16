@@ -1294,6 +1294,7 @@ ExitDataLoad:
                 If Result Is Nothing Then
                     GoTo Reload
                 Else
+                    If Loader.IsCanceled Then Return
                     McInstanceList = Result
                 End If
             Else
@@ -1302,6 +1303,7 @@ Reload:
                 McInstanceListForceRefresh = False
                 Logger.Info("文件夹列表变更，重载所有版本")
                 WriteIni(PathMc & "PCL.ini", "InstanceCache", FolderListCheck)
+                If Loader.IsCanceled Then Return
                 McInstanceList = InitMcInstanceListWithoutCache(PathMc)
             End If
             IsFirstMcInstanceListLoad = False
