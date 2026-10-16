@@ -782,6 +782,7 @@ Recheck:
 #End Region
 ExitDataLoad:
                 '确定版本图标
+                If State <> McInstanceState.Error Then ImportInstanceIcon(PathVersion)
                 Logo = ReadIni(PathVersion & "PCL\Setup.ini", "Logo", "")
                 If Logo = "" OrElse Not CType(ReadIni(PathVersion & "PCL\Setup.ini", "LogoCustom", False), Boolean) Then
                     Select Case State
@@ -1371,9 +1372,10 @@ OnLoaded:
                         InstanceList.Add(Instance)
                         Instance.Info = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "CustomInfo", "")
                         If Instance.Info = "" Then Instance.Info = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "Info", Instance.Info)
+                        Instance.State = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "State", Instance.State)
+                        If Instance.State <> McInstanceState.Error Then ImportInstanceIcon(Instance.PathVersion)
                         Instance.Logo = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "Logo", Instance.Logo)
                         Instance.ReleaseTime = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "ReleaseTime", Instance.ReleaseTime)
-                        Instance.State = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "State", Instance.State)
                         Instance.IsStar = ReadIni(Instance.PathVersion & "PCL\Setup.ini", "IsStar", False)
                         Instance.DisplayType = ReadIni(Folder & "PCL\Setup.ini", "DisplayType", McInstanceCardType.Auto)
                         If Instance.State <> McInstanceState.Error AndAlso

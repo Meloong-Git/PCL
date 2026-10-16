@@ -180,6 +180,7 @@ Public Class PageInstanceOverall
             Dim NewLogo As String = ComboDisplayLogo.SelectedItem.Tag
             WriteIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "Logo", NewLogo)
             WriteIni(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "LogoCustom", Not NewLogo = "")
+            DeleteIniKey(PageInstanceLeft.Instance.PathVersion & "PCL\Setup.ini", "LogoAuto")
             '刷新显示
             WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "") '要求刷新缓存
             PageInstanceLeft.Instance = New McInstance(PageInstanceLeft.Instance.Name).Load()
