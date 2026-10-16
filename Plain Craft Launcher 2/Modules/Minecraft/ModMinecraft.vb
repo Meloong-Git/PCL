@@ -1356,7 +1356,7 @@ OnLoaded:
                     If VersionName = "" Then Continue For
                     Dim FolderVersions As String = $"{Folder}versions\{VersionName}\"
                     If FileUtils.Exists(FolderVersions & ".pclignore") Then
-                        If IsFirstMcInstanceListLoad Then
+                        If IsFirstMcInstanceListLoad AndAlso Not LoaderTaskbar.Any(Function(l) l.State = LoadState.Loading) Then
                             Logger.Info($"清理残留的忽略项目：{FolderVersions}") '#2781
                             FileUtils.Delete(FolderVersions & ".pclignore")
                         Else
@@ -1447,7 +1447,7 @@ OnLoaded:
             End If
             Dim VersionFolder As String = VersionFolderInfo.FullName & "\"
             If FileUtils.Exists(VersionFolder & ".pclignore") Then
-                If IsFirstMcInstanceListLoad Then
+                If IsFirstMcInstanceListLoad AndAlso Not LoaderTaskbar.Any(Function(l) l.State = LoadState.Loading) Then
                     Logger.Info($"清理残留的忽略项目：{VersionFolder}") '#2781
                     FileUtils.Delete(VersionFolder & ".pclignore")
                 Else
