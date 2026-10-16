@@ -103,8 +103,12 @@ Public Class PageInstanceLeft
                 PageInstanceMod.Refresh()
                 ItemMod.Checked = True
             Case FormMain.PageSubType.InstanceExport
-                If FrmInstanceExport IsNot Nothing Then FrmInstanceExport.RefreshAll()
+                If FrmInstanceExport IsNot Nothing Then
+                    FrmInstanceExport.RefreshAll()
+                    FrmInstanceExport.PageOnContentExit()
+                End If
                 ItemExport.Checked = True
+                Hint("正在刷新……", Log:=False)
         End Select
     End Sub
 
