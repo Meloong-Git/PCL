@@ -874,7 +874,9 @@ ExitDataLoad:
             Dim Info As String
             Select Case State
                 Case McInstanceState.Snapshot, McInstanceState.Original, McInstanceState.Forge, McInstanceState.NeoForge, McInstanceState.Fabric, McInstanceState.OptiFine, McInstanceState.LiteLoader
-                    If Version.VanillaName.ContainsIgnoreCase("pre") Then
+                    If GetMcFoolName(Version.VanillaName) <> "" Then
+                        Info = "愚人节版本 " & Version.VanillaName
+                    ElseIf Version.VanillaName.ContainsIgnoreCase("pre") Then
                         Info = "预发布版 " & Version.VanillaName
                     ElseIf Version.VanillaName.ContainsIgnoreCase("rc") Then
                         Info = "发布候选 " & Version.VanillaName
