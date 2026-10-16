@@ -405,6 +405,10 @@ Public Class Settings
         End Try
     End Sub
 
+    Public Shared Function GetHintsToReset(Prefix As String) As List(Of String)
+        Return Entries.Keys.Where(Function(k) k.StartsWith(Prefix, StringComparison.Ordinal) AndAlso HasSaved(k)).ToList()
+    End Function
+
     ''' <summary>
     ''' 获取某个设置项的默认值。
     ''' </summary>
