@@ -75,6 +75,14 @@ Public Class ResourceProject
     ''' 若非从 Modrinth 获取则为 Nothing。
     ''' </summary>
     Public ReadOnly UnsafeGameVersions As List(Of String)
+    ''' <summary>
+    ''' 指定 MC 版本实际支持的 Mod 加载器。仅用于展示，不会被缓存。
+    ''' </summary>
+    Public LoadersOfVersion As ModLoaders = ModLoaders.None
+    ''' <summary>
+    ''' MC 版本实际支持的加载器，仅 CurseForge 有效
+    ''' </summary>
+    Private ReadOnly LoadersPerVersion As New Dictionary(Of String, ModLoaders)
 
     '数据库信息
 
@@ -190,6 +198,11 @@ Public Class ResourceProject
                 For Each File In If(Data("latestFilesIndexes"), New JArray) '这俩玩意儿包含的文件不一样，见 #3599
                     If Not McVersion.IsStandardFormat(File("gameVersion")) Then Continue For
                     Files.Add(New KeyValuePair(Of Integer, List(Of String))(File("fileId"), {File("gameVersion").ToString}.ToList))
+                    '部分早期上传的文件没有标注加载器
+                    If File("modLoader") IsNot Nothing Then
+                        Dim FileVersion As String = File("gameVersion").ToString
+                        LoadersPerVersion(FileVersion) = LoadersPerVersion.GetOrDefault(FileVersion) Or Resource.FromCurseForgeModLoaderType(File("modLoader").ToObject(Of Integer))
+                    End If
                 Next
                 CurseForgeFileIds = Files.Select(Function(f) f.Key).Distinct.ToList
                 Drops = Files.SelectMany(Function(f) f.Value).
@@ -501,7 +514,7 @@ Public Class ResourceProject
         End If
         '获取 Mod 加载器描述
         Dim ModLoaderDescriptionFull As String, ModLoaderDescriptionPart As String
-        Dim ModLoadersForDesc = ModLoaders.Flags().ToList()
+        Dim ModLoadersForDesc = LoadersOfVersion.Flags().ToList()
         Select Case ModLoadersForDesc.Count
             Case 0
                 If ModLoadersForDesc.IsSingle Then
@@ -565,6 +578,26 @@ Public Class ResourceProject
                 If(DownloadCount > 100000, Math.Floor(DownloadCount / 10000) & " 万", DownloadCount))
             Return NewItem
         End Function) With {.Height = 64}
+    End Function
+    ''' <summary>
+    ''' 获取当前工程在指定 MC 版本下实际支持的 Mod 加载器（#9426）。
+    ''' </summary>
+    Public Function GetLoadersForVersion(GameVersion As String) As ModLoaders
+        If String.IsNullOrEmpty(GameVersion) Then Return ModLoaders
+        Dim Result As ModLoaders = ModLoaders.None
+        If Platform = ResourcePlatforms.CurseForge Then
+            Result = LoadersPerVersion.GetOrDefault(GameVersion)
+        Else
+            'Modrinth 只能请求发布文件
+            For Each Version As JObject In DlModRequest($"https://api.modrinth.com/v2/project/{Id}/version?game_versions=[""{GameVersion}""]&include_changelog=false")
+                Dim RawLoaders As List(Of String) = Version("loaders").Select(Function(l) l.ToString.Lower).ToList
+                For Each Loader In EnumUtils.GetAllFlags(Of ModLoaders)()
+                    If RawLoaders.Contains(Loader.ToString.Lower) Then Result = Result Or Loader
+                Next
+            Next
+        End If
+        '没有标注加载器时，退回未筛选的加载器
+        Return If(Result = ModLoaders.None, ModLoaders, Result)
     End Function
     Public Sub ApplyLogoToMyImage(Img As MyImage)
         If String.IsNullOrEmpty(LogoUrl) Then
