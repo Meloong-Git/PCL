@@ -14,6 +14,13 @@ Public Class MyCard
         End Set
     End Property
     Private _MainTextBlock As TextBlock
+    Private Sub InitMainTextBlock()
+        If _MainTextBlock IsNot Nothing Then Return
+        _MainTextBlock = New TextBlock With {.HorizontalAlignment = HorizontalAlignment.Left, .VerticalAlignment = VerticalAlignment.Top, .Margin = New Thickness(15, 12, 0, 0), .FontWeight = FontWeights.Bold, .FontSize = 13, .IsHitTestVisible = False}
+        _MainTextBlock.SetResourceReference(TextBlock.ForegroundProperty, "ColorBrush1")
+        _MainTextBlock.SetBinding(TextBlock.TextProperty, New Binding("Title") With {.Source = Me, .Mode = BindingMode.OneWay})
+        MainGrid.Children.Add(_MainTextBlock)
+    End Sub
     Public Property MainTextBlock As TextBlock
         Get
             Init() '当父级触发 Loaded 时，本卡片可能尚未触发 Loaded（该事件从父级向子级调用），因此这会是 null。手动触发以确保控件已加载。
@@ -38,7 +45,8 @@ Public Class MyCard
     Public Uuid As Integer = GetUuid()
     Public ReadOnly Property Inlines As InlineCollection
         Get
-            Return MainTextBlock.Inlines
+            InitMainTextBlock()
+            Return _MainTextBlock.Inlines
         End Get
     End Property
     Public Property CornerRadius As CornerRadius
@@ -77,12 +85,7 @@ Public Class MyCard
         If IsLoad Then Return
         IsLoad = True
         '初次加载限定
-        If MainTextBlock Is Nothing Then
-            MainTextBlock = New TextBlock With {.HorizontalAlignment = HorizontalAlignment.Left, .VerticalAlignment = VerticalAlignment.Top, .Margin = New Thickness(15, 12, 0, 0), .FontWeight = FontWeights.Bold, .FontSize = 13, .IsHitTestVisible = False}
-            MainTextBlock.SetResourceReference(TextBlock.ForegroundProperty, "ColorBrush1")
-            MainTextBlock.SetBinding(TextBlock.TextProperty, New Binding("Title") With {.Source = Me, .Mode = BindingMode.OneWay})
-            MainGrid.Children.Add(MainTextBlock)
-        End If
+        InitMainTextBlock()
         If CanSwap OrElse SwapControl IsNot Nothing Then
             If SwapControl Is Nothing AndAlso Children.Count > 3 Then SwapControl = Children(3)
             MainSwap = New Shapes.Path With {.HorizontalAlignment = HorizontalAlignment.Right, .Stretch = Stretch.Uniform, .Height = 6, .Width = 10, .VerticalAlignment = VerticalAlignment.Top, .Margin = New Thickness(0, 17, 16, 0), .Data = New GeometryConverter().ConvertFromString("M2,4 l-2,2 10,10 10,-10 -2,-2 -8,8 -8,-8 z"), .RenderTransform = New RotateTransform(180), .RenderTransformOrigin = New Point(0.5, 0.5)}
