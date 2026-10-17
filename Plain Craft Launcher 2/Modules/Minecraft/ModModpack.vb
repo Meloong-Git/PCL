@@ -268,7 +268,7 @@ Public Module ModModpack
                     If FileList.ContainsKey(Id) Then Continue For
                     '可选 Mod 提示
                     If ModOptionalList.Contains(Id) Then
-                        If MyMsgBox("是否要下载整合包中的可选文件 " & ModJson("displayName").ToString & "？", "下载可选文件", "是", "否") = 2 Then
+                        If MyMsgBox("是否要下载整合包中的可选文件 " & ModJson("fileName").ToString & "？", "下载可选文件", "是", "否") = 2 Then
                             Continue For
                         End If
                     End If
