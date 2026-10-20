@@ -90,11 +90,11 @@ Public Class PageResource
                 Next
                 Return ComboSearchLoader.Items(0)
             End Function
-            If TargetInstance.Version.HasForge Then
+            If TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.Forge) Then
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("Forge")
-            ElseIf TargetInstance.Version.HasFabric Then
+            ElseIf TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.Fabric) Then
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("Fabric")
-            ElseIf TargetInstance.Version.HasNeoForge Then
+            ElseIf TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.NeoForge) Then
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("NeoForge")
             End If
             TargetInstance = Nothing

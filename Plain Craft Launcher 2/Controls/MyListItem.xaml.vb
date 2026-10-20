@@ -508,7 +508,8 @@ Public Class MyListItem
         RaiseEvent Click(sender, e)
         If e.Handled Then Return
         '触发自定义事件
-        If CustomEventService.GetEventType(sender) <> CustomEvent.EventType.None Then
+        If CustomEventService.GetEventType(sender) <> CustomEvent.EventType.None OrElse
+           CustomEventService.GetEvents(sender).Events.Count > 0 Then
             RaiseCustomEvent()
             e.Handled = True
         End If

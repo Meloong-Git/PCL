@@ -24,11 +24,10 @@ Public Module LocalResourceLoaders
             '获取 Mod 文件夹下的可用文件列表
             Dim ModFileList As New List(Of String)
             If DirectoryUtils.Exists(Loader.Input) Then
-                Dim RawName As String = Loader.Input.Lower
                 For Each File In DirectoryUtils.EnumerateFiles(Loader.Input, True)
-                    If File.BeforeLast("\").Lower & "\" <> RawName Then
+                    If Not PathUtils.IsSame(PathUtils.RemoveLastPart(File), Loader.Input) Then
                         '仅当 Forge 1.13- 且文件夹名与版本号相同时，才加载该子文件夹下的 Mod
-                        If Not (PageInstanceLeft.Instance IsNot Nothing AndAlso PageInstanceLeft.Instance.Version.HasForge AndAlso
+                        If Not (PageInstanceLeft.Instance IsNot Nothing AndAlso PageInstanceLeft.Instance.Version.ModLoaders.HasFlagF(ModLoaders.Forge) AndAlso
                                 PageInstanceLeft.Instance.Version.Vanilla.Major < 13 AndAlso
                                 PathUtils.GetLastPart(PathUtils.RemoveLastPart(File)) = $"1.{PageInstanceLeft.Instance.Version.Vanilla.Major}.{PageInstanceLeft.Instance.Version.Vanilla.Build}") Then
                             Continue For
@@ -36,12 +35,9 @@ Public Module LocalResourceLoaders
                     End If
                     Static IsModFile As Func(Of String, Boolean) =
                     Function(FullName As String)
-                        If FullName Is Nothing OrElse Not FullName.Contains(".") Then Return False
-                        FullName = FullName.Lower
-                        If FullName.EndsWithF(".jar", True) OrElse FullName.EndsWithF(".zip", True) OrElse FullName.EndsWithF(".litemod", True) OrElse
-                            FullName.EndsWithF(".jar.disabled", True) OrElse FullName.EndsWithF(".zip.disabled", True) OrElse FullName.EndsWithF(".litemod.disabled", True) OrElse
-                            FullName.EndsWithF(".jar.old", True) OrElse FullName.EndsWithF(".zip.old", True) OrElse FullName.EndsWithF(".litemod.old", True) Then Return True
-                        Return False
+                        If FullName Is Nothing Then Return False
+                        If {"disabled", "old"}.Contains(PathUtils.GetExtension(FullName)) Then FullName = PathUtils.GetFileNameWithoutExtension(FullName)
+                        Return {"jar", "zip", "litemod"}.Contains(PathUtils.GetExtension(FullName))
                     End Function
                     If IsModFile(File) Then ModFileList.Add(File)
                 Next
@@ -271,7 +267,7 @@ Public Module LocalResourceLoaders
                             Dim EntryVersion As String = Entry("gameVersion")
                             Return EntryVersion IsNot Nothing AndAlso EntryVersion = VanillaVersion
                         End Function).
-                        MaxByAll(Function(Entry) Entry("gameVersion").ToString, New VersionComparer) '只保留最新的 MC 版本
+                        MaxByAll(Function(Entry) Entry("gameVersion").ToString, Comparer(Of String).Create(Function(x, y) McUtils.CompareVersion(x, y))) '只保留最新的 MC 版本
                         For Each Entry In LatestFiles
                             Dim FileId = Entry("fileId").ToObject(Of Integer)
                             If Not UpdateFileIds.ContainsKey(FileId) Then UpdateFileIds(FileId) = New List(Of LocalResourceFile)

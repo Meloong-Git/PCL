@@ -9,7 +9,10 @@ Public Class Application
             '核心初始化
             MeloongCore.Main.Init("PCL")
             MeloongCore.Wpf.Main.Init()
-            Logger.Instance = New PclLogger With {.logFolder = Paths.BaseThenName, .MinLevel = If(ModeDebug, LogLevel.Trace, LogLevel.Info)}
+            If Not (e.Args.Contains("--update") OrElse e.Args.Contains("--gpu") OrElse e.Args.Contains("--memory")) Then '若是通过命令行调用，则不检查单例、不轮换日志（#9137）
+                WaitingMutex(e)
+                Logger.Instance = New PclLogger With {.logFolder = Paths.BaseThenName, .MinLevel = If(ModeDebug, LogLevel.Trace, LogLevel.Info)}
+            End If
             '提升主线程优先级
             Thread.CurrentThread.Priority = ThreadPriority.Highest
             '执行开发版测试
@@ -47,7 +50,7 @@ Public Class Application
                     Catch ex As Exception
                         Environment.Exit(ProcessReturnValues.Fail)
                     End Try
-                ElseIf e.Args(0).StartsWithF("--memory") Then
+                ElseIf e.Args(0) = "--memory" Then
                     '内存优化
                     Dim Ram = My.Computer.Info.AvailablePhysicalMemory
                     Try
@@ -70,7 +73,7 @@ Public Class Application
                 CheckPermissionWithException(Paths.Base & "PCL\")
             Catch ex As Exception
                 MsgBox($"PCL 没有对当前文件夹的权限（{Paths.Base}PCL\），请尝试：" & vbCrLf &
-                  "1. 将 PCL 移动到其他文件夹" & If(Paths.Base.StartsWithF("C:", True), "，例如 C 盘和桌面以外的其他位置。", "。") & vbCrLf &
+                  "1. 将 PCL 移动到其他文件夹" & If(PathUtils.GetDiskName(Paths.Base) = "C"c, "，例如 C 盘和桌面以外的其他位置。", "。") & vbCrLf &
                   "2. 删除当前目录中的 PCL 文件夹，然后再试。" & vbCrLf &
                   "3. 右键 PCL 选择属性，打开 兼容性 中的 以管理员身份运行此程序。",
                 MsgBoxStyle.Critical, "运行环境错误")
@@ -81,7 +84,7 @@ RetryCacheCheck:
                 DirectoryUtils.Create(PathTemp)
                 CheckPermissionWithException(PathTemp)
             Catch ex As Exception
-                If PathTemp = Path.GetTempPath() & "PCL\" Then
+                If PathUtils.IsSame(PathTemp, Path.GetTempPath() & "PCL\") Then
                     MyMsgBox("PCL 无法访问缓存文件夹，可能导致程序出错或无法正常使用！" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDisplay(True), "缓存文件夹不可用")
                 Else
                     MyMsgBox("手动设置的缓存文件夹不可用，PCL 将使用默认缓存文件夹。" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDisplay(True), "缓存文件夹不可用")
@@ -92,8 +95,6 @@ RetryCacheCheck:
             End Try
             DirectoryUtils.Create(PathTemp & "Cache\")
             DirectoryUtils.Create(Paths.AppDataThenName)
-            '要求单例
-            WaitingMutex(e)
             '设置 ToolTipService 默认值
             ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(100))
             '设置网络配置默认值
@@ -231,7 +232,7 @@ RetryCacheCheck:
         End Function
     End Sub
     Private Shared Sub ExtractLibwebp() '这个方法会调用 ModBase，进而调用 MeloongCore，所以不能放在 New 里
-        SetDllDirectory(PathPure.Value.TrimEnd("\"c))
+        SetDllDirectory(PathUtils.RemoveSlashSuffix(PathPure.Value))
         Try
             ExtractResources(PathPure.Value & "libwebp.dll", "libwebp64")
         Catch ex As Exception

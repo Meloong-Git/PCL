@@ -101,23 +101,40 @@ Public Class PageLaunchRight
                         Url = "https://pcl.wyc-w.top/index.xaml"
                     Case 15
                         Logger.Info("主页预设：Minecraft 芝士站")
-                        Url = "https://www.xxag.top/mkss"
+                        Url = "https://mkss-services.awaeric.xyz"
                     Case 16
                         Logger.Info("主页预设：整合包推荐引擎")
                         Url = "https://qawsedrftgyhujiko.fun/pcl2/Custom.xaml"
                     Case 17
-                        Logger.Info("Bangumi 番剧主页")
-                        Url = "https://bangumi.p.kaphia.qzz.io"
+                        Logger.Info("主页预设：Bangumi 番剧主页")
+                        Url = "https://bangumi.p.kaphia.top"
                     Case 18
-                        Logger.Info("Bilibili 热门")
-                        Url = "https://bilibili.p.kaphia.qzz.io"
+                        Logger.Info("主页预设：Bilibili 热门")
+                        Url = "https://bilibili.p.kaphia.top"
                     Case 19
-                        Logger.Info("Music 云音乐热门")
-                        Url = "https://cloudmusic.p.kaphia.qzz.io"
+                        Logger.Info("主页预设：Music 云音乐热门")
+                        Url = "https://cloudmusic.p.kaphia.top"
+                    Case 20
+                        Logger.Info("主页预设：模组推荐")
+                        Url = "https://g-fish.dpdns.org/download/ModPage.xaml"
+                    Case 21
+                        Logger.Info("主页预设：每日游戏推荐")
+                        Url = "https://pcl.xn--9iq209asnop94b.top/download/GamePage.xaml"
+                    Case 22
+                        Logger.Info("主页预设：Wallpaper 每日壁纸")
+                        Url = "https://wallpaper.p.kaphia.top"
+                    Case 23
+                        Logger.Info("主页预设：Weather 天气预报")
+                        Url = "https://weather-p.kaphia.top/{variable:PCLDailyWeatherPage:choose}.xaml"
+                    Case 24
+                        Logger.Info("主页预设：新一代狗屁王大杂烩主页")
+                        Url = "https://end.g-fish.dpdns.org/Custom.xaml"
                 End Select
         End Select
         '联网下载
         If Not String.IsNullOrWhiteSpace(Url) Then
+            '替换自定义变量与设置
+            Url = ArgumentReplace(Url, AddressOf WebUtility.HtmlEncode)
             If Url = Settings.Get(Of String)("CacheSavedPageUrl") AndAlso FileUtils.Exists(PathTemp & "Cache\Custom.xaml") Then
                 '缓存可用
                 Logger.Info("主页自定义数据来源：联网缓存文件")
@@ -145,8 +162,6 @@ Public Class PageLaunchRight
         Dim Address As String = Task.Input.Address '#3721 中连续触发两次导致内容变化
         Dim ShouldRefresh As Boolean = Task.Input.ShouldRefresh
         Try
-            '替换自定义变量与设置
-            Address = ArgumentReplace(Address, AddressOf WebUtility.HtmlEncode)
             '获取版本校验地址
             Dim VersionAddress As String
             If Address.Contains(".xaml") Then

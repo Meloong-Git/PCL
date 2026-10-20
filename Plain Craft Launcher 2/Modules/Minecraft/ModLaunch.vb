@@ -48,7 +48,7 @@ Public Module ModLaunch
             End Try
             '检查版本
             CurrentLaunchOptions.Instance.Load()
-            If CurrentLaunchOptions.Instance.State = McInstanceState.Error Then
+            If CurrentLaunchOptions.Instance.State = McInstance.McInstanceState.Error Then
                 Hint($"无法启动 {CurrentLaunchOptions.Instance.Name}：{CurrentLaunchOptions.Instance.Info}", HintType.Red)
                 Return False
             End If
@@ -56,6 +56,10 @@ Public Module ModLaunch
             McInstanceSelected = CurrentLaunchOptions.Instance
             FrmLaunchLeft.RefreshButtonsUI()
             FrmLaunchLeft.RefreshPage(False, False)
+        End If
+        If McInstanceSelected IsNot Nothing AndAlso McInstanceLock.IsLocked(McInstanceSelected) Then
+            Hint($"版本 {McInstanceSelected.Name} 正在被修改，请稍后再启动！", HintType.Red)
+            Return False
         End If
         FrmMain.AprilGiveup()
         '禁止进入版本选择页面（否则就可以在启动中切换 McInstanceSelected 了）
@@ -70,7 +74,12 @@ Public Module ModLaunch
     ''' </summary>
     Public Sub McLaunchLog(Text As String, Optional Level As LogLevel = LogLevel.Info)
         Text = FilterUserName(FilterAccessToken(Text, "*"), "*")
-        If ModeDebug Then RunInUi(Sub() FrmLaunchRight.LabLog.Text += $"{vbCrLf}[{Date.Now:HH':'mm':'ss'.'fff}] {Text}")
+        If ModeDebug Then
+            RunInUi(
+            Sub()
+                FrmLaunchRight.LabLog.AppendText($"[{Date.Now:HH':'mm':'ss'.'fff}] {Text}{vbCrLf}")
+            End Sub)
+        End If
         Logger.Log(Text, Level)
     End Sub
 
@@ -196,25 +205,6 @@ NextInner:
         End Try
     End Sub
 
-    ''' <summary>
-    ''' 取消正在进行的游戏启动。
-    ''' </summary>
-    Public Sub McLaunchCancel()
-        If McLaunchLoaderReal IsNot Nothing Then
-            McLaunchLoaderReal.Cancel()
-            McLaunchLog("已取消启动")
-            Try
-                If McLaunchWatcher IsNot Nothing Then
-                    McLaunchWatcher.Kill()
-                ElseIf McLaunchProcess IsNot Nothing Then
-                    If Not McLaunchProcess.HasExited Then McLaunchProcess.Kill()
-                End If
-            Catch ex As Exception
-                Logger.Error(ex, "取消启动结束进程失败", LogBehavior.Toast)
-            End Try
-        End If
-    End Sub
-
 #End Region
 
 #Region "内存优化"
@@ -249,7 +239,7 @@ NextInner:
         '检查版本
         If McInstanceSelected Is Nothing Then Throw New Exception("未选择 Minecraft 版本！")
         McInstanceSelected.Load()
-        If McInstanceSelected.State = McInstanceState.Error Then Throw New Exception("Minecraft 存在问题：" & McInstanceSelected.Info)
+        If McInstanceSelected.State = McInstance.McInstanceState.Error Then Throw New Exception("Minecraft 存在问题：" & McInstanceSelected.Info)
         '检查输入信息
         Dim CheckResult As String = ""
         RunInUiWait(Sub() CheckResult = McLoginAble(McLoginInput()))
@@ -557,7 +547,7 @@ NextInner:
         '检查是否已经登录完成
         Dim ExpiresAt = Settings.Get(Of Long)("CacheMsV2Expires")
         If Not Data.IsForceRestarting AndAlso '不要求强行重启
-           ExpiresAt > 0 AndAlso ExpiresAt > GetUnixTimestampUtc() AndAlso 'AccessToken 尚未过期
+           ExpiresAt > 0 AndAlso ExpiresAt > ToUnixTimestampUtc(Date.UtcNow) AndAlso 'AccessToken 尚未过期
            Input.UserName = Settings.Get(Of String)("CacheMsV2Name") Then
             Data.Output = New McLoginResult With {
                 .Name = Input.UserName, .Type = "Microsoft",
@@ -1052,7 +1042,7 @@ Retry:
         Dim ResultJson As JObject = Result.DeserializeJson()
         Return (
             ResultJson("access_token").ToString,
-            ResultJson("expires_in").ToObject(Of Integer) + GetUnixTimestampUtc() - 1200) '提前 20 分钟视作过期
+            ResultJson("expires_in").ToObject(Of Integer) + GetUnixTimestampUtc() - 3600) '提前 1 小时视作过期
     End Function
     '微软登录步骤 5：验证微软账号是否持有 MC，这也会刷新 XGP
     Private Sub MsLoginStep5(AccessToken As String)
@@ -1382,16 +1372,11 @@ NextInstance:
         'Log4j 漏洞防御参数
         Args.Add("-Dlog4j2.formatMsgNoLookups=true")
 
-        '编码（#4700、#5892、#5909、#6934、#8950）
-        Dim EncodingName As String
-        Select Case McLaunchJavaSelected.Version.Major
-            Case Is >= 21 'Java 21+ 会固定使用 UTF-8
-                EncodingName = "UTF-8"
-            Case Is >= 18 'Java 18~20 时，启动 MC 时会添加 COMPAT 参数，因此 Java 会回退到 native.encoding
-                EncodingName = McLaunchJavaSelected.NativeEncodingName
-            Case Else 'Java 17- 时，直接使用 file.encoding
-                EncodingName = McLaunchJavaSelected.FileEncodingName
-        End Select
+        '编码（#4700、#5892、#5909、#6934、#8950、#9241）
+        Dim UseCompatEncoding = McLaunchJavaSelected.Version.Major >= 18
+        Dim EncodingName = If(UseCompatEncoding,
+                              McLaunchJavaSelected.NativeEncodingName, 'Java 18+ 会添加 COMPAT，因此 Java 会回退到 native.encoding
+                              McLaunchJavaSelected.FileEncodingName) 'Java 17- 直接使用 file.encoding
         Try
             McLaunchEncoding = Encoding.GetEncoding(If(EncodingName.Equals("GBK", StringComparison.OrdinalIgnoreCase), "GB18030", EncodingName))
         Catch ex As Exception
@@ -1405,7 +1390,7 @@ NextInstance:
         Dim StderrArgName = If(McLaunchJavaSelected.Version.Major < 19, "sun.stderr.encoding", "stderr.encoding")
         If Not Args.Any(Function(a) a.StartsWithF($"-D{StdoutArgName}=")) Then Args.Add($"-D{StdoutArgName}={LaunchEncodingName}")
         If Not Args.Any(Function(a) a.StartsWithF($"-D{StderrArgName}=")) Then Args.Add($"-D{StderrArgName}={LaunchEncodingName}")
-        If McLaunchJavaSelected.Version.Major >= 18 AndAlso McLaunchJavaSelected.Version.Major < 21 Then Args.Add("-Dfile.encoding=COMPAT") '使用 COMPAT 防止部分 Mod 配置文件不兼容 UTF-8
+        If UseCompatEncoding AndAlso Not Args.Any(Function(a) a.StartsWithF("-Dfile.encoding=")) Then Args.Add("-Dfile.encoding=COMPAT") '防止老版本 MC 与部分 Mod 不兼容 UTF-8
 
         '为 JLW 添加 -jar，它必须放在最后
         If UseJLW Then
@@ -1465,7 +1450,8 @@ NextInstance:
         Arg &= " " & CustomArg
 
         '把 OptiFineForgeTweaker 放在参数的末尾
-        If (McInstanceSelected.Version.HasForge OrElse McInstanceSelected.Version.HasLiteLoader) AndAlso McInstanceSelected.Version.HasOptiFine Then
+        If (McInstanceSelected.Version.ModLoaders.HasFlagF(ModLoaders.Forge) OrElse McInstanceSelected.Version.ModLoaders.HasFlagF(ModLoaders.LiteLoader)) AndAlso
+                McInstanceSelected.Version.HasOptiFine AndAlso Not McInstanceSelected.Version.OptiFineAsMod Then
             If Arg.Contains("--tweakClass optifine.OptiFineForgeTweaker") Then
                 McLaunchLog("发现正确的 OptiFineForge TweakClass，目前的游戏参数：" & Arg)
                 Arg = Arg.Replace(" --tweakClass optifine.OptiFineForgeTweaker", "") & " --tweakClass optifine.OptiFineForgeTweaker"
@@ -1520,10 +1506,10 @@ NextInstance:
     Private Iterator Function McLaunchArgumentsReplace(Arguments As List(Of String)) As IEnumerable(Of (Key As String, Value As String))
         '基础参数
         Yield ("${classpath_separator}", ";")
-        Yield ("${natives_directory}", GetNativesFolder().TrimEnd("\"c))
+        Yield ("${natives_directory}", PathUtils.RemoveSlashSuffix(GetNativesFolder()))
         Yield ("${library_directory}", PathUtils.ToShortPath(McFolderSelected & "libraries"))
         Yield ("${libraries_directory}", PathUtils.ToShortPath(McFolderSelected & "libraries"))
-        Yield ("${pure_directory}", PathPure.Value.TrimEnd("\"c)) '由 PCL 添加，这会允许在分割参数并去重后再替换路径，防止路径中的特殊字符影响参数分割和去重
+        Yield ("${pure_directory}", PathUtils.RemoveSlashSuffix(PathPure.Value)) '由 PCL 添加，这会允许在分割参数并去重后再替换路径，防止路径中的特殊字符影响参数分割和去重
         Yield ("${launcher_name}", "PCL")
         Yield ("${launcher_version}", VersionCode)
         Yield ("${version_name}", McInstanceSelected.Name)
@@ -1568,9 +1554,8 @@ NextInstance:
             Case Else
                 TargetSize = New Size(854, 480)
         End Select
-        If McInstanceSelected.Version.Vanilla.Major <= 12 AndAlso
-            McLaunchJavaSelected.Version >= New Version(8, 0, 200) AndAlso McLaunchJavaSelected.Version <= New Version(8, 0, 321) AndAlso
-            Not McInstanceSelected.Version.HasOptiFine AndAlso Not McInstanceSelected.Version.HasForge Then '修复 1.12.2- 下 JRE 8u200~321 下窗口大小为设置大小的 DPI% 倍（#3463）
+        If McInstanceSelected.Version.Vanilla.Major <= 12 AndAlso McLaunchJavaSelected.Version >= New Version(8, 0, 200) AndAlso McLaunchJavaSelected.Version <= New Version(8, 0, 321) AndAlso
+                Not McInstanceSelected.Version.HasOptiFine AndAlso Not McInstanceSelected.Version.ModLoaders.HasFlagF(ModLoaders.Forge) Then '修复 1.12.2- 下 JRE 8u200~321 下窗口大小为设置大小的 DPI% 倍（#3463）
             McLaunchLog($"已应用窗口大小过大修复（Java 版本：{McLaunchJavaSelected.Version}）")
             TargetSize.Width /= DPI / 96
             TargetSize.Height /= DPI / 96
@@ -1694,7 +1679,7 @@ NextInstance:
             End Try
             For Each Entry In Zip.Entries
                 Dim FileName As String = Entry.FullName
-                If FileName.EndsWithF(".dll", True) Then
+                If PathUtils.GetExtension(FileName) = "dll" Then
                     '实际解压文件的步骤
                     Dim FilePath As String = Target & FileName
                     ExistFiles.Add(FilePath)
@@ -1738,8 +1723,9 @@ NextInstance:
     ''' <summary>
     ''' 获取 Natives 文件夹路径，以 \ 结尾。
     ''' </summary>
-    Private Function GetNativesFolder() As String
-        Dim Result As String = PathUtils.AddSlashSuffix(PathUtils.ToShortPath(McInstanceSelected.PathVersion)) & McInstanceSelected.Name & "-natives\"
+    Public Function GetNativesFolder(Optional Instance As McInstance = Nothing) As String
+        If Instance Is Nothing Then Instance = McInstanceSelected
+        Dim Result As String = PathUtils.AddSlashSuffix(PathUtils.ToShortPath(Instance.PathVersion)) & Instance.Name & "-natives\"
         If Not (IsGBKEncoding OrElse Result.IsAsciiOnly()) Then
             Result = Paths.AppData & ".minecraft\bin\natives\"
             If Not Result.IsAsciiOnly() Then
@@ -1865,7 +1851,7 @@ NextInstance:
             Dim CurrentLang As String = ReadIni(SetupFileAddress, "lang", "none")
             Dim RequiredLang As String = If(CurrentLang = "none" OrElse Not DirectoryUtils.Exists(McInstanceSelected.PathIndie & "saves"), '#3844，整合包可能已经自带了 options.txt
                 If(Settings.Get(Of Boolean)("ToolHelpChinese"), "zh_cn", "en_us"), CurrentLang.Lower)
-            If Not McInstanceSelected.Version.Vaild OrElse McInstanceSelected.Version.Vanilla.Major <= 10 Then
+            If Not McInstanceSelected.Version.Valid OrElse McInstanceSelected.Version.Vanilla.Major <= 10 Then
                 '将最后两位改为大写，前面的部分保留
                 RequiredLang = RequiredLang.Substring(0, RequiredLang.Length - 2) & RequiredLang.Substring(RequiredLang.Length - 2).Upper
             End If
@@ -1908,53 +1894,40 @@ NextInstance:
             If McLoginLoader.Input.Type = McLoginType.Legacy AndAlso Settings.Get(Of Integer)("LaunchSkinType") = 4 AndAlso FileUtils.Exists(Paths.AppDataThenName & "CustomSkin.png") Then
                 Dim MetaFileAddress As String = PathTemp & "pack.mcmeta"
                 Dim PackPicAddress As String = PathTemp & "pack.png"
-                Dim PackFormat As Integer
-                Select Case McInstanceSelected.Version.Vanilla.Major
-                    Case 0, 1, 2, 3, 4, 5
-                        '更早的版本没有资源包
-                        McLaunchLog("Minecraft 版本过老，尚不支持自定义离线皮肤")
-                        GoTo IgnoreCustomSkin
-                    Case 6, 7, 8
-                        PackFormat = 1
-                    Case 9, 10
-                        PackFormat = 2
-                    Case 11, 12
-                        PackFormat = 3
-                    Case 13, 14
-                        PackFormat = 4
-                    Case 15
-                        PackFormat = 5
-                    Case 16
-                        PackFormat = 6
-                    Case 17
-                        PackFormat = 7
-                    Case 18
-                        If McInstanceSelected.Version.Vanilla.Minor <= 2 Then
-                            PackFormat = 8
-                        Else
-                            PackFormat = 9
-                        End If
-                    Case 19
-                        If McInstanceSelected.Version.Vanilla.Minor <= 3 Then
-                            PackFormat = 9
-                        Else
-                            PackFormat = 12
-                        End If
-                    Case 20
-                        If McInstanceSelected.Version.Vanilla.Minor <= 1 Then
-                            PackFormat = 15
-                        Else
-                            PackFormat = 17
-                        End If
-                    Case Else '快照版是 9999
-                        PackFormat = 17
-                        'https://zh.minecraft.wiki/w/数据包#数据包版本
-                End Select
-                McLaunchLog("正在构建自定义皮肤资源包，格式为：" & PackFormat)
+                If McInstanceSelected.Version.Vanilla.Major < 6 Then
+                    McLaunchLog("Minecraft 版本过老，尚不支持自定义离线皮肤")
+                    GoTo IgnoreCustomSkin
+                End If
+                Dim PackVersionJToken As JToken = McInstanceSelected.JsonVersion?("pack_version")
+                If TypeOf PackVersionJToken Is JObject Then PackVersionJToken = DirectCast(PackVersionJToken, JObject)("resource") '从 1.17 开始，可以从 pack_version.resource 获取资源包版本
+                Dim PackVersion As Integer = Val(PackVersionJToken?.ToString)
+                If PackVersion <= 0 Then '没有对应字段的老版本 MC，或兜底
+                    Select Case McInstanceSelected.Version.Vanilla.Major
+                        Case 6, 7, 8
+                            PackVersion = 1
+                        Case 9, 10
+                            PackVersion = 2
+                        Case 11, 12
+                            PackVersion = 3
+                        Case 13, 14
+                            PackVersion = 4
+                        Case 15
+                            PackVersion = 5
+                        Case 16
+                            PackVersion = If(McInstanceSelected.Version.Vanilla.Build <= 1, 5, 6)
+                        Case 17
+                            PackVersion = 7
+                        Case 18
+                            PackVersion = 8
+                        Case Else '旧版快照可能没有可用的资源包格式声明
+                            PackVersion = 17
+                    End Select
+                End If
+                McLaunchLog($"正在构建自定义皮肤资源包，版本号 {PackVersion}，MC 版本 {McInstanceSelected.Version.Vanilla}")
                 '准备文件
                 Dim Bit As New MyBitmap(PathImage & "Heads/Logo.png")
                 Bit.Save(PackPicAddress)
-                FileUtils.Write(MetaFileAddress, "{""pack"":{""pack_format"":" & PackFormat & ",""description"":""PCL 自定义离线皮肤资源包""}}")
+                FileUtils.Write(MetaFileAddress, "{""pack"":{""pack_format"":" & PackVersion & ",""description"":""PCL 自定义离线皮肤资源包""}}")
                 Dim Skin As New MyBitmap(Paths.AppDataThenName & "CustomSkin.png")
                 If (McInstanceSelected.Version.Vanilla.Major = 6 OrElse McInstanceSelected.Version.Vanilla.Major = 7) AndAlso Skin.Pic.Height = 64 Then
                     McLaunchLog("该 Minecraft 版本不支持双层皮肤，已进行裁剪")

@@ -6,6 +6,10 @@ Public Class PageInstanceLeft
     ''' </summary>
     Public Shared Instance As McInstance = Nothing
 
+    Private Sub PageInstanceLeft_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
+        PageSetupUI.HiddenRefresh()
+    End Sub
+
     Public Sub RefreshModDisabled() Handles Me.Loaded
         If Instance IsNot Nothing AndAlso Instance.Modable Then
             ItemMod.Visibility = Visibility.Visible
@@ -26,7 +30,7 @@ Public Class PageInstanceLeft
     ''' <summary>
     ''' 勾选事件改变页面。
     ''' </summary>
-    Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemOverall.Check, ItemMod.Check, ItemModDisabled.Check, ItemSetup.Check, ItemExport.Check
+    Private Sub PageCheck(sender As FrameworkElement, e As RouteEventArgs) Handles ItemOverall.Check, ItemMod.Check, ItemModDisabled.Check, ItemSetup.Check, ItemModify.Check, ItemExport.Check
         '尚未初始化控件属性时，sender.Tag 为 Nothing，会导致切换到页面 0
         '若使用 IsLoaded，则会导致模拟点击不被执行（模拟点击切换页面时，控件的 IsLoaded 为 False）
         If sender.Tag IsNot Nothing Then PageChange(Val(sender.Tag))
@@ -45,11 +49,14 @@ Public Class PageInstanceLeft
                 If FrmInstanceModDisabled Is Nothing Then FrmInstanceModDisabled = New PageInstanceModDisabled
                 Return FrmInstanceModDisabled
             Case FormMain.PageSubType.InstanceSetup
-                If IsNothing(FrmInstanceSetup) Then FrmInstanceSetup = New PageInstanceSetup
+                If FrmInstanceSetup Is Nothing Then FrmInstanceSetup = New PageInstanceSetup
                 Return FrmInstanceSetup
             Case FormMain.PageSubType.InstanceExport
                 If FrmInstanceExport Is Nothing Then FrmInstanceExport = New PageInstanceExport
                 Return FrmInstanceExport
+            Case FormMain.PageSubType.InstanceModify
+                If FrmDownloadModify Is Nothing Then FrmDownloadModify = New PageDownloadModify
+                Return FrmDownloadModify
             Case Else
                 Throw New Exception("未知的版本设置子页面种类：" & ID)
         End Select
@@ -60,6 +67,10 @@ Public Class PageInstanceLeft
     ''' </summary>
     Public Sub PageChange(ID As FormMain.PageSubType)
         If PageID = ID Then Return
+        If Instance IsNot Nothing AndAlso McInstanceLock.IsLocked(Instance) Then
+            Hint("该版本正在被修改，请稍后再切换页面！", HintType.Red)
+            Return
+        End If
         AniControlEnabled += 1
         Try
             PageChangeRun(PageGet(ID))
@@ -98,13 +109,20 @@ Public Class PageInstanceLeft
         Refresh(FrmMain.PageCurrentSub)
     End Sub
     Public Sub Refresh(SubType As FormMain.PageSubType)
+        If Instance IsNot Nothing AndAlso McInstanceLock.IsLocked(Instance) Then
+            Hint("该版本正在被修改，请稍后再刷新！", HintType.Red)
+            Return
+        End If
         Select Case SubType
             Case FormMain.PageSubType.InstanceMod
                 PageInstanceMod.Refresh()
                 ItemMod.Checked = True
             Case FormMain.PageSubType.InstanceExport
-                If FrmInstanceExport IsNot Nothing Then FrmInstanceExport.RefreshAll()
+                FrmInstanceExport?.RefreshAll()
                 ItemExport.Checked = True
+            Case FormMain.PageSubType.InstanceModify
+                FrmDownloadModify?.PageLoaderRestart()
+                ItemModify.Checked = True
         End Select
     End Sub
 

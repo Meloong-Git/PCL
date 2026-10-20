@@ -92,7 +92,7 @@ Public Class CrashAnalyzer
         '尝试视作压缩包解压
         Try
             Dim Info = FileUtils.GetInfo(FilePath)
-            If Info.Exists AndAlso Info.Length > 0 AndAlso Not FilePath.EndsWithF(".jar", True) Then
+            If Info.Exists AndAlso Info.Length > 0 AndAlso Not PathUtils.GetExtension(FilePath) = "jar" Then
                 FileUtils.ExtractToDirectory(FilePath, TempFolder & "Temp\")
                 Logger.Info($"已解压导入的日志文件：{FilePath}")
                 GoTo Extracted
@@ -163,9 +163,9 @@ Extracted:
                 Else
                     TargetType = AnalyzeFileType.ExtraLogFile
                 End If
-            ElseIf MatchName.EndsWithF(".log", True) Then
+            ElseIf PathUtils.GetExtension(MatchName) = "log" Then
                 TargetType = AnalyzeFileType.ExtraLogFile
-            ElseIf MatchName.EndsWithF(".txt", True) Then
+            ElseIf PathUtils.GetExtension(MatchName) = "txt" Then
                 TargetType = AnalyzeFileType.ExtraReportFile
             Else
                 Logger.Info($"{MatchName} 分类为 Ignore")

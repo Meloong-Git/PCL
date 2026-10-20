@@ -18,7 +18,7 @@ Public Module ModJava
                     '强制选择的 Java
                     Dim SelectedJavaSetting = Settings.Get(Of String)("LaunchArgumentJavaSelect")
                     Dim SelectedJava = If(SelectedJavaSetting.StartsWithF("{"), SelectedJavaSetting.DeserializeJson(Of JObject)()("Path").ToString, "")
-                    Dim Match = OldJavaList.FirstOrDefault(Function(j) j.Folder.Equals(SelectedJava, StringComparison.OrdinalIgnoreCase))
+                    Dim Match = OldJavaList.FirstOrDefault(Function(j) PathUtils.IsSame(j.Folder, SelectedJava))
                     If Match IsNot Nothing Then
                         OldJavaList.Remove(Match)
                         OldJavaList.Insert(0, Match)
@@ -78,7 +78,7 @@ Public Module ModJava
             Return
         End If
         '不再移除它
-        Configs.JavaRemovedList.Edit(Sub(ByRef List) List.RemoveIf(Function(f) f.Equals(NewJava.Folder, StringComparison.OrdinalIgnoreCase)))
+        Configs.JavaRemovedList.Edit(Sub(ByRef List) List.RemoveIf(Function(f) PathUtils.IsSame(f, NewJava.Folder)))
         '加入列表顶部
         Configs.JavaList.Edit(
         Sub(ByRef List)
@@ -150,16 +150,16 @@ Public Module ModJava
         End Sub
 
         '原版 26-：通过版本号判断
-        If (Not Instance.Version.Vaild AndAlso Instance.ReleaseTime >= New Date(2024, 4, 2)) OrElse
-           (Instance.Version.Vaild AndAlso Instance.Version.Vanilla >= New Version(20, 0, 5)) Then
+        If (Not Instance.Version.Valid AndAlso Instance.ReleaseTime >= New Date(2024, 4, 2)) OrElse
+           (Instance.Version.Valid AndAlso Instance.Version.Vanilla >= New Version(20, 0, 5)) Then
             '1.20.5+（24w14a+）：至少 Java 21
             AddConstraint(ValueRange(Of Version).AtLeast(New Version(21, 0)))
-        ElseIf (Not Instance.Version.Vaild AndAlso Instance.ReleaseTime >= New Date(2021, 11, 16)) OrElse
-               (Instance.Version.Vaild AndAlso Instance.Version.Vanilla.Major >= 18) Then
+        ElseIf (Not Instance.Version.Valid AndAlso Instance.ReleaseTime >= New Date(2021, 11, 16)) OrElse
+               (Instance.Version.Valid AndAlso Instance.Version.Vanilla.Major >= 18) Then
             '1.18 pre2+：至少 Java 17
             AddConstraint(ValueRange(Of Version).AtLeast(New Version(17, 0)))
-        ElseIf (Not Instance.Version.Vaild AndAlso Instance.ReleaseTime >= New Date(2021, 5, 11)) OrElse
-               (Instance.Version.Vaild AndAlso Instance.Version.Vanilla.Major >= 17) Then
+        ElseIf (Not Instance.Version.Valid AndAlso Instance.ReleaseTime >= New Date(2021, 5, 11)) OrElse
+               (Instance.Version.Valid AndAlso Instance.Version.Vanilla.Major >= 17) Then
             '1.17+ (21w19a+)：至少 Java 16
             AddConstraint(ValueRange(Of Version).AtLeast(New Version(16, 0)))
         ElseIf Instance.ReleaseTime.Year >= 2017 Then 'Minecraft 1.12 与 1.11 的分界线正好是 2017 年，太棒了
@@ -185,7 +185,7 @@ Public Module ModJava
         End If
 
         'OptiFine 检测
-        If Instance.Version.HasOptiFine AndAlso Instance.Version.Vaild Then '不管非标准版本
+        If Instance.Version.HasOptiFine AndAlso Instance.Version.Valid Then '不管非标准版本
             If Instance.Version.Vanilla.Major < 7 Then
                 '<1.7：至多 Java 8
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
@@ -199,11 +199,11 @@ Public Module ModJava
         End If
 
         'Forge 检测（部分测试结果见 #8432）
-        If Instance.Version.HasForge Then
+        If Instance.Version.ModLoaders.HasFlagF(ModLoaders.Forge) Then
             If Instance.Version.Vanilla >= New Version(6, 0, 1) AndAlso Instance.Version.Vanilla <= New Version(7, 0, 2) Then
                 '1.6.1 - 1.7.2：必须 Java 7
                 AddConstraint(ValueRange(Of Version).ClosedOpen(New Version(7, 0), New Version(8, 0)))
-            ElseIf Instance.Version.Vanilla.Major <= 12 OrElse Not Instance.Version.Vaild Then '非标准版本
+            ElseIf Instance.Version.Vanilla.Major <= 12 OrElse Not Instance.Version.Valid Then '非标准版本
                 '<=1.12：Java 8
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
             ElseIf Instance.Version.Vanilla.Major <= 14 Then
@@ -212,38 +212,38 @@ Public Module ModJava
             ElseIf Instance.Version.Vanilla.Major = 15 Then
                 '1.15：Java 8 - 15
                 AddConstraint(ValueRange(Of Version).ClosedOpen(New Version(8, 0), New Version(16, 0)))
-            ElseIf CompareVersionGE(Instance.Version.Forge, "34.0.0") AndAlso CompareVersionGE("36.2.25", Instance.Version.Forge) Then
+            ElseIf McUtils.CompareVersionGE(Instance.Version.ModLoaderVersions(ModLoaders.Forge), "34.0.0") AndAlso McUtils.CompareVersionGE("36.2.25", Instance.Version.ModLoaderVersions(ModLoaders.Forge)) Then
                 '1.16.3~5，Forge 34.0.0 ~ 36.2.25：最高 Java 8u320
                 AddConstraint(ValueRange(Of Version).AtMost(New Version(8, 0, 320)))
-            ElseIf CompareVersionGE(Instance.Version.Forge, "36.2.26") AndAlso CompareVersionGE("36.999999.999999", Instance.Version.Forge) Then
+            ElseIf McUtils.CompareVersionGE(Instance.Version.ModLoaderVersions(ModLoaders.Forge), "36.2.26") AndAlso McUtils.CompareVersionGE("36.999999.999999", Instance.Version.ModLoaderVersions(ModLoaders.Forge)) Then
                 '1.16.5，Forge 36.2.26+，<37.0.0：最高 Java 23
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(24, 0)))
-            ElseIf CompareVersionGE(Instance.Version.Forge, "37.0.0") AndAlso CompareVersionGE("37.0.79", Instance.Version.Forge) Then
+            ElseIf McUtils.CompareVersionGE(Instance.Version.ModLoaderVersions(ModLoaders.Forge), "37.0.0") AndAlso McUtils.CompareVersionGE("37.0.79", Instance.Version.ModLoaderVersions(ModLoaders.Forge)) Then
                 '1.17.1，Forge 37.0.0 ~ 37.0.79：最高 Java 16
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(17, 0)))
             ElseIf Instance.Version.Vanilla.Major = 18 AndAlso Instance.Version.HasOptiFine Then '#305
                 '1.18：若安装了 OptiFine，最高 Java 18
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(19, 0)))
-            ElseIf CompareVersionGE(Instance.Version.Forge, "45.0.21") AndAlso CompareVersionGE("45.0.65", Instance.Version.Forge) Then
+            ElseIf McUtils.CompareVersionGE(Instance.Version.ModLoaderVersions(ModLoaders.Forge), "45.0.21") AndAlso McUtils.CompareVersionGE("45.0.65", Instance.Version.ModLoaderVersions(ModLoaders.Forge)) Then
                 '1.19.4，Forge 45.0.21 ~ 45.0.65：最高 Java 19
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(20, 0)))
-            ElseIf CompareVersionGE(Instance.Version.Forge, "45.0.66") AndAlso CompareVersionGE("47.4.8", Instance.Version.Forge) Then
+            ElseIf McUtils.CompareVersionGE(Instance.Version.ModLoaderVersions(ModLoaders.Forge), "45.0.66") AndAlso McUtils.CompareVersionGE("47.4.8", Instance.Version.ModLoaderVersions(ModLoaders.Forge)) Then
                 '1.19.4~1.20.1，Forge 45.0.66 ~ 47.4.8：最高 Java 21
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(22, 0)))
             End If
         End If
 
         'NeoForge 检测
-        If Instance.Version.HasNeoForge Then
+        If Instance.Version.ModLoaders.HasFlagF(ModLoaders.NeoForge) Then
             If Instance.Version.Vanilla = New Version(20, 0, 1) OrElse
-               (CompareVersionGE("20.2.62-beta", Instance.Version.NeoForge) AndAlso Not Instance.Version.NeoForge.Contains("25w14craftmine")) Then
+               (McUtils.CompareVersionGE("20.2.62-beta", Instance.Version.ModLoaderVersions(ModLoaders.NeoForge)) AndAlso Not Instance.Version.ModLoaderVersions(ModLoaders.NeoForge).Contains("25w14craftmine")) Then
                 '1.20.1，以及 1.20.2 的 20.2.62-beta 之前：最高 Java 21
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(22, 0)))
             End If
         End If
 
         'Fabric 检测
-        If Instance.Version.HasFabric AndAlso Instance.Version.Vaild Then '不管非标准版本
+        If Instance.Version.ModLoaders.HasFlagF(ModLoaders.Fabric) AndAlso Instance.Version.Valid Then '不管非标准版本
             If Instance.Version.Vanilla.Major >= 15 AndAlso Instance.Version.Vanilla.Major <= 16 Then
                 '1.15 - 1.16：Java 8+
                 AddConstraint(ValueRange(Of Version).AtLeast(New Version(8, 0)))
@@ -251,15 +251,14 @@ Public Module ModJava
                 '1.18+：Java 17+
                 AddConstraint(ValueRange(Of Version).AtLeast(New Version(17, 0)))
             End If
-            If Instance.Version.Fabric <> "未知版本" AndAlso
-               CompareVersion(Instance.Version.Fabric, "0.17.0") < 0 Then
+            If Instance.Version.ModLoaderVersions(ModLoaders.Fabric) <> "未知版本" AndAlso McUtils.CompareVersion(Instance.Version.ModLoaderVersions(ModLoaders.Fabric), "0.17.0") < 0 Then
                 'Fabric Loader 0.16.x 及更早版本的 Mixin/ASM 不兼容 Java 25
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(25, 0)))
             End If
         End If
 
         'LiteLoader 检测
-        If Instance.Version.HasLiteLoader AndAlso Instance.Version.Vaild Then '不管非标准版本
+        If Instance.Version.ModLoaders.HasFlagF(ModLoaders.LiteLoader) AndAlso Instance.Version.Valid Then '不管非标准版本
             '最高 Java 8
             AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
         End If
@@ -411,9 +410,9 @@ Public Module ModJava
                         Dim Components = DownloadListWorker.LastResult
 
                         '确定要下载的目标 Java
-                        Dim JavaToDownload As JavaDownloadInfo = If(
-                        Components.FirstOrDefault(Function(Comp) Comp.Java("version")("name").ToString = RecommendedComponent), '优先选择指定的 Component
-                        Components.FirstOrDefault(Function(Comp) Range.Contains(Comp.JavaVersion)))
+                        Dim JavaToDownload As JavaDownloadInfo = Components.FirstOrDefault(
+                            Function(Comp) Comp.Java("version")("name").ToString = RecommendedComponent, '优先选择指定的 Component
+                            Function(Comp) Range.Contains(Comp.JavaVersion))
                         If JavaToDownload Is Nothing Then
                             Logger.Warn($"Mojang 提供的 Java 列表中没有合适的 Java，无法自动下载")
                             '提示需要手动下载 Java
