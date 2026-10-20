@@ -64,7 +64,7 @@ Public Class PageSelectLeft
                                 </ContextMenu>
                         )
                 End Select
-                If (Folder.Type = McFolder.Types.Vanilla OrElse Folder.Type = McFolder.Types.RenamedVanilla) AndAlso Folder.Location = Paths.Base & ".minecraft\" AndAlso McFolderList.IsSingle Then CType(ContMenu.FindName("Delete"), MyMenuItem).Header = "清空"
+                If (Folder.Type = McFolder.Types.Vanilla OrElse Folder.Type = McFolder.Types.RenamedVanilla) AndAlso PathUtils.IsSame(Folder.Location, Paths.Base & ".minecraft\") AndAlso McFolderList.IsSingle Then CType(ContMenu.FindName("Delete"), MyMenuItem).Header = "清空"
                 '注册事件
                 If Not Folder.Type = McFolder.Types.Vanilla Then CType(ContMenu.FindName("Remove"), MyMenuItem).AddHandler(MyMenuItem.ClickEvent, New RoutedEventHandler(AddressOf FrmSelectLeft.Remove_Click))
                 CType(ContMenu.FindName("Open"), MyMenuItem).AddHandler(MyMenuItem.ClickEvent, New RoutedEventHandler(AddressOf FrmSelectLeft.Open_Click))
@@ -116,7 +116,7 @@ Public Class PageSelectLeft
 
             '确认勾选状态
             For i = 0 To McFolderList.Count - 1
-                If McFolderList(i).Location = McFolderSelected Then
+                If PathUtils.IsSame(McFolderList(i).Location, McFolderSelected) Then
                     CType(FrmSelectLeft.PanList.Children(i + 1), MyListItem).Checked = True '去掉第一个标题
                     Return
                 End If
@@ -139,9 +139,9 @@ Public Class PageSelectLeft
     '添加文件夹
     Public Sub Add_Click()
         Dim NewFolder As String = ""
-        '检查是否有下载任务
-        If HasDownloadingTask() Then
-            Hint("在下载任务进行时，无法添加游戏文件夹！", HintType.Red)
+        '下载或版本修改期间禁止更改游戏文件夹
+        If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask() Then
+            Hint("请在其他任务完成后，再添加游戏文件夹！", HintType.Red)
             Return
         End If
         Try
@@ -150,8 +150,11 @@ Public Class PageSelectLeft
             If NewFolder Is Nothing Then Return
             If NewFolder.Contains("!") OrElse NewFolder.Contains(";") Then Hint("Minecraft 文件夹路径中不能含有感叹号或分号！", HintType.Red) : Return
             '要求输入显示名称
-            Dim SplitedNames As String() = NewFolder.TrimEnd("\").Split("\")
-            Dim DefaultName As String = If(SplitedNames.Last = ".minecraft", If(SplitedNames.Count >= 3, SplitedNames(SplitedNames.Count - 2), ""), SplitedNames.Last)
+            Dim DefaultName = PathUtils.GetLastPart(NewFolder)
+            If DefaultName = ".minecraft" Then
+                Dim ParentFolder = PathUtils.RemoveLastPart(NewFolder)
+                DefaultName = If(ParentFolder.EndsWithF(":"), "", PathUtils.GetLastPart(ParentFolder))
+            End If
             If DefaultName.Length > 40 Then DefaultName = DefaultName.Substring(0, 39)
             Dim NewName As String = MyMsgBoxInput("输入显示名称", "输入该文件夹在左边栏列表中显示的名称。", DefaultName,
                                               New ObjectModel.Collection(Of Validate) From {New ValidateNullOrWhiteSpace, New ValidateLength(1, 30), New ValidateExcept({">", "|"})})
@@ -169,7 +172,7 @@ Public Class PageSelectLeft
         RunInThread(
         Sub()
             Try
-                If Not FolderPath.EndsWithF("\") Then FolderPath &= "\"
+                FolderPath = PathUtils.AddSlashSuffix(FolderPath)
                 '检查文件夹权限
                 If Not CheckPermission(FolderPath) Then
                     If ShowHint Then
@@ -195,7 +198,7 @@ Public Class PageSelectLeft
                 For i = 0 To Folders.Count - 1
                     Dim Folder As String = Folders(i)
                     If Folder = "" Then Continue For
-                    If Folder.Split(">")(1) = FolderPath Then
+                    If PathUtils.IsSame(Folder.Split(">")(1), FolderPath) Then
                         IsAdded = True
                         If Folder.Split(">")(0) = DisplayName Then
                             If ShowHint Then Hint("此文件夹已在列表中！", HintType.Blue)
@@ -246,9 +249,9 @@ Public Class PageSelectLeft
 
     '创建文件夹
     Public Sub Create_Click()
-        '检查是否有下载任务
-        If HasDownloadingTask() Then
-            Hint("在下载任务进行时，无法创建游戏文件夹！", HintType.Red)
+        '下载或版本修改期间禁止更改游戏文件夹
+        If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask() Then
+            Hint("请在其他任务完成后，再创建游戏文件夹！", HintType.Red)
             Return
         End If
         CreateMcFolderInCurrentPath()
@@ -270,6 +273,10 @@ Public Class PageSelectLeft
             Dim Target As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
             '若为 “移除”，则提醒是否删除 PCL 的配置文件
             If Target.Type = McFolder.Types.Custom Then
+                If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask() Then
+                    Hint("请在其他任务完成后，再移除游戏文件夹！", HintType.Red)
+                    Return
+                End If
                 Select Case MyMsgBox("是否需要清理 PCL 在该文件夹中的配置文件？" & vbCrLf & "这包括各个版本的独立设置（如自定义图标、第三方登录配置）等，对游戏本身没有影响。", "配置文件清理", "删除", "保留", "取消")
                     Case 1
                         '删除配置文件
@@ -292,6 +299,10 @@ Public Class PageSelectLeft
         End Try
     End Sub
     Public Sub Delete_Click(sender As Object, e As RoutedEventArgs)
+        If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask() Then
+            Hint("请在其他任务完成后，再删除游戏文件夹！", HintType.Red)
+            Return
+        End If
         Dim Target As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
         Dim DeleteText As String = If((Target.Type = McFolder.Types.Vanilla OrElse Target.Type = McFolder.Types.RenamedVanilla) AndAlso Target.Location = Paths.Base & ".minecraft\" AndAlso McFolderList.IsSingle, "清空", "删除")
         If MyMsgBox("你确定要" & DeleteText & "这个文件夹吗？" & vbCrLf &
@@ -328,7 +339,7 @@ Public Class PageSelectLeft
         Dim DeletedName As String = Nothing
         Dim Folders = Settings.Get(Of String)("LaunchFolders").Split("|"c, True).ToList
         For Each Folder In Folders.ToList
-            If Not Folder.EndsWithF(Target.Location) Then Continue For
+            If Not Folder.Contains(">") OrElse Not PathUtils.IsSame(Folder.AfterFirst(">"), Target.Location) Then Continue For
             DeletedName = Folder.BeforeFirst(">")
             Folders.Remove(Folder)
             Exit For
@@ -349,7 +360,7 @@ Public Class PageSelectLeft
     End Sub
     Public Shared Sub RefreshCurrent(Folder As String)
         WriteIni(Folder & "PCL.ini", "InstanceCache", "") '删除缓存以强制要求下一次加载时更新列表
-        If Folder = McFolderSelected Then LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+        If PathUtils.IsSame(Folder, McFolderSelected) Then LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
     End Sub
     Public Sub Rename_Click(sender As Object, e As RoutedEventArgs)
         Dim Folder As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
@@ -365,7 +376,7 @@ Public Class PageSelectLeft
             For i = 0 To Folders.Count - 1
                 Dim FolderCurrent As String = Folders(i)
                 If FolderCurrent = "" Then Continue For
-                If FolderCurrent.Split(">")(1) = Folder.Location Then
+                If PathUtils.IsSame(FolderCurrent.Split(">")(1), Folder.Location) Then
                     IsAdded = True
                     If FolderCurrent.Split(">")(0) = NewName Then
                         '名称未修改
@@ -390,9 +401,9 @@ Public Class PageSelectLeft
     '点击选项
     Public Sub Folder_Change(sender As MyListItem, e As RouteEventArgs)
         If Not e.RaiseByMouse OrElse Not sender.Checked Then Return
-        '检查是否有下载任务
-        If HasDownloadingTask(True) Then
-            Hint("在下载任务进行时，无法切换游戏文件夹！", HintType.Red)
+        '下载或版本修改期间禁止更改游戏文件夹
+        If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask(True) Then
+            Hint("请在其他任务完成后，再切换游戏文件夹！", HintType.Red)
             e.Handled = True
             Return
         End If

@@ -65,10 +65,10 @@
                         <local:MyCheckBox Margin="30,0,0,0">
                             <local:MyCheckBox.Tag>
                                 <local:ExportOption 
-                                Title="OptiFine 设置"
-                                Rules="optionsof.txt|optionsshaders.txt"
-                                DefaultChecked="True"
-                                RequireOptiFine="True" />
+                                 Title="OptiFine 设置"
+                                 Rules="optionsof.txt|optionsshaders.txt"
+                                 DefaultChecked="True"
+                                 RequireOptiFine="True" />
                             </local:MyCheckBox.Tag>
                         </local:MyCheckBox>
                         <local:MyCheckBox x:Name="CheckOptionsMod">

@@ -235,18 +235,16 @@
                     <local:MyHint Margin="0,15,0,-4" Text="内容见 ModSetup" Theme="Blue" x:Name="HintCustom" />
                     <local:MyHint Margin="0,15,0,6" Text="请谨慎使用陌生人提供的主页，恶意代码可能会造成损害！" Theme="Yellow" x:Name="HintCustomWarn" 
                                   CanClose="True" RelativeSetup="HintCustomWarn" />
-                    <Grid Height="35" x:Name="PanCustomLocal" Visibility="Collapsed" Margin="0,10,0,5">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="Button" />
-                        </Grid.ColumnDefinitions>
-                        <local:MyButton x:Name="BtnCustomRefresh" Grid.Column="0" Height="32" MinWidth="140" Text="刷新主页" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" />
-                        <local:MyButton x:Name="BtnCustomFile" Grid.Column="1" Height="32" MinWidth="140" Text="生成教学文件" Padding="13,0" Margin="0,0,20,0" />
-                        <local:MyButton x:Name="BtnCustomTutorial" Grid.Column="2" Height="32" MinWidth="140" Text="查看教程" Padding="13,0" Margin="0,0,20,0" />
-                        <local:MyButton x:Name="BtnCustomOpen" Grid.Column="3" Height="32" MinWidth="140" Text="打开主页文件夹" Padding="13,0" Margin="0,0,20,0" />
-                    </Grid>
+                    <WrapPanel x:Name="PanCustomLocal" Visibility="Collapsed" Margin="0,0,0,5">
+                        <local:MyButton x:Name="BtnCustomRefresh" Text="刷新主页"  
+                                        MinWidth="140" Height="35" Padding="13,0" Margin="0,10,20,0" HorizontalAlignment="Left" ColorType="Highlight" />
+                        <local:MyButton x:Name="BtnCustomFile" Text="生成教学文件" 
+                                        MinWidth="140" Height="35" Padding="13,0" Margin="0,10,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnCustomTutorial" Text="查看教程" 
+                                        MinWidth="140" Height="35" Padding="13,0" Margin="0,10,20,0" HorizontalAlignment="Left" />
+                        <local:MyButton x:Name="BtnCustomFolder" Text="打开主页文件夹" 
+                                        MinWidth="140" Height="35" Padding="13,0" Margin="0,10,20,0" HorizontalAlignment="Left" />
+                    </WrapPanel>
                     <Grid x:Name="PanCustomNet" Visibility="Collapsed" Margin="0,10,0,5">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="Name" />
@@ -288,6 +286,11 @@
                             <local:MyComboBoxItem local:SettingService.Value="17" Content="Bangumi 番剧主页（作者：wzyaeu）" />
                             <local:MyComboBoxItem local:SettingService.Value="18" Content="Bilibili 热门（作者：wzyaeu）" />
                             <local:MyComboBoxItem local:SettingService.Value="19" Content="Music 云音乐热门（作者：wzyaeu）" />
+                            <local:MyComboBoxItem local:SettingService.Value="20" Content="模组推荐（作者：llsgllsg）" />
+                            <local:MyComboBoxItem local:SettingService.Value="21" Content="每日游戏推荐（作者：llsgllsg）" />
+                            <local:MyComboBoxItem local:SettingService.Value="22" Content="Wallpaper 每日壁纸（作者：wzyaeu）" />
+                            <local:MyComboBoxItem local:SettingService.Value="23" Content="Weather 天气预报（作者：wzyaeu）" />
+                            <local:MyComboBoxItem local:SettingService.Value="24" Content="新一代狗屁王大杂烩主页（作者：llsgllsg）" />
                         </local:MyComboBox>
                     </Grid>
                 </StackPanel>
@@ -334,6 +337,7 @@
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="3" Text="版本管理" x:Name="CheckHiddenFunctionSelect" local:SettingService.Key="UiHiddenFunctionSelect" ToolTip="隐藏启动按钮下方的版本选择与版本设置入口。" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="4" Text="Mod 更新" x:Name="CheckHiddenFunctionModUpdate" local:SettingService.Key="UiHiddenFunctionModUpdate" ToolTip="禁止在 Mod 管理页面更新 Mod。" />
                         <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="5" Text="功能隐藏" x:Name="CheckHiddenFunctionHidden" local:SettingService.Key="UiHiddenFunctionHidden" ToolTip="仅隐藏本选项卡，设置的禁用内容依然有效。&#xa;可以在保留个性化设置页面的情况下避免隐藏设置被修改。" />
+                        <local:MyCheckBox Height="22" VerticalAlignment="Center" Grid.Row="4" Grid.Column="6" Text="版本修改" x:Name="CheckHiddenFunctionModify" local:SettingService.Key="UiHiddenFunctionInstanceModify" ToolTip="隐藏版本设置中的版本修改功能。" />
                     </Grid>
                 </StackPanel>
             </local:MyCard>

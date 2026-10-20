@@ -396,7 +396,7 @@ PreFin:
                 AddHandler DownButton.Click, Sub() MoveJavaInList(JavaEntry, 1)
                 Buttons.Add(DownButton)
                 '从列表中移除按钮
-                Dim IsOfficial As Boolean = JavaEntry.Folder.StartsWithF($"{Paths.AppData}.minecraft\runtime\")
+                Dim IsOfficial As Boolean = PathUtils.IsParentOf($"{Paths.AppData}.minecraft\runtime\", JavaEntry.Folder)
                 Dim DeleteButton As New MyIconButton With {.Logo = Logo.IconButtonStop, .Height = 24, .Width = 24}
                 DeleteButton.IsEnabled = Not IsOfficial
                 DeleteButton.ToolTip = If(DeleteButton.IsEnabled, "从列表中移除", "无法移除官方 Java")

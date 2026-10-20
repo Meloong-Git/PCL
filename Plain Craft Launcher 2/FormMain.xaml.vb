@@ -11,6 +11,16 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 413 Then 'Release 2.99.0.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：为遵守相关法律法规，PCL 暂时不再提供 MC 下载功能，非常抱歉 qwq……"))
+            End If
+            If LastVersion < 411 Then 'Release 2.14.0.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：允许修改、添加、移除、更新已安装版本的各个组件，可从版本设置中进入"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：启动游戏时允许按 Esc 取消"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：允许复制主页的启动日志中的内容"))
+                FeatureCount += 19
+                BugCount += 26
+            End If
             If LastVersion < 408 Then 'Release 2.13.1.1
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：版本设置中，添加打开截图文件夹的快捷方式"))
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：导出整合包时，可以勾选导出光影设置文件"))
@@ -93,6 +103,16 @@ Public Class FormMain
             '3：BUG+ IMP* FEAT-
             '2：BUG* IMP-
             '1：BUG-
+            If LastVersion < 414 Then 'Snapshot 2.99.0.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：为遵守相关法律法规，PCL 暂时不再提供 MC 下载功能，非常抱歉 qwq……"))
+            End If
+            If LastVersion < 412 Then 'Snapshot 2.14.0.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：允许修改、添加、移除、更新已安装版本的各个组件，可从版本设置中进入"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：启动游戏时允许按 Esc 取消"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：允许复制主页的启动日志中的内容"))
+                FeatureCount += 19
+                BugCount += 26
+            End If
             If LastVersion < 410 Then 'Snapshot 2.13.1.1
                 If LastVersion = 409 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：更新 Mod 时可能更新成另一个 Mod 加载器的版本"))
                 FeatureCount += 2
@@ -786,7 +806,7 @@ Public Class FormMain
         If PanMsg.Children.Any Then
             If e.Key = Key.Enter Then
                 CType(PanMsg.Children(0), Object).Btn1_Click()
-            ElseIf e.Key = Key.Escape OrElse (e.Key = Key.W AndAlso Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) Then
+            ElseIf e.Key = Key.Escape Then
                 Dim Msg As Object = PanMsg.Children(0)
                 If TypeOf Msg IsNot MyMsgInput AndAlso TypeOf Msg IsNot MyMsgSelect AndAlso Msg.Btn3.Visibility = Visibility.Visible Then
                     Msg.Btn3_Click()
@@ -803,8 +823,14 @@ Public Class FormMain
         ' 在没有弹窗时：继续检查……
         '==========================
 
-        '按 ESC 返回上一级
-        If e.Key = Key.Escape Then TriggerPageBack()
+        '按 ESC 取消启动，或返回上一级
+        If e.Key = Key.Escape Then
+            If PageCurrent = FormMain.PageType.Launch AndAlso McLaunchLoader.State = LoadState.Loading Then
+                FrmLaunchLeft.BtnCancel_Click()
+                Return
+            End If
+            TriggerPageBack()
+        End If
         '更改隐藏版本可见性
         If e.Key = Key.F11 AndAlso PageCurrent = FormMain.PageType.InstanceSelect Then
             FrmSelectRight.ShowHidden = Not FrmSelectRight.ShowHidden
@@ -826,11 +852,6 @@ Public Class FormMain
         If e.Key = Key.F5 Then
             If TypeOf PageLeft Is IRefreshable Then CType(PageLeft, IRefreshable).Refresh()
             If TypeOf PageRight Is IRefreshable Then CType(PageRight, IRefreshable).Refresh()
-            Return
-        End If
-        'Ctrl + w 关闭程序
-        If e.Key = Key.W AndAlso Keyboard.Modifiers.HasFlag(ModifierKeys.Control) Then
-            EndProgram(True)
             Return
         End If
         '调用启动游戏
@@ -1020,14 +1041,14 @@ Public Class FormMain
             If FilePathList.Count > 1 Then
                 '必须要求全部为 jar 文件
                 For Each File In PathList
-                    If Not {"jar", "litemod", "disabled", "old"}.Contains(File.AfterLast(".").Lower) Then
+                    If Not {"jar", "litemod", "disabled", "old"}.Contains(PathUtils.GetExtension(File)) Then
                         Hint("一次请只拖入一个文件！", HintType.Red)
                         Return
                     End If
                 Next
             End If
             '主页
-            Dim Extension As String = FilePath.AfterLast(".").Lower
+            Dim Extension As String = PathUtils.GetExtension(FilePath)
             If Extension = "xaml" Then
                 Logger.Info("文件后缀为 XAML，作为主页加载")
                 If FileUtils.Exists(Paths.Base & "PCL\Custom.xaml") Then
@@ -1048,20 +1069,24 @@ Public Class FormMain
             If PageInstanceMod.InstallMods(PathList) Then Return
             '安装整合包
             If {"zip", "rar", "mrpack"}.Any(Function(t) t = Extension) Then '部分压缩包是 zip 格式但后缀为 rar，总之试一试
-                Logger.Info("文件为压缩包，尝试作为整合包安装")
-                Hint("检测到压缩包拖入，正在准备安装……")
+                Hint("正在读取压缩包……")
                 Try
+                    Logger.Info("文件为压缩包，尝试作为整合包安装")
                     ModpackInstall(FilePath)
                     RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.TaskManager))
                     Return
                 Catch ex As Exception
+                    If RestrictMcDownload AndAlso ex.Message = "为遵守相关法律法规，PCL 暂时不再提供 MC 下载功能，非常抱歉 qwq……" Then
+                        Hint(ex.Message, HintType.Red)
+                        Return
+                    End If
                     If ex.IsCanceled Then Return
                     '安装失败，继续往后尝试
                 End Try
             End If
             'RAR 处理
             If Extension = "rar" Then
-                Hint("PCL 无法处理 rar 格式的压缩包，请在解压后重新压缩为 zip 格式再试！")
+                Hint("PCL 无法处理 rar 格式的压缩包，请在解压后重新压缩为 zip 格式再试！", HintType.Red)
                 Return
             End If
             '错误报告分析
@@ -1077,7 +1102,7 @@ Public Class FormMain
                 Logger.Error(ex, "自主错误报告分析失败")
             End Try
             '未知操作
-            Hint("PCL 无法确定应当执行的文件拖拽操作……")
+            Hint("PCL 无法确定适合的操作……", HintType.Red)
         End Sub, "文件拖拽")
     End Sub
 
@@ -1219,9 +1244,10 @@ Public Class FormMain
         OtherTest = 2
         InstanceOverall = 0
         InstanceSetup = 1
-        InstanceMod = 2
-        InstanceModDisabled = 3
-        InstanceExport = 4
+        InstanceModify = 2
+        InstanceMod = 3
+        InstanceModDisabled = 4
+        InstanceExport = 5
     End Enum
     ''' <summary>
     ''' 获取次级页面的名称。若并非次级页面则返回空字符串，故可以以此判断是否为次级页面。
@@ -1386,6 +1412,10 @@ Public Class FormMain
     ''' </summary>
     Private Sub PageChangeActual(Stack As PageStackData, Optional SubType As PageSubType = -1)
         If PageCurrent = Stack AndAlso (PageCurrentSub = SubType OrElse SubType = -1) Then Return
+        If Stack.Page = PageType.InstanceSetup AndAlso PageInstanceLeft.Instance IsNot Nothing AndAlso McInstanceLock.IsLocked(PageInstanceLeft.Instance) Then
+            Hint("该版本正在被修改，暂时无法进入版本设置！", HintType.Red)
+            Return
+        End If
         AniControlEnabled += 1
         Try
 

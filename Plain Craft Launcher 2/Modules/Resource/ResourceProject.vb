@@ -184,11 +184,11 @@ Public Class ResourceProject
                     If Not NewFile.DownloadAvailable Then Continue For
                     ModLoaders = ModLoaders Or NewFile.ModLoaders
                     Dim GameVersions = File("gameVersions").ToObject(Of List(Of String))
-                    If Not GameVersions.Any(Function(v) McVersion.IsFormatFit(v)) Then Continue For
+                    If Not GameVersions.Any(Function(v) McVersion.IsStandardFormat(v)) Then Continue For
                     Files.Add(New KeyValuePair(Of Integer, List(Of String))(File("id"), GameVersions))
                 Next
                 For Each File In If(Data("latestFilesIndexes"), New JArray) '这俩玩意儿包含的文件不一样，见 #3599
-                    If Not McVersion.IsFormatFit(File("gameVersion")) Then Continue For
+                    If Not McVersion.IsStandardFormat(File("gameVersion")) Then Continue For
                     Files.Add(New KeyValuePair(Of Integer, List(Of String))(File("fileId"), {File("gameVersion").ToString}.ToList))
                 Next
                 CurseForgeFileIds = Files.Select(Function(f) f.Key).Distinct.ToList

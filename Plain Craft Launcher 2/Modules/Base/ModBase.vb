@@ -6,12 +6,12 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.13.1.1" '显示用版本名
+    Public Const VersionBaseName As String = "2.99.0.0" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If RELEASE Then
-    Public Const VersionCode As Integer = 408 '正式版
+    Public Const VersionCode As Integer = 413 '正式版
 #Else
-    Public Const VersionCode As Integer = 410 '快照版
+    Public Const VersionCode As Integer = 414 '快照版
 #End If
 
     '版本信息
@@ -47,7 +47,7 @@ Public Module ModBase
     ''' <summary>
     ''' 程序的缓存文件夹路径，以 \ 结尾。
     ''' </summary>
-    Public PathTemp As String = If(Settings.Get(Of String)("SystemSystemCache") = "", Path.GetTempPath() & "PCL\", Settings.Get(Of String)("SystemSystemCache")).ToString.Replace("/", "\").TrimEnd("\") & "\"
+    Public PathTemp As String = PathUtils.AddSlashSuffix(If(Settings.Get(Of String)("SystemSystemCache") = "", Path.GetTempPath() & "PCL\", Settings.Get(Of String)("SystemSystemCache")).Replace("/", "\"))
     ''' <summary>
     ''' 当前程序的语言。
     ''' </summary>
@@ -75,7 +75,7 @@ Public Module ModBase
     ''' <summary>
     ''' 系统盘盘符，以 \ 结尾。例如 “C:\”。
     ''' </summary>
-    Public OsDrive As String = Environment.GetLogicalDrives().Where(Function(p) Directory.Exists(p)).First.Upper.First & ":\" '#3799
+    Public OsDrive As String = Environment.GetLogicalDrives().First(Function(p) Directory.Exists(p)) '#3799
 
     Public ReadOnly Property ModeDebug As Boolean
         Get
@@ -576,7 +576,7 @@ Public Module ModBase
         Try
             If String.IsNullOrEmpty(Folder) Then Return False
             Folder = PathUtils.AddSlashSuffix(Folder)
-            If Folder.EndsWithF(":\System Volume Information\") OrElse Folder.EndsWithF(":\$RECYCLE.BIN\") Then Return False
+            If Folder.EndsWithF(":\System Volume Information\", True) OrElse Folder.EndsWithF(":\$RECYCLE.BIN\", True) Then Return False
             If Not DirectoryUtils.Exists(Folder) Then Return False
             Dim TestFilePath As String = $"{Folder}CheckPermission{GetUuid()}.txt"
             FileUtils.Write(TestFilePath, "临时文件，用于检测该文件夹的权限是否正常。")
@@ -593,7 +593,7 @@ Public Module ModBase
     Public Sub CheckPermissionWithException(Folder As String)
         If String.IsNullOrWhiteSpace(Folder) Then Throw New ArgumentNullException("文件夹名不能为空！")
         Folder = PathUtils.AddSlashSuffix(Folder)
-        If Folder.EndsWithF(":\System Volume Information\") OrElse Folder.EndsWithF(":\$RECYCLE.BIN\") Then Throw New UnauthorizedAccessException("没有对系统文件夹的权限！")
+        If Folder.EndsWithF(":\System Volume Information\", True) OrElse Folder.EndsWithF(":\$RECYCLE.BIN\", True) Then Throw New UnauthorizedAccessException("没有对系统文件夹的权限！")
         If Not DirectoryUtils.Exists(Folder) Then Throw New DirectoryNotFoundException("文件夹不存在！")
         Dim TestFilePath As String = $"{Folder}CheckPermission{GetUuid()}.txt"
         FileUtils.Write(TestFilePath, "临时文件，用于检测该文件夹的权限是否正常。")
@@ -788,7 +788,7 @@ Public Module ModBase
     ''' <summary>
     ''' 可用于临时存放文件的，不含任何特殊字符的文件夹路径，以“\”结尾。
     ''' </summary>
-    Public PathPure As Lazy(Of String) = New Lazy(Of String)(
+    Public PathPure As New Lazy(Of String)(
     Function()
         If Paths.Base.IsAsciiOnly() Then
             Return Paths.Base & "PCL\"
@@ -843,6 +843,12 @@ Public Module ModBase
     ''' </summary>
     Public Function GetUnixTimestampUtc() As Long
         Return (Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000
+    End Function
+    ''' <summary>
+    ''' 获取十进制 Unix 时间戳。
+    ''' </summary>
+    Public Function ToUnixTimestampUtc(Time As Date) As Long
+        Return (Time.ToUniversalTime().Ticks - 621355968000000000) / 10000000
     End Function
     ''' <summary>
     ''' 时间戳转化为日期。
@@ -1027,7 +1033,7 @@ Public Module ModBase
             Try
                 Retrier.Attempt(delay:=Function(Attempt) TimeSpan.FromMilliseconds(200), maxAttempts:=4, isRetryAllowed:=Function(ex) True, action:=
                 Sub()
-                    RunInUi(
+                    RunInUiWait(
                     Sub()
                         My.Computer.Clipboard.Clear()
                         If Not String.IsNullOrEmpty(Text) Then My.Computer.Clipboard.SetText(Text)

@@ -65,7 +65,7 @@ Public Class PageLaunchLeft
             '确认 Minecraft 版本存在
             Dim Selection As String = ReadIni(McFolderSelected & "PCL.ini", "Version")
             Dim Instance As McInstance = If(Selection = "", Nothing, New McInstance(Selection))
-            If Instance Is Nothing OrElse Not Instance.PathVersion.StartsWithF(McFolderSelected) OrElse Not Instance.Check() Then
+            If Instance Is Nothing OrElse Not PathUtils.IsParentOf(McFolderSelected, Instance.PathVersion) OrElse Not Instance.Check() Then
                 '无效的版本
                 Logger.Info($"当前选择的 Minecraft 版本无效：{If(Instance Is Nothing, "null", Instance.PathVersion)}", If(IsNothing(Instance), LogBehavior.None, LogBehavior.ToastIfDebug))
                 If Not McInstanceListLoader.State = LoadState.Finished Then LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\", WaitForExit:=True)
@@ -691,7 +691,7 @@ ExitRefresh:
         End If
     End Sub
     '取消按钮
-    Private Sub BtnCancel_Click() Handles BtnCancel.Click
+    Public Sub BtnCancel_Click() Handles BtnCancel.Click
         If McLaunchLoaderReal IsNot Nothing Then
             McLaunchLoaderReal.Cancel()
             McLaunchLog("已取消启动")
@@ -709,6 +709,10 @@ ExitRefresh:
     '版本设置按钮
     Private Sub BtnMore_Click() Handles BtnMore.Click
         If McLaunchLoader.State = LoadState.Loading Then Return
+        If McInstanceLock.IsLocked(McInstanceSelected) Then
+            Hint("该版本正在被修改，暂时无法进入版本设置！", HintType.Red)
+            Return
+        End If
         McInstanceSelected.Load()
         PageInstanceLeft.Instance = McInstanceSelected
         FrmMain.PageChange(FormMain.PageType.InstanceSetup, 0)

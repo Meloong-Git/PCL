@@ -30,6 +30,8 @@ Public Class PageSelectRight
             For Each Card As KeyValuePair(Of McInstanceCardType, List(Of McInstance)) In McInstanceList.ToArray
                 '确认是否为隐藏版本显示状态
                 If Card.Key = McInstanceCardType.Hidden Xor ShowHidden Then Continue For
+                Dim Instances = Card.Value.Where(Function(Instance) Not McInstanceLock.IsLocked(Instance)).ToList
+                If Not Instances.Any Then Continue For
 #Region "确认卡片名称"
                 Dim CardName As String = ""
                 Select Case Card.Key
@@ -40,11 +42,11 @@ Public Class PageSelectRight
                         Dim IsNeoForgeExists As Boolean = False
                         Dim IsFabricExists As Boolean = False
                         Dim IsLiteExists As Boolean = False
-                        For Each Instance As McInstance In Card.Value
-                            If Instance.Version.HasFabric Then IsFabricExists = True
-                            If Instance.Version.HasLiteLoader Then IsLiteExists = True
-                            If Instance.Version.HasForge Then IsForgeExists = True
-                            If Instance.Version.HasNeoForge Then IsNeoForgeExists = True
+                        For Each Instance As McInstance In Instances
+                            If Instance.Version.ModLoaders.HasFlagF(ModLoaders.Fabric) Then IsFabricExists = True
+                            If Instance.Version.ModLoaders.HasFlagF(ModLoaders.LiteLoader) Then IsLiteExists = True
+                            If Instance.Version.ModLoaders.HasFlagF(ModLoaders.Forge) Then IsForgeExists = True
+                            If Instance.Version.ModLoaders.HasFlagF(ModLoaders.NeoForge) Then IsNeoForgeExists = True
                         Next
                         If If(IsLiteExists, 1, 0) + If(IsForgeExists, 1, 0) + If(IsFabricExists, 1, 0) + If(IsNeoForgeExists, 1, 0) > 1 Then
                             CardName = "可安装 Mod"
@@ -72,17 +74,18 @@ Public Class PageSelectRight
                 End Select
 #End Region
                 '建立控件
-                Dim CardTitle As String = CardName & If(CardName = "收藏夹", "", " (" & Card.Value.Count & ")")
-                Dim NewCard As New MyCard With {.Title = CardTitle, .Margin = New Thickness(0, 0, 0, 15), .SwapType = 0}
-                Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Card.Value}
+                Dim CardTitle As String = CardName & If(CardName = "收藏夹", "", " (" & Instances.Count & ")")
+                Dim NewCard As New MyCard With {.Title = CardTitle, .Margin = New Thickness(0, 0, 0, 15)}
+                Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0)}
                 NewCard.Children.Add(NewStack)
                 NewCard.SwapControl = NewStack
+                NewCard.SetContentBuilder(Instances, Function(Instance) Instance.ToListItem(AddressOf McInstanceListContent))
                 PanMain.Children.Add(NewCard)
                 '确定卡片是否展开
                 If Card.Key = McInstanceCardType.Rubbish OrElse Card.Key = McInstanceCardType.Error OrElse Card.Key = McInstanceCardType.Fool Then
                     NewCard.IsSwapped = True
                 Else
-                    MyCard.StackInstall(NewStack, 0, CardTitle)
+                    NewCard.BuildContent()
                 End If
             Next
 
@@ -128,15 +131,16 @@ Public Class PageSelectRight
             BtnStar.LogoScale = 1.1
             BtnStar.Logo = Logo.IconButtonLikeLine
         End If
-        AddHandler BtnStar.Click, Sub()
-                                      WriteIni(Instance.PathVersion & "PCL\Setup.ini", "IsStar", Not Instance.IsStar)
-                                      McInstanceListForceRefresh = True
-                                      LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
-                                  End Sub
+        AddHandler BtnStar.Click,
+        Sub()
+            WriteIni(Instance.PathVersion & "PCL\Setup.ini", "IsStar", Not Instance.IsStar)
+            McInstanceListForceRefresh = True
+            LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+        End Sub
         Dim BtnDel As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonDelete}
         BtnDel.ToolTip = "删除"
         AddHandler BtnDel.Click, Sub() DeleteInstance(sender, Instance)
-        If Instance.State <> McInstanceState.Error Then
+        If Instance.State <> McInstance.McInstanceState.Error Then
             Dim BtnCont As New MyIconButton With {.LogoScale = 1.1, .Logo = Logo.IconButtonSetup}
             BtnCont.ToolTip = "设置"
             AddHandler BtnCont.Click,
@@ -166,6 +170,10 @@ Public Class PageSelectRight
     '点击选项
     Public Shared Sub Item_Click(sender As MyListItem, e As EventArgs)
         Dim Instance As McInstance = sender.Tag
+        If McInstanceLock.IsLocked(Instance) Then
+            Hint("该版本正在被修改，请稍后再选择！", HintType.Red)
+            Return
+        End If
         If New McInstance(Instance.PathVersion).Check Then
             '正常版本
             McInstanceSelected = Instance
@@ -183,8 +191,12 @@ Public Class PageSelectRight
     '修改此代码时，同时修改 PageInstanceOverall 中的代码
     Public Shared Sub DeleteInstance(Item As MyListItem, Instance As McInstance)
         Try
+            If McInstanceLock.IsLocked(Instance) Then
+                Hint("该版本正在被修改，请稍后再删除！", HintType.Red)
+                Return
+            End If
             Dim IsShiftPressed As Boolean = My.Computer.Keyboard.ShiftKeyDown
-            Dim IsHintIndie As Boolean = Instance.State <> McInstanceState.Error AndAlso Instance.PathIndie <> McFolderSelected
+            Dim IsHintIndie As Boolean = Instance.State <> McInstance.McInstanceState.Error AndAlso Instance.PathIndie <> McFolderSelected
             Dim SavesFolder = DirectoryUtils.GetInfo(Instance.PathIndie & "saves\")
             Dim SaveEntries = If(IsHintIndie AndAlso SavesFolder.Exists, SavesFolder.EnumerateDirectories.OrderByDescending(Function(Save) Save.LastWriteTime).Select(Function(Save) $"{Save.Name}（上次修改：{StringUtils.FormatTimeSpan(Save.LastWriteTime - Date.Now, False)}）").ToList, New List(Of String))
             Select Case MyMsgBox($"你确定要{If(IsShiftPressed, "永久", "")}删除版本 {Instance.Name} 吗？" &
@@ -207,7 +219,7 @@ Public Class PageSelectRight
                     Dim Card As MyCard = Parent.Parent
                     Card.Title = Card.Title.Replace(Parent.Children.Count - 1, Parent.Children.Count - 2) '有一个占位符
                     Parent.Children.Remove(Item)
-                    If McInstanceSelected IsNot Nothing AndAlso Instance.PathVersion = McInstanceSelected.PathVersion Then
+                    If McInstanceSelected IsNot Nothing AndAlso PathUtils.IsSame(Instance.PathVersion, McInstanceSelected.PathVersion) Then
                         '删除当前版本就更改选择
                         McInstanceSelected = MyVirtualizingElement.TryInit(Parent.Children(0)).Tag
                     End If

@@ -99,12 +99,12 @@ Public Class ResourceSearcher
             Dim Address As String = $"https://api.modrinth.com/v2/search?limit={RESULT_PAGE_SIZE}&index=relevance"
             If Not String.IsNullOrEmpty(SearchText) Then Address += "&query=" & StringUtils.UrlEscape(SearchText)
             If Storage.ModrinthOffset > 0 Then Address += "&offset=" & Storage.ModrinthOffset
-            'facets=[["categories:'game-mechanics'"],["categories:'forge',categories:'fabric'"],["versions:1.19.3"],["project_type:mod"]]
+            'facets=[["categories:'game-mechanics'"],["categories:forge","categories:fabric"],["versions:1.19.3"],["project_type:mod"]]
             Dim Facets As New List(Of String)
             Facets.Add($"[""project_type:{Type.ToString.Lower}""]")
             If Not String.IsNullOrEmpty(Tag) Then Facets.Add($"[""categories:'{Tag.AfterLast("/")}'""]")
             If ModLoaders <> ModLoaders.None AndAlso Not IgnoreModLoaderFilter Then
-                Facets.Add($"[""categories:'{ModLoaders.Flags.Select(Function(f) f.ToString.Lower).Join("',categories:'")}'""]")
+                Facets.Add($"[""categories:{ModLoaders.Flags.Select(Function(f) f.ToString.Lower).Join(""",""categories:")}""]")
             End If
             If Not String.IsNullOrEmpty(GameVersion) Then Facets.Add($"[""versions:'{GameVersion}'""]")
             Address += "&facets=[" & String.Join(",", Facets) & "]"
@@ -384,6 +384,15 @@ NextPage:
                                 Not Project.UnsafeGameVersions.Any(Function(d) d = Request.GameVersion) Then Continue For
                             ProjectList.Add(Project)
                         Next
+                        If ProjectList.Any AndAlso Request.ModLoaders <> ModLoaders.None AndAlso Not IgnoreModLoaderFilter AndAlso
+                                Not String.IsNullOrEmpty(Request.GameVersion) Then
+                            Dim ProjectIds = ProjectList.Select(Function(p) p.Id).Join(""",""project_id:")
+                            Dim Loaders = Request.ModLoaders.Flags.Select(Function(f) f.ToString.Lower).Join(""",""categories:")
+                            Dim FilterUrl = $"https://api.modrinth.com/v2/search?limit={ProjectList.Count}&facets=" &
+                                $"[[""project_id:{ProjectIds}""],[""categories:{Loaders}""],[""versions:{Request.GameVersion}""]]"
+                            Dim MatchedIds = DlModRequest(FilterUrl)("hits").Select(Function(h) h("project_id").ToString).ToList
+                            ProjectList.KeepIf(Function(p) MatchedIds.Contains(p.Id))
+                        End If
                         '更新结果
                         ProjectList.ForEach(Sub(p) SearchResults.Add(p))
                         Logger.Info($"从 Modrinth 直接获取到了 {ProjectList.Count} 个工程")

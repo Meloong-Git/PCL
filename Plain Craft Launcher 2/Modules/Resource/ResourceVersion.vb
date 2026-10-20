@@ -90,7 +90,7 @@ Public Class ResourceVersion
     ''' </summary>
     Public DownloadUrls As List(Of String)
     ''' <summary>
-    ''' 对应文件的 SHA1 或 MD5。
+    ''' 对应文件的 SHA1 或 MD5。固定为小写。
     ''' </summary>
     Public Hash As String = Nothing
     ''' <summary>
@@ -127,8 +127,9 @@ Public Class ResourceVersion
                 .DownloadCount = Data("downloadCount")
                 .FileName = Data("fileName")
                 .Size = Data("fileLength")
-                .Hash = CType(Data("hashes"), JArray).ToList.FirstOrDefault(Function(s) s("algo").ToObject(Of Integer) = 1)?("value")
-                If .Hash Is Nothing Then .Hash = CType(Data("hashes"), JArray).ToList.FirstOrDefault(Function(s) s("algo").ToObject(Of Integer) = 2)?("value")
+                If .Size = 0 Then .Size = -1 'CurseForge 可能错误地返回 0 尺寸（#9104）
+                .Hash = CType(Data("hashes"), JArray).ToList.FirstOrDefault(Function(s) s("algo").ToObject(Of Integer) = 1)?("value")?.ToString().Lower()
+                If .Hash Is Nothing Then .Hash = CType(Data("hashes"), JArray).ToList.FirstOrDefault(Function(s) s("algo").ToObject(Of Integer) = 2)?("value")?.ToString().Lower()
                 'DownloadAddress
                 Dim Url = Data("downloadUrl").ToString
                 If Url = "" Then Url = $"https://edge.forgecdn.net/files/{CInt(.Id.ToString.Substring(0, 4))}/{CInt(.Id.ToString.Substring(4))}/{ .FileName}"
@@ -145,13 +146,13 @@ Public Class ResourceVersion
                 'GameVersions
                 Dim RawVersions As List(Of String) = Data("gameVersions").Select(Function(t) t.ToString.Trim.Lower).ToList
                 .GameVersions = RawVersions.
-                        Where(Function(v) McVersion.IsFormatFit(v)).
+                        Where(Function(v) McVersion.IsStandardFormat(v)).
                         Select(Function(v) v.Replace("-snapshot", " 预览版")).
                         Distinct.ToList
                 If .GameVersions.IsSingle Then
                     .GameVersions = .GameVersions.ToList
                 ElseIf .GameVersions.Count > 1 Then
-                    .GameVersions = .GameVersions.SortByComparison(AddressOf CompareVersionGE).ToList
+                    .GameVersions = .GameVersions.SortByComparison(AddressOf McUtils.CompareVersionGE).ToList
                     If .ResourceType = ResourceTypes.ModPack Then .GameVersions = { .GameVersions(0)}.ToList '整合包理应只 “支持” 一个版本
                 Else
                     .GameVersions = New List(Of String) From {"未知版本"}
@@ -176,7 +177,7 @@ Public Class ResourceVersion
                     .FileName = File("filename")
                     .DownloadUrls = New List(Of String) From {File("url"), DlSourceModGet(File("url"))}.Distinct.ToList '同时添加了镜像源
                     .Size = File("size")
-                    .Hash = File("hashes")("sha1")
+                    .Hash = File("hashes")("sha1")?.ToString.Lower()
                 End If
                 '类别与 Loaders
                 '结果可能混杂着 Mod、数据包和服务端插件
@@ -208,7 +209,7 @@ Public Class ResourceVersion
                 If .GameVersions.IsSingle Then
                     '无需处理
                 ElseIf .GameVersions.Count > 1 Then
-                    .GameVersions = .GameVersions.SortByComparison(AddressOf CompareVersionGE).ToList
+                    .GameVersions = .GameVersions.SortByComparison(AddressOf McUtils.CompareVersionGE).ToList
                     If .ResourceType = ResourceTypes.ModPack Then .GameVersions = New List(Of String) From { .GameVersions(0)} '整合包理应只 “支持” 一个版本
                 ElseIf RawVersions.Any(Function(v) v.RegexCheck("[0-9]{2}w[0-9]{2}[a-z]")) Then
                     .GameVersions = RawVersions.Where(Function(v) v.RegexCheck("[0-9]{2}w[0-9]{2}[a-z]")).ToList
@@ -355,7 +356,7 @@ Public Class ResourceVersion
                 .Info =
                 Iterator Function()
                     If ModLoaders <> ModLoaders.None Then Yield ModLoaders.Flags.Join("、"c)
-                    If .Title <> FileName.BeforeLast(".") Then Yield FileName.BeforeLast(".")
+                    If .Title <> PathUtils.GetFileNameWithoutExtension(FileName) Then Yield PathUtils.GetFileNameWithoutExtension(FileName)
                     If Dependencies.Any Then Yield $"{Dependencies.Count} 项前置"
                     If GameVersions.All(Function(v) Not v.Contains(".") OrElse {"w", "snapshot", "rc", "pre", "experimental", "-"}.Any(Function(s) v.ContainsIgnoreCase(s))) Then Yield $"游戏版本 {GameVersions.Join("、"c)}"
                     If DownloadCount > 0 Then Yield $"下载 {If(DownloadCount > 100000, Math.Round(DownloadCount / 10000) & " 万", DownloadCount.ToString() + " ")}次" 'CurseForge 的下载次数经常错误地返回 0
