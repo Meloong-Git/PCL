@@ -25,7 +25,9 @@ Public Class LazyLoadBehavior
             '判断是否在 ScrollViewer 的可视区域内
             Dim Scroll = FindParentScrollViewer(Element)
             If Scroll Is Nothing Then Return
-            If Not New Rect(0, 0, Scroll.ViewportWidth, Scroll.ViewportHeight).IntersectsWith(
+            Dim ViewportWidth As Double = If(Scroll.ViewportWidth > 0, Scroll.ViewportWidth, Scroll.RenderSize.Width)
+            Dim ViewportHeight As Double = If(Scroll.ViewportHeight > 0, Scroll.ViewportHeight, Scroll.RenderSize.Height)
+            If Not New Rect(0, 0, ViewportWidth, ViewportHeight).IntersectsWith(
                Element.TransformToAncestor(Scroll).TransformBounds(New Rect(New Point(0, 0), Element.RenderSize))) Then Return
             '执行
             Handled = True
