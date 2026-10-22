@@ -549,6 +549,7 @@ Install:
             ModList = ModList.ToList() '防止刷新影响迭代器
             Dim FileList As New List(Of NetFile)
             Dim FileCopyList As New Dictionary(Of String, String)
+            Dim TempModsFolder As String = RequestTaskTempFolder() & "mods\"
             For Each Entry As LocalResourceFile In ModList
                 Dim File As ResourceVersion = Entry.UpdateFile
                 If Not File.DownloadAvailable Then Continue For
@@ -577,7 +578,7 @@ Install:
                     NewestReplaceName = NewestSegs.Join("-")
                 End If
                 '添加到下载列表
-                Dim TempAddress As String = PathTemp & "mods\" & Entry.File.Name.Replace(CurrentReplaceName, NewestReplaceName) '需要下载到 mods 文件夹，以便重复文件检查时识别
+                Dim TempAddress As String = TempModsFolder & Entry.File.Name.Replace(CurrentReplaceName, NewestReplaceName) '9360
                 Dim RealAddress As String = Path.Combine(PathUtils.RemoveLastPart(Entry.File.FullName), Entry.File.Name.Replace(CurrentReplaceName, NewestReplaceName))
                 FileList.Add(File.ToNetFile(TempAddress, ResourceVersion.DownloadReason.Update, PageInstanceLeft.Instance.Version.VanillaName, PageInstanceLeft.Instance.Version.ModLoaders))
                 FileCopyList(TempAddress) = RealAddress
@@ -640,6 +641,7 @@ Install:
                         For Each TempFile In FileCopyList.Keys
                             FileUtils.Delete(TempFile)
                         Next
+                        DirectoryUtils.Delete(TempModsFolder)
                     Catch ex As Exception
                         Logger.Warn(ex, "清理 Mod 更新缓存失败")
                     End Try
