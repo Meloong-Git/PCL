@@ -1719,10 +1719,7 @@ FinishExCatch:
         ''' 启动监控线程，用于新增下载线程。
         ''' </summary>
         Private Sub StartManager()
-            '必须加锁：NetManager.Start 可能被多个下载任务并发调用（#6762）。
-            '若仅用 Static 变量做判断，两个线程可能同时通过检查，进而启动多套
-            'StatRefresher 线程，使 RefreshStat 被并发执行，SpeedLast 列表遭到
-            '并发修改，最终在 List.Insert 的 Array.Copy 中抛出「源数组长度不足」。
+            '并发调用会启动多套 StatRefresher，导致 SpeedLast 被并发修改（#6762）
             SyncLock StartManagerLock
                 If IsManagerStarted Then Return
                 IsManagerStarted = True
