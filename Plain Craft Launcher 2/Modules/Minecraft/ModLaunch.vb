@@ -1685,7 +1685,7 @@ NextInstance:
                     ExistFiles.Add(FilePath)
                     Dim OriginalFile = FileUtils.GetInfo(FilePath)
                     If OriginalFile.Exists Then
-                        If OriginalFile.Length = Entry.Length Then
+                        If OriginalFile.Length = Entry.Length AndAlso CanSkipNativeExtraction(FilePath, Entry) Then
                             If ModeDebug Then McLaunchLog("无需解压：" & FilePath)
                             Continue For
                         End If
@@ -1696,6 +1696,12 @@ NextInstance:
                             McLaunchLog("删除原 dll 访问被拒绝，这通常代表有一个 MC 正在运行，跳过解压：" & FilePath)
                             McLaunchLog("实际的错误信息：" & ex.GetDisplay(True))
                             Exit For
+                        Catch ex As IOException
+                            If FileUtils.Exists(FilePath) Then
+                                McLaunchLog("删除原 dll 失败，这通常代表有一个 MC 正在运行，跳过解压：" & FilePath)
+                                McLaunchLog("实际的错误信息：" & ex.GetDisplay(True))
+                                Exit For
+                            End If
                         End Try
                     End If
                     '解压新文件
@@ -1720,6 +1726,25 @@ NextInstance:
         Next
 
     End Sub
+
+    Private Function CanSkipNativeExtraction(FilePath As String, Entry As ZipArchiveEntry) As Boolean
+        Try
+            Using ExistingStream As Stream = FileUtils.ReadAsStream(FilePath)
+                Using EntryStream As Stream = Entry.Open()
+                    Using ExistingHash = System.Security.Cryptography.SHA256.Create(), EntryHash = System.Security.Cryptography.SHA256.Create()
+                        Return ExistingHash.ComputeHash(ExistingStream).SequenceEqual(EntryHash.ComputeHash(EntryStream))
+                    End Using
+                End Using
+            End Using
+        Catch ex As IOException
+            '长度相同且无法完成比对时，若旧文件仍在，保持此前跳过解压的行为。
+            Return FileUtils.Exists(FilePath)
+        Catch ex As InvalidDataException
+            Return FileUtils.Exists(FilePath)
+        Catch ex As UnauthorizedAccessException
+            Return FileUtils.Exists(FilePath)
+        End Try
+    End Function
     ''' <summary>
     ''' 获取 Natives 文件夹路径，以 \ 结尾。
     ''' </summary>
