@@ -1911,6 +1911,17 @@ FinishExCatch:
     End Function
 
     ''' <summary>
+    ''' 判断主机名是否为微软登录相关的域名（域名本身或其子域名）。
+    ''' 不能使用 Contains 子串匹配，否则形如 xboxlive.example.com 的仿冒域名也会通过。
+    ''' </summary>
+    Private Function IsMinecraftLoginHost(Host As String) As Boolean
+        Return Host.Equals("xboxlive.com", StringComparison.OrdinalIgnoreCase) OrElse
+               Host.EndsWith(".xboxlive.com", StringComparison.OrdinalIgnoreCase) OrElse
+               Host.Equals("minecraftservices.com", StringComparison.OrdinalIgnoreCase) OrElse
+               Host.EndsWith(".minecraftservices.com", StringComparison.OrdinalIgnoreCase)
+    End Function
+
+    ''' <summary>
     ''' 设置是否应当在正版登录时校验 SSL 证书。
     ''' </summary>
     Public Sub ShouldValidateSslCertificateOnLogin(Enabled As Boolean)
@@ -1922,7 +1933,7 @@ FinishExCatch:
             Logger.Warn($"未通过 SSL 证书验证（{Failure}），提供的证书为 {Certificate?.Subject}，URL：{Request?.Address}")
             If Request Is Nothing Then
                 Return Not Enabled
-            ElseIf Request.Address.Host.Contains("xboxlive") OrElse Request.Address.Host.Contains("minecraftservices") Then
+            ElseIf IsMinecraftLoginHost(Request.Address.Host) Then
                 Return Not Enabled '根据设置决定是否忽略错误
             Else
                 Return False
