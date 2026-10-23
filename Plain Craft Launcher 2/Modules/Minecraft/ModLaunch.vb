@@ -1681,7 +1681,11 @@ NextInstance:
                 Dim FileName As String = Entry.FullName
                 If PathUtils.GetExtension(FileName) = "dll" Then
                     '实际解压文件的步骤
-                    Dim FilePath As String = Target & FileName
+                    Dim FilePath As String = Target & FileName.Replace("/"c, "\"c)
+                    If Not PathUtils.IsParentOf(Target, FilePath) Then
+                        McLaunchLog("跳过路径不合法的 Natives 文件：" & FileName, LogLevel.Warn)
+                        Continue For
+                    End If
                     ExistFiles.Add(FilePath)
                     Dim OriginalFile = FileUtils.GetInfo(FilePath)
                     If OriginalFile.Exists Then
