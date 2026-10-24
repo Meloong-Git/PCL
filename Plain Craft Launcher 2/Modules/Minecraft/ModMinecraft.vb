@@ -1602,7 +1602,15 @@ OnLoaded:
 
         '获取当前支持库列表
         Logger.Info($"获取支持库列表：{Instance.Name}")
-        Dim Result = McLibListGetWithJson(Instance.JsonObject)
+        'lwjgl3ify 原生启动：使用其自带的启动清单，以 Java 17+ 直接启动
+        Dim Lwjgl3ifyInfo As Lwjgl3ifyInfo = ModLwjgl3ify.Lwjgl3ifyGet(Instance)
+        Dim Result As List(Of McLibEntry)
+        If Lwjgl3ifyInfo.Enabled Then
+            Logger.Info($"lwjgl3ify 已启用，使用其自带的启动清单（{If(Lwjgl3ifyInfo.ModVersion, "未知版本")}）")
+            Result = New List(Of McLibEntry)(Lwjgl3ifyInfo.Libraries)
+        Else
+            Result = McLibListGetWithJson(Instance.JsonObject)
+        End If
 
         '需要添加原版 Jar
         If IncludeMainJar Then

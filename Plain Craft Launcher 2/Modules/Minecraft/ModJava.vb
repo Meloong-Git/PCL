@@ -149,6 +149,9 @@ Public Module ModJava
             End If
         End Sub
 
+        'lwjgl3ify 检测
+        Dim UseLwjgl3ify As Boolean = ModLwjgl3ify.Lwjgl3ifyEnabled(Instance)
+
         '原版 26-：通过版本号判断
         If (Not Instance.Version.Valid AndAlso Instance.ReleaseTime >= New Date(2024, 4, 2)) OrElse
            (Instance.Version.Valid AndAlso Instance.Version.Vanilla >= New Version(20, 0, 5)) Then
@@ -203,7 +206,7 @@ Public Module ModJava
             If Instance.Version.Vanilla >= New Version(6, 0, 1) AndAlso Instance.Version.Vanilla <= New Version(7, 0, 2) Then
                 '1.6.1 - 1.7.2：必须 Java 7
                 AddConstraint(ValueRange(Of Version).ClosedOpen(New Version(7, 0), New Version(8, 0)))
-            ElseIf Instance.Version.Vanilla.Major <= 12 OrElse Not Instance.Version.Valid Then '非标准版本
+            ElseIf (Instance.Version.Vanilla.Major <= 12 OrElse Not Instance.Version.Valid) AndAlso Not UseLwjgl3ify Then '非标准版本
                 '<=1.12：Java 8
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
             ElseIf Instance.Version.Vanilla.Major <= 14 Then
@@ -261,6 +264,12 @@ Public Module ModJava
         If Instance.Version.ModLoaders.HasFlagF(ModLoaders.LiteLoader) AndAlso Instance.Version.Valid Then '不管非标准版本
             '最高 Java 8
             AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
+        End If
+
+        'lwjgl3ify 检测
+        If UseLwjgl3ify Then
+            'lwjgl3ify 强制要求 Java 17.0.6+，推荐 Java 21
+            AddConstraint(ValueRange(Of Version).AtLeast(ModLwjgl3ify.MinJavaVersion))
         End If
 
         '统一通行证检测

@@ -51,6 +51,9 @@ Public Class PageInstanceSetup
             Dim _unused = PageInstanceLeft.Instance.PathIndie '触发自动判定
             ComboArgumentIndieV2.SelectedIndex = If(Settings.Get(Of Boolean)("VersionArgumentIndieV2", Instance:=PageInstanceLeft.Instance), 0, 1)
             UpdateJavaList()
+            'lwjgl3ify 提示
+            HintLwjgl3ify.Visibility = If(ModLwjgl3ify.Lwjgl3ifyEnabled(PageInstanceLeft.Instance),
+                                         Visibility.Visible, Visibility.Collapsed)
 
             '服务器
             ComboServerLogin.SelectedIndex = Settings.Get(Of Integer)("VersionServerLogin", Instance:=PageInstanceLeft.Instance)

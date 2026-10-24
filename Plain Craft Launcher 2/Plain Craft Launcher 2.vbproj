@@ -334,6 +334,7 @@
     <Compile Include="Modules\Base\ModValidate.vb" />
     <Compile Include="Modules\Minecraft\ModDownload.vb" />
     <Compile Include="Modules\Minecraft\ModLaunch.vb" />
+    <Compile Include="Modules\Minecraft\ModLwjgl3ify.vb" />
     <Compile Include="Modules\Minecraft\ModMinecraft.vb" />
     <Compile Include="Pages\PageOther\PageOtherTest.xaml.vb">
       <DependentUpon>PageOtherTest.xaml</DependentUpon>

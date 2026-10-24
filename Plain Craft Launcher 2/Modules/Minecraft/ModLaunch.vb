@@ -1178,6 +1178,13 @@ Retry:
             McLaunchLog($"预期 Java 版本范围：{GetJavaRequirement(McInstanceSelected).Range}")
             McLaunchLog($"Java 版本设置类别：{Settings.Get(Of Integer)("VersionArgumentJavaV2", McInstanceSelected)}")
         End If
+        'lwjgl3ify 需要 Java 17.0.6+，即使用户强制指定了旧版 Java 也要给出明确提示
+        If ModLwjgl3ify.Lwjgl3ifyEnabled(McInstanceSelected) AndAlso
+                (McLaunchJavaSelected.Version Is Nothing OrElse McLaunchJavaSelected.Version < ModLwjgl3ify.MinJavaVersion) Then
+            Throw New Exception($"lwjgl3ify 需要 Java {ModLwjgl3ify.MinJavaVersion} 或更高版本（推荐 Java 21），" &
+                                $"当前选择的 Java 为 {If(McLaunchJavaSelected.Version, "未知版本")}。" & vbCrLf &
+                                "请在版本设置的 Java 选项中选择自动选择或指定一个 Java 17+。")
+        End If
         McLaunchLog("选择的 Java：" & McLaunchJavaSelected.ToString)
     End Sub
 
@@ -1193,7 +1200,14 @@ Retry:
         Dim Arguments As New List(Of String)
         McLaunchLog("参数获取开始")
         Arguments.AddRange(McLaunchArgumentsJVM()) 'JVM 参数
-        Arguments.Add(McInstanceSelected.JsonObject("mainClass")) 'mainClass
+        '启动入口（lwjgl3ify 需要使用其自带的 RFB 启动入口）
+        Dim Lwjgl3ifyInfo As Lwjgl3ifyInfo = ModLwjgl3ify.Lwjgl3ifyGet(McInstanceSelected)
+        Dim MainClass As String = McInstanceSelected.JsonObject("mainClass")
+        If Lwjgl3ifyInfo.Enabled AndAlso Not String.IsNullOrWhiteSpace(Lwjgl3ifyInfo.MainClass) Then
+            MainClass = Lwjgl3ifyInfo.MainClass
+            McLaunchLog($"lwjgl3ify：使用启动入口 {MainClass}")
+        End If
+        Arguments.Add(MainClass)
         Arguments.AddRange(McLaunchArgumentsGame()) '游戏参数
         '替换
         McLaunchLog("=================== 启动参数开始 ===================")
@@ -1220,6 +1234,8 @@ Retry:
     'JVM 部分
     Private Function McLaunchArgumentsJVM() As List(Of String)
         Dim Args As New List(Of String)
+        Dim Lwjgl3ifyLaunchInfo As Lwjgl3ifyInfo = ModLwjgl3ify.Lwjgl3ifyGet(McInstanceSelected)
+        Dim UseLwjgl3ify As Boolean = Lwjgl3ifyLaunchInfo.Enabled
 
         'Minecraft 参数
         If McInstanceSelected.JsonObject("arguments") IsNot Nothing AndAlso McInstanceSelected.JsonObject("arguments")("jvm") IsNot Nothing Then
@@ -1291,10 +1307,14 @@ NextInstance:
         '非 GBK 编码下命令行参数乱码的问题（JDK-8272352）
         Dim UseJLW As Boolean =
             Not Settings.Get(Of Boolean)("LaunchAdvanceDisableJLW") AndAlso Not Settings.Get(Of Boolean)("VersionAdvanceDisableJLW", McInstanceSelected) AndAlso
-            Not IsGBKEncoding '即使游戏文件夹名称不含非 ASCII 字符，但玩家名等也可能出现中文，因此依然需要 JLW（#8739）
+            Not IsGBKEncoding AndAlso Not UseLwjgl3ify '即使游戏文件夹名称不含非 ASCII 字符，但玩家名等也可能出现中文，因此依然需要 JLW（#8739）
         If UseJLW AndAlso CustomArg.Contains("-javaagent") Then
             UseJLW = False
             McLaunchLog("由于使用了自定义 javaagent，已禁用 JLW，这可能导致游戏崩溃！", LogLevel.Warn)
+        End If
+        If UseLwjgl3ify AndAlso Not Settings.Get(Of Boolean)("LaunchAdvanceDisableJLW") AndAlso
+                Not Settings.Get(Of Boolean)("VersionAdvanceDisableJLW", McInstanceSelected) AndAlso Not IsGBKEncoding Then
+            McLaunchLog("由于使用了 lwjgl3ify，已禁用 JLW", LogLevel.Warn)
         End If
         If UseJLW Then
             If McLaunchJavaSelected.Version.Major >= 9 Then
@@ -1307,34 +1327,20 @@ NextInstance:
         'LUA
         Dim UseLUA As Boolean =
             Not Settings.Get(Of Boolean)("LaunchAdvanceDisableLUA") AndAlso Not Settings.Get(Of Boolean)("VersionAdvanceDisableLUA", McInstanceSelected) AndAlso
-            McLibListGet(McInstanceSelected, False).Select(Function(e) e.OriginalName).Contains("org.lwjgl:lwjgl:3.4.1")
+            Not UseLwjgl3ify AndAlso McLibListGet(McInstanceSelected, False).Select(Function(e) e.OriginalName).Contains("org.lwjgl:lwjgl:3.4.1")
         If UseLUA Then Args.Add($"-javaagent:""{LaunchUtils.ExtractPatch("Launch\LwjglUnsafeAgent.jar", PathPure.Value)}""")
         McLaunchLog("使用 LUA：" & UseLUA)
 
-        'lwjgl3ify 支持
-        Dim UseLwjgl3ify As Boolean = False
-        Dim Lwjgl3ifyPath As String = Nothing
-        Try
-            Dim ModsFolder As String = McInstanceSelected.PathIndie & "mods\"
-            If DirectoryUtils.Exists(ModsFolder) Then
-                Dim ModFiles = DirectoryUtils.GetInfo(ModsFolder).GetFiles("*.jar")
-                For Each ModFile In ModFiles
-                    If ModFile.Name.ToLower().Contains("lwjgl3ify") Then
-                        Lwjgl3ifyPath = ModFile.FullName
-                        UseLwjgl3ify = True
-                        McLaunchLog($"检测到 lwjgl3ify：{ModFile.Name}")
-                        Exit For
-                    End If
-                Next
-            End If
-        Catch ex As Exception
-            McLaunchLog($"检测 lwjgl3ify 时出错：{ex.Message}", LogLevel.Warn)
-        End Try
-        If UseLwjgl3ify AndAlso Lwjgl3ifyPath IsNot Nothing Then
-            Args.Add($"-javaagent:""{Lwjgl3ifyPath}""")
-            McLaunchLog("已添加 lwjgl3ify javaagent 参数")
+        'lwjgl3ify 原生启动
+        If UseLwjgl3ify Then
+            'LWJGL3 会自动从 classpath 中的 Natives Jar 解压本地库，不能指向 LWJGL2 的 Natives 文件夹
+            Args = Args.Where(Function(a) Not a.StartsWithF("-Djava.library.path=")).ToList
+            Args.AddRange(Lwjgl3ifyLaunchInfo.JvmArgs)
+            McLaunchLog($"使用 lwjgl3ify：{If(Lwjgl3ifyLaunchInfo.ModVersion, "未知版本")}（Java 17+ 原生启动）")
+            If Lwjgl3ifyLaunchInfo.ForgePatchesPath IsNot Nothing Then McLaunchLog($"lwjgl3ify forgePatches：{Lwjgl3ifyLaunchInfo.ForgePatchesPath}")
+        Else
+            McLaunchLog("使用 lwjgl3ify：False")
         End If
-        McLaunchLog("使用 lwjgl3ify：" & UseLwjgl3ify)
 
 #Region "内存管理"
 
@@ -1399,9 +1405,22 @@ NextInstance:
 
         '编码（#4700、#5892、#5909、#6934、#8950、#9241）
         Dim UseCompatEncoding = McLaunchJavaSelected.Version.Major >= 18
-        Dim EncodingName = If(UseCompatEncoding,
+        Dim EncodingName As String
+        If UseLwjgl3ify Then
+            'lwjgl3ify 与 GTNH 均要求使用 UTF-8，不能让 PCL 回退到 GBK 或 COMPAT
+            UseCompatEncoding = False
+            EncodingName = "UTF-8"
+            Args = Args.Where(Function(a) Not a.StartsWithF("-Dfile.encoding=") AndAlso
+                                         Not a.StartsWithF("-Dstdout.encoding=") AndAlso
+                                         Not a.StartsWithF("-Dstderr.encoding=") AndAlso
+                                         Not a.StartsWithF("-Dsun.stdout.encoding=") AndAlso
+                                         Not a.StartsWithF("-Dsun.stderr.encoding=")).ToList
+            Args.Add("-Dfile.encoding=UTF-8")
+        Else
+            EncodingName = If(UseCompatEncoding,
                               McLaunchJavaSelected.NativeEncodingName, 'Java 18+ 会添加 COMPAT，因此 Java 会回退到 native.encoding
                               McLaunchJavaSelected.FileEncodingName) 'Java 17- 直接使用 file.encoding
+        End If
         Try
             McLaunchEncoding = Encoding.GetEncoding(If(EncodingName.Equals("GBK", StringComparison.OrdinalIgnoreCase), "GB18030", EncodingName))
         Catch ex As Exception
@@ -1684,6 +1703,12 @@ NextInstance:
 #Region "解压 Natives"
 
     Private Sub McLaunchNatives(Loader As LoaderTask(Of Integer, Integer))
+
+        'lwjgl3ify 使用 LWJGL3，本地库由 LWJGL3 自行从 classpath 中解压，不需要 PCL 处理 Natives
+        If ModLwjgl3ify.Lwjgl3ifyEnabled(McInstanceSelected) Then
+            McLaunchLog("lwjgl3ify：跳过 Natives 解压")
+            Return
+        End If
 
         '创建文件夹
         Dim Target As String = GetNativesFolder()

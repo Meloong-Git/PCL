@@ -15,7 +15,14 @@ Friend Module ModSecret
 
 #Region "网络鉴权"
 
-    Public Const RestrictMcDownload As Boolean = True
+    ''' <summary>
+    ''' 是否限制 Minecraft 下载功能。开源版本不限制下载。
+    ''' </summary>
+    Public Const RestrictMcDownload As Boolean = False
+
+    ''' <summary>
+    ''' 将 URL 中的 {CDN} 标记替换为 CDN 域名。
+    ''' </summary>
     Friend Function SecretCdnSign(UrlWithMark As String) As String
         If Not UrlWithMark.EndsWithF("{CDN}") Then Return UrlWithMark
         Return UrlWithMark.Replace("{CDN}", "").Replace(" ", "%20")
