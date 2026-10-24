@@ -11,8 +11,12 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
+            If LastVersion < 415 Then 'Release 2.99.0.1
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "删除：MC 下载功能相关入口"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：为设置更新添加部分黑名单"))
+            End If
             If LastVersion < 413 Then 'Release 2.99.0.0
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：为遵守相关法律法规，PCL 暂时不再提供 MC 下载功能，非常抱歉 qwq……"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：为遵守相关法律法规，PCL 不再提供 MC 下载功能，非常抱歉 qwq……"))
             End If
             If LastVersion < 411 Then 'Release 2.14.0.0
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：允许修改、添加、移除、更新已安装版本的各个组件，可从版本设置中进入"))
@@ -103,8 +107,12 @@ Public Class FormMain
             '3：BUG+ IMP* FEAT-
             '2：BUG* IMP-
             '1：BUG-
+            If LastVersion < 416 Then 'Snapshot 2.99.0.1
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "删除：MC 下载功能相关入口"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：为设置更新添加部分黑名单"))
+            End If
             If LastVersion < 414 Then 'Snapshot 2.99.0.0
-                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：为遵守相关法律法规，PCL 暂时不再提供 MC 下载功能，非常抱歉 qwq……"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：为遵守相关法律法规，PCL 不再提供 MC 下载功能，非常抱歉 qwq……"))
             End If
             If LastVersion < 412 Then 'Snapshot 2.14.0.0
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：允许修改、添加、移除、更新已安装版本的各个组件，可从版本设置中进入"))
@@ -1076,7 +1084,7 @@ Public Class FormMain
                     RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.TaskManager))
                     Return
                 Catch ex As Exception
-                    If RestrictMcDownload AndAlso ex.Message = "为遵守相关法律法规，PCL 暂时不再提供 MC 下载功能，非常抱歉 qwq……" Then
+                    If RestrictMcDownload AndAlso ex.Message = "为遵守相关法律法规，PCL 不再提供 MC 下载功能，非常抱歉 qwq……" Then
                         Hint(ex.Message, HintType.Red)
                         Return
                     End If

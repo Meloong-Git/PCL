@@ -639,7 +639,7 @@ Finish:
             CurrentState = 0
         Else
             If McInstanceSelected Is Nothing Then
-                If Settings.Get(Of Boolean)("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow Then
+                If RestrictMcDownload OrElse (Settings.Get(Of Boolean)("UiHiddenPageDownload") AndAlso Not PageSetupUI.HiddenForceShow) Then
                     CurrentState = 1
                 Else
                     CurrentState = 2

@@ -2110,7 +2110,7 @@ OnLoaded:
             Dim Time As Date = Version("releaseTime")
             Dim MsgBoxText As String = $"新版本：{VersionName}{vbCrLf}" &
                 If((Date.Now - Time).TotalDays > 1, "更新时间：" & Time.ToString, "更新于：" & StringUtils.FormatTimeSpan(Time - Date.Now, False))
-            Dim MsgResult = MyMsgBox(MsgBoxText, "Minecraft 更新提示", "确定", "下载", If((Date.Now - Time).TotalHours > 3, "更新日志", ""),
+            Dim MsgResult = MyMsgBox(MsgBoxText, "Minecraft 更新提示", "确定", If(RestrictMcDownload, "", "下载"), If((Date.Now - Time).TotalHours > 3, "更新日志", ""),
                 Button3Action:=Sub() McUpdateLogShow(Version))
             '弹窗结果
             If MsgResult = 2 Then

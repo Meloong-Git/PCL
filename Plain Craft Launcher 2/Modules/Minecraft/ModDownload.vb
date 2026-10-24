@@ -163,8 +163,7 @@ Public Module ModDownload
     Public Property AllDrops As List(Of Integer)
         Get
             If _AllDrops Is Nothing Then
-                _AllDrops = Settings.Get(Of String)("CacheDrops").ToString.
-                    Split(",", True).Select(Function(d) CInt(Val(d))).ToList()
+                _AllDrops = Settings.Get(Of String)("CacheDrops").ToString.Split(",", True).Select(Function(d) CInt(Val(d))).ToList()
             End If
             Return If(_AllDrops.Any, _AllDrops, Nothing) '不要将 _AllDrops 再设为 Nothing，以防止反复获取设置尝试初始化
         End Get

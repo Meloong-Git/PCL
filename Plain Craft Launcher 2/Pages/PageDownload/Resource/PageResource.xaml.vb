@@ -55,7 +55,7 @@ Public Class PageResource
         Set(Value As ResourceTypes)
             If _Type = Value Then Return
             _Type = Value
-            BtnSearchInstallModPack.Visibility = If(Value = ResourceTypes.ModPack, Visibility.Visible, Visibility.Collapsed)
+            BtnSearchInstallModPack.Visibility = If(Value = ResourceTypes.ModPack AndAlso Not RestrictMcDownload, Visibility.Visible, Visibility.Collapsed)
         End Set
     End Property
     Private _Type As ResourceTypes = -1
