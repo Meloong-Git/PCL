@@ -643,6 +643,9 @@ Public Module ModModpack
                 Case Else
                     If UID.StartsWithF("org.lwjgl") Then '#8210
                         Logger.Info($"已跳过 LWJGL 项：{UID}")
+                    ElseIf UID.StartsWithF("me.eigenraven.lwjgl3ify") Then
+                        'lwjgl3ify 由 PCL 根据 mods 中的 Mod 自动处理，无需作为加载器安装
+                        Logger.Info($"已跳过 lwjgl3ify 项：{UID}")
                     Else
                         NotifyIncompatibleLoader(UID)
                     End If
