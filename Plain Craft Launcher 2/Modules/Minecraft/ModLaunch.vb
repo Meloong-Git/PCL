@@ -77,7 +77,9 @@ Public Module ModLaunch
         If ModeDebug Then
             RunInUi(
             Sub()
-                FrmLaunchRight.LabLog.AppendText($"[{Date.Now:HH':'mm':'ss'.'fff}] {Text}{vbCrLf}")
+                '换行仅作条目之间的分隔而非结尾，避免 TextBox 把末尾换行渲染成一行空白（#9495）
+                Dim Separator = If(FrmLaunchRight.LabLog.Text = "", "", vbCrLf)
+                FrmLaunchRight.LabLog.AppendText($"{Separator}[{Date.Now:HH':'mm':'ss'.'fff}] {Text}")
             End Sub)
         End If
         Logger.Log(Text, Level)
