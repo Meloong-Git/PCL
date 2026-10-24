@@ -18,7 +18,7 @@ Friend Module ModSecret
     ''' <summary>
     ''' 是否限制 Minecraft 下载功能。开源版本不限制下载。
     ''' </summary>
-    Public Const RestrictMcDownload As Boolean = False
+    Public Const RestrictMcDownload As Boolean = True
 
     ''' <summary>
     ''' 将 URL 中的 {CDN} 标记替换为 CDN 域名。
