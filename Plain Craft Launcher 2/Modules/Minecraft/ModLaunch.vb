@@ -1311,6 +1311,31 @@ NextInstance:
         If UseLUA Then Args.Add($"-javaagent:""{LaunchUtils.ExtractPatch("Launch\LwjglUnsafeAgent.jar", PathPure.Value)}""")
         McLaunchLog("使用 LUA：" & UseLUA)
 
+        'lwjgl3ify 支持
+        Dim UseLwjgl3ify As Boolean = False
+        Dim Lwjgl3ifyPath As String = Nothing
+        Try
+            Dim ModsFolder As String = McInstanceSelected.PathIndie & "mods\"
+            If DirectoryUtils.Exists(ModsFolder) Then
+                Dim ModFiles = DirectoryUtils.GetInfo(ModsFolder).GetFiles("*.jar")
+                For Each ModFile In ModFiles
+                    If ModFile.Name.ToLower().Contains("lwjgl3ify") Then
+                        Lwjgl3ifyPath = ModFile.FullName
+                        UseLwjgl3ify = True
+                        McLaunchLog($"检测到 lwjgl3ify：{ModFile.Name}")
+                        Exit For
+                    End If
+                Next
+            End If
+        Catch ex As Exception
+            McLaunchLog($"检测 lwjgl3ify 时出错：{ex.Message}", LogLevel.Warn)
+        End Try
+        If UseLwjgl3ify AndAlso Lwjgl3ifyPath IsNot Nothing Then
+            Args.Add($"-javaagent:""{Lwjgl3ifyPath}""")
+            McLaunchLog("已添加 lwjgl3ify javaagent 参数")
+        End If
+        McLaunchLog("使用 lwjgl3ify：" & UseLwjgl3ify)
+
 #Region "内存管理"
 
         McLaunchLog("当前剩余内存：" & Math.Round(My.Computer.Info.AvailablePhysicalMemory / 1024 / 1024 / 1024 * 10) / 10 & "G")
