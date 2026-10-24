@@ -407,6 +407,13 @@ Public Module ModJava
                         If Not DownloadListWorker.HasSucceeded Then DownloadListWorker.Start(c, p?.SplitTo(0.4))
                         DownloadListWorker.WaitIfRunning(cancellationToken:=c)
                         p?.Set(0.4, skiped:=True)
+                        '等待结束后需确认任务是否成功：失败时直接读取 LastResult 会抛出信息量极低的
+                        'InvalidOperationException「从未成功完成过」，把真正的网络超时原因覆盖掉（#9533）
+                        '原始失败原因已由 RedoableWorker 写入日志，此处仅需给出可操作的提示
+                        If Not DownloadListWorker.HasSucceeded Then
+                            c.ThrowIfCancellationRequested() '用户主动取消时优先抛出取消异常
+                            Throw New Exception("获取 Java 下载列表失败，请检查网络连接或更换下载源后重试")
+                        End If
                         Dim Components = DownloadListWorker.LastResult
 
                         '确定要下载的目标 Java
