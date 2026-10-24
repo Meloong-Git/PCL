@@ -1139,7 +1139,15 @@ OnLoaded:
 
 #Region "循环加载每个版本的信息"
         For Each VersionFolderInfo As DirectoryInfo In DirectoryUtils.GetInfo(Folder & "versions").GetDirectories
-            If Not VersionFolderInfo.Exists OrElse Not VersionFolderInfo.EnumerateFiles.Any Then
+            '扫描期间文件夹可能被「修改版本」等操作删除或重命名，此时跳过而非中断整个列表的加载（#9499）
+            Dim VersionFiles As List(Of FileInfo) = Nothing
+            Try
+                VersionFiles = VersionFolderInfo.EnumerateFiles.ToList
+            Catch ex As DirectoryNotFoundException
+                Logger.Warn($"跳过扫描期间被删除或重命名的版本文件夹：{VersionFolderInfo.FullName}")
+                Continue For
+            End Try
+            If Not VersionFolderInfo.Exists OrElse Not VersionFiles.Any Then
                 Logger.Info($"跳过空文件夹：{VersionFolderInfo.FullName}")
                 Continue For
             End If
