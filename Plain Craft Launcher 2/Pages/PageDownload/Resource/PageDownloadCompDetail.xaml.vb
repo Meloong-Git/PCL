@@ -450,7 +450,15 @@ GroupDone:
                         Return AllowedLoaders = ModLoaders.None OrElse AllowedLoaders.Flags.Intersect(Instance.Version.ModLoaders.Flags).Any
                     End Function
                     '获取常规资源默认下载位置
-                    If CachedFolder.ContainsKey(File.ResourceType) Then
+                    '上次下载的文件夹若不属于当前适合的版本，弃用缓存以免下载到错误的版本（#9536）
+                    '例如连续下载 Forge 与 NeoForge 的 Mod 而未切换所选版本时，缓存会张冠李戴
+                    Dim CachedValid As Boolean = CachedFolder.ContainsKey(File.ResourceType)
+                    If CachedValid AndAlso McInstanceSelected IsNot Nothing AndAlso IsInstanceSuitable(McInstanceSelected) AndAlso
+                       Not CachedFolder(File.ResourceType).StartsWithF(McInstanceSelected.PathIndie) Then
+                        Logger.Info($"弃用上次下载的文件夹：{CachedFolder(File.ResourceType)}")
+                        CachedValid = False
+                    End If
+                    If CachedValid Then
                         DefaultFolder = CachedFolder(File.ResourceType)
                         Logger.Info($"使用上次下载时的文件夹作为默认下载位置：{DefaultFolder}")
                     ElseIf McInstanceSelected IsNot Nothing AndAlso IsInstanceSuitable(McInstanceSelected) Then
