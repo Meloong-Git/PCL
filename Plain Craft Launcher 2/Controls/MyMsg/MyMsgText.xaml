@@ -25,8 +25,10 @@
             <Rectangle x:Name="ShapeLine" Grid.Row="1" Height="2" Fill="{Binding Foreground, ElementName=LabTitle}" />
             <my:MyScrollViewer Grid.Row="3" VerticalAlignment="Top" x:Name="PanCaption" Margin="0,0,0,17" Padding="7,0,15,0"
                                VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" DeltaMult="0.7">
-                <TextBlock VerticalAlignment="Top" TextTrimming="None" TextWrapping="Wrap" Name="LabCaption" FontSize="15" LineHeight="18"
-                           Foreground="#FF5C5C5C" FontWeight="Normal" Padding="1" />
+                <TextBox VerticalAlignment="Top" TextWrapping="Wrap" AcceptsReturn="False" Name="LabCaption" FontSize="15"
+                         Foreground="#FF5C5C5C" FontWeight="Normal" Padding="1"
+                         IsReadOnly="True" Background="Transparent" BorderThickness="0" AllowDrop="False"
+                         VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" />
             </my:MyScrollViewer>
             <StackPanel Grid.Row="4" Name="PanBtn" VerticalAlignment="Top" HorizontalAlignment="Right" Margin="150,0,8,0" Orientation="Horizontal">
                 <my:MyButton ColorType="Normal" x:FieldModifier="public" Text="测试按钮1" x:Name="Btn1" Margin="12,0,0,0" TextPadding="7" SnapsToDevicePixels="False" Padding="5,0" UseLayoutRounding="False" />
