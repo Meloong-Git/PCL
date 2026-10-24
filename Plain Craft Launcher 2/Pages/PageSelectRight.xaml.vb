@@ -223,7 +223,7 @@ Public Class PageSelectRight
                         '删除当前版本就更改选择
                         McInstanceSelected = MyVirtualizingElement.TryInit(Parent.Children(0)).Tag
                     End If
-                    LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.UpdateOnly, MaxDepth:=1, ExtraPath:="versions\")
+                    LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
                 Else
                     '删除后没剩了
                     LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
