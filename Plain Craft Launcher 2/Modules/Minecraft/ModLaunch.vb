@@ -1178,13 +1178,22 @@ Retry:
             McLaunchLog($"预期 Java 版本范围：{GetJavaRequirement(McInstanceSelected).Range}")
             McLaunchLog($"Java 版本设置类别：{Settings.Get(Of Integer)("VersionArgumentJavaV2", McInstanceSelected)}")
         End If
-        'lwjgl3ify 需要 Java 17.0.6+，即使用户强制指定了旧版 Java 也要给出明确提示
-        If ModLwjgl3ify.Lwjgl3ifyEnabled(McInstanceSelected) AndAlso
-                (McLaunchJavaSelected.Version Is Nothing OrElse McLaunchJavaSelected.Version < ModLwjgl3ify.MinJavaVersion) Then
+        'lwjgl3ify 需要 Java 17.0.6+。即使用户之前强制指定了 Java 8，也自动改用合适的 Java，否则必定无法启动
+        Dim UseLwjgl3ify As Boolean = ModLwjgl3ify.Lwjgl3ifyEnabled(McInstanceSelected)
+        If UseLwjgl3ify AndAlso (McLaunchJavaSelected.Version Is Nothing OrElse McLaunchJavaSelected.Version < ModLwjgl3ify.MinJavaVersion) Then
+            McLaunchLog($"lwjgl3ify 需要 Java {ModLwjgl3ify.MinJavaVersion} 或更高版本，当前 Java 为 " &
+                        $"{If(McLaunchJavaSelected.Version, "未知版本")}，正在重新选择 Java……", LogLevel.Warn)
+            Dim RetryJava As Java = SelectOrDownloadJava(ValueRange(Of Version).AtLeast(ModLwjgl3ify.MinJavaVersion), True,
+                                                         Task.CreateCancellationToken, Task.CreateSyncProgressProvider)
+            If Task.IsCanceled Then Return
+            If RetryJava IsNot Nothing Then McLaunchJavaSelected = RetryJava
+        End If
+        If UseLwjgl3ify AndAlso (McLaunchJavaSelected.Version Is Nothing OrElse McLaunchJavaSelected.Version < ModLwjgl3ify.MinJavaVersion) Then
             Throw New Exception($"lwjgl3ify 需要 Java {ModLwjgl3ify.MinJavaVersion} 或更高版本（推荐 Java 21），" &
                                 $"当前选择的 Java 为 {If(McLaunchJavaSelected.Version, "未知版本")}。" & vbCrLf &
-                                "请在版本设置的 Java 选项中选择自动选择或指定一个 Java 17+。")
+                                "请安装一个 Java 17+，或在版本设置的 Java 选项中选择自动选择。")
         End If
+        McLaunchLog($"lwjgl3ify 原生启动：{UseLwjgl3ify}")
         McLaunchLog("选择的 Java：" & McLaunchJavaSelected.ToString)
     End Sub
 

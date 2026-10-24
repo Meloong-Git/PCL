@@ -12,6 +12,7 @@ Public Class Application
             If Not (e.Args.Contains("--update") OrElse e.Args.Contains("--gpu") OrElse e.Args.Contains("--memory")) Then '若是通过命令行调用，则不检查单例、不轮换日志（#9137）
                 WaitingMutex(e)
                 Logger.Instance = New PclLogger With {.logFolder = Paths.BaseThenName, .MinLevel = If(ModeDebug, LogLevel.Trace, LogLevel.Info)}
+                Logger.Info("本构建包含 lwjgl3ify 原生启动支持")
             End If
             '提升主线程优先级
             Thread.CurrentThread.Priority = ThreadPriority.Highest

@@ -97,14 +97,18 @@ Friend Module ModLwjgl3ify
     ''' 判断该版本是否为 Minecraft 1.7.10。部分整合包的版本号无法被正确识别，因此同时检查版本 Json。
     ''' </summary>
     Private Function Lwjgl3ifyIs1710(Instance As McInstance) As Boolean
+        '明显是 1.8+ 的版本不处理；无法确认版本号的自定义整合包则继续检查
+        If Instance.Version.Valid AndAlso Instance.Version.Vanilla.Major = 1 AndAlso Instance.Version.Vanilla.Minor >= 8 Then Return False
         If Instance.Version.Valid AndAlso Instance.Version.Vanilla = New Version(1, 7, 10) Then Return True
         Dim Json As JObject = Instance.JsonObject
-        If Json Is Nothing Then Return False
-        For Each Key As String In {"id", "inheritsFrom", "jar"}
-            Dim Value As String = Json(Key)?.ToString
-            If Value IsNot Nothing AndAlso Value.Contains("1.7.10") Then Return True
-        Next
-        Return False
+        If Json IsNot Nothing Then
+            For Each Key As String In {"id", "inheritsFrom", "jar"}
+                Dim Value As String = Json(Key)?.ToString
+                If Value IsNot Nothing AndAlso Value.Contains("1.7.10") Then Return True
+            Next
+        End If
+        '无法识别版本号（例如整合包自定义了版本名）时仍尝试启用，lwjgl3ify 本身只支持 1.7.10
+        Return True
     End Function
 
     ''' <summary>
