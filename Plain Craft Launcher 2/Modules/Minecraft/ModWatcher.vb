@@ -263,7 +263,7 @@ Public Module ModWatcher
         Private Sub TimerWindow()
             Try
                 If GameProcess.HasExited Then Return
-                If IsWindowFinished Then Return
+                If IsWindowFinished AndAlso (WindowHandle = IntPtr.Zero OrElse IsWindow(WindowHandle)) Then Return
                 '获取全部窗口，检查是否有新增的
                 Dim MinecraftWindow As KeyValuePair(Of IntPtr, String)? = Nothing
                 Try
@@ -347,7 +347,8 @@ Public Module ModWatcher
         Private Declare Function EnumWindows Lib "user32" (hWnd As EnumWindowsSub, lParam As Integer) As Boolean
         Private Declare Function GetClassName Lib "user32" Alias "GetClassNameA" (hWnd As Integer, str As StringBuilder, maxCount As Integer) As Integer
         Private Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (hWnd As Integer, str As StringBuilder, maxCount As Integer) As Integer
-        Private Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (hWnd As Integer, str As String) As Boolean
+        Private Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (hWnd As IntPtr, str As String) As Boolean
+        Private Declare Function IsWindow Lib "user32" (hWnd As IntPtr) As Boolean
         Private Declare Function ShowWindow Lib "user32" (hWnd As IntPtr, cmdWindow As UInteger) As Boolean
         Private Declare Function IsWindowVisible Lib "user32" (hWnd As IntPtr) As Boolean
         Private Declare Function GetWindowThreadProcessId Lib "user32" (hWnd As IntPtr, ByRef lpdwProcessId As Integer) As Integer
