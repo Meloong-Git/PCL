@@ -801,6 +801,20 @@ Public Module ModBase
         End If
     End Function)
 
+    '#9277
+    Public Function FormatUrlHost(Url As String) As String
+        If Url.Length > 2048 Then Return Url
+        If Url.IsAsciiOnly() Then Return Url
+        Try
+            Dim Target As New Uri(Url)
+            Dim Host As String = Target.IdnHost
+            If Host = Target.Host Then Return Url
+            Return Url.Replace("://" & Target.Host, "://" & Host)
+        Catch
+            Return Url
+        End Try
+    End Function
+
     ''' <summary>
     ''' 指示接取到这个异常的函数进行重试。
     ''' </summary>
