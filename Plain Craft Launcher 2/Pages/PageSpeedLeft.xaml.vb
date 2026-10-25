@@ -227,6 +227,7 @@ Public Class PageSpeedLeft
     ''' 若没有任务，尝试返回主页。
     ''' </summary>
     Private Sub TryReturnToHome()
+        If LoaderTaskbar.Any() Then Return
         If FrmSpeedRight.PanMain.Children.Count = 0 AndAlso FrmMain.PageCurrent = FormMain.PageType.TaskManager Then
             FrmMain.PageBack()
         End If
