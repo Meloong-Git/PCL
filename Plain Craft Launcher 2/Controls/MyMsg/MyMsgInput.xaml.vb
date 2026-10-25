@@ -13,7 +13,6 @@ Public Class MyMsgInput
             LabTitle.Text = Converter.Title
             LabText.Text = Converter.Text
             PanText.Visibility = If(Converter.Text = "", Visibility.Collapsed, Visibility.Visible)
-            TextArea.Text = Converter.Content
             TextArea.HintText = Converter.HintText
             TextArea.ValidateRules = Converter.ValidateRules
             Btn1.Text = Converter.Button1
@@ -30,10 +29,15 @@ Public Class MyMsgInput
         End Try
     End Sub
 
+    Private IsLoad As Boolean = False
     Private Sub Load(sender As Object, e As EventArgs) Handles MyBase.Loaded
         Try
 
             'UI 初始化
+            If Not IsLoad Then
+                IsLoad = True
+                TextArea.Text = MyConverter.Content '加载后填入默认值，使无效名称能显示校验提示
+            End If
             If Btn2.IsVisible AndAlso Not Btn1.ColorType = MyButton.ColorState.Red Then Btn1.ColorType = MyButton.ColorState.Highlight
             TextArea.Focus()
             TextArea.SelectionStart = TextArea.Text.Length
