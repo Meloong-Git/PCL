@@ -246,7 +246,8 @@ Public Class PageResource
         If Not TextSearchVersion.IsDropDownOpen Then UpdateSearchLoaderVisibility()
     End Sub
     Private Sub UpdateSearchLoaderVisibility() Handles TextSearchVersion.DropDownClosed
-        If PageType = ResourceTypes.Mod AndAlso (TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w")) Then
+        If PageType = ResourceTypes.Mod AndAlso (TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w") OrElse
+                Val(ComboSearchLoader.SelectedItem.Tag) <> 0) Then
             ComboSearchLoader.Visibility = Visibility.Visible
             Grid.SetColumnSpan(TextSearchVersion, 1)
         Else
@@ -254,6 +255,12 @@ Public Class PageResource
             Grid.SetColumnSpan(TextSearchVersion, 2)
             ComboSearchLoader.SelectedIndex = 0
         End If
+    End Sub
+    Private Sub TextSearchVersion_LostFocus() Handles TextSearchVersion.LostFocus
+        If TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w") Then Exit Sub
+        ComboSearchLoader.Visibility = Visibility.Collapsed
+        Grid.SetColumnSpan(TextSearchVersion, 2)
+        ComboSearchLoader.SelectedIndex = 0
     End Sub
 
 #End Region
