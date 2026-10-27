@@ -215,6 +215,28 @@ EndHint:
         Login
     End Enum
 
+    '弹窗文本的最大长度
+    Public Const MaxMsgBoxTextLength As Integer = 15000
+
+    '截去过长日志内容
+    Private Function TrimMiddleText(Text As String) As String
+        If Text Is Nothing OrElse Text.Length <= MaxMsgBoxTextLength Then Return Text
+        Dim KeepLength As Integer = Math.Max(MaxMsgBoxTextLength - 1000, 0)
+        Dim HeadLength As Integer = SnapToLine(Text, KeepLength \ 3, True)
+        Dim TailStart As Integer = SnapToLine(Text, Text.Length - KeepLength + HeadLength, False)
+        Logger.Info($"文本过长（{Text.Length} 字符），将从中间省略 {TailStart - HeadLength} 字符")
+        Return Text.Substring(0, HeadLength) & vbCrLf & vbCrLf &
+               $"（为避免日志过长造成卡顿，展示时省略 {TailStart - HeadLength} 个字符）" & vbCrLf & vbCrLf &
+               Text.Substring(TailStart)
+    End Function
+
+    Private Function SnapToLine(Text As String, Position As Integer, Forward As Boolean) As Integer
+        If Position <= 0 OrElse Position >= Text.Length Then Return Math.Max(Position, 0)
+        Dim LineBreak As Integer = If(Forward, Text.IndexOf(vbLf, Position), Text.LastIndexOf(vbLf, Position))
+        If LineBreak < 0 OrElse Math.Abs(LineBreak - Position) > 100 Then Return Position
+        Return LineBreak + 1
+    End Function
+
     ''' <summary>
     ''' 显示弹窗，返回点击按钮的编号（从 1 开始）。
     ''' </summary>
@@ -232,7 +254,7 @@ EndHint:
                              Optional IsWarn As Boolean = False, Optional HighLight As Boolean = True, Optional ForceWait As Boolean = False,
                              Optional Button1Action As Action = Nothing, Optional Button2Action As Action = Nothing, Optional Button3Action As Action = Nothing) As Integer
         '将弹窗列入队列
-        Dim Converter As New MyMsgBoxConverter With {.Type = MyMsgBoxType.Text, .Button1 = Button1, .Button2 = Button2, .Button3 = Button3, .Text = Caption, .IsWarn = IsWarn, .Title = Title, .HighLight = HighLight, .ForceWait = True, .Button1Action = Button1Action, .Button2Action = Button2Action, .Button3Action = Button3Action}
+        Dim Converter As New MyMsgBoxConverter With {.Type = MyMsgBoxType.Text, .Button1 = Button1, .Button2 = Button2, .Button3 = Button3, .Text = TrimMiddleText(Caption), .IsWarn = IsWarn, .Title = Title, .HighLight = HighLight, .ForceWait = True, .Button1Action = Button1Action, .Button2Action = Button2Action, .Button3Action = Button3Action}
         If Button2.Length > 0 OrElse ForceWait Then
             '若有多个按钮则开始等待
             If FrmMain Is Nothing OrElse FrmMain.PanMsg Is Nothing AndAlso RunInUi() Then
