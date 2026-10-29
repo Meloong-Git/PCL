@@ -1475,6 +1475,13 @@ NextInstance:
         '额外传入的参数
         Args.AddRange(CurrentLaunchOptions.ExtraGameArgs)
 
+        '#6935
+        If Settings.Get(Of Integer)("LaunchArgumentWindowType") = 1 Then
+            For i = Args.Count - 2 To 0 Step -1
+                If Args(i) = "--width" OrElse Args(i) = "--height" Then Args.RemoveRange(i, 2)
+            Next
+        End If
+
         '全屏
         If Settings.Get(Of Integer)("LaunchArgumentWindowType") = 0 Then Args.Add("--fullscreen")
 
