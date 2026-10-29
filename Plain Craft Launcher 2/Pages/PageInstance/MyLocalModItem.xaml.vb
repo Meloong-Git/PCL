@@ -462,8 +462,18 @@ Public Class MyLocalModItem
     Private Sub ShowUpdateLog()
         Dim CurseForgeUrl As String = Entry.ChangelogUrls.FirstOrDefault(Function(x) x.Contains("curseforge.com"))
         Dim ModrinthUrl As String = Entry.ChangelogUrls.FirstOrDefault(Function(x) x.Contains("modrinth.com"))
+        '如果哈希只命中一个平台，内置数据库补全另一平台的更新日志链接
+        If Entry.Project IsNot Nothing AndAlso (CurseForgeUrl Is Nothing) <> (ModrinthUrl Is Nothing) Then
+            If ModrinthUrl Is Nothing Then
+                Dim Slug As String = Entry.Project.GetSlugOnPlatform(ResourcePlatforms.Modrinth)
+                If Slug IsNot Nothing Then ModrinthUrl = $"https://modrinth.com/mod/{Slug}/changelog?g={PageInstanceLeft.Instance.Version.VanillaName}"
+            Else
+                Dim Slug As String = Entry.Project.GetSlugOnPlatform(ResourcePlatforms.CurseForge)
+                If Slug IsNot Nothing Then CurseForgeUrl = $"https://www.curseforge.com/minecraft/mc-mods/{Slug}/files"
+            End If
+        End If
         If CurseForgeUrl Is Nothing OrElse ModrinthUrl Is Nothing Then
-            OpenWebsite(Entry.ChangelogUrls.First)
+            OpenWebsite(If(CurseForgeUrl Is Nothing, ModrinthUrl, CurseForgeUrl))
         Else
             Select Case MyMsgBox("要在哪个网站上查看更新日志？", "查看更新日志", "Modrinth", "CurseForge", "取消")
                 Case 1
