@@ -931,7 +931,7 @@ Public Class PageDownloadInstall
         Try
             If FabricApiName Is Nothing OrElse MinecraftVersion Is Nothing Then Return False
             FabricApiName = FabricApiName.Lower
-            Dim TargetName = VanillaName.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3").Lower
+            Dim TargetName = MinecraftVersion.Replace("∞", "infinite").Replace("Combat Test 7c", "1.16_combat-3").Lower
             If FabricApi.RawGameVersions.Any(Function(f) f = TargetName)
                 Return True
             End If
