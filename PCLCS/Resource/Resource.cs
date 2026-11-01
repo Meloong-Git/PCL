@@ -9,7 +9,6 @@ public static class Resource {
         1 => ModLoaders.Forge,
         3 => ModLoaders.LiteLoader,
         4 => ModLoaders.Fabric,
-        5 => ModLoaders.Quilt,
         6 => ModLoaders.NeoForge,
         _ => ModLoaders.None,
     };
@@ -24,7 +23,6 @@ public static class Resource {
             ModLoaders.Forge => 1,
             ModLoaders.LiteLoader => 3,
             ModLoaders.Fabric => 4,
-            ModLoaders.Quilt => 5,
             ModLoaders.NeoForge => 6,
             _ => 0,
         };

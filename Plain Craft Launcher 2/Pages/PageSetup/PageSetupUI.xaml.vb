@@ -341,6 +341,14 @@ Refresh:
         End Select
         FrmSetupUI.CardCustom.TriggerForceResize()
     End Sub
+    Private Sub BtnCustomFolder_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnCustomFolder.Click
+        Dim CustomPath As String = Paths.Base & "PCL\Custom.xaml"
+        If FileUtils.Exists(CustomPath) Then
+            OpenExplorer(CustomPath)
+        Else
+            OpenExplorer(Paths.Base & "PCL\")
+        End If
+    End Sub
 
     '主题
     Private Sub LabLauncherTheme5Unlock_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles LabLauncherTheme5Unlock.MouseLeftButtonUp
@@ -444,6 +452,10 @@ Refresh:
             FrmLaunchLeft.RefreshButtonsUI()
             If FrmSetupUI IsNot Nothing Then
                 FrmSetupUI.CardSwitch.Visibility = If(Not HiddenForceShow AndAlso Settings.Get(Of Boolean)("UiHiddenFunctionHidden"), Visibility.Collapsed, Visibility.Visible)
+            End If
+            '版本设置子页面
+            If FrmInstanceLeft IsNot Nothing Then
+                FrmInstanceLeft.ItemModify.Visibility = If(Not HiddenForceShow AndAlso Settings.Get(Of Boolean)("UiHiddenFunctionInstanceModify"), Visibility.Collapsed, Visibility.Visible)
             End If
             '设置子页面
             If FrmSetupLeft IsNot Nothing Then

@@ -139,47 +139,27 @@ Namespace My.Resources
                 Return CType(obj,Byte())
             End Get
         End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
-        Friend ReadOnly Property JavaWrapper() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("JavaWrapper", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
+
         '''<summary>
         '''  查找 System.Byte[] 类型的本地化资源。
         '''</summary>
         Friend ReadOnly Property libwebp64() As Byte()
             Get
                 Dim obj As Object = ResourceManager.GetObject("libwebp64", resourceCulture)
-                Return CType(obj,Byte())
+                Return CType(obj, Byte())
             End Get
         End Property
-        
-        '''<summary>
-        '''  查找 System.Byte[] 类型的本地化资源。
-        '''</summary>
-        Friend ReadOnly Property LUA() As Byte()
-            Get
-                Dim obj As Object = ResourceManager.GetObject("LUA", resourceCulture)
-                Return CType(obj,Byte())
-            End Get
-        End Property
-        
+
         '''<summary>
         '''  查找 System.Byte[] 类型的本地化资源。
         '''</summary>
         Friend ReadOnly Property MeloongCore() As Byte()
             Get
                 Dim obj As Object = ResourceManager.GetObject("MeloongCore", resourceCulture)
-                Return CType(obj,Byte())
+                Return CType(obj, Byte())
             End Get
         End Property
-        
+
         '''<summary>
         '''  查找 System.Byte[] 类型的本地化资源。
         '''</summary>

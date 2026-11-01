@@ -64,7 +64,7 @@ Public Class PageSelectLeft
                                 </ContextMenu>
                         )
                 End Select
-                If (Folder.Type = McFolder.Types.Vanilla OrElse Folder.Type = McFolder.Types.RenamedVanilla) AndAlso Folder.Location = Paths.Base & ".minecraft\" AndAlso McFolderList.IsSingle Then CType(ContMenu.FindName("Delete"), MyMenuItem).Header = "清空"
+                If (Folder.Type = McFolder.Types.Vanilla OrElse Folder.Type = McFolder.Types.RenamedVanilla) AndAlso PathUtils.IsSame(Folder.Location, Paths.Base & ".minecraft\") AndAlso McFolderList.IsSingle Then CType(ContMenu.FindName("Delete"), MyMenuItem).Header = "清空"
                 '注册事件
                 If Not Folder.Type = McFolder.Types.Vanilla Then CType(ContMenu.FindName("Remove"), MyMenuItem).AddHandler(MyMenuItem.ClickEvent, New RoutedEventHandler(AddressOf FrmSelectLeft.Remove_Click))
                 CType(ContMenu.FindName("Open"), MyMenuItem).AddHandler(MyMenuItem.ClickEvent, New RoutedEventHandler(AddressOf FrmSelectLeft.Open_Click))
@@ -108,7 +108,7 @@ Public Class PageSelectLeft
             Dim ItemInstall As New MyListItem With {.IsScaleAnimationEnabled = False, .Type = MyListItem.CheckType.Clickable, .Title = "导入整合包", .Height = 34,
                 .ToolTip = "在当前选择的 Minecraft 文件夹下安装整合包",
                 .Logo = "M512 40.96C249.344 40.96 35.84 252.416 35.84 512s213.504 471.04 476.16 471.04c103.424 0 202.752-33.28 286.72-96.256l1.536-1.536c5.12-5.632 7.68-12.8 7.68-19.968 0-16.896-13.824-30.208-30.72-30.208-7.68 0-15.36 2.56-20.992 7.68h-0.512c-71.68 52.224-155.648 79.36-243.712 79.36-227.328 0-412.16-182.784-412.16-407.552 0-224.768 184.832-407.552 412.16-407.552s412.16 182.784 412.16 407.552c0 68.608-15.872 132.608-46.592 190.464-0.512 1.024-1.024 2.048-1.024 3.072-0.512 2.048-1.536 4.608-1.536 8.192 0 16.896 13.824 30.208 30.72 30.208 12.288 0 23.04-7.168 28.16-18.432 35.84-68.608 53.76-141.312 53.76-216.064 0.512-259.584-212.992-471.04-475.648-471.04z M812.032 483.328c-31.744-20.992-71.68 1.536-78.848 6.144-1.024 0.512-104.448 61.44-128 74.752-8.192 4.608-22.528-0.512-27.136-4.096-31.232-36.352-54.272-70.656-68.608-102.4-13.312-29.184 0.512-41.472 3.072-43.52 7.168-4.608 114.688-68.608 143.36-83.456 24.064-12.288 40.96-25.088 46.08-45.056 3.072-13.312 0-27.136-9.216-39.936-22.016-31.744-172.544-84.992-311.296-3.584-157.184 91.648-152.064 242.688-150.528 292.352v9.216c0 18.944-12.8 37.376-14.848 40.448l-20.992 21.504c-6.144 6.144-9.216 13.824-9.216 22.528 0 8.704 3.584 16.384 9.728 22.528 12.8 12.288 32.768 11.776 45.056-0.512l22.528-23.552 0.512-0.512c3.072-3.584 30.208-38.4 30.208-81.92l-0.512-11.264c-1.536-44.544-5.632-162.816 119.296-235.52 88.064-51.2 173.056-32.256 208.896-19.968-36.864 19.456-143.36 83.456-144.896 84.48-22.016 14.336-55.808 58.88-26.112 122.88 17.408 37.376 43.52 76.8 80.896 120.32 14.336 17.408 62.976 37.376 103.424 15.36 24.576-13.312 125.44-73.216 130.048-75.776 2.048-1.024 4.608-2.56 7.68-3.584 0 2.56-0.512 6.144-1.024 10.752-5.632 35.84-35.328 155.136-191.488 181.76-49.664 8.704-89.6 3.584-121.856-0.512h-0.512c-37.888-4.608-73.216-9.216-101.888 14.336-31.232 26.112-40.96 34.304-35.84 54.272 3.584 14.336 16.384 24.064 30.72 24.064 2.56 0 5.12-0.512 7.68-1.024 6.656-1.536 12.8-5.632 16.896-10.752 2.048-2.048 7.68-6.656 20.992-18.432 6.656-5.632 25.088-3.584 52.736 0 34.816 4.608 81.92 10.24 141.312 0.512 157.184-26.624 228.864-138.752 243.2-234.496 7.68-38.912 0-64.512-21.504-78.336z"}
-            FrmSelectLeft.PanList.Children.Add(ItemInstall)
+            If Not RestrictMcDownload Then FrmSelectLeft.PanList.Children.Add(ItemInstall)
             AddHandler ItemInstall.Click, AddressOf ModpackInstall
 
             '边距
@@ -116,7 +116,7 @@ Public Class PageSelectLeft
 
             '确认勾选状态
             For i = 0 To McFolderList.Count - 1
-                If McFolderList(i).Location = McFolderSelected Then
+                If PathUtils.IsSame(McFolderList(i).Location, McFolderSelected) Then
                     CType(FrmSelectLeft.PanList.Children(i + 1), MyListItem).Checked = True '去掉第一个标题
                     Return
                 End If
@@ -139,9 +139,9 @@ Public Class PageSelectLeft
     '添加文件夹
     Public Sub Add_Click()
         Dim NewFolder As String = ""
-        '检查是否有下载任务
-        If HasDownloadingTask() Then
-            Hint("在下载任务进行时，无法添加游戏文件夹！", HintType.Red)
+        '下载或版本修改期间禁止更改游戏文件夹
+        If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask() Then
+            Hint("请在其他任务完成后，再添加游戏文件夹！", HintType.Red)
             Return
         End If
         Try
@@ -150,8 +150,11 @@ Public Class PageSelectLeft
             If NewFolder Is Nothing Then Return
             If NewFolder.Contains("!") OrElse NewFolder.Contains(";") Then Hint("Minecraft 文件夹路径中不能含有感叹号或分号！", HintType.Red) : Return
             '要求输入显示名称
-            Dim SplitedNames As String() = NewFolder.TrimEnd("\").Split("\")
-            Dim DefaultName As String = If(SplitedNames.Last = ".minecraft", If(SplitedNames.Count >= 3, SplitedNames(SplitedNames.Count - 2), ""), SplitedNames.Last)
+            Dim DefaultName = PathUtils.GetLastPart(NewFolder)
+            If DefaultName = ".minecraft" Then
+                Dim ParentFolder = PathUtils.RemoveLastPart(NewFolder)
+                DefaultName = If(ParentFolder.EndsWithF(":"), "", PathUtils.GetLastPart(ParentFolder))
+            End If
             If DefaultName.Length > 40 Then DefaultName = DefaultName.Substring(0, 39)
             Dim NewName As String = MyMsgBoxInput("输入显示名称", "输入该文件夹在左边栏列表中显示的名称。", DefaultName,
                                               New ObjectModel.Collection(Of Validate) From {New ValidateNullOrWhiteSpace, New ValidateLength(1, 30), New ValidateExcept({">", "|"})})
@@ -169,7 +172,7 @@ Public Class PageSelectLeft
         RunInThread(
         Sub()
             Try
-                If Not FolderPath.EndsWithF("\") Then FolderPath &= "\"
+                FolderPath = PathUtils.AddSlashSuffix(FolderPath)
                 '检查文件夹权限
                 If Not CheckPermission(FolderPath) Then
                     If ShowHint Then
@@ -195,7 +198,7 @@ Public Class PageSelectLeft
                 For i = 0 To Folders.Count - 1
                     Dim Folder As String = Folders(i)
                     If Folder = "" Then Continue For
-                    If Folder.Split(">")(1) = FolderPath Then
+                    If PathUtils.IsSame(Folder.Split(">")(1), FolderPath) Then
                         IsAdded = True
                         If Folder.Split(">")(0) = DisplayName Then
                             If ShowHint Then Hint("此文件夹已在列表中！", HintType.Blue)
@@ -246,9 +249,9 @@ Public Class PageSelectLeft
 
     '创建文件夹
     Public Sub Create_Click()
-        '检查是否有下载任务
-        If HasDownloadingTask() Then
-            Hint("在下载任务进行时，无法创建游戏文件夹！", HintType.Red)
+        '下载或版本修改期间禁止更改游戏文件夹
+        If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask() Then
+            Hint("请在其他任务完成后，再创建游戏文件夹！", HintType.Red)
             Return
         End If
         CreateMcFolderInCurrentPath()
@@ -270,6 +273,10 @@ Public Class PageSelectLeft
             Dim Target As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
             '若为 “移除”，则提醒是否删除 PCL 的配置文件
             If Target.Type = McFolder.Types.Custom Then
+                If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask() Then
+                    Hint("请在其他任务完成后，再移除游戏文件夹！", HintType.Red)
+                    Return
+                End If
                 Select Case MyMsgBox("是否需要清理 PCL 在该文件夹中的配置文件？" & vbCrLf & "这包括各个版本的独立设置（如自定义图标、第三方登录配置）等，对游戏本身没有影响。", "配置文件清理", "删除", "保留", "取消")
                     Case 1
                         '删除配置文件
@@ -292,6 +299,10 @@ Public Class PageSelectLeft
         End Try
     End Sub
     Public Sub Delete_Click(sender As Object, e As RoutedEventArgs)
+        If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask() Then
+            Hint("请在其他任务完成后，再删除游戏文件夹！", HintType.Red)
+            Return
+        End If
         Dim Target As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
         Dim DeleteText As String = If((Target.Type = McFolder.Types.Vanilla OrElse Target.Type = McFolder.Types.RenamedVanilla) AndAlso Target.Location = Paths.Base & ".minecraft\" AndAlso McFolderList.IsSingle, "清空", "删除")
         If MyMsgBox("你确定要" & DeleteText & "这个文件夹吗？" & vbCrLf &
@@ -328,7 +339,7 @@ Public Class PageSelectLeft
         Dim DeletedName As String = Nothing
         Dim Folders = Settings.Get(Of String)("LaunchFolders").Split("|"c, True).ToList
         For Each Folder In Folders.ToList
-            If Not Folder.EndsWithF(Target.Location) Then Continue For
+            If Not Folder.Contains(">") OrElse Not PathUtils.IsSame(Folder.AfterFirst(">"), Target.Location) Then Continue For
             DeletedName = Folder.BeforeFirst(">")
             Folders.Remove(Folder)
             Exit For
@@ -349,7 +360,7 @@ Public Class PageSelectLeft
     End Sub
     Public Shared Sub RefreshCurrent(Folder As String)
         WriteIni(Folder & "PCL.ini", "InstanceCache", "") '删除缓存以强制要求下一次加载时更新列表
-        If Folder = McFolderSelected Then LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+        If PathUtils.IsSame(Folder, McFolderSelected) Then LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
     End Sub
     Public Sub Rename_Click(sender As Object, e As RoutedEventArgs)
         Dim Folder As McFolder = CType(CType(CType(sender.Parent, ContextMenu).Parent, Primitives.Popup).PlacementTarget, MyListItem).Tag
@@ -365,7 +376,7 @@ Public Class PageSelectLeft
             For i = 0 To Folders.Count - 1
                 Dim FolderCurrent As String = Folders(i)
                 If FolderCurrent = "" Then Continue For
-                If FolderCurrent.Split(">")(1) = Folder.Location Then
+                If PathUtils.IsSame(FolderCurrent.Split(">")(1), Folder.Location) Then
                     IsAdded = True
                     If FolderCurrent.Split(">")(0) = NewName Then
                         '名称未修改
@@ -390,9 +401,9 @@ Public Class PageSelectLeft
     '点击选项
     Public Sub Folder_Change(sender As MyListItem, e As RouteEventArgs)
         If Not e.RaiseByMouse OrElse Not sender.Checked Then Return
-        '检查是否有下载任务
-        If HasDownloadingTask(True) Then
-            Hint("在下载任务进行时，无法切换游戏文件夹！", HintType.Red)
+        '下载或版本修改期间禁止更改游戏文件夹
+        If McInstanceLock.IsAnyLocked OrElse HasDownloadingTask(True) Then
+            Hint("请在其他任务完成后，再切换游戏文件夹！", HintType.Red)
             e.Handled = True
             Return
         End If

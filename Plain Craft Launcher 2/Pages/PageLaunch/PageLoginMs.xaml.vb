@@ -18,7 +18,7 @@ Public Class PageLoginMs
                 ComboAccounts.Items.Add(Item)
             Next
         Catch ex As Exception
-            Logger.Error(ex, $"微软登录信息出错，登录信息已被重置（{Settings.Get(Of String)("LoginMsJson")}）", LogBehavior.Toast)
+            Logger.Error(ex, $"微软登录信息出错，登录信息已被重置", LogBehavior.Toast)
             Settings.Set("LoginMsJson", "{}")
         End Try
         '如果不保留输入，刷新列表后自动选择第一项

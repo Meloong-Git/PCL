@@ -90,7 +90,7 @@ Public Class MyImage
             Catch ex As Exception
                 Logger.Warn(ex, $"加载图片失败（{value}）")
                 Try
-                    If value.StartsWithF(PathTemp) Then FileUtils.Delete(value)
+                    If value.StartsWithF(PathTemp, True) Then FileUtils.Delete(value)
                 Catch
                 End Try
             End Try

@@ -6,12 +6,12 @@ Public Module ModBase
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.13.0.1" '显示用版本名
+    Public Const VersionBaseName As String = "2.99.0.1" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If RELEASE Then
-    Public Const VersionCode As Integer = 406 '正式版
+    Public Const VersionCode As Integer = 415 '正式版
 #Else
-    Public Const VersionCode As Integer = 407 '快照版
+    Public Const VersionCode As Integer = 416 '快照版
 #End If
 
     '版本信息
@@ -47,7 +47,7 @@ Public Module ModBase
     ''' <summary>
     ''' 程序的缓存文件夹路径，以 \ 结尾。
     ''' </summary>
-    Public PathTemp As String = If(Settings.Get(Of String)("SystemSystemCache") = "", Path.GetTempPath() & "PCL\", Settings.Get(Of String)("SystemSystemCache")).ToString.Replace("/", "\").TrimEnd("\") & "\"
+    Public PathTemp As String = PathUtils.AddSlashSuffix(If(Settings.Get(Of String)("SystemSystemCache") = "", Path.GetTempPath() & "PCL\", Settings.Get(Of String)("SystemSystemCache")).Replace("/", "\"))
     ''' <summary>
     ''' 当前程序的语言。
     ''' </summary>
@@ -75,7 +75,7 @@ Public Module ModBase
     ''' <summary>
     ''' 系统盘盘符，以 \ 结尾。例如 “C:\”。
     ''' </summary>
-    Public OsDrive As String = Environment.GetLogicalDrives().Where(Function(p) Directory.Exists(p)).First.Upper.First & ":\" '#3799
+    Public OsDrive As String = Environment.GetLogicalDrives().First(Function(p) Directory.Exists(p)) '#3799
 
     Public ReadOnly Property ModeDebug As Boolean
         Get
@@ -465,57 +465,7 @@ Public Module ModBase
 
 #Region "文件"
 
-    '=============================
-    '  注册表
-    '=============================
-
-    ''' <summary>
-    ''' 读取注册表键。如果失败则返回默认值。
-    ''' </summary>
-    Public Function ReadReg(Key As String, Optional DefaultValue As String = "") As String
-        Try
-            Return If(My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, False)?.GetValue(Key), DefaultValue)
-        Catch ex As Exception
-            Logger.Error(ex, $"读取注册表出错：{Key}", LogBehavior.Toast)
-            Return DefaultValue
-        End Try
-    End Function
-    ''' <summary>
-    ''' 写入注册表键。
-    ''' </summary>
-    Public Sub WriteReg(Key As String, Value As String, Optional ThrowException As Boolean = False)
-        Try
-            Dim SubKey As Microsoft.Win32.RegistryKey = My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, True)
-            If SubKey Is Nothing Then SubKey = My.Computer.Registry.CurrentUser.CreateSubKey("Software\" & RegFolder) '如果不存在就创建  
-            SubKey.SetValue(Key, Value)
-        Catch ex As Exception
-            Logger.Warn(ex, $"写入注册表出错：{Key}", If(ThrowException, LogBehavior.Toast, LogBehavior.ToastIfDebug))
-            If ThrowException Then Throw
-        End Try
-    End Sub
-    ''' <summary>
-    ''' 是否存在某个注册表键。
-    ''' </summary>
-    Public Function HasReg(Key As String) As Boolean
-        Return ReadReg(Key, Nothing) IsNot Nothing
-    End Function
-    ''' <summary>
-    ''' 删除注册表键。
-    ''' </summary>
-    Public Sub DeleteReg(Key As String, Optional ThrowException As Boolean = False)
-        Try
-            Dim SubKey As Microsoft.Win32.RegistryKey = My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, True)
-            If SubKey?.GetValue(Key) Is Nothing Then Return
-            SubKey.DeleteValue(Key)
-        Catch ex As Exception
-            Logger.Warn(ex, $"删除注册表出错：{Key}", If(ThrowException, LogBehavior.Toast, LogBehavior.ToastIfDebug))
-            If ThrowException Then Throw
-        End Try
-    End Sub
-
-    '=============================
-    '  ini
-    '=============================
+    'ini
 
     Private ReadOnly IniCache As New ConcurrentDictionary(Of String, ConcurrentDictionary(Of String, String))
     ''' <summary>
@@ -617,7 +567,8 @@ Public Module ModBase
         End Try
     End Sub
 
-    '文件校验
+    '权限检查
+
     ''' <summary>
     ''' 检查是否拥有某一文件夹的 I/O 权限。如果文件夹不存在，会返回 False。
     ''' </summary>
@@ -625,7 +576,7 @@ Public Module ModBase
         Try
             If String.IsNullOrEmpty(Folder) Then Return False
             Folder = PathUtils.AddSlashSuffix(Folder)
-            If Folder.EndsWithF(":\System Volume Information\") OrElse Folder.EndsWithF(":\$RECYCLE.BIN\") Then Return False
+            If Folder.EndsWithF(":\System Volume Information\", True) OrElse Folder.EndsWithF(":\$RECYCLE.BIN\", True) Then Return False
             If Not DirectoryUtils.Exists(Folder) Then Return False
             Dim TestFilePath As String = $"{Folder}CheckPermission{GetUuid()}.txt"
             FileUtils.Write(TestFilePath, "临时文件，用于检测该文件夹的权限是否正常。")
@@ -642,7 +593,7 @@ Public Module ModBase
     Public Sub CheckPermissionWithException(Folder As String)
         If String.IsNullOrWhiteSpace(Folder) Then Throw New ArgumentNullException("文件夹名不能为空！")
         Folder = PathUtils.AddSlashSuffix(Folder)
-        If Folder.EndsWithF(":\System Volume Information\") OrElse Folder.EndsWithF(":\$RECYCLE.BIN\") Then Throw New UnauthorizedAccessException("没有对系统文件夹的权限！")
+        If Folder.EndsWithF(":\System Volume Information\", True) OrElse Folder.EndsWithF(":\$RECYCLE.BIN\", True) Then Throw New UnauthorizedAccessException("没有对系统文件夹的权限！")
         If Not DirectoryUtils.Exists(Folder) Then Throw New DirectoryNotFoundException("文件夹不存在！")
         Dim TestFilePath As String = $"{Folder}CheckPermission{GetUuid()}.txt"
         FileUtils.Write(TestFilePath, "临时文件，用于检测该文件夹的权限是否正常。")
@@ -837,8 +788,8 @@ Public Module ModBase
     ''' <summary>
     ''' 可用于临时存放文件的，不含任何特殊字符的文件夹路径，以“\”结尾。
     ''' </summary>
-    Public PathPure As String = GetPureASCIIDir()
-    Private Function GetPureASCIIDir() As String
+    Public PathPure As New Lazy(Of String)(
+    Function()
         If Paths.Base.IsAsciiOnly() Then
             Return Paths.Base & "PCL\"
         ElseIf Paths.AppDataThenName.IsAsciiOnly() Then
@@ -848,7 +799,7 @@ Public Module ModBase
         Else
             Return OsDrive & "ProgramData\PCL\"
         End If
-    End Function
+    End Function)
 
     ''' <summary>
     ''' 指示接取到这个异常的函数进行重试。
@@ -892,6 +843,12 @@ Public Module ModBase
     ''' </summary>
     Public Function GetUnixTimestampUtc() As Long
         Return (Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000
+    End Function
+    ''' <summary>
+    ''' 获取十进制 Unix 时间戳。
+    ''' </summary>
+    Public Function ToUnixTimestampUtc(Time As Date) As Long
+        Return (Time.ToUniversalTime().Ticks - 621355968000000000) / 10000000
     End Function
     ''' <summary>
     ''' 时间戳转化为日期。
@@ -1076,7 +1033,7 @@ Public Module ModBase
             Try
                 Retrier.Attempt(delay:=Function(Attempt) TimeSpan.FromMilliseconds(200), maxAttempts:=4, isRetryAllowed:=Function(ex) True, action:=
                 Sub()
-                    RunInUi(
+                    RunInUiWait(
                     Sub()
                         My.Computer.Clipboard.Clear()
                         If Not String.IsNullOrEmpty(Text) Then My.Computer.Clipboard.SetText(Text)

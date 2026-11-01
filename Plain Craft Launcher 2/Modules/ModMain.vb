@@ -414,6 +414,7 @@ EndHint:
     Public FrmInstanceModDisabled As PageInstanceModDisabled
     Public FrmInstanceSetup As PageInstanceSetup
     Public FrmInstanceExport As PageInstanceExport
+    Public FrmDownloadModify As PageDownloadModify
 
     '资源信息分页声明
     Public FrmDownloadResourceDetail As PageDownloadResourceDetail
@@ -510,7 +511,7 @@ EndHint:
                 EventData = If(JsonData("EventData"), "")
                 IsEvent = True
             Else
-                Dim XamlAddress As String = FilePath.Lower.Replace(".json", ".xaml")
+                Dim XamlAddress As String = Path.ChangeExtension(FilePath, ".xaml")
                 If FileUtils.Exists(XamlAddress) Then
                     XamlContent = FileUtils.ReadAsString(XamlAddress)
                     IsEvent = False
@@ -596,9 +597,9 @@ EndHint:
                     '读取自带文件
                     For Each File In DirectoryUtils.EnumerateFiles(PathTemp & "Help", True)
                         '跳过非 json 文件与以 . 开头的文件夹
-                        If PathUtils.RemoveLastPart(File).Replace(PathTemp & "Help", "").Contains("\.") OrElse PathUtils.GetExtension(File) <> "json" Then Continue For
+                        If PathUtils.RemoveLastPart(File).Substring((PathTemp & "Help").Length).Contains("\.") OrElse PathUtils.GetExtension(File) <> "json" Then Continue For
                         '检查忽略列表
-                        Dim RealPath As String = File.Replace(PathTemp & "Help\", "")
+                        Dim RealPath As String = File.Substring((PathTemp & "Help\").Length)
                         For Each Ignore In IgnoreList
                             If RealPath.RegexCheck(Ignore) Then
                                 Logger.Trace($"已忽略 {RealPath}：{Ignore}")
@@ -799,26 +800,16 @@ NextFile:
     ''' 如果失败，则抛出异常。
     ''' </summary>
     Public Sub SetGPUPreference(Executeable As String)
-        Const REG_KEY As String = "Software\Microsoft\DirectX\UserGpuPreferences"
+        Const REG_KEY As String = "HKEY_CURRENT_USER\Software\Microsoft\DirectX\UserGpuPreferences"
         Const REG_VALUE As String = "GpuPreference=2;"
         '查看现有设置
-        Using ReadOnlyKey = My.Computer.Registry.CurrentUser.OpenSubKey(REG_KEY, False)
-            If ReadOnlyKey IsNot Nothing Then
-                If REG_VALUE = ReadOnlyKey.GetValue(Executeable)?.ToString() Then
-                    Logger.Info($"无需调整显卡设置：{Executeable}")
-                    Return
-                End If
-            Else
-                '创建父级键
-                Logger.Info($"需要创建显卡设置的父级键")
-                My.Computer.Registry.CurrentUser.CreateSubKey(REG_KEY)
-            End If
-        End Using
+        If RegistryUtils.Read(REG_KEY, Executeable).result?.ToString() = REG_VALUE Then
+            Logger.Info($"无需调整显卡设置：{Executeable}")
+            Return
+        End If
         '写入新设置
-        Using WriteKey = My.Computer.Registry.CurrentUser.OpenSubKey(REG_KEY, True)
-            WriteKey.SetValue(Executeable, REG_VALUE)
-            Logger.Info($"已调整显卡设置：{Executeable}")
-        End Using
+        RegistryUtils.Write(REG_KEY, Executeable, REG_VALUE)
+        Logger.Info($"已调整显卡设置：{Executeable}")
     End Sub
 
     ''' <summary>
@@ -867,11 +858,19 @@ NextFile:
             Else
                 Text = Text.Replace("{version}", Replacer(McInstanceSelected.Version.VanillaName))
             End If
+            Text = Text.Replace("{forge}", Replacer(If(McInstanceSelected.Version.ModLoaders.HasFlagF(ModLoaders.Forge), McInstanceSelected.Version.ModLoaderVersions(ModLoaders.Forge), "")))
+            Text = Text.Replace("{fabric}", Replacer(If(McInstanceSelected.Version.ModLoaders.HasFlagF(ModLoaders.Fabric), McInstanceSelected.Version.ModLoaderVersions(ModLoaders.Fabric), "")))
+            Text = Text.Replace("{neoforge}", Replacer(If(McInstanceSelected.Version.ModLoaders.HasFlagF(ModLoaders.NeoForge), McInstanceSelected.Version.ModLoaderVersions(ModLoaders.NeoForge), "")))
+            Text = Text.Replace("{liteloader}", Replacer(If(McInstanceSelected.Version.ModLoaders.HasFlagF(ModLoaders.LiteLoader), "true", "")))
         Else
             Text = Text.Replace("{version_path}", Replacer(Nothing)) : Text = Text.Replace("{verpath}", Replacer(Nothing))
             Text = Text.Replace("{version_indie}", Replacer(Nothing)) : Text = Text.Replace("{verindie}", Replacer(Nothing))
             Text = Text.Replace("{name}", Replacer(Nothing))
             Text = Text.Replace("{version}", Replacer(Nothing))
+            Text = Text.Replace("{forge}", Replacer(Nothing))
+            Text = Text.Replace("{fabric}", Replacer(Nothing))
+            Text = Text.Replace("{neoforge}", Replacer(Nothing))
+            Text = Text.Replace("{liteloader}", Replacer(Nothing))
         End If
         '登录信息
         If McLoginLoader.State = LoadState.Finished Then
@@ -896,8 +895,8 @@ NextFile:
         Text = Text.RegexReplace("\{hint\}", Function() Replacer(PageOtherTest.GetRandomHint()))
         Text = Text.RegexReplace("\{cave\}", Function() Replacer(PageOtherTest.GetRandomCave()))
         Text = Text.RegexReplace("\{setup:([a-zA-Z0-9]+)\}", Function(m) Replacer(Settings.GetSafe(m.Groups(1).Value, McInstanceSelected)))
-        Text = Text.RegexReplace("\{varible:([^:\}]+)(?::([^\}]+))?\}", Function(m) Replacer(ReadReg("CustomEvent" & m.Groups(1).Value, m.Groups(2).Value)))
-        Text = Text.RegexReplace("\{variable:([^:\}]+)(?::([^\}]+))?\}", Function(m) Replacer(ReadReg("CustomEvent" & m.Groups(1).Value, m.Groups(2).Value)))
+        Text = Text.RegexReplace("\{varible:([^:\}]+)(?::([^\}]+))?\}", Function(m) Replacer(RegistryUtils.TryRead($"HKEY_CURRENT_USER\Software\{RegFolder}", $"CustomEvent{m.Groups(1).Value}", m.Groups(2).Value)))
+        Text = Text.RegexReplace("\{variable:([^:\}]+)(?::([^\}]+))?\}", Function(m) Replacer(RegistryUtils.TryRead($"HKEY_CURRENT_USER\Software\{RegFolder}", $"CustomEvent{m.Groups(1).Value}", m.Groups(2).Value)))
         Return Text
     End Function
 

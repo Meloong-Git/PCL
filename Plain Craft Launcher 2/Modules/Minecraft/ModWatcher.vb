@@ -8,7 +8,8 @@ Public Module ModWatcher
         Dim IsRunning As Boolean = False
         Dim TriggerLauncherShutdown As Boolean = True
         For Each Watcher In McWatcherList
-            If Watcher.State = Watcher.MinecraftState.Loading OrElse Watcher.State = Watcher.MinecraftState.Running Then
+            If Watcher.State = Watcher.MinecraftState.Loading OrElse Watcher.State = Watcher.MinecraftState.Running OrElse
+               (Watcher.State = Watcher.MinecraftState.Crashed AndAlso Not Watcher.GameProcess.HasExited) Then
                 IsRunning = True
                 Exit For
             ElseIf Watcher.State = Watcher.MinecraftState.Crashed OrElse Watcher.State = Watcher.MinecraftState.Canceled Then
@@ -91,7 +92,9 @@ Public Module ModWatcher
             RunInNewThread(
             Sub()
                 Try
-                    Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Crashed OrElse State = MinecraftState.Canceled OrElse Loader.State = LoadState.Canceled
+                    Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Canceled OrElse
+                             (Loader.State = LoadState.Canceled AndAlso State <> MinecraftState.Crashed) OrElse
+                             (State = MinecraftState.Crashed AndAlso GameProcess.HasExited)
                         TimerWindow()
                         TimerLog()
                         '设置窗口标题
@@ -103,6 +106,7 @@ Public Module ModWatcher
                             Thread.Sleep(64)
                         Next
                     Loop
+                    If State = MinecraftState.Crashed Then WatcherStateChanged()
                     WatcherLog("Minecraft 日志监控已退出")
                 Catch ex As Exception
                     Logger.Error(ex, "Minecraft 日志监控主循环出错")
@@ -314,14 +318,17 @@ Public Module ModWatcher
                     Dim str As New StringBuilder(512)
                     GetClassName(hwnd, str, str.Capacity)
                     Dim ClassName As String = str.ToString
-                    If Not (ClassName = "GLFW30" OrElse ClassName = "LWJGL" OrElse ClassName = "SunAwtFrame") Then Return
+                    If Not (ClassName = "GLFW30" OrElse ClassName = "SDL_app" OrElse ClassName = "LWJGL" OrElse ClassName = "SunAwtFrame") Then Return
+                    'SDL 会先创建隐藏窗口，待初始化完成后才显示（#9073）
+                    If ClassName = "SDL_app" AndAlso Not IsWindowVisible(hwnd) Then Return
                     '获取窗口标题名
                     str = New StringBuilder(512)
                     GetWindowText(hwnd, str, str.Capacity)
                     Dim WindowText As String = str.ToString
                     '有的 Mod 可以修改窗口标题，所以不能检测是否为 Minecraft 打头，这并不准确
-                    '部分版本会搞个 GLFW message window 出来所以得反选
-                    If Not (WindowText.StartsWithF("FML") OrElse (WindowText <> "PopupMessageWindow") AndAlso Not WindowText.StartsWithF("GLFW")) Then Return
+                    '部分版本会搞个 GLFW message window，高版本还有个 Hidden Utility Window，都要反选
+                    If String.IsNullOrWhiteSpace(WindowText) OrElse WindowText = "SDL_app" OrElse WindowText = "PopupMessageWindow" OrElse
+                       WindowText.StartsWithF("GLFW") OrElse WindowText.EndsWithF("Hidden Utility Window") Then Return
                     '获取窗口关联的进程
                     Dim ProcessId As Integer
                     GetWindowThreadProcessId(hwnd, ProcessId)
@@ -342,6 +349,7 @@ Public Module ModWatcher
         Private Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (hWnd As Integer, str As StringBuilder, maxCount As Integer) As Integer
         Private Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (hWnd As Integer, str As String) As Boolean
         Private Declare Function ShowWindow Lib "user32" (hWnd As IntPtr, cmdWindow As UInteger) As Boolean
+        Private Declare Function IsWindowVisible Lib "user32" (hWnd As IntPtr) As Boolean
         Private Declare Function GetWindowThreadProcessId Lib "user32" (hWnd As IntPtr, ByRef lpdwProcessId As Integer) As Integer
 
         '崩溃处理

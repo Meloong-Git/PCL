@@ -120,7 +120,6 @@ Public Class Settings
         New Setting("ToolDownloadVersion", 1, Source:=Sources.Registry),
         New Setting("ToolDownloadTranslate", 0, Source:=Sources.Registry),
         New Setting("ToolDownloadTranslateV2", 1, Source:=Sources.Registry),
-        New Setting("ToolDownloadIgnoreQuilt", True, Source:=Sources.Registry),
         New Setting("ToolDownloadCert", False, Source:=Sources.Registry, OnChanged:=AddressOf ModNet.ShouldValidateSslCertificateOnLogin),
         New Setting("ToolDownloadMod", 2, Source:=Sources.Registry),
         New Setting("ToolModLocalNameStyle", 0, Source:=Sources.Registry),
@@ -159,6 +158,7 @@ Public Class Settings
         New Setting("UiHiddenPageOther", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
         New Setting("UiHiddenFunctionSelect", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
         New Setting("UiHiddenFunctionModUpdate", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
+        New Setting("UiHiddenFunctionInstanceModify", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
         New Setting("UiHiddenFunctionHidden", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
         New Setting("UiHiddenSetupLaunch", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
         New Setting("UiHiddenSetupUi", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
@@ -261,7 +261,11 @@ Public Class Settings
                 Case Sources.Normal
                     WriteIni("Setup", Key, Value)
                 Case Sources.Registry
-                    WriteReg(Key, Value)
+                    Try
+                        RegistryUtils.Write($"HKEY_CURRENT_USER\Software\{RegFolder}", Key, Value)
+                    Catch ex As Exception
+                        Logger.Warn(ex, $"写入注册表失败（{Key} → {Value}）", LogBehavior.Toast)
+                    End Try
                 Case Sources.Instance
                     If Instance Is Nothing Then Throw New Exception($"保存版本独立设置 {Key} 时未提供目标版本")
                     WriteIni(Instance.PathVersion & "PCL\Setup.ini", Key, Value)
@@ -327,7 +331,7 @@ Public Class Settings
                 Case Sources.Normal
                     GotValue = ReadIni("Setup", Key, DefaultValue)
                 Case Sources.Registry
-                    GotValue = ReadReg(Key, DefaultValue)
+                    GotValue = RegistryUtils.TryRead($"HKEY_CURRENT_USER\Software\{RegFolder}", Key, DefaultValue)
                 Case Sources.Instance
                     If Instance Is Nothing Then
                         Throw New Exception($"读取版本设置 {Key} 时未提供目标版本")
@@ -386,7 +390,11 @@ Public Class Settings
                 Case Sources.Normal
                     DeleteIniKey("Setup", Key)
                 Case Sources.Registry
-                    DeleteReg(Key)
+                    Try
+                        RegistryUtils.Delete($"HKEY_CURRENT_USER\Software\{RegFolder}", Key)
+                    Catch ex As Exception
+                        Logger.Warn(ex, $"删除注册表失败（{Key}）", LogBehavior.Toast)
+                    End Try
                 Case Sources.Instance
                     If Instance Is Nothing Then Throw New Exception($"重置版本设置 {Key} 时未提供目标版本")
                     DeleteIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
@@ -414,7 +422,12 @@ Public Class Settings
             Case Sources.Normal
                 Return HasIniKey("Setup", Key)
             Case Sources.Registry
-                Return HasReg(Key)
+                Try
+                    Return RegistryUtils.Has($"HKEY_CURRENT_USER\Software\{RegFolder}", Key)
+                Catch ex As Exception
+                    Logger.Warn(ex, $"判断注册表 {Key} 是否存在时出错")
+                    Return False
+                End Try
             Case Else 'Source.Instance
                 If Instance Is Nothing Then Throw New Exception($"判断版本设置 {Key} 是否存在时未提供目标版本")
                 Return HasIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)

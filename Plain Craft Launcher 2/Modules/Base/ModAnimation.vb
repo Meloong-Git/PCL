@@ -79,7 +79,7 @@ Public Module ModAnimation
         ''' 已经执行的动画长度。如果为负数则为延迟。
         ''' </summary>
         ''' <remarks></remarks>
-        Public TimeFinished As Integer
+        Public TimeFinished As Double
         ''' <summary>
         ''' 已经完成的百分比。
         ''' </summary>
@@ -853,9 +853,8 @@ Sleeper:
     ''' <summary>
     ''' 动画定时器事件。
     ''' </summary>
-    Public Sub AniTimer(DeltaTick As Integer)
+    Public Sub AniTimer(DeltaTick As Double)
         Try
-
             If DeltaTick / AniSpeed > 100 Then Logger.Info($"两个动画帧间隔 {DeltaTick} ms")
             Dim i As Integer = -1
             '循环每个动画组
@@ -1034,6 +1033,7 @@ NextAni:
                     End If
 
                 Case AniType.Code
+                    Ani.TimeFinished = Ani.TimeTotal
                     CType(Ani.Value, ThreadStart)()
 
                 Case AniType.ScaleTransform

@@ -487,8 +487,8 @@ Public Class PageLinkMain
         If FileUtils.Exists(PathEasyTier & "EasyTier.zip") Then
             '解压
             Dim ExtractPath As String = RequestTaskTempFolder()
-            FileUtils.ExtractToDirectory(PathEasyTier & "EasyTier.zip", ExtractPath,
-                progressHandler:=Sub(Percentage) Task.Progress = Percentage * 0.05)
+            'FileUtils.ExtractToDirectory(PathEasyTier & "EasyTier.zip", ExtractPath,
+            '    progressHandler:=Sub(Percentage) Task.Progress = Percentage * 0.05)
             DirectoryUtils.Copy(DirectoryUtils.EnumerateDirectories(ExtractPath, True).First, PathEasyTier)
             '重命名
             FileUtils.Move(PathEasyTier & "easytier-core.exe", PathEasyTier & "联机模块.exe")
