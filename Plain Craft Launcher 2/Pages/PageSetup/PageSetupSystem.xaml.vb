@@ -102,6 +102,26 @@ Public Class PageSetupSystem
     Private Sub BtnSystemUpdate_Click(sender As Object, e As EventArgs) Handles BtnSystemUpdate.Click
         UpdateCheckByButton()
     End Sub
+    '重置提示状态
+    Private Sub BtnSystemHintReset_Click(sender As Object, e As EventArgs) Handles BtnSystemHintReset.Click
+        Dim HintKeys = Settings.GetHintsToReset("Hint")
+        If HintKeys.Count = 0 Then
+            Hint("没有提示被隐藏！", Log:=False)
+            Return
+        End If
+        If HasDownloadingTask() Then
+            Hint("请在所有下载任务完成后再来重置提示！", Log:=False)
+            Return
+        End If
+        If McLaunchLoader.State = LoadState.Loading Then
+            Hint("请在当前启动任务结束后再来重置提示！", Log:=False)
+            Return
+        End If
+        If MyMsgBox("是否要重置提示状态？该操作会重启 PCL 且不可撤销。", "重置确认", "确定并重启", "取消", IsWarn:=True) <> 1 Then Return
+        HintKeys.ForEach(Sub(k) Settings.Reset(k))
+        StartProcess(PathExe, "--wait")
+        FrmMain.EndProgram(False)
+    End Sub
     ''' <summary>
     ''' 启动器是否已经是最新版？
     ''' 若返回 Nothing，则代表无更新缓存文件或出错。
