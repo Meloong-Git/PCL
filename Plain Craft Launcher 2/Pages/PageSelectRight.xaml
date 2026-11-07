@@ -1,15 +1,22 @@
 <local:MyPageRight
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d" x:Class="PageSelectRight"
     PanScroll="PanBack">
     <Grid>
         <Grid x:Name="PanAllBack">
-            <local:MyScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
-                <StackPanel Name="PanMain" Margin="25,25,25,10" Grid.IsSharedSizeScope="True" />
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0" Margin="25,25,25,15">
+                <local:MySearchBox x:Name="SearchBox" HintText="搜索版本标题 / 描述" />
+            </Grid>
+            <local:MyScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" x:Name="PanBack">
+                <StackPanel Name="PanMain" Margin="25,0,25,10" Grid.IsSharedSizeScope="True" />
             </local:MyScrollViewer>
-            <local:MyCard HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40" x:Name="PanEmpty" UseAnimation="False">
+            <local:MyCard Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="40" x:Name="PanEmpty" UseAnimation="False">
                 <StackPanel Margin="20,17">
                     <TextBlock Name="LabEmptyTitle" Margin="0,0,0,9" HorizontalAlignment="Center" Text="无可用版本" FontSize="19" UseLayoutRounding="True" SnapsToDevicePixels="True" Foreground="{DynamicResource ColorBrush3}" />
                     <Rectangle HorizontalAlignment="Stretch" Height="2" Fill="{DynamicResource ColorBrush3}" />
