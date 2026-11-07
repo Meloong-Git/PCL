@@ -4,12 +4,10 @@ Public Module ModDownloadLib
 
     ''' <summary>
     ''' 获取下载某个 Minecraft 版本的加载器列表。
-    ''' 它必须安装到 McFolderSelected，但是可以自定义版本名（不过自定义的版本名不会修改 Json 中的 id 项）。
     ''' </summary>
-    Private Function McDownloadClientLoader(Id As String, Optional JsonUrl As String = Nothing, Optional InstanceName As String = Nothing) As List(Of LoaderBase)
-        InstanceName = If(InstanceName, Id)
-        Dim VersionFolder As String = McFolderSelected & "versions\" & InstanceName & "\"
-
+    ''' <param name="VersionFolder">版本文件输出目录。</param>
+    Private Function McDownloadClientLoader(Id As String, JsonUrl As String, VersionFolder As String) As List(Of LoaderBase)
+        Dim InstanceName = PathUtils.GetLastPart(VersionFolder)
         Dim Loaders As New List(Of LoaderBase)
         Dim NewInstance As McInstance = Nothing
 
@@ -54,7 +52,7 @@ Public Module ModDownloadLib
             '顺手添加 Json 项目
             Try
                 Dim InstanceJson As JObject = FileUtils.ReadAsJson(VersionFolder & InstanceName & ".json")
-                InstanceJson.Add("clientVersion", Id)
+                InstanceJson("clientVersion") = Id
                 FileUtils.Write($"{VersionFolder}{InstanceName}.json", InstanceJson.ToString)
             Catch ex As Exception
                 Throw New Exception("添加客户端版本失败", ex)
@@ -242,11 +240,11 @@ pause"
                 New NetFile(DlSourceLauncherOrMetaGet(JsonUrl), VersionFolder & Id & ".json", New FileChecker With {.IsJson = True})
             }) With {.ProgressWeight = 2})
             '获取支持库文件地址
-            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("分析核心 JAR 文件下载地址",
+            Loaders.Add(New LoaderTask(Of String, List(Of NetFile))("分析版本 JAR 文件下载地址",
                 Sub(Task) Task.Output = New List(Of NetFile) From {DlClientJarGet(New McInstance(VersionFolder), False)}
             ) With {.ProgressWeight = 0.5, .Show = False})
             '下载支持库文件
-            Loaders.Add(New LoaderDownload("下载核心 JAR 文件", New List(Of NetFile)) With {.ProgressWeight = 5})
+            Loaders.Add(New LoaderDownload("下载版本 JAR 文件", New List(Of NetFile)) With {.ProgressWeight = 5})
 
             '启动
             Dim Loader As New LoaderCombo(Of String)("Minecraft " & Id & " 下载", Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
@@ -326,7 +324,6 @@ pause"
 
     Private Sub McDownloadOptiFineSave(DownloadInfo As DlOptiFineListEntry)
         Try
-            Dim Id As String = DownloadInfo.InstanceName
             Dim Target As String = Dialogs.SaveFile("选择保存位置", DownloadInfo.FileName, filter:={("jar", "OptiFine Jar")})
             If Target Is Nothing Then Return
 
@@ -374,9 +371,9 @@ pause"
         '添加 Java Wrapper 作为主 Jar
         Dim Arguments As String
         If UseJavaWrapper AndAlso Not Settings.Get(Of Boolean)("LaunchAdvanceDisableJLW") Then
-            Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.Value.TrimEnd("\")}"" -Duser.home=""{BaseMcFolderHome.TrimEnd("\")}"" -cp ""{Target}"" -jar ""{LaunchUtils.ExtractPatch("Launch\JavaWrapper.jar", PathPure.Value)}"" optifine.Installer"
+            Arguments = $"-Doolloo.jlw.tmpdir=""{PathUtils.RemoveSlashSuffix(PathPure.Value)}"" -Duser.home=""{PathUtils.RemoveSlashSuffix(BaseMcFolderHome)}"" -cp ""{Target}"" -jar ""{LaunchUtils.ExtractPatch("Launch\JavaWrapper.jar", PathPure.Value)}"" optifine.Installer"
         Else
-            Arguments = $"-Duser.home=""{BaseMcFolderHome.TrimEnd("\")}"" -cp ""{Target}"" optifine.Installer"
+            Arguments = $"-Duser.home=""{PathUtils.RemoveSlashSuffix(BaseMcFolderHome)}"" -cp ""{Target}"" optifine.Installer"
         End If
         If Java.Version.Major >= 9 Then Arguments = "--add-exports cpw.mods.bootstraplauncher/cpw.mods.bootstraplauncher=ALL-UNNAMED " & Arguments
         '开始启动
@@ -473,13 +470,12 @@ pause"
     Private Function McDownloadOptiFineLoader(DownloadInfo As DlOptiFineListEntry, McFolder As String, ClientDownloadLoader As LoaderCombo(Of String), ClientFolder As String) As List(Of LoaderBase)
 
         '参数初始化
-        Dim IsCustomFolder As Boolean = McFolder <> McFolderSelected
         Dim Id As String = DownloadInfo.InstanceName
         Dim VersionFolder As String = McFolder & "versions\" & Id & "\"
         Dim IsNewerVersion As Boolean = DownloadInfo.Inherit.Contains("w") OrElse McVersion.VersionToDrop(DownloadInfo.Inherit) >= 140
         Dim Target As String = If(IsNewerVersion,
-            $"{RequestTaskTempFolder()}OptiFine.jar",
-            $"{McFolder}libraries\optifine\OptiFine\{DownloadInfo.FileName.Replace("OptiFine_", "").Replace(".jar", "").Replace("preview_", "")}\{DownloadInfo.FileName.Replace("OptiFine_", "OptiFine-").Replace("preview_", "")}")
+            $"{RequestTaskTempFolder(True)}OptiFine.jar",
+            $"{McFolder}libraries\optifine\OptiFine\{PathUtils.GetFileNameWithoutExtension(DownloadInfo.FileName).Replace("OptiFine_", "").Replace("preview_", "")}\{DownloadInfo.FileName.Replace("OptiFine_", "OptiFine-").Replace("preview_", "")}")
         Dim Loaders As New List(Of LoaderBase)
 
         '获取下载地址
@@ -522,7 +518,6 @@ pause"
             Loop
             If Task.IsCanceled Then Return
             '复制原版文件
-            If Not IsCustomFolder Then Return
             SyncLock VanillaSyncLock
                 Dim ClientName As String = PathUtils.GetLastPart(ClientFolder)
                 DirectoryUtils.Create(McFolder & "versions\" & DownloadInfo.Inherit)
@@ -540,7 +535,7 @@ pause"
             Logger.Info($"检测为新版 OptiFine：{DownloadInfo.Inherit}")
             Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)("安装 OptiFine（方式 A）",
             Sub(Task As LoaderTask(Of List(Of NetFile), Boolean))
-                Dim BaseMcFolderHome As String = RequestTaskTempFolder()
+                Dim BaseMcFolderHome As String = RequestTaskTempFolder(True)
                 Dim BaseMcFolder As String = BaseMcFolderHome & ".minecraft\"
                 Try
                     '准备安装环境
@@ -597,7 +592,7 @@ Retry:
     ""releaseTime"": """ & If(DownloadInfo.ReleaseTime = "", InheritInstance.ReleaseTime.ToString("yyyy'-'MM'-'dd"), DownloadInfo.ReleaseTime.Replace("/", "-")) & "T23:33:33+08:00"",
     ""type"": ""release"",
     ""libraries"": [
-        {""name"": ""optifine:OptiFine:" & DownloadInfo.FileName.Replace("OptiFine_", "").Replace(".jar", "").Replace("preview_", "") & """},
+        {""name"": ""optifine:OptiFine:" & PathUtils.GetFileNameWithoutExtension(DownloadInfo.FileName).Replace("OptiFine_", "").Replace("preview_", "") & """},
         {""name"": ""net.minecraft:launchwrapper:1.12""}
     ],
     ""mainClass"": ""net.minecraft.launchwrapper.Launch"","
@@ -785,19 +780,14 @@ Retry:
     ''' 这不会补全所需的支持库文件，需要后续手动补全支持库。
     ''' </summary>
     Private Function McDownloadLiteLoaderLoader(DownloadInfo As DlLiteLoaderListEntry, McFolder As String) As List(Of LoaderBase)
-
-        '参数初始化
-        Dim IsCustomFolder As Boolean = McFolder <> McFolderSelected
-        Dim Id As String = DownloadInfo.Inherit
-        Dim Target As String = PathTemp & "Download\" & Id & "-Liteloader.jar"
-        Dim VersionName As String = DownloadInfo.Inherit & "-LiteLoader"
-        Dim VersionFolder As String = McFolder & "versions\" & VersionName & "\"
         Dim Loaders As New List(Of LoaderBase)
 
         '安装
         Loaders.Add(New LoaderTask(Of String, String)("安装 LiteLoader",
         Sub(Task As LoaderTask(Of String, String))
             Try
+                Dim VersionName As String = DownloadInfo.Inherit & "-LiteLoader"
+                Dim VersionFolder As String = McFolder & "versions\" & VersionName & "\"
                 '构造版本 Json
                 Dim VersionJson As New JObject
                 VersionJson.Add("id", VersionName)
@@ -945,7 +935,7 @@ Retry:
         '添加 Java Wrapper 作为主 Jar
         Dim Arguments As String
         If UseJavaWrapper AndAlso Not Settings.Get(Of Boolean)("LaunchAdvanceDisableJLW") Then
-            Arguments = $"-Doolloo.jlw.tmpdir=""{PathPure.Value.TrimEnd("\")}"" -cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" -jar ""{LaunchUtils.ExtractPatch("Launch\JavaWrapper.jar", PathPure.Value)}"" com.bangbang93.ForgeInstaller ""{McFolder}"
+            Arguments = $"-Doolloo.jlw.tmpdir=""{PathUtils.RemoveSlashSuffix(PathPure.Value)}"" -cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" -jar ""{LaunchUtils.ExtractPatch("Launch\JavaWrapper.jar", PathPure.Value)}"" com.bangbang93.ForgeInstaller ""{McFolder}"
         Else
             Arguments = $"-cp ""{PathTemp}Cache\forge_installer.jar;{Target}"" com.bangbang93.ForgeInstaller ""{McFolder}"
         End If
@@ -1078,9 +1068,7 @@ Retry:
     ''' 获取下载某个 Forgelike 版本的加载器列表。
     ''' </summary>
     Private Function McDownloadForgelikeLoader(IsNeoForge As Boolean, LoaderVersion As String, NewInstanceName As String, Inherit As String, Info As DlForgelikeEntry, McFolder As String, ClientDownloadLoader As LoaderCombo(Of String), ClientFolder As String) As List(Of LoaderBase)
-
         '参数初始化
-        McFolder = If(McFolder, McFolderSelected)
         If IsNeoForge AndAlso Info Is Nothing Then
             '需要传入 API Name，但整合包版本可能不以 1.20.1- 开头，所以需要进行特别处理
             If Inherit = "1.20.1" AndAlso Not LoaderVersion.StartsWithF("1.20.1-") Then
@@ -1095,12 +1083,9 @@ Retry:
             LoaderVersion = LoaderVersion.AfterLast("-")
         End If
         Dim LoaderName As String = If(IsNeoForge, "NeoForge", "Forge")
-        Dim IsCustomFolder As Boolean = McFolder <> McFolderSelected
-        Dim InstallerAddress As String = RequestTaskTempFolder() & "forge_installer.jar"
+        Dim InstallerAddress As String = RequestTaskTempFolder(True) & "forge_installer.jar"
         Dim VersionFolder As String = $"{McFolder}versions\{NewInstanceName}\"
-        Dim DisplayName As String = $"{LoaderName} {Inherit} - {LoaderVersion}"
         Dim Loaders As New List(Of LoaderBase)
-        Dim LibVersionFolder As String = $"{McFolderSelected}versions\{NewInstanceName}\" '作为 Lib 文件目标的版本文件夹
 
         '获取 Forge 下载信息
         If Info Is Nothing Then
@@ -1112,7 +1097,7 @@ Retry:
                 Task.Progress = 0.8
                 '查找对应版本
                 For Each ForgeVersion In ForgeLoader.Output
-                    If CompareVersion(ForgeVersion.Version.ToString, LoaderVersion) = 0 Then
+                    If McUtils.CompareVersion(ForgeVersion.Version.ToString, LoaderVersion) = 0 Then
                         Info = ForgeVersion
                         Return
                     End If
@@ -1147,6 +1132,7 @@ Retry:
         Loaders.Add(New LoaderDownload($"下载 {LoaderName} 主文件", New List(Of NetFile)) With {.ProgressWeight = 9})
 
         '安装（仅在新版安装时需要原版 Jar）
+        Dim CurrentMcFolder = McFolderSelected
         If IsNeoForge OrElse LoaderVersion.BeforeFirst(".") >= 20 Then
             Logger.Info($"检测为{If(IsNeoForge, " Neo", "新版 ")}Forge：{LoaderVersion}")
             Dim Libs As List(Of McLibEntry) = Nothing
@@ -1162,7 +1148,7 @@ Retry:
                     Dim Json2 As JObject = Installer.GetEntry("version.json").Open().ReadString().DeserializeJson()
                     Json.Merge(Json2)
                     '获取 Lib 下载信息
-                    Libs = McLibListGetWithJson(Json, True)
+                    Libs = McLibListGetWithJson(Json, True, CurrentMcFolder)
                     '添加 Mappings 下载信息
                     If Json("data") IsNot Nothing AndAlso Json("data")("MOJMAPS") IsNot Nothing Then
                         '下载原版 Json 文件
@@ -1170,7 +1156,7 @@ Retry:
                         Dim RawJson As JObject = NetRequestByLoader(DlSourceLauncherOrMetaGet(DlClientListGet(Inherit)), IsJson:=True).DeserializeJson()
                         '[net.minecraft:client:1.17.1-20210706.113038:mappings@txt] 或 @tsrg]
                         Dim OriginalName As String = Json("data")("MOJMAPS")("client").ToString.Trim("[]".ToCharArray()).BeforeFirst("@")
-                        Dim Address = McLibGet(OriginalName).Replace(".jar", "." & Json("data")("MOJMAPS")("client").ToString.Trim("[]".ToCharArray()).Split("@")(1))
+                        Dim Address = Path.ChangeExtension(McLibGet(OriginalName, CustomMcFolder:=CurrentMcFolder), "." & Json("data")("MOJMAPS")("client").ToString.Trim("[]".ToCharArray()).Split("@")(1))
                         Dim ClientMappings As JToken = RawJson("downloads")("client_mappings")
                         Libs.Add(New McLibEntry With {
                                  .IsNatives = False, .LocalPath = Address, .OriginalName = OriginalName,
@@ -1187,7 +1173,7 @@ Retry:
                             Exit For
                         End If
                     Next
-                    Task.Output = McLibNetFilesFromTokens(Libs, McFolderSelected)
+                    Task.Output = McLibNetFilesFromTokens(Libs, CurrentMcFolder)
                 Catch ex As Exception
                     Throw New Exception($"获取{If(IsNeoForge, " Neo", "新版 ")}Forge 支持库列表失败", ex)
                 Finally
@@ -1198,13 +1184,11 @@ Retry:
             Loaders.Add(New LoaderTask(Of List(Of NetFile), Boolean)($"获取 {LoaderName} 支持库文件",
             Sub(Task As LoaderTask(Of List(Of NetFile), Boolean))
 #Region "Forgelike 文件"
-                If IsCustomFolder Then
-                    For Each LibFile As McLibEntry In Libs
-                        Dim RealPath As String = LibFile.LocalPath.Replace(McFolderSelected, McFolder)
-                        If Not FileUtils.Exists(RealPath) Then FileUtils.Copy(LibFile.LocalPath, RealPath)
-                        Logger.Trace($"复制的 {LoaderName} 支持库文件：{LibFile.LocalPath}")
-                    Next
-                End If
+                For Each LibFile As McLibEntry In Libs
+                    Dim RealPath As String = Path.Combine(McFolder, LibFile.LocalPath.Substring(CurrentMcFolder.Length))
+                    If Not FileUtils.Exists(RealPath) Then FileUtils.Copy(LibFile.LocalPath, RealPath)
+                    Logger.Trace($"复制的 {LoaderName} 支持库文件：{LibFile.LocalPath}")
+                Next
 #End Region
 #Region "原版文件"
                 '等待原版文件下载完成
@@ -1218,7 +1202,6 @@ Retry:
                 Loop
                 If Task.IsCanceled Then Return
                 '复制原版文件
-                If Not IsCustomFolder Then Return
                 SyncLock VanillaSyncLock
                     Dim ClientName As String = PathUtils.GetLastPart(ClientFolder)
                     DirectoryUtils.Create(McFolder & "versions\" & Inherit)
@@ -1233,14 +1216,10 @@ Retry:
             End Sub) With {.ProgressWeight = 0.1, .Show = False})
             Loaders.Add(New LoaderTask(Of Boolean, Boolean)(If(IsNeoForge, "安装 NeoForge", "安装 Forge（方式 A）"),
             Sub(Task As LoaderTask(Of Boolean, Boolean))
-                Dim Installer As ZipArchive = Nothing
                 Try
                     Logger.Info($"开始进行 Forgelike 安装：{InstallerAddress}")
                     '记录当前文件夹列表（在新建目标文件夹之前）
                     Dim OldList = DirectoryUtils.EnumerateDirectories(McFolder & "versions\").ToList()
-                    '解压并获取信息
-                    Installer = FileUtils.OpenZip(InstallerAddress)
-                    Dim Json As JObject = Installer.GetEntry("install_profile.json").Open().ReadString().DeserializeJson()
                     '新建目标版本文件夹
                     DirectoryUtils.Create(VersionFolder)
                     Task.Progress = 0.04
@@ -1292,7 +1271,6 @@ Retry:
                 Finally
                     '清理文件
                     Try
-                        Installer?.Dispose()
                         FileUtils.Delete(InstallerAddress)
                     Catch ex As Exception
                         Logger.Warn(ex, $"安装 {LoaderName} 清理文件时出错")
@@ -1487,19 +1465,19 @@ Retry:
     ''' <summary>
     ''' 尝试获取某个 MC 版本对应的 Forge 推荐版本。如果不可用会返回 Nothing。
     ''' </summary>
-    Public Function McDownloadForgeRecommendedGet(McVersion As String) As String
+    Public Function McDownloadForgeRecommendedGet(McVersionName As String) As String
         Try
-            If McVersion Is Nothing Then Return Nothing
+            If McVersionName Is Nothing Then Return Nothing
             Dim List As String = FileUtils.TryReadAsString(PathTemp & "Cache\ForgeRecommendedList.json")
             If String.IsNullOrEmpty(List) Then
                 Logger.Info("没有 Forge 推荐版本缓存文件")
                 Return Nothing
             End If
             Dim Json As JObject = List.DeserializeJson()
-            If Json Is Nothing OrElse (Not If(McVersion, "").Contains(".")) OrElse Not Json.ContainsKey(McVersion) Then Return Nothing
-            Return If(Json(McVersion), "").ToString
+            If Json Is Nothing OrElse (Not If(McVersionName, "").Contains(".")) OrElse Not Json.ContainsKey(McVersionName) Then Return Nothing
+            Return If(Json(McVersionName), "").ToString
         Catch ex As Exception
-            Logger.Error(ex, $"获取 Forge 推荐版本失败（{If(McVersion, "null")}）")
+            Logger.Error(ex, $"获取 Forge 推荐版本失败（{If(McVersionName, "null")}）")
             Return Nothing
         End Try
     End Function
@@ -1640,7 +1618,6 @@ Retry:
     Private Function McDownloadFabricLoader(FabricVersion As String, MinecraftName As String, McFolder As String) As List(Of LoaderBase)
 
         '参数初始化
-        Dim IsCustomFolder As Boolean = McFolder <> McFolderSelected
         Dim Id As String = "fabric-loader-" & FabricVersion & "-" & MinecraftName
         Dim VersionFolder As String = McFolder & "versions\" & Id & "\"
         Dim Loaders As New List(Of LoaderBase)
@@ -1702,82 +1679,436 @@ Retry:
 
 #End Region
 
-#Region "合并安装"
+#Region "安装"
 
     ''' <summary>
     ''' 安装请求。
     ''' </summary>
     Public Class McInstallRequest
-
         ''' <summary>
-        ''' 必填。安装目标版本名称。
+        ''' 新版本安装必填。安装目标版本名称。
         ''' </summary>
         Public NewInstanceName As String
         ''' <summary>
         ''' 必填。安装目标文件夹。
         ''' </summary>
-        Public VersionFolder As String
-
+        Public InstanceFolder As String
         ''' <summary>
-        ''' 必填。欲下载的 Minecraft 的版本名。
+        ''' 必填。欲安装的 Minecraft 与组件版本。
         ''' </summary>
-        Public MinecraftName As String = Nothing
+        Public Components As McComponents
         ''' <summary>
         ''' 可选。欲下载的 Minecraft Json 地址。
         ''' </summary>
         Public MinecraftJson As String = Nothing
-
-        '若要下载 OptiFine，则需要在下面两项中完成至少一项
-        ''' <summary>
-        ''' 欲下载的 OptiFine 版本名。例如 HD_U_F6_pre1。
-        ''' </summary>
-        Public OptiFineVersion As String = Nothing
-        ''' <summary>
-        ''' 欲下载的 OptiFine 详细信息。
-        ''' </summary>
-        Public OptiFineEntry As DlOptiFineListEntry = Nothing
-
-        '若要下载 Forge，则需要在下面两项中完成至少一项
-        ''' <summary>
-        ''' 欲下载的 Forge 版本名。接受例如 36.1.4 / 14.23.5.2859 / 1.19-41.1.0 的输入。
-        ''' </summary>
-        Public ForgeVersion As String = Nothing
         ''' <summary>
         ''' 欲下载的 Forge。
         ''' </summary>
         Public ForgeEntry As DlForgeVersionEntry = Nothing
-
-        '若要下载 NeoForge，则需要在下面两项中完成至少一项
-        ''' <summary>
-        ''' 欲下载的 NeoForge 版本名。
-        ''' </summary>
-        Public NeoForgeVersion As String = Nothing
         ''' <summary>
         ''' 欲下载的 NeoForge。
         ''' </summary>
         Public NeoForgeEntry As DlNeoForgeListEntry = Nothing
-
-        ''' <summary>
-        ''' 欲下载的 Fabric Loader 版本名。
-        ''' </summary>
-        Public FabricVersion As String = Nothing
-
         ''' <summary>
         ''' 欲下载的 Fabric API 信息。
         ''' </summary>
         Public FabricApi As ResourceVersion = Nothing
-
         ''' <summary>
         ''' 欲下载的 OptiFabric 信息。
         ''' </summary>
         Public OptiFabric As ResourceVersion = Nothing
-
         ''' <summary>
         ''' 欲下载的 LiteLoader 详细信息。
         ''' </summary>
         Public LiteLoaderEntry As DlLiteLoaderListEntry = Nothing
-
+        ''' <summary>
+        ''' 是否为中间产物。
+        ''' </summary>
+        Public IsIntermediateOutput As Boolean = False
     End Class
+
+    ''' <summary>
+    ''' 获取合并安装加载器列表。
+    ''' </summary>
+    Public Function McInstallLoadersGet(Request As McInstallRequest) As List(Of LoaderBase)
+        '获取缓存目录（安装 Mod 加载器的文件夹不能包含空格）
+        Dim TempMcFolder As String = RequestTaskTempFolder(Request.Components.OptiFineEntry IsNot Nothing OrElse
+            Request.Components.ModLoaderVersions.ContainsKey(ModLoaders.Forge) OrElse Request.Components.ModLoaderVersions.ContainsKey(ModLoaders.NeoForge))
+
+        '获取各个 Mod 加载器的缓存文件夹
+        Dim OptiFineEntry = Request.Components.OptiFineEntry?.ToObject(Of DlOptiFineListEntry)()
+        Dim OptiFineFolder = If(OptiFineEntry Is Nothing, Nothing, $"{TempMcFolder}versions\{OptiFineEntry.InstanceName}")
+        Dim ForgeVersion = If(Request.Components.ModLoaderVersions.ContainsKey(ModLoaders.Forge), Request.Components.ModLoaderVersions(ModLoaders.Forge), Nothing)
+        Dim ForgeFolder = If(ForgeVersion Is Nothing, Nothing, $"{TempMcFolder}versions\forge-{ForgeVersion}")
+        Dim NeoForgeVersion = If(Request.Components.ModLoaderVersions.ContainsKey(ModLoaders.NeoForge), Request.Components.ModLoaderVersions(ModLoaders.NeoForge), Nothing)
+        Dim NeoForgeFolder = If(NeoForgeVersion Is Nothing, Nothing, $"{TempMcFolder}versions\neoforge-{NeoForgeVersion}")
+        Dim LiteLoaderVersion = If(Request.Components.ModLoaderVersions.ContainsKey(ModLoaders.LiteLoader), Request.Components.ModLoaderVersions(ModLoaders.LiteLoader), Nothing)
+        Dim LiteLoaderFolder = If(LiteLoaderVersion Is Nothing, Nothing, $"{TempMcFolder}versions\{Request.Components.MinecraftVersion}-LiteLoader")
+        Dim FabricVersion = If(Request.Components.ModLoaderVersions.ContainsKey(ModLoaders.Fabric), Request.Components.ModLoaderVersions(ModLoaders.Fabric), Nothing)
+        Dim FabricFolder = If(FabricVersion Is Nothing, Nothing, $"{TempMcFolder}versions\fabric-loader-{FabricVersion}-{Request.Components.MinecraftVersion}")
+
+        '判断 OptiFine 是否作为 Mod 进行下载
+        Dim Modable = Request.Components.ModLoaderVersions.Any
+        Dim ModsTempFolder As String = $"{TempMcFolder}mods\"
+        Dim OptiFineAsMod = OptiFineEntry IsNot Nothing AndAlso Modable '选择了 OptiFine 与任意 Mod 加载器
+        If OptiFineAsMod Then
+            Logger.Info("OptiFine 将作为 Mod 进行下载")
+            If LiteLoaderVersion IsNot Nothing Then
+                OptiFineFolder = $"{ModsTempFolder}{Request.Components.MinecraftVersion}\" '#8147
+            Else
+                OptiFineFolder = ModsTempFolder
+            End If
+        End If
+
+        '记录日志
+        If OptiFineFolder IsNot Nothing Then Logger.Info($"OptiFine 缓存：{OptiFineFolder}")
+        If ForgeFolder IsNot Nothing Then Logger.Info($"Forge 缓存：{ForgeFolder}")
+        If NeoForgeFolder IsNot Nothing Then Logger.Info($"NeoForge 缓存：{NeoForgeFolder}")
+        If FabricFolder IsNot Nothing Then Logger.Info($"Fabric 缓存：{FabricFolder}")
+        If LiteLoaderFolder IsNot Nothing Then Logger.Info($"LiteLoader 缓存：{LiteLoaderFolder}")
+        Logger.Info($"对应的原版版本：{Request.Components.MinecraftVersion}")
+
+        '重复版本检查
+        Dim VersionFolder As String = PathUtils.AddSlashSuffix(Request.InstanceFolder)
+        If FileUtils.Exists($"{VersionFolder}{Request.NewInstanceName}.json") Then
+            Hint("版本 " & Request.NewInstanceName & " 已经存在！", HintType.Red)
+            Throw New OperationCanceledException
+        End If
+
+        Dim LoaderList As New List(Of LoaderBase)
+        Dim ManagedFileSources As New Dictionary(Of String, String)
+        '添加忽略标识
+        LoaderList.Add(New LoaderTask(Of Integer, Integer)("添加忽略标识", Sub() FileUtils.Write(VersionFolder & ".pclignore", "用于临时地在 PCL 的版本列表中屏蔽此版本。")) With {.Show = False})
+        'Fabric API
+        If Request.Components.FabricApiVersion IsNot Nothing Then
+            Dim DownloadFile = Request.FabricApi.ToNetFile(ModsTempFolder, ResourceVersion.DownloadReason.Dependency, Request.Components.MinecraftVersion, ModLoaders.Fabric)
+            ManagedFileSources.Add("FabricApi", DownloadFile.LocalPath)
+            LoaderList.Add(New LoaderDownload("下载 Fabric API", New List(Of NetFile) From {DownloadFile}) With {
+                .ProgressWeight = 3, .Show = True, .Block = False})
+        End If
+        'OptiFabric
+        If Request.Components.OptiFabricVersion IsNot Nothing Then
+            Dim DownloadFile = Request.OptiFabric.ToNetFile(ModsTempFolder, ResourceVersion.DownloadReason.Dependency, Request.Components.MinecraftVersion, ModLoaders.Fabric)
+            ManagedFileSources.Add("OptiFabric", DownloadFile.LocalPath)
+            LoaderList.Add(New LoaderDownload("下载 OptiFabric", New List(Of NetFile) From {DownloadFile}) With {
+                .ProgressWeight = 3, .Show = True, .Block = False})
+        End If
+        '原版
+        Dim ClientLoader = New LoaderCombo(Of String)("下载原版 " & Request.Components.MinecraftVersion,
+            McDownloadClientLoader(Request.Components.MinecraftVersion, Request.MinecraftJson, VersionFolder)) With {
+            .ProgressWeight = 39, .Show = False, .Block = Not Modable AndAlso OptiFineEntry Is Nothing}
+        LoaderList.Add(ClientLoader)
+        'OptiFine
+        If OptiFineEntry IsNot Nothing Then
+            If OptiFineAsMod Then ManagedFileSources.Add("OptiFine", OptiFineFolder & OptiFineEntry.FileName)
+            LoaderList.Add(New LoaderCombo(Of String)("下载 OptiFine " & OptiFineEntry.DisplayName,
+                If(OptiFineAsMod,
+                    McDownloadOptiFineSaveLoader(OptiFineEntry, OptiFineFolder & OptiFineEntry.FileName),
+                    McDownloadOptiFineLoader(OptiFineEntry, TempMcFolder, ClientLoader, VersionFolder))) With {
+                .ProgressWeight = If(Modable, 16, 24), .Show = False, .Block = Not Modable})
+        End If
+        'Forge
+        If ForgeVersion IsNot Nothing Then
+            LoaderList.Add(New LoaderCombo(Of String)("下载 Forge " & ForgeVersion,
+                McDownloadForgelikeLoader(False, ForgeVersion, "forge-" & ForgeVersion, Request.Components.MinecraftVersion, Request.ForgeEntry, TempMcFolder, ClientLoader, VersionFolder)) With {
+                    .ProgressWeight = 25, .Show = False, .Block = FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing AndAlso Request.NeoForgeEntry Is Nothing})
+        End If
+        'NeoForge
+        If NeoForgeVersion IsNot Nothing Then
+            LoaderList.Add(New LoaderCombo(Of String)("下载 NeoForge " & NeoForgeVersion,
+                McDownloadForgelikeLoader(True, NeoForgeVersion, "neoforge-" & NeoForgeVersion, Request.Components.MinecraftVersion, Request.NeoForgeEntry, TempMcFolder, ClientLoader, VersionFolder)) With {
+                .ProgressWeight = 25, .Show = False, .Block = Request.ForgeEntry Is Nothing AndAlso FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing})
+        End If
+        'LiteLoader
+        If LiteLoaderVersion IsNot Nothing Then
+            LoaderList.Add(New LoaderCombo(Of String)("下载 LiteLoader " & Request.Components.MinecraftVersion,
+                McDownloadLiteLoaderLoader(Request.LiteLoaderEntry, TempMcFolder)) With {
+                    .ProgressWeight = 1, .Show = False, .Block = FabricVersion Is Nothing})
+        End If
+        'Fabric
+        If FabricVersion IsNot Nothing Then
+            LoaderList.Add(New LoaderCombo(Of String)("下载 Fabric " & FabricVersion,
+                McDownloadFabricLoader(FabricVersion, Request.Components.MinecraftVersion, TempMcFolder)) With {
+                .ProgressWeight = 2, .Show = False, .Block = True})
+        End If
+        '合并安装
+        Dim MinecraftFolder = McFolderSelected
+        Dim TargetFolder As String = Nothing
+        LoaderList.Add(New LoaderTask(Of String, String)("安装游戏",
+        Sub(Task As LoaderTask(Of String, String))
+            '合并 JSON：将多个版本 JSON 进行合并，如果已存在则直接覆盖
+            MergeJson(VersionFolder, OptiFineFolder, OptiFineAsMod, ForgeFolder, NeoForgeFolder, FabricFolder, LiteLoaderFolder)
+            Task.Progress = 0.2
+            '迁移文件
+            DirectoryUtils.Copy(TempMcFolder & "libraries", MinecraftFolder & "libraries")
+            Task.Progress = 0.8
+            '创建 Mod 和资源包文件夹
+            TargetFolder = If(Request.IsIntermediateOutput, VersionFolder, New McInstance(VersionFolder).PathIndie) '版本隔离信息在此时被决定
+            Dim ModsFolder = TargetFolder & "mods\"
+            If DirectoryUtils.Exists(ModsTempFolder) Then
+                DirectoryUtils.Copy(ModsTempFolder, ModsFolder)
+            ElseIf Modable Then
+                DirectoryUtils.Create(ModsFolder)
+                Logger.Info($"自动创建 Mod 文件夹：{ModsFolder}")
+            End If
+            Dim ResourcepacksFolder = TargetFolder & "resourcepacks\"
+            DirectoryUtils.Create(ResourcepacksFolder)
+            Logger.Info($"自动创建资源包文件夹：{ResourcepacksFolder}")
+        End Sub) With {.ProgressWeight = 2, .Block = True})
+        '补全文件
+        Dim LoadersLib As New List(Of LoaderBase)
+        LoadersLib.Add(New LoaderTask(Of String, List(Of NetFile))("分析游戏支持库文件（副加载器）", Sub(Task) Task.Output = McLibNetFilesFromInstance(New McInstance(VersionFolder))) With {.ProgressWeight = 1, .Show = False})
+        LoadersLib.Add(New LoaderDownload("下载游戏支持库文件（副加载器）", New List(Of NetFile)) With {.ProgressWeight = 7, .Show = False})
+        LoaderList.Add(New LoaderCombo(Of String)("下载游戏支持库文件", LoadersLib) With {.ProgressWeight = 8})
+        '记录安装清单
+        LoaderList.Add(New LoaderTask(Of Integer, Integer)("记录安装清单",
+        Sub()
+            Dim ManagedFiles As New List(Of McInstallManifest.ManagedFile)
+            '记录由 PCL 管理的 Mod 信息
+            For Each Entry In ManagedFileSources
+                Dim RelativePath = Entry.Value.Substring(ModsTempFolder.Length)
+                Dim FullPath = PathUtils.ForCompare(Path.Combine(TargetFolder, "mods", RelativePath))
+                ManagedFiles.Add(New McInstallManifest.ManagedFile("mods/" & RelativePath.Replace("\", "/").ToLowerInvariant(),
+                    CryptographyUtils.ComputeFileHash(FullPath, CryptographyUtils.HashMethod.Sha1), FileUtils.GetInfo(FullPath).LastWriteTimeUtc, Entry.Key))
+            Next
+            '处理加载器版本信息
+            Dim TempLoaderVersions As New Dictionary(Of ModLoaders, String)(Request.Components.ModLoaderVersions)
+            If ForgeVersion IsNot Nothing AndAlso ForgeVersion.StartsWithF("1.") AndAlso ForgeVersion.Contains("-") Then
+                TempLoaderVersions(ModLoaders.Forge) = ForgeVersion.AfterLast("-")
+            End If
+            If NeoForgeVersion IsNot Nothing AndAlso NeoForgeVersion.StartsWithF("1.20.1-") Then
+                TempLoaderVersions(ModLoaders.NeoForge) = NeoForgeVersion.Replace("1.20.1-", "")
+            End If
+            '存储 Manifest
+            Dim Target = New McComponents(Request.Components.MinecraftVersion, TempLoaderVersions,
+                Request.Components.OptiFineEntry, Request.Components.FabricApiVersion, Request.Components.OptiFabricVersion)
+            Dim InstanceConfig = New McInstance(VersionFolder).Config
+            Configs.McInstallManifest.Set(New McInstallManifest(Versions.McInstallManifestVersion, Target, Date.UtcNow, ManagedFiles), InstanceConfig)
+            InstanceConfig.Save()
+        End Sub) With {.Show = False})
+        '删除忽略标识
+        If Not Request.IsIntermediateOutput Then
+            LoaderList.Add(New LoaderTask(Of Integer, Integer)("删除忽略标识", Sub() FileUtils.Delete(VersionFolder & ".pclignore")) With {.Show = False})
+        End If
+        '总加载器
+        Return LoaderList
+    End Function
+    Private Sub MergeJson(VersionFolder As String, OptiFineFolder As String, OptiFineAsMod As Boolean,
+                          ForgeFolder As String, NeoForgeFolder As String, FabricFolder As String, LiteLoaderFolder As String)
+        Dim ProfileSources As New List(Of (Name As String, Folder As String)) From {("Minecraft", VersionFolder)}
+        If OptiFineFolder IsNot Nothing AndAlso Not OptiFineAsMod Then ProfileSources.Add(("OptiFine", OptiFineFolder))
+        If ForgeFolder IsNot Nothing Then ProfileSources.Add(("Forge", ForgeFolder))
+        If NeoForgeFolder IsNot Nothing Then ProfileSources.Add(("NeoForge", NeoForgeFolder))
+        If LiteLoaderFolder IsNot Nothing Then ProfileSources.Add(("LiteLoader", LiteLoaderFolder))
+        If FabricFolder IsNot Nothing Then ProfileSources.Add(("Fabric", FabricFolder))
+        Logger.Info($"开始进行版本合并，输出：{VersionFolder}，" & String.Join("，", ProfileSources.Select(Function(Source) $"{Source.Name}：{Source.Folder}")))
+        '读取文件并检查文件是否合规
+        Dim LoadedProfiles As New List(Of (Name As String, Json As JObject))
+        For Each Source In ProfileSources
+            Dim ProfilePath = Path.Combine(Source.Folder, PathUtils.GetLastPart(Source.Folder) & ".json")
+            Dim ProfileText = If(FileUtils.TryReadAsString(ProfilePath), "")
+            If Not ProfileText.StartsWithF("{") Then Throw New Exception($"{Source.Name} json 有误，地址：{ProfilePath}，前段内容：{ProfileText.Substring(0, Math.Min(ProfileText.Length, 1000))}")
+            LoadedProfiles.Add((Source.Name, ProfileText.DeserializeJson(Of JObject)()))
+        Next
+        '先获取 minecraftArguments，避免合并时原版参数被覆盖
+        Dim AllArguments = LoadedProfiles.Select(Function(Profile) If(Profile.Json("minecraftArguments")?.ToString(), " ")).Join(" ")
+        '合并（相关讨论见 #2801）
+        Dim MergedJson = LoadedProfiles(0).Json 'Minecraft 原版 JSON
+        For Each Loaded In LoadedProfiles.Skip(1)
+            Loaded.Json.Remove("releaseTime")
+            Loaded.Json.Remove("time")
+            MergedJson.Merge(Loaded.Json)
+        Next
+        '填入 minecraftArguments
+        Dim SplitArguments As New List(Of String)
+        For Each Argument In AllArguments.Split(" ", True).Select(Function(Value) Value.Trim())
+            If Not Argument.StartsWithF("-") AndAlso SplitArguments.Any Then
+                Dim LastArgument = SplitArguments.Last
+                If LastArgument.StartsWithF("-") AndAlso Not LastArgument.Contains(" ") Then
+                    SplitArguments(SplitArguments.Count - 1) = LastArgument & " " & Argument
+                    Continue For
+                End If
+            End If
+            SplitArguments.Add(Argument)
+        Next
+        If SplitArguments.Any() Then MergedJson("minecraftArguments") = SplitArguments.Distinct().Join(" ")
+        '修改
+        MergedJson.Remove("_comment_")
+        MergedJson.Remove("inheritsFrom")
+        MergedJson.Remove("jar")
+        Dim VersionName = PathUtils.GetLastPart(VersionFolder)
+        MergedJson("id") = VersionName
+        '保存
+        FileUtils.Write(Path.Combine(VersionFolder, VersionName & ".json"), MergedJson.ToString())
+        Logger.Info($"版本合并 {VersionName} 完成")
+    End Sub
+    ''' <summary>
+    ''' 进行合并安装。返回是否已经开始安装。
+    ''' </summary>
+    Public Function McInstallStart(Request As McInstallRequest) As Boolean
+        Try
+            Dim Loader As New LoaderCombo(Of String)(Request.NewInstanceName & " 安装", McInstallLoadersGet(Request)) With {.OnStateChanged = AddressOf McInstallState}
+            '启动
+            Loader.Start(Request.InstanceFolder)
+            LoaderTaskbarAdd(Loader)
+            FrmMain.BtnExtraDownload.ShowRefresh()
+            FrmMain.BtnExtraDownload.Ribble()
+            Return True
+        Catch ex As Exception
+            Logger.Error(ex, "开始合并安装失败")
+            Return False
+        End Try
+    End Function
+    ''' <summary>
+    ''' 进行修改安装。返回是否已经开始安装。
+    ''' </summary>
+    Public Function McModificationStart(Request As McInstallRequest, Instance As McInstance) As Boolean
+        Try
+            '检查版本目录下的 Natives，防止修改正在运行的游戏
+            Dim TargetFolder = Instance.PathIndie
+            Dim SubLoaders As New List(Of LoaderBase)
+            SubLoaders.Add(New LoaderTask(Of Integer, Integer)("检查 Natives 文件占用",
+            Sub()
+                For Each File In DirectoryUtils.EnumerateFiles(GetNativesFolder(Instance), includeSubDirectories:=True, searchPattern:="*.dll")
+                    If Not FileUtils.IsAvailable(File) Then Throw New Exception($"Natives 文件正在被占用，请关闭游戏后再次尝试：{File}")
+                Next
+            End Sub) With {.Show = False})
+            '安装修改后的 MC 版本
+            Dim BuildFolder = RequestTaskTempFolder() & Instance.Name & "\"
+            Dim BuildRequest As New McInstallRequest With {
+                .NewInstanceName = Instance.Name,
+                .InstanceFolder = BuildFolder,
+                .Components = Request.Components,
+                .MinecraftJson = Request.MinecraftJson,
+                .ForgeEntry = Request.ForgeEntry,
+                .NeoForgeEntry = Request.NeoForgeEntry,
+                .FabricApi = Request.FabricApi,
+                .OptiFabric = Request.OptiFabric,
+                .LiteLoaderEntry = Request.LiteLoaderEntry,
+                .IsIntermediateOutput = True
+            }
+            SubLoaders.AddRange(McInstallLoadersGet(BuildRequest))
+            '版本合并
+            Dim RenameFailed As Boolean = False
+            SubLoaders.Add(New LoaderTask(Of Integer, Integer)("修改版本",
+            Sub(Task)
+                'TODO: 提交前显示文件修改列表（大量文件按“XXX 文件夹下 XXX 项”汇总），可以询问玩家是否覆盖原版本或作为新版本安装（不覆盖）？
+                McInstallCommit(Instance, Configs.McInstallManifest.Get(New McInstance(BuildFolder).Config), BuildFolder, TargetFolder)
+                '重命名和引用交接
+                Dim NewInstance As McInstance = Nothing
+                If Request.NewInstanceName Is Nothing Then
+                    NewInstance = New McInstance(Instance.PathVersion).Load()
+                Else
+                    Try
+                        NewInstance = Instance.Rename(Request.NewInstanceName)
+                    Catch ex As Exception
+                        RenameFailed = True
+                        Logger.Warn(ex, $"版本修改成功，但重命名为 {Request.NewInstanceName} 失败：{ex.GetDisplay(False)}", LogBehavior.None)
+                        NewInstance = New McInstance(Instance.PathVersion).Load()
+                    End Try
+                End If
+                If NewInstance Is Nothing Then NewInstance = New McInstance(Instance.PathVersion).Load()
+                RunInUiWait(
+                Sub()
+                    WriteIni(McFolderSelected & "PCL.ini", "InstanceCache", "")
+                    '未切换则选中修改后的版本
+                    If PageInstanceLeft.Instance IsNot Nothing AndAlso
+                       PathUtils.IsSame(PageInstanceLeft.Instance.PathVersion, Instance.PathVersion) Then
+                        PageInstanceLeft.Instance = NewInstance
+                    End If
+                    If McInstanceSelected IsNot Nothing AndAlso
+                       PathUtils.IsSame(McInstanceSelected.PathVersion, Instance.PathVersion) Then
+                        McInstanceSelected = NewInstance
+                    End If
+                End Sub)
+            End Sub) With {.ProgressWeight = 1, .Block = True})
+            '实际修改任务
+            Dim Loader As New LoaderCombo(Of String)(Instance.Name & " 修改", SubLoaders) With {.OnStateChanged =
+            Sub(CurrentLoader)
+                '流程收尾
+                Select Case CurrentLoader.State
+                    Case LoadState.Finished
+                        If Not RenameFailed Then
+                            Hint(CurrentLoader.Name & "成功！", HintType.Green)
+                        Else
+                            Hint(CurrentLoader.Name & "成功，但重命名失败！", HintType.Green)
+                        End If
+                    Case LoadState.Failed
+                        MyMsgBox(CurrentLoader.Error.GetDisplay(True), CurrentLoader.Name & "失败", IsWarn:=True)
+                    Case LoadState.Canceled
+                        Hint(CurrentLoader.Name & "已取消！", HintType.Blue)
+                End Select
+            End Sub}
+            Dim Worker As New RedoableWorker(Sub() Loader.WaitForExit(Instance.PathVersion))
+            '启动
+            If McInstanceLock.TryAcquire(Worker, Instance.PathVersion) Then
+                AddHandler Worker.Stopped, Sub() RunInUi(Sub() LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\"))
+                Worker.Start()
+                '加锁后刷新版本列表，隐藏正在修改的实例。
+                LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+            Else
+                Logger.Error("版本被其他 Worker 占用，版本修改失败")
+                Return False
+            End If
+            LoaderTaskbarAdd(Loader)
+            FrmMain.BtnExtraDownload.ShowRefresh()
+            FrmMain.BtnExtraDownload.Ribble()
+            Return True
+        Catch ex As Exception
+            LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
+            Logger.Error(ex, "开始修改版本失败", LogBehavior.Toast)
+            Return False
+        End Try
+    End Function
+
+    ''' <summary>
+    ''' 将安装好的临时版本文件夹覆盖到一个现有文件夹中。
+    ''' </summary>
+    Public Sub McInstallCommit(Instance As McInstance, NewManifest As McInstallManifest, BuildFolder As String, TargetFolder As String)
+        Dim OldFiles = If(Configs.McInstallManifest.Get(Instance.Config)?.ManagedFiles, {})
+        Dim NewFiles = NewManifest.ManagedFiles
+
+        '============== 整理变更的文件列表 ==============
+
+        Dim FilesToDelete As New List(Of String)
+        Dim FilesToMove As New List(Of (Source As String, Target As String))
+        'ManagedFiles
+        '新版里有：添加或覆盖新版文件
+        For Each NewFile In NewFiles
+            FilesToMove.Add((Path.Combine(BuildFolder, NewFile.RelativePath), Path.Combine(TargetFolder, NewFile.RelativePath)))
+        Next
+        '新版里没有，老版里有：删除本地文件到回收站
+        Dim NewFilePaths As New HashSet(Of String)(NewFiles.Select(Function(File) File.RelativePath))
+        For Each OldFile In OldFiles
+            If NewFilePaths.Contains(OldFile.RelativePath) Then Continue For
+            FilesToDelete.Add(PathUtils.ForCompare(Path.Combine(TargetFolder, OldFile.RelativePath)))
+        Next
+        '老版本 MC 的 assets 文件
+        If DirectoryUtils.Exists(BuildFolder & "resources\") Then DirectoryUtils.Copy(BuildFolder & "resources\", TargetFolder & "resources\")
+        'json 与 jar
+        Dim OldJsonPath As String = Instance.GetJsonPath()
+        FilesToDelete.Add(OldJsonPath)
+        FilesToDelete.Add(Path.ChangeExtension(OldJsonPath, ".jar"))
+        FilesToDelete.Add(Instance.PathVersion & Instance.Name & ".jar")
+        FilesToDelete = FilesToDelete.Distinct(StringComparer.OrdinalIgnoreCase).ToList()
+
+        '============== 实际修改 ==============
+
+        Instance.Config.Save()
+        For Each TargetPath In FilesToDelete
+            FileUtils.Delete(TargetPath, True)
+        Next
+        FileUtils.Move(BuildFolder & Instance.Name & ".jar", Instance.PathVersion & Instance.Name & ".jar")
+        FileUtils.Move(BuildFolder & Instance.Name & ".json", OldJsonPath)
+        For Each File In FilesToMove
+            DirectoryUtils.Create(PathUtils.RemoveLastPart(File.Target))
+            FileUtils.Copy(File.Source, File.Target)
+        Next
+        Dim ManagedFiles = NewFiles.Select(Function(File) New McInstallManifest.ManagedFile(File.RelativePath, File.Sha1,
+            FileUtils.GetInfo(Path.Combine(TargetFolder, File.RelativePath)).LastWriteTimeUtc, File.Component)).ToList()
+        Configs.McInstallManifest.Set(New McInstallManifest(NewManifest.SchemaVersion, NewManifest.Components, NewManifest.LastModifiedUtc, ManagedFiles), Instance.Config)
+        Instance.Config.Save()
+    End Sub
 
     ''' <summary>
     ''' 在加载器状态改变后显示一条提示。
@@ -1813,345 +2144,22 @@ Retry:
         LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
     End Sub
     Public Sub McInstallFailedClearFolder(Loader)
-        Try
-            If Loader.State <> LoadState.Failed AndAlso Loader.State <> LoadState.Canceled Then Return
-            Thread.Sleep(1000) '防止存在尚未完全释放的文件，导致清理失败（例如整合包安装）
-            '删除版本文件夹
-            If DirectoryUtils.Exists(Loader.Input & "saves\") OrElse DirectoryUtils.Exists(Loader.Input & "versions\") Then
-                Logger.Warn($"由于版本已被独立启动，不清理版本文件夹：{Loader.Input}")
-            Else
-                Logger.Warn($"由于下载失败或取消，清理版本文件夹：{Loader.Input}")
-                DirectoryUtils.Delete(Loader.Input)
-            End If
-        Catch ex As Exception
-            Logger.Warn(ex, "下载失败或取消后清理版本文件夹失败")
-        End Try
-    End Sub
-
-    ''' <summary>
-    ''' 进行合并安装。返回是否已经开始安装（例如如果没有安装 Java 则会进行提示并返回 False）
-    ''' </summary>
-    Public Function McInstall(Request As McInstallRequest) As Boolean
-        Try
-            Dim SubLoaders = McInstallLoader(Request)
-            If SubLoaders Is Nothing Then Return False
-            Dim Loader As New LoaderCombo(Of String)(Request.NewInstanceName & " 安装", SubLoaders) With {.OnStateChanged = AddressOf McInstallState}
-
-            '启动
-            Loader.Start(Request.VersionFolder)
-            LoaderTaskbarAdd(Loader)
-            FrmMain.BtnExtraDownload.ShowRefresh()
-            FrmMain.BtnExtraDownload.Ribble()
-            Return True
-
-        Catch ex As Exception
-            Logger.Error(ex, "开始合并安装失败")
-            Return False
-        End Try
-    End Function
-    ''' <summary>
-    ''' 获取合并安装加载器列表，并进行前期的缓存清理与 Java 检查工作。
-    ''' </summary>
-    Public Function McInstallLoader(Request As McInstallRequest) As List(Of LoaderBase)
-        '获取缓存目录（安装 Mod 加载器的文件夹不能包含空格）
-        Dim TempMcFolder As String = RequestTaskTempFolder(Request.OptiFineEntry IsNot Nothing OrElse Request.ForgeEntry IsNot Nothing OrElse Request.NeoForgeEntry IsNot Nothing)
-
-        '获取参数
-        Dim VersionFolder As String = McFolderSelected & "versions\" & Request.NewInstanceName & "\"
-        If DirectoryUtils.Exists(TempMcFolder) Then DirectoryUtils.Delete(TempMcFolder)
-        Dim OptiFineFolder As String = Nothing
-        If Request.OptiFineVersion IsNot Nothing Then
-            If Request.OptiFineVersion.Contains("_HD_U_") Then Request.OptiFineVersion = "HD_U_" & Request.OptiFineVersion.AfterLast("_HD_U_") '#735
-            Request.OptiFineEntry = New DlOptiFineListEntry With {
-                .DisplayName = Request.MinecraftName & " " & Request.OptiFineVersion.Replace("HD_U_", "").Replace("_", "").Replace("pre", " pre"),
-                .Inherit = Request.MinecraftName,
-                .IsPreview = Request.OptiFineVersion.ContainsIgnoreCase("pre"),
-                .InstanceName = Request.MinecraftName & "-OptiFine_" & Request.OptiFineVersion,
-                .FileName = If(Request.OptiFineVersion.ContainsIgnoreCase("pre"), "preview_", "") &
-                    "OptiFine_" & Request.MinecraftName & "_" & Request.OptiFineVersion & ".jar"
-            }
-        End If
-        If Request.OptiFineEntry IsNot Nothing Then OptiFineFolder = TempMcFolder & "versions\" & Request.OptiFineEntry.InstanceName
-        Dim ForgeFolder As String = Nothing
-        If Request.ForgeEntry IsNot Nothing Then Request.ForgeVersion = If(Request.ForgeVersion, Request.ForgeEntry.VersionName)
-        If Request.ForgeVersion IsNot Nothing Then ForgeFolder = TempMcFolder & "versions\forge-" & Request.ForgeVersion
-        Dim NeoForgeFolder As String = Nothing
-        If Request.NeoForgeEntry IsNot Nothing Then Request.NeoForgeVersion = If(Request.NeoForgeVersion, Request.NeoForgeEntry.VersionName)
-        If Request.NeoForgeVersion IsNot Nothing Then NeoForgeFolder = TempMcFolder & "versions\neoforge-" & Request.NeoForgeVersion
-        Dim FabricFolder As String = Nothing
-        If Request.FabricVersion IsNot Nothing Then FabricFolder = TempMcFolder & "versions\fabric-loader-" & Request.FabricVersion & "-" & Request.MinecraftName
-        Dim LiteLoaderFolder As String = Nothing
-        If Request.LiteLoaderEntry IsNot Nothing Then LiteLoaderFolder = TempMcFolder & "versions\" & Request.MinecraftName & "-LiteLoader"
-
-        '判断 OptiFine 是否作为 Mod 进行下载
-        Dim Modable As Boolean = Request.FabricVersion IsNot Nothing OrElse Request.ForgeEntry IsNot Nothing OrElse Request.NeoForgeEntry IsNot Nothing OrElse Request.LiteLoaderEntry IsNot Nothing
-        Dim ModsTempFolder As String = TempMcFolder & "mods\"
-        Dim OptiFineAsMod As Boolean = Request.OptiFineEntry IsNot Nothing AndAlso Modable '选择了 OptiFine 与任意 Mod 加载器
-        If OptiFineAsMod Then
-            Logger.Info("OptiFine 将作为 Mod 进行下载")
-            If Request.LiteLoaderEntry IsNot Nothing Then
-                OptiFineFolder = ModsTempFolder & Request.MinecraftName & "\" '#8147
-            Else
-                OptiFineFolder = ModsTempFolder
-            End If
-        End If
-
-        '记录日志
-        If OptiFineFolder IsNot Nothing Then Logger.Info($"OptiFine 缓存：{OptiFineFolder}")
-        If ForgeFolder IsNot Nothing Then Logger.Info($"Forge 缓存：{ForgeFolder}")
-        If NeoForgeFolder IsNot Nothing Then Logger.Info($"NeoForge 缓存：{NeoForgeFolder}")
-        If FabricFolder IsNot Nothing Then Logger.Info($"Fabric 缓存：{FabricFolder}")
-        If LiteLoaderFolder IsNot Nothing Then Logger.Info($"LiteLoader 缓存：{LiteLoaderFolder}")
-        Logger.Info($"对应的原版版本：{Request.MinecraftName}")
-
-        '重复版本检查
-        If FileUtils.Exists($"{VersionFolder}{Request.NewInstanceName}.json") Then
-            Hint("版本 " & Request.NewInstanceName & " 已经存在！", HintType.Red)
-            Throw New OperationCanceledException
-        End If
-
-        Dim LoaderList As New List(Of LoaderBase)
-        '添加忽略标识
-        LoaderList.Add(New LoaderTask(Of Integer, Integer)("添加忽略标识", Sub() FileUtils.Write(VersionFolder & ".pclignore", "用于临时地在 PCL 的版本列表中屏蔽此版本。")) With {.Show = False, .Block = False})
-        'Fabric API
-        If Request.FabricApi IsNot Nothing Then
-            LoaderList.Add(New LoaderDownload("下载 Fabric API", New List(Of NetFile) From {Request.FabricApi.ToNetFile(ModsTempFolder, ResourceVersion.DownloadReason.Dependency, Request.MinecraftName, ModLoaders.Fabric)}) With {.ProgressWeight = 3, .Block = False})
-        End If
-        'OptiFabric
-        If Request.OptiFabric IsNot Nothing Then
-            LoaderList.Add(New LoaderDownload("下载 OptiFabric", New List(Of NetFile) From {Request.OptiFabric.ToNetFile(ModsTempFolder, ResourceVersion.DownloadReason.Dependency, Request.MinecraftName, ModLoaders.Fabric)}) With {.ProgressWeight = 3, .Block = False})
-        End If
-        '原版
-        Dim ClientLoader = New LoaderCombo(Of String)("下载原版 " & Request.MinecraftName, McDownloadClientLoader(Request.MinecraftName, Request.MinecraftJson, Request.NewInstanceName)) With {.Show = False, .ProgressWeight = 39,
-            .Block = Request.ForgeVersion Is Nothing AndAlso Request.NeoForgeVersion Is Nothing AndAlso Request.OptiFineEntry Is Nothing AndAlso Request.FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing}
-        LoaderList.Add(ClientLoader)
-        'OptiFine
-        If Request.OptiFineEntry IsNot Nothing Then
-            If OptiFineAsMod Then
-                LoaderList.Add(New LoaderCombo(Of String)("下载 OptiFine " & Request.OptiFineEntry.DisplayName, McDownloadOptiFineSaveLoader(Request.OptiFineEntry, OptiFineFolder & Request.OptiFineEntry.FileName)) With {.Show = False, .ProgressWeight = 16,
-                    .Block = Request.ForgeVersion Is Nothing AndAlso Request.NeoForgeVersion Is Nothing AndAlso Request.FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing})
-            Else
-                LoaderList.Add(New LoaderCombo(Of String)("下载 OptiFine " & Request.OptiFineEntry.DisplayName, McDownloadOptiFineLoader(Request.OptiFineEntry, TempMcFolder, ClientLoader, Request.VersionFolder)) With {.Show = False, .ProgressWeight = 24,
-                    .Block = Request.ForgeVersion Is Nothing AndAlso Request.NeoForgeVersion Is Nothing AndAlso Request.FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing})
-            End If
-        End If
-        'Forge
-        If Request.ForgeVersion IsNot Nothing Then
-            LoaderList.Add(New LoaderCombo(Of String)("下载 Forge " & Request.ForgeVersion, McDownloadForgelikeLoader(False, Request.ForgeVersion, "forge-" & Request.ForgeVersion, Request.MinecraftName, Request.ForgeEntry, TempMcFolder, ClientLoader, Request.VersionFolder)) With {.Show = False, .ProgressWeight = 25,
-                .Block = Request.FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing AndAlso Request.NeoForgeEntry Is Nothing})
-        End If
-        'NeoForge
-        If Request.NeoForgeVersion IsNot Nothing Then
-            LoaderList.Add(New LoaderCombo(Of String)("下载 NeoForge " & Request.NeoForgeVersion, McDownloadForgelikeLoader(True, Request.NeoForgeVersion, "neoforge-" & Request.NeoForgeVersion, Request.MinecraftName, Request.NeoForgeEntry, TempMcFolder, ClientLoader, Request.VersionFolder)) With {.Show = False, .ProgressWeight = 25,
-                .Block = Request.ForgeEntry Is Nothing AndAlso Request.FabricVersion Is Nothing AndAlso Request.LiteLoaderEntry Is Nothing})
-        End If
-        'LiteLoader
-        If Request.LiteLoaderEntry IsNot Nothing Then
-            LoaderList.Add(New LoaderCombo(Of String)("下载 LiteLoader " & Request.MinecraftName, McDownloadLiteLoaderLoader(Request.LiteLoaderEntry, TempMcFolder)) With {.Show = False, .ProgressWeight = 1,
-                .Block = Request.FabricVersion Is Nothing})
-        End If
-        'Fabric
-        If Request.FabricVersion IsNot Nothing Then
-            LoaderList.Add(New LoaderCombo(Of String)("下载 Fabric " & Request.FabricVersion, McDownloadFabricLoader(Request.FabricVersion, Request.MinecraftName, TempMcFolder)) With {.Show = False, .ProgressWeight = 2,
-                .Block = True})
-        End If
-        '合并安装
-        LoaderList.Add(New LoaderTask(Of String, String)("安装游戏",
-        Sub(Task As LoaderTask(Of String, String))
-            '合并 JSON
-            MergeJson(VersionFolder, VersionFolder, OptiFineFolder, OptiFineAsMod, ForgeFolder, Request.ForgeVersion, NeoForgeFolder, Request.NeoForgeVersion, FabricFolder, LiteLoaderFolder)
-            Task.Progress = 0.2
-            '迁移文件
-            DirectoryUtils.Copy(TempMcFolder & "libraries", McFolderSelected & "libraries")
-            Task.Progress = 0.8
-            '创建 Mod 和资源包文件夹
-            Dim ModsFolder = New McInstance(VersionFolder).PathIndie & "mods\" '版本隔离信息在此时被决定
-            If DirectoryUtils.Exists(ModsTempFolder) Then
-                DirectoryUtils.Copy(ModsTempFolder, ModsFolder)
-            ElseIf Modable Then
-                DirectoryUtils.Create(ModsFolder)
-                Logger.Info($"自动创建 Mod 文件夹：{ModsFolder}")
-            End If
-            Dim ResourcepacksFolder = New McInstance(VersionFolder).PathIndie & "resourcepacks\"
-            DirectoryUtils.Create(ResourcepacksFolder)
-            Logger.Info($"自动创建资源包文件夹：{ResourcepacksFolder}")
-        End Sub) With {.ProgressWeight = 2, .Block = True})
-        '补全文件
-        If Request.OptiFineEntry IsNot Nothing OrElse (Request.ForgeVersion IsNot Nothing AndAlso Request.ForgeVersion.BeforeFirst(".") >= 20) OrElse Request.NeoForgeVersion IsNot Nothing OrElse Request.FabricVersion IsNot Nothing OrElse Request.LiteLoaderEntry IsNot Nothing Then
-            Dim LoadersLib As New List(Of LoaderBase)
-            LoadersLib.Add(New LoaderTask(Of String, List(Of NetFile))("分析游戏支持库文件（副加载器）", Sub(Task) Task.Output = McLibNetFilesFromInstance(New McInstance(VersionFolder))) With {.ProgressWeight = 1, .Show = False})
-            LoadersLib.Add(New LoaderDownload("下载游戏支持库文件（副加载器）", New List(Of NetFile)) With {.ProgressWeight = 7, .Show = False})
-            LoaderList.Add(New LoaderCombo(Of String)("下载游戏支持库文件", LoadersLib) With {.ProgressWeight = 8})
-        End If
-        '删除忽略标识
-        LoaderList.Add(New LoaderTask(Of Integer, Integer)("删除忽略标识", Sub() FileUtils.Delete(VersionFolder & ".pclignore")) With {.Show = False})
-        '总加载器
-        Return LoaderList
-    End Function
-
-    ''' <summary>
-    ''' 将多个版本 JSON 进行合并，如果目标已存在则直接覆盖。失败会抛出异常。
-    ''' </summary>
-    Private Sub MergeJson(OutputFolder As String, MinecraftFolder As String, Optional OptiFineFolder As String = Nothing, Optional OptiFineAsMod As Boolean = False, Optional ForgeFolder As String = Nothing, Optional ForgeVersion As String = Nothing, Optional NeoForgeFolder As String = Nothing, Optional NeoForgeVersion As String = Nothing, Optional FabricFolder As String = Nothing, Optional LiteLoaderFolder As String = Nothing)
-        Logger.Info($"开始进行版本合并，输出：{OutputFolder}，Minecraft：{MinecraftFolder}" &
-            If(OptiFineFolder IsNot Nothing, "，OptiFine：" & OptiFineFolder, "") &
-            If(ForgeFolder IsNot Nothing, "，Forge：" & ForgeFolder, "") &
-            If(NeoForgeFolder IsNot Nothing, "，NeoForge：" & NeoForgeFolder, "") &
-            If(LiteLoaderFolder IsNot Nothing, "，LiteLoader：" & LiteLoaderFolder, "") &
-            If(FabricFolder IsNot Nothing, "，Fabric：" & FabricFolder, ""))
-        DirectoryUtils.Create(OutputFolder)
-
-        Dim HasOptiFine As Boolean = OptiFineFolder IsNot Nothing AndAlso Not OptiFineAsMod, HasForge As Boolean = ForgeFolder IsNot Nothing, HasNeoForge As Boolean = NeoForgeFolder IsNot Nothing, HasLiteLoader As Boolean = LiteLoaderFolder IsNot Nothing, HasFabric As Boolean = FabricFolder IsNot Nothing
-        Dim OutputName As String, MinecraftName As String, OptiFineName As String, ForgeName As String, NeoForgeName As String, LiteLoaderName As String, FabricName As String
-        Dim OutputJsonPath As String, MinecraftJsonPath As String, OptiFineJsonPath As String = Nothing, ForgeJsonPath As String = Nothing, NeoForgeJsonPath As String = Nothing, LiteLoaderJsonPath As String = Nothing, FabricJsonPath As String = Nothing
-        Dim OutputJar As String, MinecraftJar As String
-#Region "初始化路径信息"
-        If Not OutputFolder.EndsWithF("\") Then OutputFolder += "\"
-        OutputName = PathUtils.GetLastPart(OutputFolder)
-        OutputJsonPath = OutputFolder & OutputName & ".json"
-        OutputJar = OutputFolder & OutputName & ".jar"
-
-        If Not MinecraftFolder.EndsWithF("\") Then MinecraftFolder += "\"
-        MinecraftName = PathUtils.GetLastPart(MinecraftFolder)
-        MinecraftJsonPath = MinecraftFolder & MinecraftName & ".json"
-        MinecraftJar = MinecraftFolder & MinecraftName & ".jar"
-
-        If HasOptiFine Then
-            If Not OptiFineFolder.EndsWithF("\") Then OptiFineFolder += "\"
-            OptiFineName = PathUtils.GetLastPart(OptiFineFolder)
-            OptiFineJsonPath = OptiFineFolder & OptiFineName & ".json"
-        End If
-
-        If HasForge Then
-            If Not ForgeFolder.EndsWithF("\") Then ForgeFolder += "\"
-            ForgeName = PathUtils.GetLastPart(ForgeFolder)
-            ForgeJsonPath = ForgeFolder & ForgeName & ".json"
-        End If
-
-        If HasNeoForge Then
-            If Not NeoForgeFolder.EndsWithF("\") Then NeoForgeFolder += "\"
-            NeoForgeName = PathUtils.GetLastPart(NeoForgeFolder)
-            NeoForgeJsonPath = NeoForgeFolder & NeoForgeName & ".json"
-        End If
-
-        If HasLiteLoader Then
-            If Not LiteLoaderFolder.EndsWithF("\") Then LiteLoaderFolder += "\"
-            LiteLoaderName = PathUtils.GetLastPart(LiteLoaderFolder)
-            LiteLoaderJsonPath = LiteLoaderFolder & LiteLoaderName & ".json"
-        End If
-
-        If HasFabric Then
-            If Not FabricFolder.EndsWithF("\") Then FabricFolder += "\"
-            FabricName = PathUtils.GetLastPart(FabricFolder)
-            FabricJsonPath = FabricFolder & FabricName & ".json"
-        End If
-#End Region
-
-        Dim OutputJson As JObject, MinecraftJson As JObject, OptiFineJson As JObject = Nothing, ForgeJson As JObject = Nothing, NeoForgeJson As JObject = Nothing, LiteLoaderJson As JObject = Nothing, FabricJson As JObject = Nothing
-#Region "读取文件并检查文件是否合规"
-        Dim MinecraftJsonText As String = If(FileUtils.TryReadAsString(MinecraftJsonPath), "")
-        If Not MinecraftJsonText.StartsWithF("{") Then Throw New Exception("Minecraft json 有误，地址：" & MinecraftJsonPath & "，前段内容：" & MinecraftJsonText.Substring(0, Math.Min(MinecraftJsonText.Length, 1000)))
-        MinecraftJson = MinecraftJsonText.DeserializeJson()
-
-        If HasOptiFine Then
-            Dim OptiFineJsonText As String = If(FileUtils.TryReadAsString(OptiFineJsonPath), "")
-            If Not OptiFineJsonText.StartsWithF("{") Then Throw New Exception("OptiFine json 有误，地址：" & OptiFineJsonPath & "，前段内容：" & OptiFineJsonText.Substring(0, Math.Min(OptiFineJsonText.Length, 1000)))
-            OptiFineJson = OptiFineJsonText.DeserializeJson()
-        End If
-
-        If HasForge Then
-            Dim ForgeJsonText As String = If(FileUtils.TryReadAsString(ForgeJsonPath), "")
-            If Not ForgeJsonText.StartsWithF("{") Then Throw New Exception("Forge json 有误，地址：" & ForgeJsonPath & "，前段内容：" & ForgeJsonText.Substring(0, Math.Min(ForgeJsonText.Length, 1000)))
-            ForgeJson = ForgeJsonText.DeserializeJson()
-        End If
-
-        If HasNeoForge Then
-            Dim NeoForgeJsonText As String = If(FileUtils.TryReadAsString(NeoForgeJsonPath), "")
-            If Not NeoForgeJsonText.StartsWithF("{") Then Throw New Exception("NeoForge json 有误，地址：" & NeoForgeJsonPath & "，前段内容：" & NeoForgeJsonText.Substring(0, Math.Min(NeoForgeJsonText.Length, 1000)))
-            NeoForgeJson = NeoForgeJsonText.DeserializeJson()
-        End If
-
-        If HasLiteLoader Then
-            Dim LiteLoaderJsonText As String = If(FileUtils.TryReadAsString(LiteLoaderJsonPath), "")
-            If Not LiteLoaderJsonText.StartsWithF("{") Then Throw New Exception("LiteLoader json 有误，地址：" & LiteLoaderJsonPath & "，前段内容：" & LiteLoaderJsonText.Substring(0, Math.Min(LiteLoaderJsonText.Length, 1000)))
-            LiteLoaderJson = LiteLoaderJsonText.DeserializeJson()
-        End If
-
-        If HasFabric Then
-            Dim FabricJsonText As String = If(FileUtils.TryReadAsString(FabricJsonPath), "")
-            If Not FabricJsonText.StartsWithF("{") Then Throw New Exception("Fabric json 有误，地址：" & FabricJsonPath & "，前段内容：" & FabricJsonText.Substring(0, Math.Min(FabricJsonText.Length, 1000)))
-            FabricJson = FabricJsonText.DeserializeJson()
-        End If
-#End Region
-
-#Region "处理 JSON 文件"
-        '获取 minecraftArguments
-        Dim AllArguments As String =
-            If(MinecraftJson("minecraftArguments"), " ").ToString & " " &
-            If(OptiFineJson IsNot Nothing, If(OptiFineJson("minecraftArguments"), " ").ToString, " ") & " " &
-            If(ForgeJson IsNot Nothing, If(ForgeJson("minecraftArguments"), " ").ToString, " ") & " " &
-            If(NeoForgeJson IsNot Nothing, If(NeoForgeJson("minecraftArguments"), " ").ToString, " ") & " " &
-            If(LiteLoaderJson IsNot Nothing, If(LiteLoaderJson("minecraftArguments"), " ").ToString, " ")
-        '分割参数字符串
-        Dim RawArguments As List(Of String) = AllArguments.Split(" ", True).Select(Function(l) l.Trim).ToList
-        Dim SplitArguments As New List(Of String)
-        For i = 0 To RawArguments.Count - 1
-            If RawArguments(i).StartsWithF("-") Then
-                SplitArguments.Add(RawArguments(i))
-            ElseIf SplitArguments.Any AndAlso SplitArguments.Last.StartsWithF("-") AndAlso Not SplitArguments.Last.Contains(" ") Then
-                SplitArguments(SplitArguments.Count - 1) = SplitArguments.Last & " " & RawArguments(i)
-            Else
-                SplitArguments.Add(RawArguments(i))
-            End If
-        Next
-        Dim RealArguments As String = SplitArguments.Distinct.Join(" ")
-        '合并
-        '相关讨论见 #2801
-        OutputJson = MinecraftJson
-        If HasOptiFine Then
-            '合并 OptiFine
-            OptiFineJson.Remove("releaseTime")
-            OptiFineJson.Remove("time")
-            OutputJson.Merge(OptiFineJson)
-        End If
-        If HasForge Then
-            '合并 Forge
-            ForgeJson.Remove("releaseTime")
-            ForgeJson.Remove("time")
-            OutputJson.Merge(ForgeJson)
-        End If
-        If HasNeoForge Then
-            '合并 NeoForge
-            NeoForgeJson.Remove("releaseTime")
-            NeoForgeJson.Remove("time")
-            OutputJson.Merge(NeoForgeJson)
-        End If
-        If HasLiteLoader Then
-            '合并 LiteLoader
-            LiteLoaderJson.Remove("releaseTime")
-            LiteLoaderJson.Remove("time")
-            OutputJson.Merge(LiteLoaderJson)
-        End If
-        If HasFabric Then
-            '合并 Fabric
-            FabricJson.Remove("releaseTime")
-            FabricJson.Remove("time")
-            OutputJson.Merge(FabricJson)
-        End If
-        '修改
-        If RealArguments IsNot Nothing AndAlso RealArguments.Replace(" ", "") <> "" Then OutputJson("minecraftArguments") = RealArguments
-        OutputJson.Remove("_comment_")
-        OutputJson.Remove("inheritsFrom")
-        OutputJson.Remove("jar")
-        OutputJson("id") = OutputName
-#End Region
-
-#Region "保存"
-        FileUtils.Write(OutputJsonPath, OutputJson.ToString)
-        FileUtils.Copy(MinecraftJar, OutputJar)
-        Logger.Info($"版本合并 {OutputName} 完成")
-#End Region
-
+        If Loader.State <> LoadState.Failed AndAlso Loader.State <> LoadState.Canceled Then Return
+        RunInThread(
+        Sub()
+            Try
+                Thread.Sleep(1000) '防止存在尚未完全释放的文件，导致清理失败（例如整合包安装）
+                '删除版本文件夹
+                If DirectoryUtils.Exists(Loader.Input & "saves\") OrElse DirectoryUtils.Exists(Loader.Input & "versions\") Then
+                    Logger.Warn($"由于版本已被独立启动，不清理版本文件夹：{Loader.Input}")
+                Else
+                    Logger.Warn($"由于下载失败或取消，清理版本文件夹：{Loader.Input}")
+                    DirectoryUtils.Delete(Loader.Input)
+                End If
+            Catch ex As Exception
+                Logger.Warn(ex, "下载失败或取消后清理版本文件夹失败")
+            End Try
+        End Sub)
     End Sub
 
 #End Region

@@ -68,13 +68,17 @@ public static class Versions {
     /// <summary>
     /// 版本管理中 Mod 信息缓存的版本号。
     /// </summary>
-    public const int LocalModCacheVersion = 19;
+    public const int LocalModCacheVersion = 21;
     /// <summary>
     /// Minecraft 本地实例信息缓存的版本号。
     /// </summary>
-    public const int McInstanceCacheVersion = 38;
+    public const int McInstanceCacheVersion = 39;
     /// <summary>
     /// Java 相关配置的版本号。
     /// </summary>
     public const int JavaConfigVersion = 1;
+    /// <summary>
+    /// Minecraft 安装清单的版本号。
+    /// </summary>
+    public const int McInstallManifestVersion = 1;
 }

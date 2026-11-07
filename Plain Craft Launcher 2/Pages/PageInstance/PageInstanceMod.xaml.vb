@@ -284,7 +284,7 @@ Public Class PageInstanceMod
     ''' 返回输入的文件是否为一个 Mod 文件，仅用于判断拖拽行为。
     ''' </summary>
     Public Shared Function InstallMods(FilePathList As IEnumerable(Of String)) As Boolean
-        Dim Extension As String = FilePathList.First.AfterLast(".").Lower
+        Dim Extension As String = PathUtils.GetExtension(FilePathList.First)
         '检查文件扩展名
         If Not {"jar", "litemod", "disabled", "old"}.Any(Function(t) t = Extension) Then Return False
         Logger.Info("文件为 jar/litemod 格式，尝试作为 Mod 安装")
@@ -307,15 +307,15 @@ Public Class PageInstanceMod
 Install:
             Try
                 For Each ModFile In FilePathList
-                    Dim NewFileName = PathUtils.GetLastPart(ModFile).Replace(".disabled", "").Replace(".old", "")
+                    Dim NewFileName = (New LocalResourceFile(ModFile)).EnabledName
                     If Not NewFileName.Contains(".") Then NewFileName += ".jar" '#4227
                     NewFileName = Instance.PathIndie & "mods\" & NewFileName
-                    If ModFile = NewFileName Then Continue For '防止安装相同文件导致文件被删除
+                    If PathUtils.IsSame(ModFile, NewFileName) Then Continue For '防止安装相同文件导致文件被删除
                     FileUtils.Delete(NewFileName, True)
                     FileUtils.Copy(ModFile, NewFileName)
                 Next
                 If FilePathList.IsSingle Then
-                    Hint($"已安装 {PathUtils.GetLastPart(FilePathList.First).Replace(".disabled", "").Replace(".old", "")}！", HintType.Green)
+                    Hint($"已安装 {(New LocalResourceFile(FilePathList.First)).EnabledName}！", HintType.Green)
                 Else
                     Hint($"已安装 {FilePathList.Count} 个 Mod！", HintType.Green)
                 End If
@@ -553,8 +553,8 @@ Install:
                 Dim File As ResourceVersion = Entry.UpdateFile
                 If Not File.DownloadAvailable Then Continue For
                 '确认更新后的文件名
-                Dim CurrentReplaceName = Entry.ProjectVersion.FileName.Replace(".jar", "").Replace(".old", "").Replace(".disabled", "")
-                Dim NewestReplaceName = Entry.UpdateFile.FileName.Replace(".jar", "").Replace(".old", "").Replace(".disabled", "")
+                Dim CurrentReplaceName = PathUtils.GetFileNameWithoutExtension(Entry.ProjectVersion.FileName)
+                Dim NewestReplaceName = PathUtils.GetFileNameWithoutExtension(Entry.UpdateFile.FileName)
                 Dim CurrentSegs = CurrentReplaceName.Split("-"c).ToList()
                 Dim NewestSegs = NewestReplaceName.Split("-"c).ToList()
                 Dim Shortened As Boolean = False

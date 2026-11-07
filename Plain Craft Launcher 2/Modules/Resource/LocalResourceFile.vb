@@ -25,7 +25,7 @@ Public Class LocalResourceFile
         End Get
     End Property
     ''' <summary>
-    ''' 假若该资源未被禁用时，文件的文件名。
+    ''' 假若该资源未被禁用时，文件的文件名。包含 .jar/.litemod 等后缀。
     ''' </summary>
     Public ReadOnly Property EnabledName As String
         Get
@@ -57,7 +57,7 @@ Public Class LocalResourceFile
     Public Property Display As String
         Get
             If _Display Is Nothing Then _Display = ProjectVersion?.Display
-            If _Display Is Nothing Then _Display = PathUtils.GetFileNameWithoutExtension(File.FullName)
+            If _Display Is Nothing Then _Display = PathUtils.GetFileNameWithoutExtension(EnabledName)
             Return _Display
         End Get
         Set(value As String)
@@ -238,7 +238,7 @@ Public Class LocalResourceFile
     Private _CurseForgeHash As UInteger?
 
     ''' <summary>
-    ''' 获取用于 Modrinth 信息获取的 Hash 值（SHA1）。
+    ''' 获取用于 Modrinth 信息获取的 Hash 值（SHA1）。固定为小写。
     ''' </summary>
     Public ReadOnly Property ModrinthHash As String
         Get
@@ -269,7 +269,7 @@ Public Class LocalResourceFile
     End Function
     Public Overrides Function Equals(obj As Object) As Boolean
         Dim Target = TryCast(obj, LocalResourceFile)
-        Return Target IsNot Nothing AndAlso File.FullName = Target.File.FullName
+        Return Target IsNot Nothing AndAlso PathUtils.IsSame(File.FullName, Target.File.FullName)
     End Function
 
 #End Region

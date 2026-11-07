@@ -335,7 +335,7 @@ Public Class MyLocalModItem
             BtnUpdate.Visibility = Visibility.Collapsed
         End If
         '标题与描述
-        Dim DescFileName As String = Entry.File.Name.BeforeLast(".")
+        Dim DescFileName As String = PathUtils.GetFileNameWithoutExtension(Entry.EnabledName)
         Dim NewDescription As String
         If Settings.Get(Of Integer)("ToolModLocalNameStyle") = 1 Then
             '标题显示文件名，详情显示译名

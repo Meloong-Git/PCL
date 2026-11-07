@@ -93,7 +93,8 @@ Public Class PageSpeedLeft
                             Tb.Text = Loader.Error.GetDisplay(True)
                             AddHandler Tb.MouseLeftButtonDown,
                             Sub(sender As TextBlock, e As EventArgs)
-                                ClipboardSet(sender.Text, SuccessHint:="已复制错误详情！")
+                                ClipboardSet(sender.Text, False)
+                                Hint("已复制错误详情！", HintType.Green)
                             End Sub
                             Card.Children.Add(Tb)
 #End Region
