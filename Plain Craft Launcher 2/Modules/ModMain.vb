@@ -818,7 +818,7 @@ NextFile:
     Public Function ArgumentReplace(Text As String, Optional EscapeHandler As Func(Of String, String) = Nothing, Optional ReplaceTime As Boolean = True) As String
         If Text Is Nothing OrElse Not Text.Contains("{") Then Return Text
         '预处理（注意，文件夹必须以 \ 结尾）
-        Static Replacer As Func(Of String, String) =
+        Dim Replacer As Func(Of String, String) =
         Function(s As String) As String
             If s Is Nothing Then Return ""
             If EscapeHandler Is Nothing Then Return s
