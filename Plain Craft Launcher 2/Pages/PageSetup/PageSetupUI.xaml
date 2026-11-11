@@ -277,7 +277,7 @@
                             <!--<local:MyComboBoxItem local:SettingService.Value="8" Content="PCL 新闻速报（作者：Joker2184）" />-->
                             <local:MyComboBoxItem local:SettingService.Value="9" Content="PCL 新功能说明书（作者：WForst-Breeze）" />
                             <!--<local:MyComboBoxItem local:SettingService.Value="10" Content="OpenMCIM 仪表盘（作者：SALTWOOD）" />-->
-                            <local:MyComboBoxItem local:SettingService.Value="11" Content="杂志主页（作者：CreeperIsASpy）" />
+                            <local:MyComboBoxItem local:SettingService.Value="11" Content="杂志主页（作者：正源 Neclyon）" />
                             <local:MyComboBoxItem local:SettingService.Value="12" Content="PCL GitHub 仪表盘（作者：Deep-Dark-Forest）" />
                             <local:MyComboBoxItem local:SettingService.Value="13" Content="Minecraft 更新摘要（作者：pynickle）" />
                             <local:MyComboBoxItem local:SettingService.Value="14" Content="今日新闻热点（作者：EYicheng）" />
