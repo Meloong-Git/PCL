@@ -132,7 +132,7 @@ Public Class MyMsgLogin
                         Finished(New Exception("$登录用时太长啦，重新试试吧！"))
                         Return
                     ElseIf Response.Contains("Account security interrupt") Then
-                        Finished(New Exception("$该账号由于安全问题无法登陆，请前往微软账户页获取更多信息。"))
+                        Finished(New Exception("$该账号由于安全问题无法登录，请前往微软账户页获取更多信息。"))
                         Return
                     ElseIf Response.Contains("service abuse") Then
                         Finished(New Exception("$非常抱歉，该账号已被微软封禁，无法登录。"))
