@@ -131,7 +131,8 @@
             <local:MyCard Margin="0,0,0,15" Title="赞助者">
                 <StackPanel Margin="25,40,19,20">
                     <TextBlock HorizontalAlignment="Left" Text="以下是近期的高级赞助者们！感谢大家对 PCL 的支持！！！" Margin="0,0,25,5.5" TextTrimming="None" TextWrapping="WrapWithOverflow" />
-                    <WrapPanel Margin="0,0,0,10">                        <TextBlock Margin="0,1.5,6,0" Text="·" />
+                    <WrapPanel Margin="0,0,0,10">
+                        <TextBlock Margin="0,1.5,6,0" Text="·" />
                         <TextBlock Margin="0,1.5,6,0" Text="J" />
                         <TextBlock Margin="0,1.5,6,0" Text="c" />
                         <TextBlock Margin="0,1.5,6,0" Text="1" />
@@ -1474,6 +1475,8 @@
                         <RowDefinition Height="60" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="60" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="60" />
                     </Grid.RowDefinitions>
                     
                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Java Launch Wrapper" TextWrapping="Wrap" FontWeight="Bold" />
@@ -1557,6 +1560,15 @@
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/HMCL-dev/HMCL/tree/main/minecraft/libraries/HMCLTransformerDiscoveryService" />
                     <local:MyButton Grid.Row="21" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
                                     local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/HMCL-dev/HMCL/blob/main/LICENSE" />
+
+                    <TextBlock Grid.Row="22" Grid.Column="0" Text="MeloongCore" TextWrapping="Wrap" FontWeight="Bold" />
+                    <TextBlock Grid.Row="22" Grid.Column="2" Grid.ColumnSpan="2" Text="Copyright © 2026 LTCatt and contributors&#xa;Licensed under the Apache License 2.0" TextWrapping="Wrap" />
+                    <local:MyButton Grid.Row="23" Grid.Column="2" MinWidth="140" Text="查看来源网站" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                                    local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/Meloong-Git/MeloongCore" />
+                    <local:MyButton Grid.Row="23" Grid.Column="3" MinWidth="140" Text="查看许可文档" Padding="13,0" Margin="0,7,20,18" HorizontalAlignment="Left"
+                                    local:CustomEventService.EventType="打开网页" local:CustomEventService.EventData="https://github.com/Meloong-Git/MeloongCore/blob/master/LICENSE.txt" />
+                    
+
                 </Grid>
             </local:MyCard>
         </StackPanel>
