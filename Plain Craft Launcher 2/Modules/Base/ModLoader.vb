@@ -671,6 +671,7 @@ Restart:
     '任务栏进度条
     Public LoaderTaskbar As New ConcurrentList(Of LoaderBase)
     Public LoaderTaskbarProgress As Double = 0 '平滑后的进度
+    Public LoaderTaskbarHideProgress As Boolean = False
     Private LoaderTaskbarProgressLast As Shell.TaskbarItemProgressState = Shell.TaskbarItemProgressState.None
 
     Public Sub LoaderTaskbarAdd(Of T)(Loader As LoaderCombo(Of T))
@@ -697,7 +698,7 @@ Restart:
             Else
                 LoaderTaskbarProgress = LoaderTaskbarProgress * 0.9 + NewProgress * 0.1
             End If
-            RunInUi(Sub() FrmMain.BtnExtraDownload.Progress = LoaderTaskbarProgress)
+            RunInUi(Sub() FrmMain.BtnExtraDownload.Progress = If(LoaderTaskbarHideProgress, 0, LoaderTaskbarProgress))
             '更新任务栏信息
             If Not LoaderTaskbar.Any() OrElse LoaderTaskbarProgress = 1 Then
                 NewState = Shell.TaskbarItemProgressState.None
