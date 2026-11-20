@@ -85,7 +85,7 @@ Public Class PageOtherHelp
         Sub()
             If Not HelpLoader.State = LoadState.Finished Then HelpLoader.WaitForExit(GetUuid)
             Dim Entry As New HelpEntry(Location)
-            RunInUi(
+            RunInUiWait(
             Sub()
                 Dim FrmHelpDetail As New PageOtherHelpDetail
                 If FrmHelpDetail.Init(Entry) Then
@@ -100,7 +100,7 @@ Public Class PageOtherHelp
         RunInThread(
         Sub()
             If Not HelpLoader.State = LoadState.Finished Then HelpLoader.WaitForExit(GetUuid)
-            RunInUi(
+            RunInUiWait(
             Sub()
                 Dim FrmHelpDetail As New PageOtherHelpDetail
                 If FrmHelpDetail.Init(Entry) Then
