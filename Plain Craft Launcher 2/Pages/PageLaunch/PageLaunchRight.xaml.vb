@@ -116,7 +116,7 @@ Public Class PageLaunchRight
                         Url = "https://cloudmusic.p.kaphia.top"
                     Case 20
                         Logger.Info("主页预设：模组推荐")
-                        Url = "https://g-fish.dpdns.org/download/ModPage.xaml"
+                        Url = "https://pcl.xn--9iq209asnop94b.top/download/ModPage.xaml"
                     Case 21
                         Logger.Info("主页预设：每日游戏推荐")
                         Url = "https://pcl.xn--9iq209asnop94b.top/download/GamePage.xaml"
