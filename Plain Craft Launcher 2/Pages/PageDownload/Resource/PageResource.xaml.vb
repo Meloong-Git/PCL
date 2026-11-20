@@ -55,7 +55,7 @@ Public Class PageResource
         Set(Value As ResourceTypes)
             If _Type = Value Then Return
             _Type = Value
-            BtnSearchInstallModPack.Visibility = If(Value = ResourceTypes.ModPack, Visibility.Visible, Visibility.Collapsed)
+            BtnSearchInstallModPack.Visibility = If(Value = ResourceTypes.ModPack AndAlso Not RestrictMcDownload, Visibility.Visible, Visibility.Collapsed)
         End Set
     End Property
     Private _Type As ResourceTypes = -1
@@ -90,11 +90,11 @@ Public Class PageResource
                 Next
                 Return ComboSearchLoader.Items(0)
             End Function
-            If TargetInstance.Version.HasForge Then
+            If TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.Forge) Then
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("Forge")
-            ElseIf TargetInstance.Version.HasFabric Then
+            ElseIf TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.Fabric) Then
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("Fabric")
-            ElseIf TargetInstance.Version.HasNeoForge Then
+            ElseIf TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.NeoForge) Then
                 ComboSearchLoader.SelectedItem = GetTargetItemByName("NeoForge")
             End If
             TargetInstance = Nothing

@@ -1396,7 +1396,7 @@ FinishExCatch:
         Public Overrides Sub Start(Optional Input As Object = Nothing, Optional IsForceRestart As Boolean = False)
             If Input IsNot Nothing Then Files = New ConcurrentQueue(Of NetFile)(CType(Input, IEnumerable(Of NetFile)))
             '去重
-            Files = New ConcurrentQueue(Of NetFile)(Files.DistinctBy(Function(a) a.LocalPath))
+            Files = New ConcurrentQueue(Of NetFile)(Files.DistinctBy(Function(a) PathUtils.ForCompare(a.LocalPath).Lower()))
             '设置剩余文件数
             SyncLock FileRemainLock
                 FileRemain += Files.Where(Function(f) f.State <> NetState.Finished).Count
@@ -1421,7 +1421,7 @@ FinishExCatch:
                         Next
                         If Not File.HasAvailableSource() Then Throw New ArgumentException("输入的下载链接不正确！")
                         File.LocalPath = File.LocalPath.Replace("/", "\")
-                        If Not File.LocalPath.Lower.Contains(":\") Then Throw New ArgumentException("输入的本地文件地址不正确：" & File.LocalPath)
+                        If Not File.LocalPath.Contains(":\") Then Throw New ArgumentException("输入的本地文件地址不正确：" & File.LocalPath)
                         If File.LocalPath.EndsWithF("\") Then Throw New ArgumentException("请输入含文件名的完整文件路径：" & File.LocalPath)
                         DirectoryUtils.Create(PathUtils.RemoveLastPart(File.LocalPath)) '创建目标文件夹
                     Next
@@ -1519,7 +1519,7 @@ FinishExCatch:
                 Select(Function(FolderName) (FolderName, File.LocalPath.IndexOfF(FolderName, True))).
                 Where(Function(kv) kv.Item2 >= 0).ToList
             If Not TypeIndexes.Any Then
-                If File.LocalName.EndsWithF(".jar") Then
+                If PathUtils.GetExtension(File.LocalName) = "jar" Then
                     TypeIndexes.Add(("\versions\", 1)) '总是对 jar 进行版本文件检查，以包括另存为 jar 的情况
                 Else
                     Return Nothing
@@ -1547,7 +1547,7 @@ FinishExCatch:
                 Case "versions\"
                     '版本 jar 或 json：查找 MC 文件夹下的各个版本文件夹
                     For Each VersionFolder In VersionFolders
-                        For Each Candidate In DirectoryUtils.EnumerateFiles(VersionFolder, searchPattern:="*." & PathUtils.GetLastPart(File.LocalPath).AfterLast(".").Lower)
+                        For Each Candidate In DirectoryUtils.EnumerateFiles(VersionFolder, searchPattern:="*." & PathUtils.GetExtension(File.LocalPath))
                             If CheckCandidate(Candidate, File.Check) Then Return Candidate
                         Next
                     Next

@@ -102,73 +102,36 @@ Public Class MyCard
             RunInUi(Sub() UseAnimation = RawUseAnimation, True)
         End If
     End Sub
-    Public Sub StackInstall()
-        StackInstall(SwapControl, SwapType, Title)
-        TriggerForceResize()
+
+    '填充
+    Private ContentBuilder As Action(Of Panel)
+    Public Sub SetContentBuilder(Builder As Action(Of Panel))
+        ContentBuilder = Builder
     End Sub
-    Public Shared Sub StackInstall(ByRef Stack As StackPanel, Type As Integer, Optional CardTitle As String = "")
-        '这一部分的代码是好几年前留下的究极屎坑，当时还不知道该咋正确调用这种方法，就写了这么一坨屎
-        '但是现在……反正勉强能用……懒得改了就这样吧.jpg
-        '别骂了别骂了.jpg
-        If Stack.Tag Is Nothing Then Return
-        '排序
-        Dim HasDuplicates As Boolean = False
-        Select Case Type
-            Case 3
-                Stack.Tag = CType(Stack.Tag, List(Of DlOptiFineListEntry)).SortByComparison(Function(a, b) CompareVersionGE(a.DisplayName, b.DisplayName))
-            Case 4, 10
-                Stack.Tag = CType(Stack.Tag, List(Of DlLiteLoaderListEntry)).SortByComparison(Function(a, b) CompareVersionGE(a.Inherit, b.Inherit))
-            Case 6
-                Stack.Tag = CType(Stack.Tag, List(Of DlForgeVersionEntry)).OrderByDescending(Function(a) a).ToList
-            Case 8, 9
-                Stack.Tag = CType(Stack.Tag, List(Of ResourceVersion)).SortByComparison(Function(a, b) a.ReleaseDate > b.ReleaseDate)
-                HasDuplicates =
-                    CType(Stack.Tag, List(Of ResourceVersion)).DistinctBy(Function(a) a.Display).Count <>
-                    CType(Stack.Tag, List(Of ResourceVersion)).Count
-        End Select
-        '控件转换
-        Select Case Type
-            Case 6
-                ForgeDownloadListItemPreload(Stack, Stack.Tag, AddressOf ForgeSave_Click, True)
-            Case 8
-                PageDownloadResourceDetail.ResourceFilesCardPreload(Stack, Stack.Tag)
-        End Select
-        '实现控件虚拟化
-        For Each Data As Object In Stack.Tag
-            Select Case Type
-                Case 0
-                    Stack.Children.Add(CType(Data, McInstance).ToListItem(AddressOf PageSelectRight.McInstanceListContent))
-                Case 2
-                    Stack.Children.Add(McDownloadListItem(Data, AddressOf McDownloadMenuSave, True))
-                Case 3
-                    Stack.Children.Add(OptiFineDownloadListItem(Data, AddressOf OptiFineSave_Click, True))
-                Case 6
-                    Stack.Children.Add(ForgeDownloadListItem(Data, AddressOf ForgeSave_Click, True))
-                Case 7
-                    '不能使用 AddressOf，这导致了 #535，原因完全不明，疑似是编译器 Bug
-                    Stack.Children.Add(McDownloadListItem(Data, Sub(sender, e) FrmDownloadInstall.MinecraftSelected(sender, e), False))
-                Case 8
-                    '若存在重复的版本名，则显示文件名而非版本名（#1344）
-                    Stack.Children.Add(CType(Data, ResourceVersion).ToListItem(
-                        AddressOf FrmDownloadResourceDetail.Save_Click, IsBadDisplay:=HasDuplicates))
-                Case 9
-                    '若存在重复的版本名，则显示文件名而非版本名（#1344）
-                    Stack.Children.Add(CType(Data, ResourceVersion).ToListItem(
-                        AddressOf FrmDownloadResourceDetail.Install_Click, AddressOf FrmDownloadResourceDetail.Save_Click, IsBadDisplay:=HasDuplicates))
-                Case 10
-                    Stack.Children.Add(LiteLoaderDownloadListItem(Data, AddressOf LiteLoaderSave_Click, True))
-                Case 11
-                    Stack.Children.Add(CType(Data, HelpEntry).ToListItem)
-                Case 12
-                    Stack.Children.Add(FabricDownloadListItem(CType(Data, JObject), AddressOf FrmDownloadInstall.Fabric_Selected))
-                Case 13
-                    Stack.Children.Add(NeoForgeDownloadListItem(Data, AddressOf NeoForgeSave_Click, True))
-                Case Else
-                    Logger.Error($"未知的虚拟化种类：{Type}")
-            End Select
-        Next
-        Stack.Children.Add(New FrameworkElement With {.Height = 18}) '下边距，同时适应折叠
-        Stack.Tag = Nothing
+    Public Sub SetContentBuilder(Of T)(Items As IEnumerable(Of T), ItemBuilder As Func(Of T, UIElement))
+        SetContentBuilder(
+        Sub(Stack)
+            For Each Item In Items
+                Stack.Children.Add(ItemBuilder(Item))
+            Next
+            Stack.Children.Add(New FrameworkElement With {.Height = 18})
+        End Sub)
+    End Sub
+    ''' <summary>
+    ''' 使用 ContentBuilder 生成卡片内容。
+    ''' </summary>
+    Public Sub BuildContent()
+        If ContentBuilder Is Nothing Then Return
+        Dim Stack = TryCast(SwapControl, Panel)
+        If Stack Is Nothing Then Return
+        Try
+            ContentBuilder(Stack)
+            ContentBuilder = Nothing
+        Catch
+            Stack.Children.Clear()
+            Throw
+        End Try
+        TriggerForceResize()
     End Sub
 
     '动画
@@ -278,10 +241,6 @@ Public Class MyCard
     Public SwapControl As FrameworkElement
     Public Property CanSwap As Boolean = False
     ''' <summary>
-    ''' 被折叠的种类，用于控件虚拟化。
-    ''' </summary>
-    Public Property SwapType As Integer
-    ''' <summary>
     ''' 是否已被折叠。
     ''' </summary>
     Public Property IsSwapped As Boolean
@@ -293,7 +252,7 @@ Public Class MyCard
             _IsSwapped = value
             If SwapControl Is Nothing Then Return
             '展开
-            If Not IsSwapped AndAlso TypeOf SwapControl Is StackPanel Then StackInstall(SwapControl, SwapType, Title)
+            If Not IsSwapped Then BuildContent()
             '若尚未加载，会在 Loaded 事件中触发无动画的折叠，不需要在这里进行
             If Not IsLoaded Then Return
             '更新样式

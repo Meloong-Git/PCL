@@ -27,6 +27,7 @@
 		<Using Include="System.Collections.Generic" />
 		<Using Include="System.Collections.Concurrent" />
 		<Using Include="System.Text" />
+		<Using Include="System.Text.RegularExpressions" />
 		<Using Include="System.Net" />
 		<Using Include="System.Runtime.CompilerServices" />
 		<Using Include="System.Runtime.InteropServices" />
@@ -58,6 +59,7 @@
 		<EmbeddedResource Include="Launch\JavaWrapper.jar" LogicalName="Launch\JavaWrapper.jar" />
 		<EmbeddedResource Include="Launch\LwjglUnsafeAgent.jar" LogicalName="Launch\LwjglUnsafeAgent.jar" />
 		<EmbeddedResource Include="Resource\WikiEntries.txt" LogicalName="Resource\WikiEntries.txt" />
+		<EmbeddedResource Include="Minecraft\OptiFineHashes.json" LogicalName="Minecraft\OptiFineHashes.json" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Reference Include="Microsoft.VisualBasic" />

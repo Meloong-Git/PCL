@@ -1,5 +1,8 @@
 
+
 #Region "附加属性"
+
+Imports PCL.FormMain
 
 ''' <summary>
 ''' 用于在 XAML 中初始化列表对象。
@@ -272,9 +275,23 @@ Public Class CustomEvent
                     Hint(Arg0.Replace("\n", vbCrLf), If(Args.Length = 1, HintType.Blue, EnumUtils.FromString(Of HintType)(Arg1)))
 
                 Case EventType.切换页面
-                    RunInUi(Sub() FrmMain.PageChange(
-                                EnumUtils.FromString(Of FormMain.PageType)(Arg0),
-                                If(Args.Length = 1, FormMain.PageSubType.Default, EnumUtils.FromString(Of FormMain.PageSubType)(Arg1))))
+                    RunInUi(
+                    Sub()
+                        Dim TargetPage = EnumUtils.FromString(Of PageType)(Arg0)
+                        If TargetPage = PageType.InstanceSetup Then
+                            If McInstanceSelected Is Nothing Then
+                                Hint("请先选择一个 Minecraft 版本！", HintType.Red)
+                                Return
+                            End If
+                            If McInstanceLock.IsLocked(McInstanceSelected) Then
+                                Hint("该版本正在被修改，暂时无法进入版本设置！", HintType.Red)
+                                Return
+                            End If
+                            PageInstanceLeft.Instance = McInstanceSelected
+                        End If
+                        FrmMain.PageChange(TargetPage,
+                            If(Args.Length = 1, PageSubType.Default, EnumUtils.FromString(Of PageSubType)(Arg1)))
+                    End Sub)
 
                 Case EventType.导入整合包, EventType.安装整合包
                     RunInUi(Sub() ModpackInstall())
@@ -295,7 +312,7 @@ Public Class CustomEvent
                                 Case 2
                                     PageOtherTest.StartCustomDownload(Arg0, Arg1)
                                 Case Else
-                                    PageOtherTest.StartCustomDownload(Arg0, Arg(1), Args(2))
+                                    PageOtherTest.StartCustomDownload(Arg0, Args(1), Args(2))
                             End Select
                         Catch
                             PageOtherTest.StartCustomDownload(Arg0, "未知")
@@ -304,16 +321,16 @@ Public Class CustomEvent
 
                 Case EventType.修改设置, EventType.写入设置
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 UiLauncherTransparent|400")
-                    Settings.SetSafe(Arg0, Arg1, Instance:=McInstanceSelected)
-                    If Args.Length = 2 Then Hint($"已写入设置：{Arg0} → {Arg1}", HintType.Green)
+                    Settings.SetSafe(Arg0, Args(1), Instance:=McInstanceSelected)
+                    If Args.Length = 2 Then Hint($"已写入设置：{Arg0} → {Args(1)}", HintType.Green)
 
                 Case EventType.修改变量, EventType.写入变量
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 VariableName|SomeValue")
                     Try
-                        RegistryUtils.Write($"HKEY_CURRENT_USER\Software\{RegFolder}", $"CustomEvent{Arg0}", Arg1)
-                        If Args.Length = 2 Then Hint($"已写入变量：{Arg0} → {Arg1}", HintType.Green)
+                        RegistryUtils.Write($"HKEY_CURRENT_USER\Software\{RegFolder}", $"CustomEvent{Arg0}", Args(1))
+                        If Args.Length = 2 Then Hint($"已写入变量：{Arg0} → {Args(1)}", HintType.Green)
                     Catch ex As Exception
-                        Logger.Warn(ex, $"写入变量失败：{Arg0} → {Arg1}", LogBehavior.Toast)
+                        Logger.Warn(ex, $"写入变量失败：{Arg0} → {Args(1)}", LogBehavior.Toast)
                     End Try
 
                 Case EventType.加入房间
@@ -353,7 +370,7 @@ Public Class CustomEvent
             Dim RawFileName As String
             Try
                 RawFileName = PathUtils.GetLastPart(RelativeUrl)
-                If Not RawFileName.EndsWithF(".json", True) Then Throw New Exception("未指向 .json 后缀的文件")
+                If Not PathUtils.GetExtension(RawFileName) = "json" Then Throw New Exception("未指向 .json 后缀的文件")
             Catch ex As Exception
                 Throw New Exception("联网帮助页面须指向一个帮助 JSON 文件，并在同路径下包含相应 XAML 文件！" & vbCrLf &
                                     "例如：" & vbCrLf &

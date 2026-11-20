@@ -22,14 +22,14 @@ Public Class PageInstanceExport
     End Sub
     Private Sub PageInstanceExport_Loaded() Handles Me.Loaded
         AniControlEnabled += 1
-        If CurrentInstance <> PageInstanceLeft.Instance.PathVersion Then RefreshAll() '切换到了另一个版本，重置页面
+        If Not PathUtils.IsSame(CurrentInstance, PageInstanceLeft.Instance.PathVersion) Then RefreshAll() '切换到了另一个版本，重置页面
         CustomEventService.SetEventData(BtnAdvancedHelp,
             If(BuildType = BuildTypes.Release, "指南/整合包制作 - Public.json", "指南/整合包制作 - Snapshot.json"))
         AniControlEnabled -= 1
     End Sub
     Public Sub RefreshAll() Implements IRefreshable.Refresh
         Logger.Info("刷新导出页面")
-        HintOptiFine.Visibility = If(PageInstanceLeft.Instance.Version.HasOptiFine, Visibility.Visible, Visibility.Collapsed)
+        HintOptiFine.Visibility = If(PageInstanceLeft.Instance.Version.HasOptiFine AndAlso Not PageInstanceLeft.Instance.Version.OptiFineAsMod, Visibility.Visible, Visibility.Collapsed)
         CurrentInstance = PageInstanceLeft.Instance.PathVersion
         TextExportName.Text = ""
         TextExportName.HintText = PageInstanceLeft.Instance.Name
@@ -114,7 +114,7 @@ Public Class PageInstanceExport
         '确认选项是否应该被显示
         Dim IsVisible =
         Function(TargetOption As ExportOption) As Boolean
-            '检查需要 OptiFine 或 Mod 加载器
+            '检查需要 OptiFine（例如光影）或 Mod 加载器（例如 mods/）
             If TargetOption.RequireOptiFine AndAlso Not PageInstanceLeft.Instance.Version.HasOptiFine Then Return False
             If TargetOption.RequireModLoader AndAlso Not PageInstanceLeft.Instance.Modable Then Return False
             If TargetOption.RequireModLoaderOrOptiFine AndAlso Not PageInstanceLeft.Instance.Version.HasOptiFine AndAlso Not PageInstanceLeft.Instance.Modable Then Return False
@@ -257,9 +257,9 @@ Public Class PageInstanceExport
                     For Each ShaderPackCheckBox In PanOptionsShaderPacks.Children.OfType(Of MyCheckBox)()
                         If Not ShaderPackCheckBox.Checked Then Continue For
                         Dim ShaderPackOption = GetExportOption(ShaderPackCheckBox)
-                        Dim SettingFileName = ShaderPackOption.Rules.TrimEnd("/") & ".txt"
-                        If Not FileUtils.Exists(Path.Combine(PageInstanceLeft.Instance.PathIndie, SettingFileName)) Then Continue For
-                        Rules.Add(StringUtils.LikePatternEscape($"shaderpacks/{SettingFileName}"))
+                        Dim SettingsFile = $"shaderpacks/{ShaderPackOption.Title}.txt"
+                        If Not FileUtils.Exists(Path.Combine(PageInstanceLeft.Instance.PathIndie, SettingsFile)) Then Continue For
+                        Rules.Add(StringUtils.LikePatternEscape(SettingsFile))
                     Next
                 End If
 
@@ -457,11 +457,11 @@ Public Class PageInstanceExport
         '缓存所需参数
         Dim CacheFolder = RequestTaskTempFolder()
         Dim OverridesFolder = CacheFolder & "modpack\overrides\"
-        Dim McVersion = PageInstanceLeft.Instance
+        Dim TargetInstance = PageInstanceLeft.Instance
         Dim IncludeJava As Boolean =
             (RulesOverrides Is Nothing AndAlso CheckOptionsJava.Visibility = Visibility.Visible AndAlso CheckOptionsJava.Checked) OrElse
-            (RulesOverrides IsNot Nothing AndAlso CheckOptionsJava.Checked AndAlso Settings.Get(Of Integer)("VersionArgumentJavaV2", McVersion) = 2)
-        Dim PathIndie As String = McVersion.PathIndie
+            (RulesOverrides IsNot Nothing AndAlso CheckOptionsJava.Checked AndAlso Settings.Get(Of Integer)("VersionArgumentJavaV2", TargetInstance) = 2)
+        Dim PathIndie As String = TargetInstance.PathIndie
         Dim CheckHostedAssets As Boolean = Not CheckAdvancedInclude.Checked
         Dim ModrinthUploadMode As Boolean = CheckAdvancedModrinth.Checked
         Dim IncludePCL As Boolean = CheckOptionsPcl.Checked
@@ -498,7 +498,7 @@ Public Class PageInstanceExport
                 '文件夹：进一步搜索
                 For Each SubFolder In Folder.EnumerateDirectories("*", SearchOption.TopDirectoryOnly)
                     '跳过部分又没用文件又多的文件夹，加快搜索
-                    If {"assets", "versions", "libraries"}.Contains(SubFolder.Name) AndAlso PathIndie = PathUtils.RemoveExtendedPrefix(Folder.FullName) Then Continue For
+                    If {"assets", "versions", "libraries"}.Contains(SubFolder.Name) AndAlso PathUtils.IsSame(PathIndie, Folder.FullName) Then Continue For
                     If {"structureCacheV1", ".fabric", ".git", "avatar-cache", "cosmetic-cache"}.Contains(SubFolder.Name) Then Continue For
                     SearchFolder(SubFolder)
                 Next
@@ -536,10 +536,10 @@ Public Class PageInstanceExport
             Loader.Progress = 0.85
             '复制 Java
             If IncludeJava Then
-                Dim JavaToExport = SelectOrDownloadJava(McVersion, False, Loader.CreateCancellationToken, Loader.CreateSyncProgressProvider(0.85, 0.93))
+                Dim JavaToExport = SelectOrDownloadJava(TargetInstance, False, Loader.CreateCancellationToken, Loader.CreateSyncProgressProvider(0.85, 0.93))
                 If JavaToExport Is Nothing Then Throw New FileNotFoundException("版本文件夹中没有找到可导出的 Java。")
                 Dim JavaFolder = PathUtils.RemoveLastPart(JavaToExport.Folder)
-                Dim DestFolder As String = Path.Combine(OverridesFolder, JavaFolder.AfterFirst(McVersion.PathVersion, True))
+                Dim DestFolder As String = Path.Combine(OverridesFolder, JavaFolder.AfterFirst(TargetInstance.PathVersion, True))
                 DirectoryUtils.Copy(JavaFolder, DestFolder)
                 Logger.Info($"已复制版本文件夹中的 Java：{JavaFolder} → {DestFolder}")
             End If
@@ -563,7 +563,7 @@ Public Class PageInstanceExport
             Next
             Loader.Progress = 0.97
             '复制 PCL 版本设置
-            If DirectoryUtils.Exists(McVersion.PathVersion & "PCL\") Then DirectoryUtils.Copy(McVersion.PathVersion & "PCL\", OverridesFolder & "PCL\")
+            If DirectoryUtils.Exists(TargetInstance.PathVersion & "PCL\") Then DirectoryUtils.Copy(TargetInstance.PathVersion & "PCL\", OverridesFolder & "PCL\")
             WriteIni(OverridesFolder & "PCL\Setup.ini", "IsStar", False)
             '复制 PCL 本体（正式版）
             If BuildType = BuildTypes.Release AndAlso IncludePCL Then FileUtils.Copy(PathExe, CacheFolder & "Plain Craft Launcher.exe")
@@ -686,16 +686,16 @@ Public Class PageInstanceExport
             Next
             Loader.Progress = 0.2
             '导出最终 JSON 文件
-            Dim Dependencies As New JObject From {{"minecraft", McVersion.Version.VanillaName}}
-            If McVersion.Version.HasForge Then Dependencies.Add("forge", McVersion.Version.Forge)
-            If McVersion.Version.HasFabric Then Dependencies.Add("fabric-loader", McVersion.Version.Fabric)
-            If McVersion.Version.HasNeoForge Then Dependencies.Add("neoforge", McVersion.Version.NeoForge)
+            Dim Dependencies As New JObject From {{"minecraft", TargetInstance.Version.VanillaName}}
+            If TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.Forge) Then Dependencies.Add("forge", TargetInstance.Version.ModLoaderVersions(ModLoaders.Forge))
+            If TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.Fabric) Then Dependencies.Add("fabric-loader", TargetInstance.Version.ModLoaderVersions(ModLoaders.Fabric))
+            If TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.NeoForge) Then Dependencies.Add("neoforge", TargetInstance.Version.ModLoaderVersions(ModLoaders.NeoForge))
             Dim ResultJson As New JObject From {
                 {"game", "minecraft"},
                 {"formatVersion", 1},
                 {"versionId", PackVersion},
                 {"name", PackName},
-                {"summary", McVersion.Info},
+                {"summary", TargetInstance.Info},
                 {"files", Files},
                 {"dependencies", Dependencies}
             }

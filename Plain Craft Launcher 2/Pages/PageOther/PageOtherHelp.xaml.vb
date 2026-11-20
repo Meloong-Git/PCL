@@ -48,12 +48,13 @@ Public Class PageOtherHelp
                     If Item.Types.Contains(Type) Then TypeItems.Add(Item)
                 Next
                 '增加卡片
-                Dim NewCard As New MyCard With {.Title = Type, .Margin = New Thickness(0, 0, 0, 15), .SwapType = 11}
-                Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = TypeItems}
+                Dim NewCard As New MyCard With {.Title = Type, .Margin = New Thickness(0, 0, 0, 15)}
+                Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0)}
                 NewCard.Children.Add(NewStack)
                 NewCard.SwapControl = NewStack
+                NewCard.SetContentBuilder(TypeItems, Function(Entry) Entry.ToListItem)
                 If Type = "指南" Then
-                    MyCard.StackInstall(NewStack, 11, "指南")
+                    NewCard.BuildContent()
                 Else
                     NewCard.IsSwapped = True
                 End If

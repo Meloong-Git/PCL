@@ -64,10 +64,10 @@ Public Class PageDownloadResourceDetail
             If IsXSpecial Then Return 1
             If IsYSpecial Then Return -1
             '比较版本号
-            Dim VersionCodeSort = -CompareVersion(x.Replace(x.BeforeFirst(" ") & " ", ""), y.Replace(y.BeforeFirst(" ") & " ", ""))
+            Dim VersionCodeSort = -McUtils.CompareVersion(x.Replace(x.BeforeFirst(" ") & " ", ""), y.Replace(y.BeforeFirst(" ") & " ", ""))
             If VersionCodeSort <> 0 Then Return VersionCodeSort
             '比较全部
-            Return -CompareVersion(x, y)
+            Return -McUtils.CompareVersion(x, y)
         End Function
         Public Sub New(Optional Topmost As String = "")
             Me.Topmost = If(Topmost, "")
@@ -98,7 +98,7 @@ Public Class PageDownloadResourceDetail
         Dim UpdateFilters =
         Sub()
             Filters = Results.SelectMany(Function(v) v.GameVersions).Select(Function(v) GetGroupedVersionName(v, GroupedDrop, GroupedOld)).
-                Distinct.OrderByDescending(Function(s) s, New VersionComparer).ToList
+                Distinct.OrderByDescending(Function(s) s, Comparer(Of String).Create(Function(x, y) McUtils.CompareVersion(x, y))).ToList
         End Sub
 
         '确定分组方式
@@ -174,7 +174,7 @@ GroupDone:
                 Dim Loaders As New List(Of String)
                 If Project.ModLoaders.Flags.Count > 1 AndAlso '工程至少有两个加载器
                     Version.ResourceType = ResourceTypes.Mod AndAlso '是 Mod
-                    McVersion.IsFormatFit(VerName) Then '不是 “快照版本” 之类的
+                    McVersion.IsStandardFormat(VerName) Then '不是 “快照版本” 之类的
                     Loaders.AddRange(Version.ModLoaders.Flags.Select(Function(f) f.ToString & " "))
                 End If
                 If Not Loaders.Any() Then Loaders.Add("") '保底加一个空的，确保它在一张卡片里
@@ -206,16 +206,17 @@ GroupDone:
                 If Not Pair.Value.Any() Then Continue For
                 If Pair.Key = TargetCardName.Replace("（所选版本）", "") Then Continue For
                 '增加卡片
-                Dim NewCard As New MyCard With {.Title = Pair.Key, .Margin = New Thickness(0, 0, 0, 15), .SwapType = If(TargetResourceType = ResourceTypes.ModPack, 9, 8)} '9 是安装，8 是另存为
+                Dim NewCard As New MyCard With {.Title = Pair.Key, .Margin = New Thickness(0, 0, 0, 15)}
                 Dim NewStack As New StackPanel With {.Margin = New Thickness(20, MyCard.SwapedHeight, 18, 0), .VerticalAlignment = VerticalAlignment.Top, .RenderTransform = New TranslateTransform(0, 0), .Tag = Pair.Value}
                 NewCard.Children.Add(NewStack)
                 NewCard.SwapControl = NewStack
+                NewCard.SetContentBuilder(AddressOf InitializeStackResourceVersions)
                 PanResults.Children.Add(NewCard)
                 '确定卡片是否默认展开
                 If Pair.Key = TargetCardName OrElse
                    (FrmMain.PageCurrent.Additional IsNot Nothing AndAlso '#2761
                    CType(FrmMain.PageCurrent.Additional(1), List(Of String)).Contains(NewCard.Title)) Then
-                    MyCard.StackInstall(NewStack, If(TargetResourceType = ResourceTypes.ModPack, 9, 8), Pair.Key) '9 是安装，8 是另存为
+                    NewCard.BuildContent()
                 Else
                     NewCard.IsSwapped = True
                 End If
@@ -240,13 +241,53 @@ GroupDone:
             Logger.Error(ex, "可视化工程下载列表出错")
         End Try
     End Sub
+    ''' <summary>
+    ''' 根据卡片中的 StackPanel.Tag 将资源版本列表数据实例化为 UI。
+    ''' </summary>
+    Private Sub InitializeStackResourceVersions(Stack As StackPanel)
+        Dim Versions = CType(Stack.Tag, List(Of ResourceVersion)).SortByComparison(Function(a, b) a.ReleaseDate > b.ReleaseDate)
+        Dim HasDuplicates = Versions.DistinctBy(Function(a) a.Display).Count <> Versions.Count
+        Dim Dependences As List(Of String)
+        '获取并添加前置信息
+        If TargetResourceType = ResourceTypes.ModPack Then
+            Dependences = New List(Of String) '整合包的前置信息会显示其中包含的一大堆 Mod，不是真正意义的前置
+        Else
+            Dependences = Versions.SelectMany(Function(f) f.Dependencies).Distinct.Ordered.ToList()
+        End If
+        If Dependences.Any() Then
+            Dependences = Dependences.Where(
+            Function(d)
+                If Not ResourceProject.Cache.ContainsKey(d) Then Logger.Warn($"未找到 ID {d} 的前置信息")
+                Return ResourceProject.Cache.ContainsKey(d)
+            End Function).ToList
+            '添加开头间隔
+            Stack.Children.Add(New TextBlock With {.Text = "前置资源", .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 2, 0, 5)})
+            '添加前置列表
+            For Each Dep In Dependences
+                Dim Item = ResourceProject.Cache(Dep).ToResourceItem(False, False)
+                Stack.Children.Add(Item)
+            Next
+            '添加结尾间隔
+            Stack.Children.Add(New TextBlock With {.Text = "版本列表", .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 12, 0, 5)})
+        End If
+        '实例化每个元素
+        For Each Version In Versions
+            If Not RestrictMcDownload AndAlso TargetResourceType = ResourceTypes.ModPack Then
+                Stack.Children.Add(Version.ToListItem(AddressOf Install_Click, AddressOf Save_Click, IsBadDisplay:=HasDuplicates))
+            Else
+                Stack.Children.Add(Version.ToListItem(AddressOf Save_Click, IsBadDisplay:=HasDuplicates))
+            End If
+        Next
+        Stack.Children.Add(New FrameworkElement With {.Height = 18})
+        Stack.Tag = Nothing
+    End Sub
     Private Function GetGroupedVersionName(Name As String, GroupedByDrop As Boolean, FoldOld As Boolean) As String
         Dim Drop = McVersion.VersionToDrop(Name)
         If Name Is Nothing Then
             Return "其他"
         ElseIf Name.Contains("w") OrElse Drop = 209 Then
             Return "快照版"
-        ElseIf Not McVersion.IsFormatFit(Name) OrElse (FoldOld AndAlso Drop < 120) Then
+        ElseIf Not McVersion.IsStandardFormat(Name) OrElse (FoldOld AndAlso Drop < 120) Then
             Return "远古版"
         ElseIf GroupedByDrop Then
             Return McVersion.DropToVersion(Drop)
@@ -469,19 +510,23 @@ GroupDone:
                     '弹窗要求选择保存位置
                     Dim Target As String
                     Dim Ext As String = If(File.ResourceType = ResourceTypes.Mod,
-                        If(File.FileName.EndsWithF(".litemod"), "litemod", "jar"),
-                        If(File.FileName.EndsWithF(".mrpack"), "mrpack", "zip"))
+                        If(PathUtils.GetExtension(File.FileName) = "litemod", "litemod", "jar"),
+                        If(PathUtils.GetExtension(File.FileName) = "mrpack", "mrpack", "zip"))
                     Target = Dialogs.SaveFile("选择保存位置", FileName, DefaultFolder, {(Ext, Desc & "文件")})
                     If Target Is Nothing Then Return
                     '构造步骤加载器
                     Dim LoaderName As String = Desc & "下载：" & PathUtils.GetFileNameWithoutExtension(Target) & " "
-                    If Target <> DefaultFolder Then CachedFolder(File.ResourceType) = PathUtils.RemoveLastPart(Target)
+                    If Not PathUtils.IsSame(PathUtils.RemoveLastPart(Target), DefaultFolder) Then CachedFolder(File.ResourceType) = PathUtils.RemoveLastPart(Target)
                     Dim Loaders As New List(Of LoaderBase)
                     Loaders.Add(New LoaderDownload("下载文件", {
                         File.ToNetFile(Target, If(TargetResourceType = ResourceTypes.Any, ResourceVersion.DownloadReason.Dependency, ResourceVersion.DownloadReason.Standalone))
                     }) With {.ProgressWeight = 6, .Block = True})
                     '启动
-                    Dim Loader As New LoaderCombo(Of Integer)(LoaderName, Loaders) With {.OnStateChanged = AddressOf LoaderStateChangedHintOnly}
+                    Dim Loader As New LoaderCombo(Of Integer)(LoaderName, Loaders) With {.OnStateChanged =
+                    Sub(MyLoader)
+                        LoaderStateChangedHintOnly(MyLoader)
+                        If MyLoader.State = LoadState.Finished AndAlso File.ResourceType = ResourceTypes.ModPack Then OpenExplorer(Target)
+                    End Sub}
                     Loader.Start(1)
                     LoaderTaskbarAdd(Loader)
                     FrmMain.BtnExtraDownload.ShowRefresh()
@@ -508,31 +553,6 @@ GroupDone:
         TargetResourceType = If(TargetResourceType = ResourceTypes.Mod, ResourceTypes.DataPack, ResourceTypes.Mod)
         FrmMain.PageCurrent.Additional(4) = TargetResourceType '加载器会从这里重新拿数据
         PageLoaderRestart(IsForceRestart:=True)
-    End Sub
-
-    ''' <summary>
-    ''' 预载包含大量 ProjectVersion 的卡片，添加必要的元素和前置列表。
-    ''' </summary>
-    Public Shared Sub ResourceFilesCardPreload(Stack As StackPanel, Files As List(Of ResourceVersion))
-        '获取卡片对应的前置 ID
-        '如果为整合包就不会有 Dependencies 信息，所以不用管
-        Dim Deps As List(Of String) = Files.SelectMany(Function(f) f.Dependencies).Distinct.ToList()
-        Deps.Sort()
-        If Not Deps.Any() Then Return
-        Deps = Deps.Where(
-        Function(dep)
-            If Not ResourceProject.Cache.ContainsKey(dep) Then Logger.Warn($"未找到 ID {dep} 的前置信息")
-            Return ResourceProject.Cache.ContainsKey(dep)
-        End Function).ToList
-        '添加开头间隔
-        Stack.Children.Add(New TextBlock With {.Text = "前置资源", .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 2, 0, 5)})
-        '添加前置列表
-        For Each Dep In Deps
-            Dim Item = ResourceProject.Cache(Dep).ToResourceItem(False, False)
-            Stack.Children.Add(Item)
-        Next
-        '添加结尾间隔
-        Stack.Children.Add(New TextBlock With {.Text = "版本列表", .FontSize = 14, .HorizontalAlignment = HorizontalAlignment.Left, .Margin = New Thickness(6, 12, 0, 5)})
     End Sub
 
 End Class

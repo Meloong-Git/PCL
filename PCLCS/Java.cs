@@ -87,9 +87,9 @@ namespace PCLCS;
 
     // 相同检查
     public bool Equals(Java? other)
-        => other is not null && string.Equals(Folder, other.Folder, StringComparison.OrdinalIgnoreCase);
+        => other is not null && PathUtils.IsSame(Folder, other.Folder);
     public override bool Equals(object? obj) => obj is Java other && Equals(other);
-    public override int GetHashCode() => StringComparer.OrdinalIgnoreCase.GetHashCode(Folder);
+    public override int GetHashCode() => StringComparer.CurrentCultureIgnoreCase.GetHashCode(PathUtils.ForCompare(Folder));
 
     /// <summary>用户友好的描述文本。</summary>
     public override string ToString()
@@ -211,7 +211,7 @@ public static class JavaUtils {
                         }
                         // 结果
                         var hasReparsePoint = HasReparsePoint(FileUtils.GetInfo(Path.Combine(targetFolder, "java.exe")));
-                        var isSpecialPath = targetFolder.Contains("java8path_target_") || targetFolder.Contains("javapath_target_") || targetFolder.Contains("javatmp") || targetFolder.Contains("system32");
+                        var isSpecialPath = targetFolder.ContainsIgnoreCase("java8path_target_") || targetFolder.ContainsIgnoreCase("javapath_target_") || targetFolder.ContainsIgnoreCase("javatmp") || targetFolder.ContainsIgnoreCase("system32");
                         results.Add((targetFolder, hasReparsePoint, isSpecialPath));
                     }
                 } catch (UnauthorizedAccessException) {

@@ -313,6 +313,10 @@ Public Module ModLoader
             '获取输入
             Try
                 Input = StartGetInput(Input)
+            Catch ex As Exception When ex.IsCanceled
+                '线程因获取输入期间加载器被重启而中断，此时输入无效，直接忽略，不应视为加载失败
+                Logger.Trace(ex, $"加载输入获取因取消而中断（{Name}）")
+                Return True
             Catch ex As Exception
                 Logger.Error(ex, $"加载输入获取失败（{Name}）", LogBehavior.Toast)
                 [Error] = ex

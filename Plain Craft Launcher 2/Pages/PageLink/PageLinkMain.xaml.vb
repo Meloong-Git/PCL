@@ -358,8 +358,9 @@ Public Class PageLinkMain
     '复制邀请码
     Private Sub Copy() Handles BtnFinishCopy.Click
         Dim CodeText As String = $"在 PCL 启动器中输入邀请码【{GetInviteCode()}】，即可加入联机房间！"
-        ClipboardSet(CodeText, SuccessHint:="已复制邀请码！")
+        ClipboardSet(CodeText, False)
         Settings.Set("LinkLastAutoJoinInviteCode", CodeText)
+        Hint("已复制邀请码！", HintType.Green)
     End Sub
     Private Function GetInviteCode() As String
         Return $"{NetworkName}-{NetworkSecret}-{INVITE_CODE_VERSION.ToString.PadLeft(2, "0"c)}{ _
@@ -368,7 +369,8 @@ Public Class PageLinkMain
 
     '复制 IP
     Private Sub BtnFinishIp_MouseLeftButtonUp(sender As Object, e As MouseButtonEventArgs) Handles BtnFinishIp.MouseLeftButtonUp
-        ClipboardSet(ClientAddress, SuccessHint:="已复制服务器地址！")
+        ClipboardSet(ClientAddress, False)
+        Hint("已复制服务器地址！", HintType.Green)
     End Sub
 
 #End Region

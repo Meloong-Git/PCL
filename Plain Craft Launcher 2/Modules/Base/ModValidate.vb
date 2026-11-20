@@ -382,7 +382,7 @@ Public Class ValidateFolderPath
     Public Overrides Function Validate(Str As String) As String
         '去除尾部斜线，统一为 \
         Str = Str.Replace("/", "\")
-        If Not Str.TrimEnd("\").EndsWithF(":") Then Str = Str.TrimEnd("\")
+        If Not PathUtils.RemoveSlashSuffix(Str).EndsWithF(":") Then Str = PathUtils.RemoveSlashSuffix(Str)
         '检查是否为空
         Dim LengthCheck As String = New ValidateNullOrWhiteSpace().Validate(Str)
         If LengthCheck <> "" Then Return LengthCheck
