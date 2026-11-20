@@ -190,6 +190,9 @@ public sealed class McVersion {
         // 从 jar 文件的 version.json 中获取版本号
         if (jarVersionJson?["name"] is JToken jarNameToken && jarNameToken.ToString() is { Length: < 32 } jarName) { // 因为 wiki 说这玩意儿可能是个 hash，虽然我没发现
             Logger.Info($"从版本 jar 中的 version.json 获取到版本号：{jarName}");
+            // version.json 中为显示名，转换为清单中的 ID
+            Match snapshotMatch = Regex.Match(jarName.Trim(), @"^((1|[2-9][0-9])\.[0-9]+(\.[0-9]+)?) Snapshot[ -]([1-9][0-9]*)$", RegexOptions.IgnoreCase);
+            if (snapshotMatch.Success) return $"{snapshotMatch.Groups[1].Value}-snapshot-{snapshotMatch.Groups[4].Value}";
             return jarName;
         }
         string VersionPattern = @"(([1-9][0-9]w[0-9]{2}[a-g])|((1|[2-9][0-9])\.[0-9]+(\.[0-9]+)?(-(pre|rc|snapshot-?)[1-9]*| Pre-Release( [1-9])?)?))(_unobfuscated)?";
