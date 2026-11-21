@@ -107,6 +107,12 @@ Public Class ResourceProject
         End Get
     End Property
     ''' <summary>
+    ''' 该项目在指定平台上的 Slug。
+    ''' </summary>
+    Public Function GetSlugOnPlatform(TargetPlatform As ResourcePlatforms) As String
+        Return WikiEntry?.Slugs.GetOrDefault(TargetPlatform)
+    End Function
+    ''' <summary>
     ''' 翻译后的中文名。若数据库没有则等同于 RawName。
     ''' </summary>
     Public ReadOnly Property TranslatedName As String
