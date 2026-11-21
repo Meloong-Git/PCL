@@ -113,7 +113,13 @@ Public Class MySkin
                 ImgFore.Source = Nothing
             End If
             '脸层
-            ImgBack.Source = Image.Clip(Scale * 8, Scale * 8, Scale * 8, Scale * 8)
+            Dim Face As MyBitmap = Image.Clip(Scale * 8, Scale * 8, Scale * 8, Scale * 8)
+            If Enumerable.Range(0, 64).All(Function(I) Face.Pic.GetPixel(I Mod 8, I \ 8).A = 0) Then
+                Using G = System.Drawing.Graphics.FromImage(Face.Pic)
+                    G.Clear(System.Drawing.Color.Black)
+                End Using
+            End If
+            ImgBack.Source = Face
             Logger.Info($"载入头像成功：{Loader.Name}")
         Catch ex As Exception
             Logger.Error(ex, $"载入头像失败（{If(Address, "null")},{Loader.Name}）", LogBehavior.Toast)
