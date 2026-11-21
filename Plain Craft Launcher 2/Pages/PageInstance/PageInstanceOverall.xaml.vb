@@ -1,4 +1,4 @@
-﻿Public Class PageInstanceOverall
+Public Class PageInstanceOverall
 
     Private IsLoad As Boolean = False
     Private Sub PageSetupLaunch_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
@@ -104,50 +104,21 @@
     '重命名版本
     Private Sub BtnDisplayRename_Click(sender As Object, e As EventArgs) Handles BtnDisplayRename.Click
         Try
+            If McInstanceLock.IsLocked(PageInstanceLeft.Instance) Then
+                Hint("该版本正在被修改，请稍后再重命名！", HintType.Red)
+                Return
+            End If
             '确认输入的新名称
             Dim OldName As String = PageInstanceLeft.Instance.Name
-            Dim OldPath As String = PageInstanceLeft.Instance.PathVersion
             '修改此部分的同时修改快速安装的版本名检测*
             Dim NewName As String = MyMsgBoxInput("重命名版本", "", OldName, New ObjectModel.Collection(Of Validate) From {
-                New ValidateFolderName(McFolderSelected & "versions", IgnoreCase:=False)})
+                New ValidateFolderName(McFolderSelected & "versions", IgnoreList:=New List(Of String) From {OldName})
+            })
             If String.IsNullOrWhiteSpace(NewName) Then Return
-            Dim NewPath As String = McFolderSelected & "versions\" & NewName & "\"
-            '重新读取版本 JSON 信息，避免 JsonObject 中已被合并的项被重新存储
-            Dim JsonObject As JObject
-            Dim OldJsonPath As String = PageInstanceLeft.Instance.GetJsonPath()
-            Try
-                JsonObject = GetJson(FileUtils.ReadAsString(OldJsonPath))
-            Catch ex As Exception
-                Logger.Warn(ex, "在重命名读取 json 时失败")
-                JsonObject = PageInstanceLeft.Instance.JsonObject
-            End Try
-            '重命名主文件夹
-            DirectoryUtils.Move(OldPath, NewPath)
-            '清理 ini 缓存
-            PageInstanceLeft.Instance.ResetIniCache()
-            '重命名 jar 文件与 natives 文件夹
-            '不能进行遍历重命名，否则在版本名很短的时候容易误伤其他文件（#6443）
-            If DirectoryUtils.Exists($"{NewPath}{OldName}-natives") Then DirectoryUtils.Move($"{NewPath}{OldName}-natives", $"{NewPath}{NewName}-natives")
-            If FileUtils.Exists($"{NewPath}{OldName}.jar") Then FileUtils.Move($"{NewPath}{OldName}.jar", $"{NewPath}{NewName}.jar")
-            '替换版本设置文件中的路径
-            If FileUtils.Exists(NewPath & "PCL\Setup.ini") Then
-                FileUtils.Write(NewPath & "PCL\Setup.ini", FileUtils.ReadAsString(NewPath & "PCL\Setup.ini").Replace(OldPath, NewPath))
-            End If
-            '更改已选中的版本
-            If ReadIni(McFolderSelected & "PCL.ini", "Version") = OldName Then
-                WriteIni(McFolderSelected & "PCL.ini", "Version", NewName)
-            End If
-            '更新版本 Json
-            Try
-                JsonObject("id") = NewName
-                FileUtils.Delete(NewPath & PathUtils.GetLastPart(OldJsonPath))
-                FileUtils.Write(NewPath & NewName & ".json", JsonObject.ToString)
-            Catch ex As Exception
-                Logger.Warn(ex, "重命名版本 json 失败")
-            End Try
+            Dim NewInstance = PageInstanceLeft.Instance.Rename(NewName)
             '刷新与提示
             Hint("重命名成功！", HintType.Green)
-            PageInstanceLeft.Instance = New McInstance(NewName).Load()
+            PageInstanceLeft.Instance = NewInstance
             If Not IsNothing(McInstanceSelected) AndAlso McInstanceSelected.Equals(PageInstanceLeft.Instance) Then WriteIni(McFolderSelected & "PCL.ini", "Version", NewName)
             Reload()
             LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.ForceRun, MaxDepth:=1, ExtraPath:="versions\")
@@ -157,7 +128,7 @@
     End Sub
 
     '版本图标
-    Private Sub ComboDisplayLogo_SelectionChanged(sender As Object, e As SelectionChangedEventArgs) Handles ComboDisplayLogo.SelectionChanged
+    Private Sub ComboDisplayLogo_SelectionChanged() Handles ItemDisplayLogoCustom.PreviewMouseLeftButtonUp, ComboDisplayLogo.SelectionChanged
         If Not (IsLoad AndAlso AniControlEnabled = 0) Then Return
         '选择 自定义 时修改图片
         Try
@@ -228,6 +199,13 @@
         OpenExplorer(Folder)
     End Sub
 
+    '截图文件夹
+    Private Sub BtnFolderScreen_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnFolderScreen.Click
+        Dim Folder As String = PageInstanceLeft.Instance.PathIndie & "screenshots\"
+        DirectoryUtils.Create(Folder)
+        OpenExplorer(Folder)
+    End Sub
+
 #End Region
 
 #Region "卡片：管理"
@@ -259,6 +237,10 @@
     '补全文件
     Private Sub BtnManageCheck_Click(sender As Object, e As EventArgs) Handles BtnManageCheck.Click
         Try
+            If McInstanceLock.IsLocked(PageInstanceLeft.Instance) Then
+                Hint("该版本正在被修改，请稍后再补全文件！", HintType.Red)
+                Return
+            End If
             '忽略文件检查提示
             If ShouldIgnoreFileCheck(PageInstanceLeft.Instance) Then
                 Hint("请先关闭 [版本设置 → 设置 → 高级启动选项 → 关闭文件校验]，然后再尝试补全文件！", HintType.Blue)
@@ -271,7 +253,7 @@
                 Return
             Next
             '启动
-            Dim Loader As New LoaderCombo(Of String)(PageInstanceLeft.Instance.Name & " 文件补全", DlClientFix(PageInstanceLeft.Instance, True, AssetsIndexExistsBehaviour.AlwaysDownload))
+            Dim Loader As New LoaderCombo(Of String)(PageInstanceLeft.Instance.Name & " 文件补全", DlClientFix(PageInstanceLeft.Instance, True, False))
             Loader.OnStateChanged =
             Sub()
                 Select Case Loader.State
@@ -279,7 +261,7 @@
                         Hint(Loader.Name & "成功！", HintType.Green)
                     Case LoadState.Failed
                         Hint(Loader.Name & "失败：" & Loader.Error.GetDisplay(False), HintType.Red)
-                    Case LoadState.Interrupted
+                    Case LoadState.Canceled
                         Hint(Loader.Name & "已取消！", HintType.Blue)
                 End Select
             End Sub
@@ -296,13 +278,20 @@
     '修改此代码时，同时修改 PageSelectRight 中的代码
     Private Sub BtnManageDelete_Click(sender As Object, e As EventArgs) Handles BtnManageDelete.Click
         Try
+            If McInstanceLock.IsLocked(PageInstanceLeft.Instance) Then
+                Hint("该版本正在被修改，请稍后再删除！", HintType.Red)
+                Return
+            End If
             Dim IsShiftPressed As Boolean = My.Computer.Keyboard.ShiftKeyDown
-            Dim IsHintIndie As Boolean = PageInstanceLeft.Instance.State <> McInstanceState.Error AndAlso PageInstanceLeft.Instance.PathIndie <> McFolderSelected
+            Dim IsHintIndie As Boolean = PageInstanceLeft.Instance.State <> McInstance.McInstanceState.Error AndAlso PageInstanceLeft.Instance.PathIndie <> McFolderSelected
+            Dim SavesFolder = DirectoryUtils.GetInfo(PageInstanceLeft.Instance.PathIndie & "saves\")
+            Dim SaveEntries = If(IsHintIndie AndAlso SavesFolder.Exists, SavesFolder.EnumerateDirectories.OrderByDescending(Function(Save) Save.LastWriteTime).Select(Function(Save) $"{Save.Name}（上次修改：{StringUtils.FormatTimeSpan(Save.LastWriteTime - Date.Now, False)}）").ToList, New List(Of String))
             Select Case MyMsgBox($"你确定要{If(IsShiftPressed, "永久", "")}删除版本 {PageInstanceLeft.Instance.Name} 吗？" &
-                        If(IsHintIndie, vbCrLf & "由于该版本开启了版本隔离，删除版本时该版本对应的存档、资源包、Mod 等文件也将被一并删除！", ""),
+                        If(IsHintIndie, vbCrLf & "该版本对应的存档、资源包、Mod 等文件也将被一并删除！" &
+                            If(SaveEntries.Any, vbCrLf & vbCrLf & "这会删除以下存档：" & vbCrLf & "· " & SaveEntries.Join(vbCrLf & "· "), ""), ""),
                         "版本删除确认", , "取消",, IsHintIndie OrElse IsShiftPressed)
                 Case 1
-                    PageInstanceLeft.Instance.ResetIniCache()
+                    PageInstanceLeft.Instance.ResetSettingsCache()
                     DirectoryUtils.Delete(PageInstanceLeft.Instance.PathVersion, Not IsShiftPressed)
                     Hint("已删除版本 " & PageInstanceLeft.Instance.Name & "！", HintType.Green)
                 Case 2

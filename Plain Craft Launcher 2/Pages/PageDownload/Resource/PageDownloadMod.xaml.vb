@@ -1,2 +1,2 @@
-﻿Public Class PageDownloadMod
+Public Class PageDownloadMod
 End Class

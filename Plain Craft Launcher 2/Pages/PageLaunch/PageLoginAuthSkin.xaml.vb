@@ -1,4 +1,4 @@
-﻿Public Class PageLoginAuthSkin
+Public Class PageLoginAuthSkin
 
     Public Sub New()
         InitializeComponent()

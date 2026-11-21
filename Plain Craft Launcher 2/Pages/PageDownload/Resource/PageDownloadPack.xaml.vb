@@ -1,2 +1,2 @@
-﻿Public Class PageDownloadPack
+Public Class PageDownloadPack
 End Class

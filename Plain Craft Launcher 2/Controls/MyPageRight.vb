@@ -1,4 +1,4 @@
-﻿Public Class MyPageRight
+Public Class MyPageRight
     Inherits AdornerDecorator
     Public PageUuid As Integer = GetUuid()
 
@@ -153,7 +153,7 @@
     '重试
     Public Sub PageLoaderRestart(Optional Input As Object = Nothing, Optional IsForceRestart As Boolean = True) '由外部调用的重试
         If Not PageLoaderAutoRun Then Return
-        If PageLoader.GetType.Name.StartsWithF("LoaderTask") Then
+        If GeneralUtils.IsGenericInstanceOf(PageLoader, GetType(LoaderTask(Of ,))) OrElse TypeOf PageLoader Is LoaderWorker Then
             PageLoader.Start(CType(PageLoader, Object).StartGetInput(Input, PageLoaderInputInvoke), IsForceRestart:=IsForceRestart)
         Else
             If Input Is Nothing AndAlso PageLoaderInputInvoke IsNot Nothing Then Input = PageLoaderInputInvoke()
@@ -175,7 +175,7 @@
         RaiseEvent PageEnter()
         Select Case PageState
             Case PageStates.Empty
-                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Interrupted Then
+                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Canceled Then
                     '如果加载器在进入页面时不启动（例如联机），那么在此时就会有 State = Waiting
                     PageState = PageStates.ContentEnter
                     TriggerEnterAnimation(PanAlways, If(PanContent, Child))
@@ -188,7 +188,7 @@
                 End If
             Case PageStates.ContentExit
                 '和上面的一样，但是不管 PanAlways
-                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Interrupted Then
+                If PageLoader Is Nothing OrElse PageLoader.State = LoadState.Finished OrElse PageLoader.State = LoadState.Waiting OrElse PageLoader.State = LoadState.Canceled Then
                     PageState = PageStates.ContentEnter
                     TriggerEnterAnimation(If(PanContent, Child))
                 ElseIf PageLoader.State = LoadState.Loading Then
@@ -364,9 +364,9 @@
                     Case PageStates.LoaderExit
                         PageState = PageStates.ContentExit
                 End Select
-            Case LoadState.Finished, LoadState.Interrupted, LoadState.Waiting
+            Case LoadState.Finished, LoadState.Canceled, LoadState.Waiting
                 If Not (OldState = LoadState.Failed OrElse OldState = LoadState.Loading) Then Return
-                Logger.Trace("已触发 PageLoaderState (Stop/Interrupt)")
+                Logger.Trace("已触发 PageLoaderState (Stop/Canceled)")
                 '运行结束
                 '需要从 LoaderWait 切换到 ContentEnter，或从 LoaderStay 切换到 LoaderExit
                 Select Case PageState

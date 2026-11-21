@@ -1,4 +1,4 @@
-﻿Public Class PageOtherTest
+Public Class PageOtherTest
 
     Public Shared Sub StartCustomDownload(Url As String, FileName As String, Optional Folder As String = Nothing)
         Hint("为便于维护，开源内容中不包含百宝箱功能……")

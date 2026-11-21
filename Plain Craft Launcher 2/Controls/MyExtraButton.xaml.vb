@@ -1,4 +1,4 @@
-﻿Public Class MyExtraButton
+Public Class MyExtraButton
 
     '声明
     Public Event Click(sender As Object, e As MouseButtonEventArgs) '自定义事件

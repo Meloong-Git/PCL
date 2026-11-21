@@ -1,4 +1,4 @@
-﻿''' <summary>
+''' <summary>
 ''' 社区资源的项目信息。
 ''' </summary>
 Public Class ResourceProject
@@ -87,8 +87,8 @@ Public Class ResourceProject
         Get
             If Not LoadedDatabase Then
                 LoadedDatabase = True
-                If Types.HasFlag(ResourceTypes.Mod) OrElse Types.HasFlag(ResourceTypes.DataPack) Then
-                    _WikiEntry = WikiEntry.All.FirstOrDefault(Function(c) If(Platform = ResourcePlatforms.CurseForge, c.CurseForgeSlug, c.ModrinthSlug) = Slug)
+                If Types.HasFlagF(ResourceTypes.Mod) OrElse Types.HasFlagF(ResourceTypes.DataPack) Then
+                    _WikiEntry = WikiEntry.All.Value.FirstOrDefault(Function(c) c.Slugs.GetOrDefault(Platform) = Slug)
                 End If
             End If
             Return _WikiEntry
@@ -111,7 +111,7 @@ Public Class ResourceProject
     ''' </summary>
     Public ReadOnly Property TranslatedName As String
         Get
-            Return If(WikiEntry Is Nothing OrElse WikiEntry.ChineseName = "", RawName, WikiEntry.ChineseName)
+            Return If(WikiEntry?.ChineseName, RawName)
         End Get
     End Property
 
@@ -184,11 +184,11 @@ Public Class ResourceProject
                     If Not NewFile.DownloadAvailable Then Continue For
                     ModLoaders = ModLoaders Or NewFile.ModLoaders
                     Dim GameVersions = File("gameVersions").ToObject(Of List(Of String))
-                    If Not GameVersions.Any(Function(v) McVersion.IsFormatFit(v)) Then Continue For
+                    If Not GameVersions.Any(Function(v) McVersion.IsStandardFormat(v)) Then Continue For
                     Files.Add(New KeyValuePair(Of Integer, List(Of String))(File("id"), GameVersions))
                 Next
                 For Each File In If(Data("latestFilesIndexes"), New JArray) '这俩玩意儿包含的文件不一样，见 #3599
-                    If Not McVersion.IsFormatFit(File("gameVersion")) Then Continue For
+                    If Not McVersion.IsStandardFormat(File("gameVersion")) Then Continue For
                     Files.Add(New KeyValuePair(Of Integer, List(Of String))(File("fileId"), {File("gameVersion").ToString}.ToList))
                 Next
                 CurseForgeFileIds = Files.Select(Function(f) f.Key).Distinct.ToList
@@ -415,7 +415,7 @@ Public Class ResourceProject
         If Not MissingProjectIds.Any() Then Return
         '联网获取剩余的工程对象
         Dim Projects As JArray
-        If Platform.HasFlag(ResourcePlatforms.CurseForge) Then
+        If Platform.HasFlagF(ResourcePlatforms.CurseForge) Then
             Projects = DlModRequest("https://api.curseforge.com/v1/mods",
                 HttpMethod.Post, "{""modIds"": [" & MissingProjectIds.Join(","c) & "]}", "application/json")("data")
         Else
@@ -441,7 +441,7 @@ Public Class ResourceProject
         Json("Website") = Website
         Json("LastUpdate") = LastUpdate
         Json("DownloadCount") = DownloadCount
-        If ModLoaders <> ModLoaders.None Then Json("ModLoaders") = ModLoaders
+        If ModLoaders <> ModLoaders.None Then Json("ModLoaders") = CInt(ModLoaders)
         Json("Tags") = New JArray(Tags)
         If LogoUrl IsNot Nothing Then Json("LogoUrl") = LogoUrl
         If Drops.Any Then Json("Drops") = New JArray(Drops)
@@ -502,7 +502,6 @@ Public Class ResourceProject
         '获取 Mod 加载器描述
         Dim ModLoaderDescriptionFull As String, ModLoaderDescriptionPart As String
         Dim ModLoadersForDesc = ModLoaders.Flags().ToList()
-        If Settings.Get(Of Boolean)("ToolDownloadIgnoreQuilt") Then ModLoadersForDesc.Remove(ModLoaders.Quilt)
         Select Case ModLoadersForDesc.Count
             Case 0
                 If ModLoadersForDesc.IsSingle Then
@@ -519,8 +518,7 @@ Public Class ResourceProject
                 Dim NewestDrop As Integer = If(Drops.Any, Drops.First, 9999)
                 If ModLoadersForDesc.Contains(ModLoaders.Forge) AndAlso
                    (NewestDrop < 140 OrElse ModLoadersForDesc.Contains(ModLoaders.Fabric)) AndAlso
-                   (NewestDrop < 200 OrElse ModLoadersForDesc.Contains(ModLoaders.NeoForge)) AndAlso
-                   (NewestDrop < 140 OrElse ModLoadersForDesc.Contains(ModLoaders.Quilt) OrElse Settings.Get(Of Boolean)("ToolDownloadIgnoreQuilt")) Then
+                   (NewestDrop < 200 OrElse ModLoadersForDesc.Contains(ModLoaders.NeoForge)) Then
                     ModLoaderDescriptionFull = "任意"
                     ModLoaderDescriptionPart = ""
                 Else
@@ -561,7 +559,7 @@ Public Class ResourceProject
                 NewItem.LabVersion.Text = ModLoaderDescriptionFull
             End If
             NewItem.LabSource.Text = Platform.ToString
-            NewItem.LabTime.Text = GetTimeSpanString(LastUpdate - Date.Now, True)
+            NewItem.LabTime.Text = StringUtils.FormatTimeSpan(LastUpdate - Date.Now, True)
             NewItem.LabDownload.Text =
                 If(DownloadCount > 100000000, Math.Round(DownloadCount / 100000000, 2) & " 亿",
                 If(DownloadCount > 100000, Math.Floor(DownloadCount / 10000) & " 万", DownloadCount))

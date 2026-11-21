@@ -1,4 +1,4 @@
-﻿Public Class MyMsgLogin
+Public Class MyMsgLogin
     Private Data As JObject
     Private UserCode As String '需要用户在网页上输入的设备代码
     Private DeviceCode As String '用于轮询的设备代码
@@ -60,7 +60,7 @@
     Public Sub Btn1_Click() Handles Btn1.Click
     End Sub
     Public Sub Btn3_Click() Handles Btn3.Click
-        Finished(New ThreadInterruptedException)
+        Finished(New OperationCanceledException)
     End Sub
 
     Private Sub Drag(sender As Object, e As MouseButtonEventArgs) Handles PanBorder.MouseLeftButtonDown, LabTitle.MouseLeftButtonDown
@@ -116,7 +116,7 @@
                     Timeout:=5000 + UnknownFailureCount * 5000,
                     MakeLog:=False, RequireJson:=True)
                 '获取结果
-                Dim ResultJson As JObject = GetJson(Result)
+                Dim ResultJson As JObject = Result.DeserializeJson()
                 McLaunchLog($"令牌过期时间：{ResultJson("expires_in")} 秒")
                 Hint("网页登录成功！", HintType.Green)
                 Finished({ResultJson("access_token").ToString, ResultJson("refresh_token").ToString})

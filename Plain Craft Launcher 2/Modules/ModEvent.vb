@@ -1,5 +1,8 @@
-﻿
+
+
 #Region "附加属性"
+
+Imports PCL.FormMain
 
 ''' <summary>
 ''' 用于在 XAML 中初始化列表对象。
@@ -178,6 +181,8 @@ Public Class CustomEvent
         Logger.Info($"执行自定义事件：{Type}, {Arg}")
         If Arg Is Nothing Then Arg = ""
         Dim Args As String() = Arg.Split("|")
+        Dim Arg0 As String = Arg.BeforeFirst("|")
+        Dim Arg1 As String = Arg.AfterFirst("|")
         Try
             Select Case Type
                 Case EventType.打开网页
@@ -194,16 +199,16 @@ Public Class CustomEvent
                     Sub()
                         Try
                             '确认实际路径
-                            Dim ActualPaths = GetAbsoluteUrls(Args(0), Type)
+                            Dim ActualPaths = GetAbsoluteUrls(Arg0, Type)
                             Dim Location = ActualPaths(0), WorkingDir = ActualPaths(1)
                             Logger.Info($"打开类自定义事件实际路径：{Location}，工作目录：{WorkingDir}")
                             '执行
                             If Type = EventType.打开帮助 Then
                                 PageOtherHelp.EnterHelpPage(Location)
                             Else
-                                If Not EventSafetyConfirm("即将执行：" & Location & If(Args.Length >= 2, " " & Args(1), "")) Then Return
+                                If Not EventSafetyConfirm("即将执行：" & Location & If(Args.Length >= 2, " " & Arg1, "")) Then Return
                                 Dim Info As New ProcessStartInfo With {
-                                    .Arguments = If(Args.Length >= 2, Args(1), ""),
+                                    .Arguments = If(Args.Length >= 2, Arg1, ""),
                                     .FileName = Location,
                                     .WorkingDirectory = WorkingDir
                                 }
@@ -215,19 +220,19 @@ Public Class CustomEvent
                     End Sub)
 
                 Case EventType.启动游戏
-                    If Args(0) = "\current" Then
+                    If Arg0 = "\current" Then
                         If McInstanceSelected Is Nothing Then
                             Hint("请先选择一个 Minecraft 版本！", HintType.Red)
                             Return
                         Else
-                            Args(0) = McInstanceSelected.Name
+                            Arg0 = McInstanceSelected.Name
                         End If
                     End If
                     RunInUi(
                     Sub()
                         If McLaunchStart(New McLaunchOptions With
-                                {.ServerIp = If(Args.Length >= 2, Args(1), Nothing), .Instance = New McInstance(Args(0))}) Then
-                            Hint($"正在启动 {Args(0)}……")
+                                {.ServerIp = If(Args.Length >= 2, Args(1), Nothing), .Instance = New McInstance(Arg0)}) Then
+                            Hint($"正在启动 {Arg0}……")
                         End If
                     End Sub)
 
@@ -264,51 +269,69 @@ Public Class CustomEvent
 
                 Case EventType.弹出窗口
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 弹窗标题|弹窗内容")
-                    MyMsgBox(Args(1).Replace("\n", vbCrLf), Args(0).Replace("\n", vbCrLf), If(Args.Length > 2, Args(2), "确定"))
+                    MyMsgBox(Arg1.BeforeLast("|").Replace("\n", vbCrLf), Arg0.Replace("\n", vbCrLf), If(Args.Length > 2, Arg1.AfterLast("|"), "确定"))
 
                 Case EventType.弹出提示
-                    Hint(Args(0).Replace("\n", vbCrLf), If(Args.Length = 1, HintType.Blue, Args(1).ToEnum(Of HintType)))
+                    Hint(Arg0.Replace("\n", vbCrLf), If(Args.Length = 1, HintType.Blue, EnumUtils.FromString(Of HintType)(Arg1)))
 
                 Case EventType.切换页面
-                    RunInUi(Sub() FrmMain.PageChange(
-                                Args(0).ToEnum(Of FormMain.PageType),
-                                If(Args.Length = 1, FormMain.PageSubType.Default, Args(1).ToEnum(Of FormMain.PageSubType))))
+                    RunInUi(
+                    Sub()
+                        Dim TargetPage = EnumUtils.FromString(Of PageType)(Arg0)
+                        If TargetPage = PageType.InstanceSetup Then
+                            If McInstanceSelected Is Nothing Then
+                                Hint("请先选择一个 Minecraft 版本！", HintType.Red)
+                                Return
+                            End If
+                            If McInstanceLock.IsLocked(McInstanceSelected) Then
+                                Hint("该版本正在被修改，暂时无法进入版本设置！", HintType.Red)
+                                Return
+                            End If
+                            PageInstanceLeft.Instance = McInstanceSelected
+                        End If
+                        FrmMain.PageChange(TargetPage,
+                            If(Args.Length = 1, PageSubType.Default, EnumUtils.FromString(Of PageSubType)(Arg1)))
+                    End Sub)
 
                 Case EventType.导入整合包, EventType.安装整合包
                     RunInUi(Sub() ModpackInstall())
 
                 Case EventType.下载文件
-                    Args(0) = Args(0).Replace("\", "/")
-                    If Not (Args(0).StartsWithF("http://", True) OrElse Args(0).StartsWithF("https://", True)) Then
+                    Arg0 = Arg0.Replace("\", "/")
+                    If Not (Arg0.StartsWithF("http://", True) OrElse Arg0.StartsWithF("https://", True)) Then
                         MyMsgBox("EventData 必须为以 http:// 或 https:// 开头的网址。" & vbCrLf & "PCL 不支持其他乱七八糟的下载协议。", "事件执行失败")
                         Return
                     End If
-                    If Not EventSafetyConfirm("即将从该网址下载文件：" & vbCrLf & Args(0)) Then Return
+                    If Not EventSafetyConfirm("即将从该网址下载文件：" & vbCrLf & Arg0) Then Return
                     RunInUi(
                     Sub()
                         Try
                             Select Case Args.Length
                                 Case 1
-                                    PageOtherTest.StartCustomDownload(Args(0), PathUtils.GetLastPart(Args(0)))
+                                    PageOtherTest.StartCustomDownload(Arg0, PathUtils.GetLastPart(Arg0))
                                 Case 2
-                                    PageOtherTest.StartCustomDownload(Args(0), Args(1))
+                                    PageOtherTest.StartCustomDownload(Arg0, Arg1)
                                 Case Else
-                                    PageOtherTest.StartCustomDownload(Args(0), Args(1), Args(2))
+                                    PageOtherTest.StartCustomDownload(Arg0, Args(1), Args(2))
                             End Select
                         Catch
-                            PageOtherTest.StartCustomDownload(Args(0), "未知")
+                            PageOtherTest.StartCustomDownload(Arg0, "未知")
                         End Try
                     End Sub)
 
                 Case EventType.修改设置, EventType.写入设置
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 UiLauncherTransparent|400")
-                    Settings.SetSafe(Args(0), Args(1), Instance:=McInstanceSelected)
-                    If Args.Length = 2 Then Hint($"已写入设置：{Args(0)} → {Args(1)}", HintType.Green)
+                    Settings.SetSafe(Arg0, Args(1), Instance:=McInstanceSelected)
+                    If Args.Length = 2 Then Hint($"已写入设置：{Arg0} → {Args(1)}", HintType.Green)
 
                 Case EventType.修改变量, EventType.写入变量
                     If Args.Length = 1 Then Throw New Exception($"EventType {Type} 需要至少 2 个以 | 分割的参数，例如 VariableName|SomeValue")
-                    WriteReg("CustomEvent" & Args(0), Args(1))
-                    If Args.Length = 2 Then Hint($"已写入变量：{Args(0)} → {Args(1)}", HintType.Green)
+                    Try
+                        RegistryUtils.Write($"HKEY_CURRENT_USER\Software\{RegFolder}", $"CustomEvent{Arg0}", Args(1))
+                        If Args.Length = 2 Then Hint($"已写入变量：{Arg0} → {Args(1)}", HintType.Green)
+                    Catch ex As Exception
+                        Logger.Warn(ex, $"写入变量失败：{Arg0} → {Args(1)}", LogBehavior.Toast)
+                    End Try
 
                 Case EventType.加入房间
                     RunInUi(
@@ -347,7 +370,7 @@ Public Class CustomEvent
             Dim RawFileName As String
             Try
                 RawFileName = PathUtils.GetLastPart(RelativeUrl)
-                If Not RawFileName.EndsWithF(".json", True) Then Throw New Exception("未指向 .json 后缀的文件")
+                If Not PathUtils.GetExtension(RawFileName) = "json" Then Throw New Exception("未指向 .json 后缀的文件")
             Catch ex As Exception
                 Throw New Exception("联网帮助页面须指向一个帮助 JSON 文件，并在同路径下包含相应 XAML 文件！" & vbCrLf &
                                     "例如：" & vbCrLf &
@@ -372,20 +395,20 @@ Public Class CustomEvent
         RelativeUrl = RelativeUrl.Replace("/", "\").Lower.TrimStart("\")
 
         '确认实际路径
-        Dim Location As String, WorkingDir As String = PathExeFolder & "PCL"
+        Dim Location As String, WorkingDir As String = Paths.Base & "PCL"
         HelpTryExtract()
         If RelativeUrl.Contains(":\") Then
             '绝对路径
             Location = RelativeUrl
             Logger.Info($"自定义事件中由绝对路径{Type}：{Location}")
-        ElseIf FileUtils.Exists(PathExeFolder & "PCL\" & RelativeUrl) Then
+        ElseIf FileUtils.Exists(Paths.Base & "PCL\" & RelativeUrl) Then
             '相对 PCL 文件夹的路径
-            Location = PathExeFolder & "PCL\" & RelativeUrl
+            Location = Paths.Base & "PCL\" & RelativeUrl
             Logger.Info($"自定义事件中由相对 PCL 文件夹的路径{Type}：{Location}")
-        ElseIf FileUtils.Exists(PathExeFolder & "PCL\Help\" & RelativeUrl) Then
+        ElseIf FileUtils.Exists(Paths.Base & "PCL\Help\" & RelativeUrl) Then
             '相对 PCL 本地帮助文件夹的路径
-            Location = PathExeFolder & "PCL\Help\" & RelativeUrl
-            WorkingDir = PathExeFolder & "PCL\Help\"
+            Location = Paths.Base & "PCL\Help\" & RelativeUrl
+            WorkingDir = Paths.Base & "PCL\Help\"
             Logger.Info($"自定义事件中由相对 PCL 本地帮助文件夹的路径{Type}：{Location}")
         ElseIf Type = EventType.打开帮助 AndAlso FileUtils.Exists(PathTemp & "Help\" & RelativeUrl) Then
             '相对 PCL 自带帮助文件夹的路径

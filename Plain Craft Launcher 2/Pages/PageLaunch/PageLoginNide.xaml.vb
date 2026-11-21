@@ -1,4 +1,4 @@
-﻿Public Class PageLoginNide
+Public Class PageLoginNide
     Private IsFirstLoad As Boolean = True
     ''' <summary>
     ''' 刷新页面显示的所有信息。

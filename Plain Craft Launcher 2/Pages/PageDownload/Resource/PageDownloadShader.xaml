@@ -1,4 +1,4 @@
-﻿<local:MyPageRight
+<local:MyPageRight
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:PCL" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -27,7 +27,7 @@
         <local:MyComboBoxItem Margin="15,0,0,0" Content="高" Tag="/high" />
 
         <local:MyComboBoxItem Content="加载器" IsEnabled="False" />
-        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版可用" Tag="/vanilla" ToolTip="作为资源包加载，可以直接在原版游戏里使用。" ToolTipService.HorizontalOffset="70" />
+        <local:MyComboBoxItem Margin="15,0,0,0" Content="原版可用" Tag="/vanilla" ToolTip="作为资源包加载，可以直接在原版游戏里使用。" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="Iris" Tag="/iris" />
         <local:MyComboBoxItem Margin="15,0,0,0" Content="OptiFine" Tag="/optifine" />
     </local:PageResource>

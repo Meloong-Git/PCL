@@ -1,4 +1,4 @@
-﻿Class MySearchBox
+Class MySearchBox
     Inherits MyCard
 
     Public Event TextChanged(sender As Object, e As EventArgs)

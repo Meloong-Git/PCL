@@ -1,4 +1,4 @@
-﻿Imports System.ComponentModel
+Imports System.ComponentModel
 Imports System.Windows.Interop
 
 Public Class FormMain
@@ -11,10 +11,43 @@ Public Class FormMain
         Dim FeatureList As New List(Of KeyValuePair(Of Integer, String))
         '统计更新日志条目
         If BuildType = BuildTypes.Release Then
-            If LastVersion < 400 Then 'Release 2.12.8.0
+            If LastVersion < 415 Then 'Release 2.99.0.1
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "删除：MC 下载功能相关入口"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：为设置更新添加部分黑名单"))
+            End If
+            If LastVersion < 413 Then 'Release 2.99.0.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：为遵守相关法律法规，PCL 不再提供 MC 下载功能，非常抱歉 qwq……"))
+            End If
+            If LastVersion < 411 Then 'Release 2.14.0.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：允许修改、添加、移除、更新已安装版本的各个组件，可从版本设置中进入"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：启动游戏时允许按 Esc 取消"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：允许复制主页的启动日志中的内容"))
+                FeatureCount += 19
+                BugCount += 26
+            End If
+            If LastVersion < 408 Then 'Release 2.13.1.1
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：版本设置中，添加打开截图文件夹的快捷方式"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：导出整合包时，可以勾选导出光影设置文件"))
+                FeatureCount += 23
+                BugCount += 28
+            End If
+            If LastVersion < 406 Then 'Release 2.13.0.1
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：重做 Java 管理与相关设置，允许调整 Java 优先级、指定 Java 版本范围等"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：导出整合包时允许自动导出版本文件夹中的 Java"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：重做弹出提示的样式以及动画，以更符合现代 UI 审美"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：可能无法安装 OptiFine 26.1.2"))
+                FeatureCount += 35
+                BugCount += 17
+            End If
+            If LastVersion < 404 Then 'Release 2.12.8.2
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：Windows 7 无法正常联网"))
+                FeatureCount += 1
+                BugCount += 2
+            End If
+            If LastVersion < 402 Then 'Release 2.12.8.1
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：升级框架到 .NET Framework 4.8"))
-                FeatureCount += 28
-                BugCount += 19
+                FeatureCount += 35
+                BugCount += 21
             End If
             If LastVersion < 398 Then 'Release 2.12.7.3
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：下载游戏、整合包的稳定性"))
@@ -74,6 +107,59 @@ Public Class FormMain
             '3：BUG+ IMP* FEAT-
             '2：BUG* IMP-
             '1：BUG-
+            If LastVersion < 416 Then 'Snapshot 2.99.0.1
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "删除：MC 下载功能相关入口"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "优化：为设置更新添加部分黑名单"))
+            End If
+            If LastVersion < 414 Then 'Snapshot 2.99.0.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(5, "删除：为遵守相关法律法规，PCL 不再提供 MC 下载功能，非常抱歉 qwq……"))
+            End If
+            If LastVersion < 412 Then 'Snapshot 2.14.0.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：允许修改、添加、移除、更新已安装版本的各个组件，可从版本设置中进入"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：启动游戏时允许按 Esc 取消"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：允许复制主页的启动日志中的内容"))
+                FeatureCount += 19
+                BugCount += 26
+            End If
+            If LastVersion < 410 Then 'Snapshot 2.13.1.1
+                If LastVersion = 409 Then FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：更新 Mod 时可能更新成另一个 Mod 加载器的版本"))
+                FeatureCount += 2
+                BugCount += 6
+            End If
+            If LastVersion < 409 Then 'Snapshot 2.13.1.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：版本设置中，添加打开截图文件夹的快捷方式"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：导出整合包时，可以勾选导出光影设置文件"))
+                FeatureCount += 21
+                BugCount += 22
+            End If
+            If LastVersion < 407 Then 'Snapshot 2.13.0.1
+                If LastVersion = 405 Then
+                    FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：使用部分主页预设时崩溃"))
+                    FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：无法删除部分文件夹"))
+                    FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：版本设置中指定的 Java 无法被保存"))
+                    FeatureCount += 1
+                    BugCount += 3
+                End If
+                FeatureCount += 2
+            End If
+            If LastVersion < 405 Then 'Snapshot 2.13.0.0
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(4, "新增：重做 Java 管理与相关设置，允许调整 Java 优先级、指定 Java 版本范围等"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：导出整合包时允许自动导出版本文件夹中的 Java"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(3, "优化：重做弹出提示的样式以及动画，以更符合现代 UI 审美"))
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：可能无法安装 OptiFine 26.1.2"))
+                FeatureCount += 35
+                BugCount += 17
+            End If
+            If LastVersion < 403 Then 'Snapshot 2.12.8.2
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：Windows 7 无法正常联网"))
+                FeatureCount += 1
+                BugCount += 2
+            End If
+            If LastVersion < 401 Then 'Snapshot 2.12.8.1
+                FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：可能无法更换披风"))
+                FeatureCount += 8
+                BugCount += 6
+            End If
             If LastVersion < 399 Then 'Snapshot 2.12.8.0
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "优化：升级框架到 .NET Framework 4.8"))
                 FeatureCount += 28
@@ -109,7 +195,7 @@ Public Class FormMain
             If LastVersion < 385 Then 'Snapshot 2.12.5
                 FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法下载 NeoForge 26.1"))
                 If LastVersion = 384 Then
-                    FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：下载可能失败，提示下载管理刷新线程出错"))
+                    FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：下载可能失败，提示任务管理刷新线程出错"))
                     FeatureList.Add(New KeyValuePair(Of Integer, String)(2, "修复：无法保存选择的 Minecraft 文件夹"))
                     FeatureList.Add(New KeyValuePair(Of Integer, String)(1, "修复：使用中文搜索 Mod 时，部分结果会忽略筛选条件"))
                 End If
@@ -241,7 +327,7 @@ Public Class FormMain
         InitializeComponent()
         Opacity = 0
         '开启管理员权限下的文件拖拽
-        If SystemUtils.HasAdminRole() Then
+        If WindowsUtils.HasAdminRole() Then
             Static Helper As New DragHelper
             AddHandler SourceInitialized,
             Sub()
@@ -352,7 +438,7 @@ Public Class FormMain
             End If
             '启动加载器池
             Try
-                JavaListInit() '延后到同意协议后再执行，避免在初次启动时进行进程操作
+                JavaInit() '延后到同意协议后再执行，避免在初次启动时进行进程操作
                 Thread.Sleep(100)
                 DlClientListMojangLoader.Start(1) 'PCL 会同时根据这里的加载结果决定是否使用官方源进行下载
                 RunCountSub()
@@ -363,7 +449,7 @@ Public Class FormMain
             End Try
             '清理自动更新文件
             Try
-                FileUtils.Delete(PathExeFolder & "PCL\Plain Craft Launcher 2.exe")
+                FileUtils.Delete(Paths.Base & "PCL\Plain Craft Launcher 2.exe")
             Catch ex As Exception
                 Logger.Warn(ex, "清理自动更新文件失败")
             End Try
@@ -400,17 +486,17 @@ Public Class FormMain
         Logger.Info($"版本号从 {LastVersionCode} 升高到 {VersionCode}")
         Settings.Set("SystemLastVersionReg", VersionCode)
         '检查有记录的最高版本号
-        Dim LowerVersionCode As Integer
+        Dim HighestVersionCode As Integer
         Const SettingKey = If(BuildType = BuildTypes.Snapshot, "SystemHighestAlphaVersionReg", "SystemHighestBetaVersionReg")
-        LowerVersionCode = Settings.Get(Of Integer)("SystemHighestAlphaVersionReg")
-        If LowerVersionCode < VersionCode Then
+        HighestVersionCode = Settings.Get(Of Integer)(SettingKey)
+        If HighestVersionCode < VersionCode Then
             Settings.Set(SettingKey, VersionCode)
-            Logger.Info($"最高版本号从 {LowerVersionCode} 升高到 {VersionCode}")
+            Logger.Info($"最高版本号从 {HighestVersionCode} 升高到 {VersionCode}")
         End If
         '被移除的窗口设置选项
         If Settings.Get(Of Integer)("LaunchArgumentWindowType") = 5 Then Settings.Set("LaunchArgumentWindowType", 1)
         '修改主题设置项名称
-        If LowerVersionCode <= 207 Then
+        If HighestVersionCode <= 207 Then
             Dim UnlockedTheme As New List(Of String) From {"2"}
             UnlockedTheme.AddRange(New List(Of String)(Settings.Get(Of String)("UiLauncherThemeHide").ToString.Split("|")))
             UnlockedTheme.AddRange(New List(Of String)(Settings.Get(Of String)("UiLauncherThemeHide2").ToString.Split("|")))
@@ -433,12 +519,12 @@ Public Class FormMain
                      "多谢各位的理解啦！", "重新解锁提醒")
         End If
         '移动自定义皮肤
-        If LastVersionCode <= 161 AndAlso FileUtils.Exists(PathExeFolder & "PCL\CustomSkin.png") AndAlso Not FileUtils.Exists(PathAppdata & "CustomSkin.png") Then
-            FileUtils.Copy(PathExeFolder & "PCL\CustomSkin.png", PathAppdata & "CustomSkin.png")
+        If LastVersionCode <= 161 AndAlso FileUtils.Exists(Paths.Base & "PCL\CustomSkin.png") AndAlso Not FileUtils.Exists(Paths.AppDataThenName & "CustomSkin.png") Then
+            FileUtils.Copy(Paths.Base & "PCL\CustomSkin.png", Paths.AppDataThenName & "CustomSkin.png")
             Logger.Info("已移动离线自定义皮肤 (162)")
         End If
-        If LastVersionCode <= 263 AndAlso FileUtils.Exists(PathTemp & "CustomSkin.png") AndAlso Not FileUtils.Exists(PathAppdata & "CustomSkin.png") Then
-            FileUtils.Copy(PathTemp & "CustomSkin.png", PathAppdata & "CustomSkin.png")
+        If LastVersionCode <= 263 AndAlso FileUtils.Exists(PathTemp & "CustomSkin.png") AndAlso Not FileUtils.Exists(Paths.AppDataThenName & "CustomSkin.png") Then
+            FileUtils.Copy(PathTemp & "CustomSkin.png", Paths.AppDataThenName & "CustomSkin.png")
             Logger.Info("已移动离线自定义皮肤 (264)")
         End If
         '解除帮助页面的隐藏
@@ -469,8 +555,8 @@ Public Class FormMain
         End If
         '输出更新日志
         If LastVersionCode <= 0 Then Return
-        If LowerVersionCode >= VersionCode Then Return
-        ShowUpdateLog(LowerVersionCode)
+        If HighestVersionCode >= VersionCode Then Return
+        ShowUpdateLog(HighestVersionCode)
     End Sub
     Private Sub DowngradeSub(LastVersionCode As Integer)
         Logger.Info($"版本号从 {LastVersionCode} 降低到 {VersionCode}")
@@ -498,7 +584,7 @@ Public Class FormMain
             Sub()
                 Logger.Info("正在强行停止任务")
                 For Each Task As LoaderBase In LoaderTaskbar.ToList()
-                    Task.Interrupt()
+                    Task.Cancel()
                 Next
             End Sub, "强行停止下载任务")
         End If
@@ -547,11 +633,12 @@ Public Class FormMain
                 FeedbackInfo()
                 Logger.Info("请在 https://github.com/Meloong-Git/PCL/issues 提交错误报告，以便于作者解决此问题！")
                 IsLogShown = True
-                StartProcess(PathExeFolder & "PCL\Log1.txt")
+                StartProcess(Paths.Base & "PCL\Log1.txt")
             End If
             Thread.Sleep(500) '防止 PCL 在记事本打开前就被掐掉
         End If
         Logger.Info($"程序已退出，返回值：{ReturnCode}")
+        ConfigUtils.SaveAll()
         Logger.Instance.Flush()
         If ReturnCode <> ProcessReturnValues.Success Then Environment.Exit(ReturnCode)
         Process.GetCurrentProcess.Kill()
@@ -701,7 +788,7 @@ Public Class FormMain
                     FrmSetupUI.PanLogoChange.Visibility = Visibility.Visible
                 End If
                 Try
-                    ImageTitleLogo.Source = PathExeFolder & "PCL\Logo.png"
+                    ImageTitleLogo.Source = Paths.Base & "PCL\Logo.png"
                 Catch ex As Exception
                     ImageTitleLogo.Source = Nothing
                     Logger.Error(ex, "显示标题栏图片失败", LogBehavior.Alert)
@@ -744,8 +831,14 @@ Public Class FormMain
         ' 在没有弹窗时：继续检查……
         '==========================
 
-        '按 ESC 返回上一级
-        If e.Key = Key.Escape Then TriggerPageBack()
+        '按 ESC 取消启动，或返回上一级
+        If e.Key = Key.Escape Then
+            If PageCurrent = FormMain.PageType.Launch AndAlso McLaunchLoader.State = LoadState.Loading Then
+                FrmLaunchLeft.BtnCancel_Click()
+                Return
+            End If
+            TriggerPageBack()
+        End If
         '更改隐藏版本可见性
         If e.Key = Key.F11 AndAlso PageCurrent = FormMain.PageType.InstanceSelect Then
             FrmSelectRight.ShowHidden = Not FrmSelectRight.ShowHidden
@@ -793,12 +886,16 @@ Public Class FormMain
 
     '切回窗口
     Private Sub FormMain_Activated() Handles Me.Activated
+        '切回窗口时自动刷新
         Try
             If PageCurrent = PageType.InstanceSetup AndAlso PageCurrentSub = PageSubType.InstanceMod Then
-                'Mod 管理自动刷新
+                'Mod 管理
                 FrmInstanceMod.ReloadModList()
+            ElseIf PageCurrent = PageType.InstanceSetup AndAlso (PageCurrentSub = PageSubType.InstanceSetup OrElse PageCurrentSub = PageSubType.InstanceExport) Then
+                '更新当前选用的 Java
+                PageInstanceLeft.ReloadCurrentJava()
             ElseIf PageCurrent = PageType.InstanceSelect Then
-                '版本选择自动刷新
+                '版本选择
                 LoaderFolderRun(McInstanceListLoader, McFolderSelected, LoaderFolderRunType.RunOnUpdated, MaxDepth:=1, ExtraPath:="versions\")
             End If
         Catch ex As Exception
@@ -868,7 +965,7 @@ Public Class FormMain
                         'Authlib 拖拽
                         e.Handled = True
                         e.Effects = DragDropEffects.Copy
-                        Dim AuthlibServer As String = EscapeUtils.FormUrlUnescape(Str.Substring("authlib-injector:yggdrasil-server:".Length))
+                        Dim AuthlibServer As String = StringUtils.FormUrlUnescape(Str.Substring("authlib-injector:yggdrasil-server:".Length))
                         Logger.Info($"Authlib 拖拽：{AuthlibServer}")
                         If Not String.IsNullOrEmpty(New ValidateHttp().Validate(AuthlibServer)) Then
                             Hint($"输入的 Authlib 验证服务器不符合网址格式（{AuthlibServer}）！", HintType.Red)
@@ -952,22 +1049,22 @@ Public Class FormMain
             If FilePathList.Count > 1 Then
                 '必须要求全部为 jar 文件
                 For Each File In PathList
-                    If Not {"jar", "litemod", "disabled", "old"}.Contains(File.AfterLast(".").Lower) Then
+                    If Not {"jar", "litemod", "disabled", "old"}.Contains(PathUtils.GetExtension(File)) Then
                         Hint("一次请只拖入一个文件！", HintType.Red)
                         Return
                     End If
                 Next
             End If
             '主页
-            Dim Extension As String = FilePath.AfterLast(".").Lower
+            Dim Extension As String = PathUtils.GetExtension(FilePath)
             If Extension = "xaml" Then
                 Logger.Info("文件后缀为 XAML，作为主页加载")
-                If FileUtils.Exists(PathExeFolder & "PCL\Custom.xaml") Then
+                If FileUtils.Exists(Paths.Base & "PCL\Custom.xaml") Then
                     If MyMsgBox("已存在一个主页文件，是否要将它覆盖？", "覆盖确认", "覆盖", "取消") = 2 Then
                         Return
                     End If
                 End If
-                FileUtils.Copy(FilePath, PathExeFolder & "PCL\Custom.xaml")
+                FileUtils.Copy(FilePath, Paths.Base & "PCL\Custom.xaml")
                 RunInUi(
                 Sub()
                     Settings.Set("UiCustomType", 1)
@@ -980,19 +1077,24 @@ Public Class FormMain
             If PageInstanceMod.InstallMods(PathList) Then Return
             '安装整合包
             If {"zip", "rar", "mrpack"}.Any(Function(t) t = Extension) Then '部分压缩包是 zip 格式但后缀为 rar，总之试一试
-                Logger.Info("文件为压缩包，尝试作为整合包安装")
+                Hint("正在读取压缩包……")
                 Try
+                    Logger.Info("文件为压缩包，尝试作为整合包安装")
                     ModpackInstall(FilePath)
+                    RunInUi(Sub() FrmMain.PageChange(FormMain.PageType.TaskManager))
                     Return
-                Catch ex As CancelledException
-                    Return '用户主动取消
                 Catch ex As Exception
+                    If RestrictMcDownload AndAlso ex.Message = "为遵守相关法律法规，PCL 不再提供 MC 下载功能，非常抱歉 qwq……" Then
+                        Hint(ex.Message, HintType.Red)
+                        Return
+                    End If
+                    If ex.IsCanceled Then Return
                     '安装失败，继续往后尝试
                 End Try
             End If
             'RAR 处理
             If Extension = "rar" Then
-                Hint("PCL 无法处理 rar 格式的压缩包，请在解压后重新压缩为 zip 格式再试！")
+                Hint("PCL 无法处理 rar 格式的压缩包，请在解压后重新压缩为 zip 格式再试！", HintType.Red)
                 Return
             End If
             '错误报告分析
@@ -1008,7 +1110,7 @@ Public Class FormMain
                 Logger.Error(ex, "自主错误报告分析失败")
             End Try
             '未知操作
-            Hint("PCL 无法确定应当执行的文件拖拽操作……")
+            Hint("PCL 无法确定适合的操作……", HintType.Red)
         End Sub, "文件拖拽")
     End Sub
 
@@ -1112,9 +1214,9 @@ Public Class FormMain
         ''' </summary>
         InstanceSelect = 5
         ''' <summary>
-        ''' 下载管理。这是一个副页面。
+        ''' 任务管理。这是一个副页面。
         ''' </summary>
-        DownloadManager = 6
+        TaskManager = 6
         ''' <summary>
         ''' 版本设置。这是一个副页面。
         ''' </summary>
@@ -1150,9 +1252,10 @@ Public Class FormMain
         OtherTest = 2
         InstanceOverall = 0
         InstanceSetup = 1
-        InstanceMod = 2
-        InstanceModDisabled = 3
-        InstanceExport = 4
+        InstanceModify = 2
+        InstanceMod = 3
+        InstanceModDisabled = 4
+        InstanceExport = 5
     End Enum
     ''' <summary>
     ''' 获取次级页面的名称。若并非次级页面则返回空字符串，故可以以此判断是否为次级页面。
@@ -1161,8 +1264,8 @@ Public Class FormMain
         Select Case Stack.Page
             Case PageType.InstanceSelect
                 Return "版本选择"
-            Case PageType.DownloadManager
-                Return "下载管理"
+            Case PageType.TaskManager
+                Return "任务管理"
             Case PageType.InstanceSetup
                 Return "版本设置 - " & If(PageInstanceLeft.Instance Is Nothing, "未知版本", PageInstanceLeft.Instance.Name)
             Case PageType.ResourceDetail
@@ -1317,6 +1420,10 @@ Public Class FormMain
     ''' </summary>
     Private Sub PageChangeActual(Stack As PageStackData, Optional SubType As PageSubType = -1)
         If PageCurrent = Stack AndAlso (PageCurrentSub = SubType OrElse SubType = -1) Then Return
+        If Stack.Page = PageType.InstanceSetup AndAlso PageInstanceLeft.Instance IsNot Nothing AndAlso McInstanceLock.IsLocked(PageInstanceLeft.Instance) Then
+            Hint("该版本正在被修改，暂时无法进入版本设置！", HintType.Red)
+            Return
+        End If
         AniControlEnabled += 1
         Try
 
@@ -1384,7 +1491,7 @@ Public Class FormMain
                     If FrmSelectLeft Is Nothing Then FrmSelectLeft = New PageSelectLeft
                     If FrmSelectRight Is Nothing Then FrmSelectRight = New PageSelectRight
                     PageChangeAnim(FrmSelectLeft, FrmSelectRight)
-                Case PageType.DownloadManager '下载管理
+                Case PageType.TaskManager '任务管理
                     If FrmSpeedLeft Is Nothing Then FrmSpeedLeft = New PageSpeedLeft
                     If FrmSpeedRight Is Nothing Then FrmSpeedRight = New PageSpeedRight
                     PageChangeAnim(FrmSpeedLeft, FrmSpeedRight)
@@ -1404,7 +1511,7 @@ Public Class FormMain
             BtnExtraApril.ShowRefresh()
 #End Region
 
-            Logger.Info($"切换主要页面：{Stack}, {SubType}")
+            Logger.Info($"切换主要页面：{Stack.Page}, {SubType}")
         Catch ex As Exception
             Logger.Error(ex, $"切换主要页面失败（ID {PageCurrent.Page}）")
         Finally
@@ -1416,8 +1523,8 @@ Public Class FormMain
         AniStop("PageLeft PageChange") '停止左边栏变更导致的右页面切换动画，防止它与本动画一起触发多次 PageOnEnter
         AniControlEnabled += 1
         '清除新页面关联性
-        If Not IsNothing(TargetLeft.Parent) Then TargetLeft.SetValue(ContentPresenter.ContentProperty, Nothing)
-        If Not IsNothing(TargetRight) AndAlso Not IsNothing(TargetRight.Parent) Then TargetRight.SetValue(ContentPresenter.ContentProperty, Nothing)
+        If TargetLeft.Parent IsNot Nothing Then TargetLeft.SetValue(ContentPresenter.ContentProperty, Nothing)
+        If TargetRight IsNot Nothing AndAlso TargetRight.Parent IsNot Nothing Then TargetRight.SetValue(ContentPresenter.ContentProperty, Nothing)
         PageLeft = TargetLeft
         PageRight = TargetRight
         '触发页面通用动画
@@ -1558,12 +1665,12 @@ Public Class FormMain
         MusicControlNext()
     End Sub
 
-    '下载管理
+    '任务管理
     Private Sub BtnExtraDownload_Click(sender As Object, e As EventArgs) Handles BtnExtraDownload.Click
-        PageChange(PageType.DownloadManager)
+        PageChange(PageType.TaskManager)
     End Sub
     Private Function BtnExtraDownload_ShowCheck() As Boolean
-        Return HasDownloadingTask() AndAlso Not PageCurrent = PageType.DownloadManager
+        Return HasDownloadingTask() AndAlso Not PageCurrent = PageType.TaskManager
     End Function
 
     '投降
@@ -1583,7 +1690,7 @@ Public Class FormMain
     '关闭 Minecraft
     Public Sub BtnExtraShutdown_Click() Handles BtnExtraShutdown.Click
         Try
-            If McLaunchLoaderReal IsNot Nothing Then McLaunchLoaderReal.Interrupt()
+            If McLaunchLoaderReal IsNot Nothing Then McLaunchLoaderReal.Cancel()
             For Each Watcher In McWatcherList
                 Watcher.Kill()
             Next

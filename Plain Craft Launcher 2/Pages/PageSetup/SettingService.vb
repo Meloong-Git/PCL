@@ -1,4 +1,4 @@
-﻿Public Class SettingService
+Public Class SettingService
 
 #Region "属性"
 

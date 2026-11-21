@@ -1,4 +1,4 @@
-﻿<local:MyScrollViewer x:Class="PageResource"
+<local:MyScrollViewer x:Class="PageResource"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -32,8 +32,9 @@
                         <local:MyComboBoxItem Content="Modrinth" Tag="2" />
                     </local:MyComboBox>
                     <TextBlock VerticalAlignment="Center" Grid.Row="2" HorizontalAlignment="Left" Text="版本" Margin="0,0,18,0" />
-                    <local:MyComboBox x:Name="TextSearchVersion" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" IsEditable="True">
+                    <local:MyComboBox x:Name="TextSearchVersion" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" IsEditable="True" IsTextSearchEnabled="False">
                         <local:MyComboBoxItem Content="全部 (也可自行输入)" IsSelected="True" />
+                        <local:MyComboBoxItem Content="26.2" />
                         <local:MyComboBoxItem Content="26.1" />
                         <local:MyComboBoxItem Content="1.21.11" />
                         <local:MyComboBoxItem Content="1.21.8" />
@@ -51,7 +52,6 @@
                         <local:MyComboBoxItem Content="Forge" Tag="1" />
                         <local:MyComboBoxItem Content="NeoForge" Tag="16" />
                         <local:MyComboBoxItem Content="Fabric" Tag="4" />
-                        <local:MyComboBoxItem Content="Quilt" Tag="8" />
                         <local:MyComboBoxItem Content="LiteLoader" Tag="2" />
                     </local:MyComboBox>
                     <TextBlock VerticalAlignment="Center" Grid.Column="4" Grid.Row="2" HorizontalAlignment="Left" Text="类型" Margin="0,0,18,0" />
@@ -66,7 +66,7 @@
                     <local:MyButton x:Name="BtnSearchRun" Text="搜索" MinWidth="140" Padding="13,0" Margin="0,0,20,0" ColorType="Highlight" />
                     <local:MyButton x:Name="BtnSearchReset" Text="重置条件" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="1" />
                     <local:MyButton x:Name="BtnSearchInstallModPack" Text="安装已有整合包" MinWidth="140" Padding="13,0" Margin="0,0,20,0" Grid.Column="2"
-                                    ToolTip="在当前选择的 Minecraft 文件夹下安装整合包" ToolTipService.HorizontalOffset="-55" ToolTipService.VerticalOffset="5" />
+                                    ToolTip="在当前选择的 Minecraft 文件夹下安装整合包" />
                 </Grid>
             </StackPanel>
         </local:MyCard>

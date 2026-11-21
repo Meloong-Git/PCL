@@ -1,4 +1,4 @@
-﻿Public Class MySkin
+Public Class MySkin
 
     '事件
     Public Event Click(sender As Object, e As MouseButtonEventArgs)
@@ -143,13 +143,13 @@
             End If
         Next
         If FrmLaunchLeft IsNot Nothing AndAlso HasLoaderRunning Then
-            '由于 Interrupt 不是实时的，暂时不会释放文件，会导致删除报错，故只能取消执行
+            '由于取消不是实时的，暂时不会释放文件，会导致删除报错，故只能取消执行
             Hint("有正在获取中的皮肤，请稍后再试！", HintType.Blue)
         Else
             RunInThread(
             Sub()
                 Try
-                    Hint("正在刷新头像……")
+                    Hint("正在刷新皮肤……")
                     '清空缓存
                     Logger.Info("正在清空皮肤缓存")
                     If DirectoryUtils.Exists(PathTemp & "Cache\Skin") Then DirectoryUtils.Delete(PathTemp & "Cache\Skin")
@@ -162,7 +162,7 @@
                     For Each SkinLoader In If(sender IsNot Nothing, {sender}, {PageLaunchLeft.SkinLegacy, PageLaunchLeft.SkinMs})
                         SkinLoader.WaitForExit(IsForceRestart:=True)
                     Next
-                    Hint("已刷新头像！", HintType.Green)
+                    Hint("已刷新皮肤！", HintType.Green)
                 Catch ex As Exception
                     Logger.Error(ex, "刷新皮肤缓存失败", LogBehavior.Alert)
                 End Try
@@ -216,13 +216,13 @@
             Hint("登录失败，无法更改披风！", HintType.Red)
             Return
         End If
-        Hint("正在获取披风列表，请稍候……")
+        If McLoginMsLoader.State <> LoadState.Finished Then Hint("正在获取披风列表，请稍候……")
         IsChanging = True
         '开始实际获取
         RunInNewThread(
         Sub()
-            Try
 Retry:
+            Try
                 '获取登录信息
                 If McLoginMsLoader.State <> LoadState.Finished Then McLoginMsLoader.WaitForExit(PageLoginMsSkin.GetLoginData())
                 If McLoginMsLoader.State <> LoadState.Finished Then
@@ -231,7 +231,7 @@ Retry:
                 End If
                 Dim AccessToken As String = McLoginMsLoader.Output.AccessToken
                 Dim Uuid As String = McLoginMsLoader.Output.Uuid
-                Dim SkinData As JObject = GetJson(McLoginMsLoader.Output.ProfileJson)
+                Dim SkinData As JObject = McLoginMsLoader.Output.ProfileJson.DeserializeJson()
                 '获取玩家的所有披风
                 Dim SelectedIndex As Integer? = Nothing
                 RunInUiWait(
@@ -245,7 +245,8 @@ Retry:
                             {"Cherry Blossom", "樱花披风"}, {"15th Anniversary", "15 周年纪念披风"}, {"Purple Heart", "紫色心形披风"},
                             {"Follower's", "追随者披风"}, {"MCC 15th Year", "MCC 15 周年披风"}, {"Minecraft Experience", "村民救援披风"},
                             {"Mojang Office", "Mojang 办公室披风"}, {"Home", "家园披风"}, {"Menace", "入侵披风"}, {"Yearn", "渴望披风"},
-                            {"Common", "普通披风"}, {"Pan", "薄煎饼披风"}, {"Founder's", "创始人披风"}, {"Copper", "铜披风"}, {"Zombie Horse", "僵尸马披风"}
+                            {"Common", "普通披风"}, {"Pan", "薄煎饼披风"}, {"Founder's", "创始人披风"}, {"Copper", "铜披风"}, {"Zombie Horse", "僵尸马披风"}, {"Builder", "建造者披风"}, {"Crafter", "工匠披风"}, 
+                            {"Aurora", "极光披风"}, {"Hero", "英雄披风"}, {"Twisted", "扭曲披风"}
                         }
                         Dim SelectionControl As New List(Of IMyRadio) From {
                             New MyRadioBox With {.Text = "无披风", .Checked = Not SkinData("capes").Any(Function(c) c("state")?.ToString = "ACTIVE")}}
@@ -267,7 +268,7 @@ Retry:
                     ContentType:="application/json",
                     Headers:={{"Authorization", "Bearer " & AccessToken}})
                 If Result.Contains("""errorMessage""") Then
-                    Hint("更改披风失败：" & GetJson(Result)("errorMessage").ToString, HintType.Red)
+                    Hint("更改披风失败：" & Result.DeserializeJson()("errorMessage").ToString, HintType.Red)
                     Return
                 Else
                     Hint("更改披风成功！", HintType.Green)
@@ -277,9 +278,32 @@ Retry:
                     Next
                     If SelectedIndex > 0 Then SkinData("capes")(SelectedIndex - 1)("state") = "ACTIVE"
                     McLoginMsLoader.Output.ProfileJson = SkinData.ToString()
+                    Settings.Set("CacheMsV2ProfileJson", McLoginMsLoader.Output.ProfileJson)
                 End If
             Catch ex As Exception
-                Logger.Error(ex, "更改披风失败", LogBehavior.Toast)
+                If TypeOf ex Is HttpRequestCodeException Then
+                    Dim requestException As HttpRequestCodeException = CType(ex, HttpRequestCodeException)
+                    Select Case requestException.StatusCode
+                        Case HttpStatusCode.BadRequest
+                            Logger.Warn(ex, "更改披风时遭遇 400 错误")
+                            If requestException.Response?.Contains("""error""") Then
+                                Hint("更改披风失败：" & requestException.Response.DeserializeJson()("error").ToString, HintType.Red)
+                                Return
+                            ElseIf requestException.Response?.Contains("""errorMessage""") Then
+                                Hint("更改披风失败：" & requestException.Response.DeserializeJson()("errorMessage").ToString, HintType.Red)
+                                Return
+                            End If
+                        Case HttpStatusCode.Unauthorized
+                            Logger.Warn(ex, "更改披风时遭遇 401 错误")
+                            Hint("正在重新登录，将在登录后自动更改披风……")
+                            McLoginMsLoader.Start(PageLoginMsSkin.GetLoginData(), IsForceRestart:=True)
+                            GoTo Retry
+                    End Select
+                ElseIf ex.IsBadNetwork Then
+                    Hint("更改披风失败：连接 Mojang 服务器超时，请稍后再试，或使用 VPN 改善网络环境", HintType.Red)
+                Else
+                    Logger.Error(ex, "更改披风失败", LogBehavior.Toast)
+                End If
             Finally
                 IsChanging = False
             End Try

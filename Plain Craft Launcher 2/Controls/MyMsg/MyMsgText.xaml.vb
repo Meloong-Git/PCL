@@ -1,4 +1,4 @@
-﻿Public Class MyMsgText
+Public Class MyMsgText
 
     Private ReadOnly MyConverter As MyMsgBoxConverter
     Private ReadOnly Uuid As Integer = GetUuid()

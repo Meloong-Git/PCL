@@ -1,4 +1,4 @@
-﻿Public Class MyComboBox
+Public Class MyComboBox
     Inherits ComboBox
     Implements ISettingControl
     Public Event TextChanged(sender As Object, e As TextChangedEventArgs)
@@ -104,6 +104,7 @@
     Private Sub MyComboBox_DropDownOpened(sender As Object, e As EventArgs) Handles Me.DropDownOpened
         RealWidth = Width
         Width = ActualWidth
+        '将下拉菜单透明度与主窗口同步
         Try
             CType(Template.FindName("PanPopup", Me), Grid).Opacity = FrmMain.Opacity
         Catch ex As Exception

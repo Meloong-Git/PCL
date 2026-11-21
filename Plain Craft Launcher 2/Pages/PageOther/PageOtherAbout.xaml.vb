@@ -1,4 +1,4 @@
-﻿Public Class PageOtherAbout
+Public Class PageOtherAbout
 
     Private Shadows IsLoaded As Boolean = False
     Private Sub PageOtherAbout_Loaded(sender As Object, e As RoutedEventArgs) Handles Me.Loaded
@@ -26,6 +26,9 @@
     End Sub
     Private Sub BtnDonateOutput_Click(sender As Object, e As EventArgs) Handles BtnDonateOutput.Click
         GeneratePotatoCode()
+    End Sub
+    Private Sub BtnAboutUpdate_Click(sender As Object, e As MouseButtonEventArgs) Handles BtnAboutUpdate.Click
+        UpdateCheckByButton()
     End Sub
 
 End Class

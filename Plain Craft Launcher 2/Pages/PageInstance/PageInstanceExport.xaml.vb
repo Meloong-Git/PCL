@@ -1,4 +1,4 @@
-﻿Public Class ExportOption
+Public Class ExportOption
     Public Property Title As String
     Public Property Description As String
     Public Property Rules As String
@@ -17,16 +17,19 @@ Public Class PageInstanceExport
     Implements IRefreshable
 
     Private CurrentInstance As String = ""
+    Private Sub PageInstanceExport_Initialized(sender As Object, e As EventArgs) Handles Me.Initialized
+        AddHandler PageInstanceLeft.CurrentJavaWorker.Stopped, Sub() RunInUi(AddressOf RefreshJavaInfo)
+    End Sub
     Private Sub PageInstanceExport_Loaded() Handles Me.Loaded
         AniControlEnabled += 1
-        If CurrentInstance <> PageInstanceLeft.Instance.PathVersion Then RefreshAll() '切换到了另一个版本，重置页面
+        If Not PathUtils.IsSame(CurrentInstance, PageInstanceLeft.Instance.PathVersion) Then RefreshAll() '切换到了另一个版本，重置页面
         CustomEventService.SetEventData(BtnAdvancedHelp,
             If(BuildType = BuildTypes.Release, "指南/整合包制作 - Public.json", "指南/整合包制作 - Snapshot.json"))
         AniControlEnabled -= 1
     End Sub
     Public Sub RefreshAll() Implements IRefreshable.Refresh
-        Logger.Info($"刷新导出页面")
-        HintOptiFine.Visibility = If(PageInstanceLeft.Instance.Version.HasOptiFine, Visibility.Visible, Visibility.Collapsed)
+        Logger.Info("刷新导出页面")
+        HintOptiFine.Visibility = If(PageInstanceLeft.Instance.Version.HasOptiFine AndAlso Not PageInstanceLeft.Instance.Version.OptiFineAsMod, Visibility.Visible, Visibility.Collapsed)
         CurrentInstance = PageInstanceLeft.Instance.PathVersion
         TextExportName.Text = ""
         TextExportName.HintText = PageInstanceLeft.Instance.Name
@@ -38,11 +41,12 @@ Public Class PageInstanceExport
         ResetConfigOverrides()
         ReloadAllSubOptions()
         RefreshAllOptionsUI()
+        RefreshJavaInfo()
         PanBack.ScrollToHome()
     End Sub
 
 #Region "子选项"
-    Private SubOptionBlackList As String() = {"Quark Programmer Art.zip", "+ EuphoriaPatches_"}
+    Private SubOptionBlackList As String() = {"Quark Programmer Art.zip", "+ EuphoriaPatches_", "PCL2 Skin.zip"}
 
     ''' <summary>
     ''' 动态生成子文件夹下的选项，例如资源包、存档等。
@@ -63,7 +67,7 @@ Public Class PageInstanceExport
                 For Each File In TargetFolder.EnumerateFiles("*.zip").Concat(TargetFolder.EnumerateFiles("*.rar"))
                     If SubOptionBlackList.Any(Function(b) File.Name.Contains(b)) Then Continue For
                     Panel.Children.Add(New MyCheckBox With {. _
-                        Tag = New ExportOption With {.Title = File.Name, .DefaultChecked = True, .Rules = EscapeUtils.LikePatternEscape($"{Folder}/{File.Name}")}})
+                        Tag = New ExportOption With {.Title = File.Name, .DefaultChecked = True, .Rules = StringUtils.LikePatternEscape($"{Folder}/{File.Name}")}})
                 Next
             End If
             If AcceptFolder Then
@@ -71,7 +75,8 @@ Public Class PageInstanceExport
                     If SubOptionBlackList.Any(Function(b) SubFolder.Name.Contains(b)) Then Continue For
                     If Not SubFolder.EnumerateFileSystemInfos().Any() Then Continue For
                     Dim NewCheckBox As New MyCheckBox With {. _
-                        Tag = New ExportOption With {.Title = SubFolder.Name, .DefaultChecked = True, .Rules = EscapeUtils.LikePatternEscape($"{Folder}/{SubFolder.Name}/")}}
+                        Tag = New ExportOption With {.Title = SubFolder.Name, .DefaultChecked = True, .Rules = StringUtils.LikePatternEscape($"{Folder}/{SubFolder.Name}/")}}
+                    If AcceptCompressedFile Then GetExportOption(NewCheckBox).Description = "文件夹"
                     If Panel Is PanOptionsSaves Then GetExportOption(NewCheckBox).Description = SubFolder.LastWriteTime.ToString("yyyy'/'MM'/'dd HH':'mm")
                     Panel.Children.Add(NewCheckBox)
                 Next
@@ -109,7 +114,7 @@ Public Class PageInstanceExport
         '确认选项是否应该被显示
         Dim IsVisible =
         Function(TargetOption As ExportOption) As Boolean
-            '检查需要 OptiFine 或 Mod 加载器
+            '检查需要 OptiFine（例如光影）或 Mod 加载器（例如 mods/）
             If TargetOption.RequireOptiFine AndAlso Not PageInstanceLeft.Instance.Version.HasOptiFine Then Return False
             If TargetOption.RequireModLoader AndAlso Not PageInstanceLeft.Instance.Modable Then Return False
             If TargetOption.RequireModLoaderOrOptiFine AndAlso Not PageInstanceLeft.Instance.Version.HasOptiFine AndAlso Not PageInstanceLeft.Instance.Modable Then Return False
@@ -119,7 +124,7 @@ Public Class PageInstanceExport
                 If Rule.StartsWithF("!") Then Return False '只看正向规则
                 '检查前两级
                 Try
-                    If AllEntries.Any(Function(Entry) Entry Like Rule) Then Return True
+                    If AllEntries.Any(Function(Entry) Entry.Lower Like Rule.Lower) Then Return True
                 Catch ex As Exception
                     Logger.Error(ex, $"错误的规则：{Rule}", LogBehavior.Toast)
                     Return False
@@ -140,12 +145,6 @@ Public Class PageInstanceExport
         '逐个检查选项
         For Each CheckBox In GetAllOptions(True)
             Dim TargetOption = GetExportOption(CheckBox)
-            '名称与简介
-            CheckBox.Inlines.Clear()
-            CheckBox.Inlines.Add(New Run(TargetOption.Title))
-            If Not String.IsNullOrEmpty(TargetOption.Description) Then
-                CheckBox.Inlines.Add(New Run("   " & TargetOption.Description) With {.Foreground = ColorGray5})
-            End If
             '可见性、默认勾选
             If String.IsNullOrEmpty(TargetOption.Rules) AndAlso String.IsNullOrEmpty(TargetOption.ShowRules) Then
                 CheckBox.Visibility = Visibility.Visible
@@ -154,6 +153,13 @@ Public Class PageInstanceExport
                 Dim Pass As Boolean = IsVisible(TargetOption)
                 CheckBox.Visibility = If(Pass, Visibility.Visible, Visibility.Collapsed)
                 CheckBox.Checked = TargetOption.DefaultChecked AndAlso Pass
+            End If
+            '名称与简介
+            CheckBox.Inlines.Clear()
+            If CheckBox.Visibility <> Visibility.Visible Then Continue For
+            CheckBox.Inlines.Add(New Run(TargetOption.Title))
+            If Not String.IsNullOrEmpty(TargetOption.Description) Then
+                CheckBox.Inlines.Add(New Run("   " & TargetOption.Description) With {.Foreground = ColorGray5})
             End If
         Next
     End Sub
@@ -244,9 +250,22 @@ Public Class PageInstanceExport
             For Each CheckBox In GetAllOptions(False)
                 If Not CheckBox.Checked Then Continue For
                 Dim TargetOption = GetExportOption(CheckBox)
-                If TargetOption.Rules Is Nothing Then Continue For
+                Dim Rules = If(TargetOption.Rules?.Split("|"c).ToList(), New List(Of String))
+
+                '动态 Rules
+                If CheckBox Is CheckOptionsShaderPackSettings Then '光影包设置：只导出勾选的光影包的设置
+                    For Each ShaderPackCheckBox In PanOptionsShaderPacks.Children.OfType(Of MyCheckBox)()
+                        If Not ShaderPackCheckBox.Checked Then Continue For
+                        Dim ShaderPackOption = GetExportOption(ShaderPackCheckBox)
+                        Dim SettingsFile = $"shaderpacks/{ShaderPackOption.Title}.txt"
+                        If Not FileUtils.Exists(Path.Combine(PageInstanceLeft.Instance.PathIndie, SettingsFile)) Then Continue For
+                        Rules.Add(StringUtils.LikePatternEscape(SettingsFile))
+                    Next
+                End If
+
+                If Not Rules.Any() Then Continue For
                 Yield $"# {TargetOption.Title}"
-                For Each Rule In TargetOption.Rules.Split("|"c)
+                For Each Rule In Rules
                     Yield Rule
                 Next
                 Yield ""
@@ -311,6 +330,9 @@ Public Class PageInstanceExport
             ConfigLines.Add("Name:" & TextExportName.Text)
             ConfigLines.Add("Version:" & TextExportVersion.Text)
             ConfigLines.Add("")
+            ConfigLines.Add($"# 当版本设置中选择了 {vbLQ}使用版本文件夹中的 Java{vbRQ} 时，是否打包版本文件夹中的 Java。")
+            ConfigLines.Add("IncludeJava:" & CheckOptionsJava.Checked)
+            ConfigLines.Add("")
             ConfigLines.Add("# 是否打包正式版 PCL，以便没有启动器的玩家安装整合包。")
             ConfigLines.Add("IncludeLauncher:" & CheckOptionsPcl.Checked)
             ConfigLines.Add("")
@@ -363,6 +385,7 @@ Public Class PageInstanceExport
             Next
             TextExportName.Text = Ini.GetOrDefault("Name", "")
             TextExportVersion.Text = Ini.GetOrDefault("Version", "")
+            CheckOptionsJava.Checked = Ini.GetOrDefault("IncludeJava", True)
             CheckOptionsPcl.Checked = Ini.GetOrDefault("IncludeLauncher", True)
             CheckOptionsPclCustom.Checked = Ini.GetOrDefault("IncludeLauncherCustom", True)
             CheckAdvancedInclude.Checked = Ini.GetOrDefault("DontCheckHostedAssets", False)
@@ -403,7 +426,7 @@ Public Class PageInstanceExport
         Dim LoaderName As String = $"导出整合包：" & PackName
         For Each OngoingLoader In LoaderTaskbar
             If OngoingLoader.Name <> LoaderName Then Continue For
-            FrmMain.PageChange(FormMain.PageType.DownloadManager)
+            FrmMain.PageChange(FormMain.PageType.TaskManager)
             Return
         Next
 
@@ -422,8 +445,9 @@ Public Class PageInstanceExport
         End If
         If PackPath Is Nothing Then
             Dim Extensions As New List(Of (Extension As String, Display As String))
+            If Not CheckOptionsPcl.Checked AndAlso CheckAdvancedModrinth.Checked Then Extensions.Add(("mrpack", "Modrinth 整合包文件"))
             Extensions.Add(("zip", "压缩文件"))
-            If Not CheckOptionsPcl.Checked Then Extensions.Add(("mrpack", "Modrinth 整合包文件"))
+            If Not CheckOptionsPcl.Checked AndAlso Not CheckAdvancedModrinth.Checked Then Extensions.Add(("mrpack", "Modrinth 整合包文件"))
             PackPath = Dialogs.SaveFile("选择导出位置",
                 PackName & If(String.IsNullOrEmpty(TextExportVersion.Text), "", " " & TextExportVersion.Text), filter:=Extensions)
             Logger.Info($"手动指定的导出路径：{PackPath}")
@@ -433,8 +457,11 @@ Public Class PageInstanceExport
         '缓存所需参数
         Dim CacheFolder = RequestTaskTempFolder()
         Dim OverridesFolder = CacheFolder & "modpack\overrides\"
-        Dim McVersion = PageInstanceLeft.Instance
-        Dim PathIndie As String = McVersion.PathIndie
+        Dim TargetInstance = PageInstanceLeft.Instance
+        Dim IncludeJava As Boolean =
+            (RulesOverrides Is Nothing AndAlso CheckOptionsJava.Visibility = Visibility.Visible AndAlso CheckOptionsJava.Checked) OrElse
+            (RulesOverrides IsNot Nothing AndAlso CheckOptionsJava.Checked AndAlso Settings.Get(Of Integer)("VersionArgumentJavaV2", TargetInstance) = 2)
+        Dim PathIndie As String = TargetInstance.PathIndie
         Dim CheckHostedAssets As Boolean = Not CheckAdvancedInclude.Checked
         Dim ModrinthUploadMode As Boolean = CheckAdvancedModrinth.Checked
         Dim IncludePCL As Boolean = CheckOptionsPcl.Checked
@@ -471,7 +498,7 @@ Public Class PageInstanceExport
                 '文件夹：进一步搜索
                 For Each SubFolder In Folder.EnumerateDirectories("*", SearchOption.TopDirectoryOnly)
                     '跳过部分又没用文件又多的文件夹，加快搜索
-                    If {"assets", "versions", "libraries"}.Contains(SubFolder.Name) AndAlso PathIndie = PathUtils.RemoveExtendedPrefix(Folder.FullName) Then Continue For
+                    If {"assets", "versions", "libraries"}.Contains(SubFolder.Name) AndAlso PathUtils.IsSame(PathIndie, Folder.FullName) Then Continue For
                     If {"structureCacheV1", ".fabric", ".git", "avatar-cache", "cosmetic-cache"}.Contains(SubFolder.Name) Then Continue For
                     SearchFolder(SubFolder)
                 Next
@@ -482,7 +509,7 @@ Public Class PageInstanceExport
                     Dim ShouldKeep As Boolean = False
                     For Each Rule In AllRules
                         Dim Revert = Rule.StartsWithF("!")
-                        If RelativePath Like Rule.TrimStart("!") Then ShouldKeep = Not Revert
+                        If RelativePath.Lower Like Rule.TrimStart("!").Lower Then ShouldKeep = Not Revert
                     Next
                     If Not ShouldKeep Then Continue For
                     Dim TargetPath As String = OverridesFolder & RelativePath
@@ -499,13 +526,23 @@ Public Class PageInstanceExport
                     '更新进度（进度并不准确，主要突出一个我还没似）
                     Progress += 1
                     If Progress = 25 Then
-                        Loader.Progress += (0.94 - Loader.Progress) * 0.012
+                        Loader.Progress += (0.84 - Loader.Progress) * 0.012
                         Progress = 0
                     End If
                 Next
             End Sub
             SearchFolder(DirectoryUtils.GetInfo(PathIndie))
             Logger.Info($"复制 overrides 文件完成，有 {Loader.Output.Count} 个文件需要联网检查")
+            Loader.Progress = 0.85
+            '复制 Java
+            If IncludeJava Then
+                Dim JavaToExport = SelectOrDownloadJava(TargetInstance, False, Loader.CreateCancellationToken, Loader.CreateSyncProgressProvider(0.85, 0.93))
+                If JavaToExport Is Nothing Then Throw New FileNotFoundException("版本文件夹中没有找到可导出的 Java。")
+                Dim JavaFolder = PathUtils.RemoveLastPart(JavaToExport.Folder)
+                Dim DestFolder As String = Path.Combine(OverridesFolder, JavaFolder.AfterFirst(TargetInstance.PathVersion, True))
+                DirectoryUtils.Copy(JavaFolder, DestFolder)
+                Logger.Info($"已复制版本文件夹中的 Java：{JavaFolder} → {DestFolder}")
+            End If
             Loader.Progress = 0.95
             '复制追加内容到根目录
             Dim BaseFolder As String = If(IncludePCL, CacheFolder, CacheFolder & "modpack\")
@@ -526,19 +563,19 @@ Public Class PageInstanceExport
             Next
             Loader.Progress = 0.97
             '复制 PCL 版本设置
-            If DirectoryUtils.Exists(McVersion.PathVersion & "PCL\") Then DirectoryUtils.Copy(McVersion.PathVersion & "PCL\", OverridesFolder & "PCL\")
+            If DirectoryUtils.Exists(TargetInstance.PathVersion & "PCL\") Then DirectoryUtils.Copy(TargetInstance.PathVersion & "PCL\", OverridesFolder & "PCL\")
             WriteIni(OverridesFolder & "PCL\Setup.ini", "IsStar", False)
             '复制 PCL 本体（正式版）
             If BuildType = BuildTypes.Release AndAlso IncludePCL Then FileUtils.Copy(PathExe, CacheFolder & "Plain Craft Launcher.exe")
             '复制 PCL 个性化内容
             If IncludePCLCustom Then
-                If DirectoryUtils.Exists(PathExeFolder & "PCL\Pictures\") Then DirectoryUtils.Copy(PathExeFolder & "PCL\Pictures\", CacheFolder & "PCL\Pictures\")
-                If DirectoryUtils.Exists(PathExeFolder & "PCL\Musics\") Then DirectoryUtils.Copy(PathExeFolder & "PCL\Musics\", CacheFolder & "PCL\Musics\")
-                If DirectoryUtils.Exists(PathExeFolder & "PCL\Help\") Then DirectoryUtils.Copy(PathExeFolder & "PCL\Help\", CacheFolder & "PCL\Help\")
-                If FileUtils.Exists(PathExeFolder & "PCL\Custom.xaml") Then FileUtils.Copy(PathExeFolder & "PCL\Custom.xaml", CacheFolder & "PCL\Custom.xaml")
-                If FileUtils.Exists(PathExeFolder & "PCL\Setup.ini") Then FileUtils.Copy(PathExeFolder & "PCL\Setup.ini", CacheFolder & "PCL\Setup.ini")
-                If FileUtils.Exists(PathExeFolder & "PCL\hints.txt") Then FileUtils.Copy(PathExeFolder & "PCL\hints.txt", CacheFolder & "PCL\hints.txt")
-                If FileUtils.Exists(PathExeFolder & "PCL\Logo.png") Then FileUtils.Copy(PathExeFolder & "PCL\Logo.png", CacheFolder & "PCL\Logo.png")
+                If DirectoryUtils.Exists(Paths.Base & "PCL\Pictures\") Then DirectoryUtils.Copy(Paths.Base & "PCL\Pictures\", CacheFolder & "PCL\Pictures\")
+                If DirectoryUtils.Exists(Paths.Base & "PCL\Musics\") Then DirectoryUtils.Copy(Paths.Base & "PCL\Musics\", CacheFolder & "PCL\Musics\")
+                If DirectoryUtils.Exists(Paths.Base & "PCL\Help\") Then DirectoryUtils.Copy(Paths.Base & "PCL\Help\", CacheFolder & "PCL\Help\")
+                If FileUtils.Exists(Paths.Base & "PCL\Custom.xaml") Then FileUtils.Copy(Paths.Base & "PCL\Custom.xaml", CacheFolder & "PCL\Custom.xaml")
+                If FileUtils.Exists(Paths.Base & "PCL\Setup.ini") Then FileUtils.Copy(Paths.Base & "PCL\Setup.ini", CacheFolder & "PCL\Setup.ini")
+                If FileUtils.Exists(Paths.Base & "PCL\hints.txt") Then FileUtils.Copy(Paths.Base & "PCL\hints.txt", CacheFolder & "PCL\hints.txt")
+                If FileUtils.Exists(Paths.Base & "PCL\Logo.png") Then FileUtils.Copy(Paths.Base & "PCL\Logo.png", CacheFolder & "PCL\Logo.png")
             End If
         End Sub) With {.ProgressWeight = 5})
 
@@ -585,7 +622,7 @@ Public Class PageInstanceExport
                 Try
                     If ModrinthUploadMode Then Return 'Modrinth 上传模式下，不从 CurseForge 获取信息
                     Dim CurseForgeHashes = Loader.Input.Select(Function(m) m.CurseForgeHash)
-                    Dim CurseForgeRaw As JContainer = DlModRequest("https://api.curseforge.com/v1/fingerprints/432/", HttpMethod.Post,
+                    Dim CurseForgeRaw As JContainer = DlModRequest("https://api.curseforge.com/v1/fingerprints/432", HttpMethod.Post,
                         $"{{""fingerprints"": [{CurseForgeHashes.Join(",")}]}}", "application/json")("data")("exactMatches")
                     For Each ResultJson As JObject In CurseForgeRaw
                         If Not ResultJson.ContainsKey("file") Then Continue For
@@ -611,7 +648,7 @@ Public Class PageInstanceExport
 
             '等待线程结束
             Do Until EndedThreadCount = 2
-                If Loader.IsInterrupted Then Return
+                If Loader.IsCanceled Then Return
                 Thread.Sleep(10)
             Loop
 
@@ -641,7 +678,7 @@ Public Class PageInstanceExport
                 Dim ModFile As LocalResourceFile = Pair.Key
                 Files.Add(New JObject From {
                     {"path", PathUtils.RemoveExtendedPrefix(ModFile.File.FullName).AfterFirst(OverridesFolder).Replace("\", "/")},
-                    {"hashes", New JObject From {{"sha1", ModFile.ModrinthHash}, {"sha512", HashUtils.ComputeFromFile(ModFile.File.FullName, HashUtils.HashMethod.Sha512)}}},
+                    {"hashes", New JObject From {{"sha1", ModFile.ModrinthHash}, {"sha512", CryptographyUtils.ComputeFileHash(ModFile.File.FullName, CryptographyUtils.HashMethod.Sha512)}}},
                     {"downloads", New JArray(Pair.Value.OrderBy(Function(u) u.Contains("modrinth.com")))}, '不优先选择 Modrinth
                     {"fileSize", ModFile.File.Length}
                 })
@@ -649,16 +686,16 @@ Public Class PageInstanceExport
             Next
             Loader.Progress = 0.2
             '导出最终 JSON 文件
-            Dim Dependencies As New JObject From {{"minecraft", McVersion.Version.VanillaName}}
-            If McVersion.Version.HasForge Then Dependencies.Add("forge", McVersion.Version.Forge)
-            If McVersion.Version.HasFabric Then Dependencies.Add("fabric-loader", McVersion.Version.Fabric)
-            If McVersion.Version.HasNeoForge Then Dependencies.Add("neoforge", McVersion.Version.NeoForge)
+            Dim Dependencies As New JObject From {{"minecraft", TargetInstance.Version.VanillaName}}
+            If TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.Forge) Then Dependencies.Add("forge", TargetInstance.Version.ModLoaderVersions(ModLoaders.Forge))
+            If TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.Fabric) Then Dependencies.Add("fabric-loader", TargetInstance.Version.ModLoaderVersions(ModLoaders.Fabric))
+            If TargetInstance.Version.ModLoaders.HasFlagF(ModLoaders.NeoForge) Then Dependencies.Add("neoforge", TargetInstance.Version.ModLoaderVersions(ModLoaders.NeoForge))
             Dim ResultJson As New JObject From {
                 {"game", "minecraft"},
                 {"formatVersion", 1},
                 {"versionId", PackVersion},
                 {"name", PackName},
-                {"summary", McVersion.Info},
+                {"summary", TargetInstance.Info},
                 {"files", Files},
                 {"dependencies", Dependencies}
             }
@@ -689,10 +726,43 @@ Public Class PageInstanceExport
         LoaderTaskbarAdd(MainLoader)
         FrmMain.BtnExtraDownload.ShowRefresh()
         FrmMain.BtnExtraDownload.Ribble()
-        FrmMain.PageChange(FormMain.PageType.DownloadManager)
+        FrmMain.PageChange(FormMain.PageType.TaskManager)
     End Sub
 
 #End Region
+
+    Private Sub RefreshJavaInfo() Handles Me.Loaded
+        Dim JavaType As Integer = Settings.Get(Of Integer)("VersionArgumentJavaV2", PageInstanceLeft.Instance)
+        Dim JavaWorker = PageInstanceLeft.CurrentJavaWorker
+        '导出选项
+        Dim JavaToExport = If(JavaType = 2 AndAlso JavaWorker.LastSucceeded AndAlso Not JavaWorker.Running, JavaWorker.LastResult, Nothing)
+        If JavaToExport Is Nothing Then
+            CheckOptionsJava.Visibility = Visibility.Collapsed
+        Else
+            CheckOptionsJava.Visibility = Visibility.Visible
+            CheckOptionsJava.Inlines.Clear()
+            CheckOptionsJava.Inlines.Add(New Run(
+                GetExportOption(CheckOptionsJava).Title))
+            CheckOptionsJava.Inlines.Add(New Run("   " &
+                $"Java {JavaToExport.Version.Major} ({JavaToExport.Version})：{ _
+                PathUtils.AddSlashSuffix(PathUtils.RemoveLastPart(JavaToExport.Folder.Replace(PathUtils.RemoveLastPart(PathUtils.RemoveLastPart(PageInstanceLeft.Instance.PathVersion)), ""))).TrimStart("\")}") With {.Foreground = ColorGray5})
+        End If
+        '警告条
+        If JavaType = 3 Then
+            BtnExport.IsEnabled = True
+            HintJava.Visibility = Visibility.Visible
+            HintJava.Theme = MyHint.Themes.Yellow
+            HintJava.Text = $"该版本设置要求 {vbLQ}使用指定的 Java{vbRQ}，这在导出后很可能会失效。建议修改为 {vbLQ}使用版本文件夹中的 Java{vbRQ}。"
+        ElseIf JavaType = 2 AndAlso JavaWorker.HasSucceeded AndAlso JavaWorker.LastResult Is Nothing Then
+            BtnExport.IsEnabled = False
+            HintJava.Visibility = Visibility.Visible
+            HintJava.Theme = MyHint.Themes.Red
+            HintJava.Text = $"该版本设置要求 {vbLQ}使用版本文件夹中的 Java{vbRQ}，但版本文件夹中没能找到任何 Java。"
+        Else
+            BtnExport.IsEnabled = True
+            HintJava.Visibility = Visibility.Collapsed
+        End If
+    End Sub
 
     '自动填写整合包名称
     Private Sub TextExportName_GotFocus() Handles TextExportName.GotFocus
@@ -702,10 +772,13 @@ Public Class PageInstanceExport
         End If
     End Sub
 
-    '勾选打包资源文件时，禁止开启 Modrinth 上传模式
     Private Sub CheckAdvancedInclude_Change(sender As Object, user As Boolean) Handles CheckAdvancedInclude.Change
+        '勾选打包资源文件时，禁止开启仅 Modrinth 资源模式
         If CheckAdvancedInclude.Checked Then CheckAdvancedModrinth.Checked = False
         CheckAdvancedModrinth.IsEnabled = Not CheckAdvancedInclude.Checked
+    End Sub
+    Private Sub CheckAdvancedModrinth_Change(sender As Object, user As Boolean) Handles CheckAdvancedModrinth.Change, CheckOptionsPcl.Change
+        HintModrinthFormat.Visibility = (CheckAdvancedModrinth.Checked AndAlso CheckOptionsPcl.Checked).ToVisibility
     End Sub
 
 End Class

@@ -1,12 +1,18 @@
-﻿Imports System.Reflection
+Imports System.Reflection
 Imports System.Windows.Threading
-Imports Microsoft.Win32
 
 Public Class Application
 
     '开始
     Private Sub Application_Startup(sender As Object, e As StartupEventArgs) Handles Me.Startup
         Try
+            '核心初始化
+            MeloongCore.Main.Init("PCL")
+            MeloongCore.Wpf.Main.Init()
+            If Not (e.Args.Contains("--update") OrElse e.Args.Contains("--gpu") OrElse e.Args.Contains("--memory")) Then '若是通过命令行调用，则不检查单例、不轮换日志（#9137）
+                WaitingMutex(e)
+                Logger.Instance = New PclLogger With {.logFolder = Paths.BaseThenName, .MinLevel = If(ModeDebug, LogLevel.Trace, LogLevel.Info)}
+            End If
             '提升主线程优先级
             Thread.CurrentThread.Priority = ThreadPriority.Highest
             '执行开发版测试
@@ -19,9 +25,7 @@ Public Class Application
             End If
             '检查 .NET Framework 版本
             Try
-                Using ndpKey As RegistryKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\")
-                    If ndpKey?.GetValue("Release") IsNot Nothing AndAlso CInt(ndpKey.GetValue("Release")) < 528040 Then OldEnvironmentAssert()
-                End Using
+                If CInt(RegistryUtils.TryRead("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full", "Release", 999999)) < 528040 Then OldEnvironmentAssert()
             Catch ex As Exception
                 Logger.Warn(ex, "检查 .NET Framework 版本失败")
             End Try
@@ -46,7 +50,7 @@ Public Class Application
                     Catch ex As Exception
                         Environment.Exit(ProcessReturnValues.Fail)
                     End Try
-                ElseIf e.Args(0).StartsWithF("--memory") Then
+                ElseIf e.Args(0) = "--memory" Then
                     '内存优化
                     Dim Ram = My.Computer.Info.AvailablePhysicalMemory
                     Try
@@ -64,12 +68,12 @@ Public Class Application
             End If
             '初始化文件结构
             Try
-                DirectoryUtils.Create(PathExeFolder & "PCL\Pictures\")
-                DirectoryUtils.Create(PathExeFolder & "PCL\Musics\")
-                CheckPermissionWithException(PathExeFolder & "PCL\")
+                DirectoryUtils.Create(Paths.Base & "PCL\Pictures\")
+                DirectoryUtils.Create(Paths.Base & "PCL\Musics\")
+                CheckPermissionWithException(Paths.Base & "PCL\")
             Catch ex As Exception
-                MsgBox($"PCL 没有对当前文件夹的权限（{PathExeFolder}PCL\），请尝试：" & vbCrLf &
-                  "1. 将 PCL 移动到其他文件夹" & If(PathExeFolder.StartsWithF("C:", True), "，例如 C 盘和桌面以外的其他位置。", "。") & vbCrLf &
+                MsgBox($"PCL 没有对当前文件夹的权限（{Paths.Base}PCL\），请尝试：" & vbCrLf &
+                  "1. 将 PCL 移动到其他文件夹" & If(PathUtils.GetDiskName(Paths.Base) = "C"c, "，例如 C 盘和桌面以外的其他位置。", "。") & vbCrLf &
                   "2. 删除当前目录中的 PCL 文件夹，然后再试。" & vbCrLf &
                   "3. 右键 PCL 选择属性，打开 兼容性 中的 以管理员身份运行此程序。",
                 MsgBoxStyle.Critical, "运行环境错误")
@@ -80,7 +84,7 @@ RetryCacheCheck:
                 DirectoryUtils.Create(PathTemp)
                 CheckPermissionWithException(PathTemp)
             Catch ex As Exception
-                If PathTemp = Path.GetTempPath() & "PCL\" Then
+                If PathUtils.IsSame(PathTemp, Path.GetTempPath() & "PCL\") Then
                     MyMsgBox("PCL 无法访问缓存文件夹，可能导致程序出错或无法正常使用！" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDisplay(True), "缓存文件夹不可用")
                 Else
                     MyMsgBox("手动设置的缓存文件夹不可用，PCL 将使用默认缓存文件夹。" & vbCrLf & vbCrLf & "错误原因：" & ex.GetDisplay(True), "缓存文件夹不可用")
@@ -90,47 +94,24 @@ RetryCacheCheck:
                 End If
             End Try
             DirectoryUtils.Create(PathTemp & "Cache\")
-            DirectoryUtils.Create(PathAppdata)
-            '要求单例
-            If BuildType <> BuildTypes.Debug Then
-                Dim ShouldWaitForExit As Boolean = e.Args.Length > 0 AndAlso e.Args(0) = "--wait" '要求等待已有的 PCL 退出
-                Dim WaitRetryCount As Integer = 0
-WaitRetry:
-                Dim WindowHwnd As IntPtr = FindWindow(Nothing, "Plain Craft Launcher　")
-                If WindowHwnd = IntPtr.Zero Then FindWindow(Nothing, "Plain Craft Launcher 2　")
-                If WindowHwnd <> IntPtr.Zero Then
-                    If ShouldWaitForExit AndAlso WaitRetryCount < 20 Then '至多等待 10 秒
-                        WaitRetryCount += 1
-                        Thread.Sleep(500)
-                        GoTo WaitRetry
-                    End If
-                    '将已有的 PCL 窗口拖出来
-                    ShowWindowToTop(WindowHwnd)
-                    '播放提示音并退出
-                    Beep()
-                    Environment.[Exit](ProcessReturnValues.Cancel)
-                End If
-            End If
+            DirectoryUtils.Create(Paths.AppDataThenName)
             '设置 ToolTipService 默认值
-            ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(300))
-            ToolTipService.BetweenShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(400))
-            ToolTipService.ShowDurationProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(9999999))
-            ToolTipService.PlacementProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(Primitives.PlacementMode.Bottom))
-            ToolTipService.HorizontalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(8.0))
-            ToolTipService.VerticalOffsetProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(4.0))
+            ToolTipService.InitialShowDelayProperty.OverrideMetadata(GetType(DependencyObject), New FrameworkPropertyMetadata(100))
             '设置网络配置默认值
             ServicePointManager.Expect100Continue = False
             ServicePointManager.DefaultConnectionLimit = 10000
             ServicePointManager.UseNagleAlgorithm = False
             ServicePointManager.EnableDnsRoundRobin = True
             ServicePointManager.ReusePort = True
+            If Environment.OSVersion.Version < New Version(6, 2) Then 'Windows 7 回退（#8519）
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Ssl3 Or SecurityProtocolType.Tls Or SecurityProtocolType.Tls11 Or SecurityProtocolType.Tls12
+            End If
             '设置初始窗口
             If Settings.Get(Of Boolean)("UiLauncherLogo") Then
                 FrmStart = New SplashScreen("Images\icon.ico")
                 FrmStart.Show(False, True)
             End If
-            '日志初始化
-            MeloongCore.Main.Init(New PclLogger With {.logFolder = PathUtils.CurrentFolder & "PCL", .MinLevel = If(ModeDebug, LogLevel.Trace, LogLevel.Info)})
+            '基础信息
             Logger.Info($"程序版本：{VersionDisplay} ({VersionCode}{If(CommitHash = "", "", $"，#{CommitHash}")})")
             If BuildType = BuildTypes.Snapshot Then
                 Logger.Info($"识别码：{Identify}{If(ThemeCheckOne(9), "，已解锁反馈主题", "，未解锁反馈主题")}")
@@ -139,14 +120,15 @@ WaitRetry:
             End If
             Logger.Info($"程序路径：{PathExe}")
             Logger.Info($"系统编码：{Encoding.Default.HeaderName} ({Encoding.Default.CodePage}, GBK={IsGBKEncoding})")
-            Logger.Info($"管理员权限：{SystemUtils.HasAdminRole()}")
+            Logger.Info($"管理员权限：{WindowsUtils.HasAdminRole()}")
             '检测异常环境
-            If PathExeFolder.Contains(Path.GetTempPath()) OrElse PathExeFolder.Contains("AppData\Local\Temp\") Then
+            If Paths.Base.Contains(Path.GetTempPath()) OrElse Paths.Base.Contains("AppData\Local\Temp\") Then
                 MyMsgBox("请将 PCL 从压缩包中解压后再使用！" & vbCrLf & "如果不会解压，可以在网上寻找教程。", "需要解压！", "我知道了", IsWarn:=True, ForceWait:=True)
                 FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
-            If Is32BitSystem Then
-                MyMsgBox("PCL 和新版 Minecraft 均不再支持 32 位系统，部分功能将无法使用。" & vbCrLf & "非常建议重装为 64 位系统后再进行游戏！", "环境警告", "我知道了", IsWarn:=True)
+            If Not Environment.Is64BitOperatingSystem Then
+                MyMsgBox("PCL 和新版 Minecraft 均不再支持 32 位系统，请重装为 64 位系统后再进行游戏！", "环境警告", "我知道了", IsWarn:=True, ForceWait:=True)
+                FormMain.EndProgramForce(ProcessReturnValues.Cancel)
             End If
             '计时
             Logger.Info($"第一阶段加载用时：{GetTimeMs() - ApplicationStartTick} ms")
@@ -162,6 +144,37 @@ WaitRetry:
             FormMain.EndProgramForce(ProcessReturnValues.Exception)
         End Try
     End Sub
+    ''' <summary>
+    ''' 要求程序以单例运行。
+    ''' 如果已在运行，则将其窗口拖出来并播放提示音，然后结束当前进程。
+    ''' </summary>
+    Private Shared Sub WaitingMutex(e As StartupEventArgs)
+        If BuildType = BuildTypes.Debug Then Return
+        Try
+            Dim MutexCreatedNew As Boolean
+            PclMutex = New Mutex(True, "PCL_SingletonMutex", MutexCreatedNew)
+            If MutexCreatedNew Then Return
+            Logger.Warn("已有一个 PCL 实例正在运行")
+            '等待已有的 PCL 退出
+            If e.Args.Length > 0 AndAlso e.Args(0) = "--wait" Then
+                Try
+                    If PclMutex.WaitOne(10000) Then Return '等待至多 10 秒
+                Catch Ignored As AbandonedMutexException
+                    Return '已有实例异常退出，继续启动
+                End Try
+            End If
+            '将已有的 PCL 窗口拖出来
+            Dim WindowHwnd As IntPtr = FindWindow(Nothing, "Plain Craft Launcher　")
+            If WindowHwnd = IntPtr.Zero Then WindowHwnd = FindWindow(Nothing, "Plain Craft Launcher 2　")
+            If WindowHwnd <> IntPtr.Zero Then ShowWindowToTop(WindowHwnd)
+            '播放提示音并退出
+            Beep()
+            Environment.[Exit](ProcessReturnValues.Cancel)
+        Catch ex As Exception
+            Logger.Warn(ex, "单例检查失败")
+        End Try
+    End Sub
+    Private Shared PclMutex As Mutex
 
     '结束
     Private Sub Application_SessionEnding(sender As Object, e As SessionEndingCancelEventArgs) Handles Me.SessionEnding
@@ -203,7 +216,7 @@ WaitRetry:
 
     '动态 DLL 加载
     Private Sub New() '这里必须尽早调用，且不能使用任何库，否则加载 MeloongCore 就会导致崩溃
-        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "System.Net.Http.Formatting", "PCLCS", "MeloongCore.Wpf", "MeloongCore"}
+        Static Prefixes As String() = {"NAudio", "Newtonsoft.Json", "Ookii.Dialogs.Wpf", "Imazen.WebP", "CacheCow.Common", "CacheCow.Client.FileStore", "CacheCow.Client", "ThrottleDebounce", "System.Net.Http.Formatting", "Microsoft.Win32.Registry", "PCLCS", "MeloongCore.Wpf", "MeloongCore"}
         Static LoadedAssemblies As New ConcurrentDictionary(Of String, Lazy(Of Assembly))(StringComparer.Ordinal) '缓存
         AddHandler AppDomain.CurrentDomain.AssemblyResolve,
         Function(sender As Object, Args As ResolveEventArgs) As Assembly
@@ -219,23 +232,21 @@ WaitRetry:
         End Function
     End Sub
     Private Shared Sub ExtractLibwebp() '这个方法会调用 ModBase，进而调用 MeloongCore，所以不能放在 New 里
-        SetDllDirectory(PathPure.TrimEnd("\"c))
+        SetDllDirectory(PathUtils.RemoveSlashSuffix(PathPure.Value))
         Try
-            ExtractResources(PathPure & "libwebp.dll", "libwebp64")
+            ExtractResources(PathPure.Value & "libwebp.dll", "libwebp64")
         Catch ex As Exception
             Logger.Warn(ex, "写入 libwebp.dll 失败") '防止同时加载多个图片时，同时写入文件导致文件占用，进而导致崩溃
         End Try
     End Sub
     Private Declare Function SetDllDirectory Lib "kernel32" Alias "SetDllDirectoryA" (lpPathName As String) As Boolean
 
-    '切换窗口
-
     '控件模板事件
     Private Sub MyIconButton_Click(sender As Object, e As EventArgs)
         Select Case Settings.Get(Of McLoginType)("LoginType")
             Case McLoginType.Ms
                 '微软
-                Dim MsJson As JObject = GetJson(Settings.Get(Of String)("LoginMsJson"))
+                Dim MsJson As JObject = Settings.Get(Of String)("LoginMsJson").DeserializeJson()
                 MsJson.Remove(sender.Tag)
                 Settings.Set("LoginMsJson", MsJson.ToString(Newtonsoft.Json.Formatting.None))
                 If FrmLoginMs.ComboAccounts.SelectedItem Is sender.Parent Then FrmLoginMs.ComboAccounts.SelectedIndex = 0
@@ -273,14 +284,6 @@ WaitRetry:
                         FrmLoginAuth.TextPass.Password = If(Dict.Values.Any, Dict.Values(0), "")
                 End Select
         End Select
-    End Sub
-
-    Public Shared ShowingTooltips As New List(Of Border)
-    Private Sub TooltipLoaded(sender As Border, e As EventArgs)
-        ShowingTooltips.Add(sender)
-    End Sub
-    Private Sub TooltipUnloaded(sender As Border, e As RoutedEventArgs)
-        ShowingTooltips.Remove(sender)
     End Sub
 
 End Class

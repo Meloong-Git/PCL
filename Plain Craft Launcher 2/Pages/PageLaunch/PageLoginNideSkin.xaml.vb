@@ -1,4 +1,4 @@
-﻿Public Class PageLoginNideSkin
+Public Class PageLoginNideSkin
 
     Public Sub New()
         InitializeComponent()

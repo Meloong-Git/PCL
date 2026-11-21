@@ -1,4 +1,4 @@
-﻿'动画引擎模块
+'动画引擎模块
 '使用 Ani 作为方法或属性的开头，使用 Aa 作为单个动画对象的开头（便于自动补全）
 
 Imports System.Windows.Media.Effects
@@ -79,7 +79,7 @@ Public Module ModAnimation
         ''' 已经执行的动画长度。如果为负数则为延迟。
         ''' </summary>
         ''' <remarks></remarks>
-        Public TimeFinished As Integer
+        Public TimeFinished As Double
         ''' <summary>
         ''' 已经完成的百分比。
         ''' </summary>
@@ -832,7 +832,12 @@ Public Module ModAnimation
                         AniCount = 0
                         AniTimer(DeltaTime * AniSpeed)
                         If RandomInteger(0, 64 * If(ModeDebug, 5, 30)) = 0 AndAlso ((AniFPS < 62 AndAlso AniFPS > 0) OrElse AniCount > 4 OrElse NetManager.FileRemain <> 0) Then
-                            Logger.Info($"FPS {AniFPS}, 动画 {AniCount}, 下载中 {NetManager.FileRemain}（{FormatFileSize(NetManager.Speed)}/s）")
+                            Logger.Info($"FPS {AniFPS}, 动画 {AniCount}, 下载中 {NetManager.FileRemain}（{StringUtils.FormatByteSize(NetManager.Speed)}/s）")
+                            If NetManager.FileRemain < 5 Then
+                                For Each File In NetManager.AllFiles.Values
+                                    If File.State < NetState.Finished Then Logger.Trace($"- {File.State} {StringUtils.FormatByteSize(File.Speed)}/s {File.LocalPath}")
+                                Next
+                            End If
                         End If
                     End Sub)
 Sleeper:
@@ -848,9 +853,8 @@ Sleeper:
     ''' <summary>
     ''' 动画定时器事件。
     ''' </summary>
-    Public Sub AniTimer(DeltaTick As Integer)
+    Public Sub AniTimer(DeltaTick As Double)
         Try
-
             If DeltaTick / AniSpeed > 100 Then Logger.Info($"两个动画帧间隔 {DeltaTick} ms")
             Dim i As Integer = -1
             '循环每个动画组
@@ -1018,7 +1022,7 @@ NextAni:
                         If Convert.ToInt32(Convert.ToChar(NextText)) >= Convert.ToInt32(Convert.ToChar(128)) Then
                             NewText &= Encoding.GetEncoding("GB18030").GetString({RandomInteger(16 + 160, 87 + 160), RandomInteger(1 + 160, 89 + 160)})
                         Else
-                            NewText &= RandomOne("0123456789./*-+\[]{};':/?,!@#$%^&*()_+-=qwwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM".ToCharArray)
+                            NewText &= RandomInteger(0, 85).ConvertRadix(86)
                         End If
                     End If
                     '设置文本
@@ -1029,6 +1033,7 @@ NextAni:
                     End If
 
                 Case AniType.Code
+                    Ani.TimeFinished = Ani.TimeTotal
                     CType(Ani.Value, ThreadStart)()
 
                 Case AniType.ScaleTransform

@@ -135,6 +135,11 @@
       <HintPath>Resources\CacheCow.Common.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ThrottleDebounce, Version=2.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Resources\ThrottleDebounce.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Imazen.WebP, Version=10.0.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Resources\Imazen.WebP.dll</HintPath>
@@ -209,7 +214,6 @@
     <Compile Include="Modules\Resource\LocalResourceFile.vb" />
     <Compile Include="Modules\Resource\ResourceProject.vb" />
     <Compile Include="Modules\Resource\ResourceVersion.vb" />
-    <Compile Include="Modules\Resource\WikiEntry.vb" />
     <Compile Include="Modules\Resource\ResourceSearcher.vb" />
     <Compile Include="Modules\Minecraft\ModJava.vb" />
     <Compile Include="Modules\Resource\LocalResourceLoaders.vb" />
@@ -278,6 +282,7 @@
     <Compile Include="Pages\PageDownload\PageDownloadInstall.xaml.vb">
       <DependentUpon>PageDownloadInstall.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PageDownload\PageDownloadModify.vb" />
     <Compile Include="Pages\PageDownload\Resource\PageDownloadCompDetail.xaml.vb">
       <DependentUpon>PageDownloadCompDetail.xaml</DependentUpon>
     </Compile>
@@ -557,7 +562,6 @@
     </Page>
     <None Include="app.manifest" />
     <None Include="Resources\Custom.xaml">
-      <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </None>
     <Page Include="Pages\PageLink\PageLinkMain.xaml">
@@ -675,6 +679,7 @@
     <Import Include="MeloongCore.Wpf" />
     <Import Include="MeloongCore.Wpf.Extensions" />
     <Import Include="Microsoft.VisualBasic" />
+    <Import Include="Newtonsoft.Json" />
     <Import Include="Newtonsoft.Json.Linq" />
     <Import Include="PCLCS" />
     <Import Include="System" />
@@ -687,6 +692,7 @@
     <Import Include="System.Net.Http" />
     <Import Include="System.Text" />
     <Import Include="System.Threading" />
+    <Import Include="System.Threading.Tasks" />
     <Import Include="System.Xml.Linq" />
     <Import Include="System.Collections" />
     <Import Include="System.Diagnostics" />
@@ -697,6 +703,7 @@
     <Import Include="System.Windows.Input" />
     <Import Include="System.Windows.Media" />
     <Import Include="System.Windows.Media.Imaging" />
+    <Import Include="ThrottleDebounce" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Modules\Base\ModAnimation.vb" />
@@ -894,6 +901,9 @@
     <None Include="Resources\CacheCow.Client.dll" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\ThrottleDebounce.dll" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="Resources\System.Net.Http.Formatting.dll" />
   </ItemGroup>
   <ItemGroup>
@@ -930,10 +940,15 @@
       <LogicalName>MeloongCore.Wpf.dll</LogicalName>
       <Link>Resources\MeloongCore.Wpf.dll</Link>
     </None>
+    <None Include="..\PCLCS\bin\Microsoft.Win32.Registry.dll">
+      <LogicalName>Microsoft.Win32.Registry.dll</LogicalName>
+      <Link>Resources\Microsoft.Win32.Registry.dll</Link>
+    </None>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Images\Heads\ChongQing.png" />
+    <Resource Include="Images\Heads\HerobrineXia.png" />
 
-    <None Include="Resources\moddata.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

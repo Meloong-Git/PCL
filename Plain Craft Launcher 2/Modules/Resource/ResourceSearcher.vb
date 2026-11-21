@@ -1,4 +1,4 @@
-﻿Public Class ResourceSearcher
+Public Class ResourceSearcher
     Private Const RESULT_PAGE_SIZE = 40
     Private Const MSG_NO_CHINESE_RESULT As String = "无搜索结果，请尝试搜索其英文名称"
 
@@ -21,8 +21,8 @@
         ''' </summary>
         Public ReadOnly Property CanContinue As Boolean
             Get
-                If Tag.StartsWithF("/") OrElse Not Sources.HasFlag(ResourcePlatforms.CurseForge) Then Storage.CurseForgeTotal = 0
-                If Tag.EndsWithF("/") OrElse Not Sources.HasFlag(ResourcePlatforms.Modrinth) Then Storage.ModrinthTotal = 0
+                If Tag.StartsWithF("/") OrElse Not Sources.HasFlagF(ResourcePlatforms.CurseForge) Then Storage.CurseForgeTotal = 0
+                If Tag.EndsWithF("/") OrElse Not Sources.HasFlagF(ResourcePlatforms.Modrinth) Then Storage.ModrinthTotal = 0
                 If Storage.CurseForgeTotal = -1 OrElse Storage.ModrinthTotal = -1 Then Return True
                 Return Storage.CurseForgeOffset < Storage.CurseForgeTotal OrElse Storage.ModrinthOffset < Storage.ModrinthTotal
             End Get
@@ -86,7 +86,7 @@
             If Tag <> "" Then Address += "&categoryId=" & Tag.BeforeFirst("/")
             If ModLoaders <> ModLoaders.None AndAlso Not IgnoreModLoaderFilter Then Address += "&modLoaderType=" & Resource.ToCurseForgeModLoaderType(ModLoaders.Flags.First)
             If Not String.IsNullOrEmpty(GameVersion) Then Address += "&gameVersion=" & GameVersion
-            If Not String.IsNullOrEmpty(SearchText) Then Address += "&searchFilter=" & EscapeUtils.UrlEscape(SearchText)
+            If Not String.IsNullOrEmpty(SearchText) Then Address += "&searchFilter=" & StringUtils.UrlEscape(SearchText)
             If Storage.CurseForgeOffset > 0 Then Address += "&index=" & Storage.CurseForgeOffset
             Return Address
         End Function
@@ -97,14 +97,14 @@
             If Tag.EndsWithF("/") Then Storage.ModrinthTotal = 0
             '应用筛选参数
             Dim Address As String = $"https://api.modrinth.com/v2/search?limit={RESULT_PAGE_SIZE}&index=relevance"
-            If Not String.IsNullOrEmpty(SearchText) Then Address += "&query=" & EscapeUtils.UrlEscape(SearchText)
+            If Not String.IsNullOrEmpty(SearchText) Then Address += "&query=" & StringUtils.UrlEscape(SearchText)
             If Storage.ModrinthOffset > 0 Then Address += "&offset=" & Storage.ModrinthOffset
-            'facets=[["categories:'game-mechanics'"],["categories:'forge',categories:'fabric'"],["versions:1.19.3"],["project_type:mod"]]
+            'facets=[["categories:'game-mechanics'"],["categories:forge","categories:fabric"],["versions:1.19.3"],["project_type:mod"]]
             Dim Facets As New List(Of String)
             Facets.Add($"[""project_type:{Type.ToString.Lower}""]")
             If Not String.IsNullOrEmpty(Tag) Then Facets.Add($"[""categories:'{Tag.AfterLast("/")}'""]")
             If ModLoaders <> ModLoaders.None AndAlso Not IgnoreModLoaderFilter Then
-                Facets.Add($"[""categories:'{ModLoaders.Flags.Select(Function(f) f.ToString.Lower).Join("',categories:'")}'""]")
+                Facets.Add($"[""categories:{ModLoaders.Flags.Select(Function(f) f.ToString.Lower).Join(""",""categories:")}""]")
             End If
             If Not String.IsNullOrEmpty(GameVersion) Then Facets.Add($"[""versions:'{GameVersion}'""]")
             Address += "&facets=[" & String.Join(",", Facets) & "]"
@@ -179,11 +179,6 @@
             End If
         End If
 
-        '拒绝 1.13- Quilt（这个版本根本没有 Quilt）
-        If Request.ModLoaders = ModLoaders.Quilt AndAlso CompareVersion(If(Request.GameVersion, "1.15"), "1.14") = -1 Then
-            Throw New Exception("Quilt 不支持 Minecraft " & Request.GameVersion)
-        End If
-
 #End Region
 
 #Region "中文搜索"
@@ -191,6 +186,7 @@
         Dim RawSearchText As String = If(Request.SearchText, "").Trim
         RawSearchText = RawSearchText.Lower
         Logger.Info($"工程列表搜索原始文本：{RawSearchText}")
+        RawSearchText = StrConv(RawSearchText, VbStrConv.SimplifiedChinese) '繁体转简体
 
         Dim IsChineseSearch As Boolean =
             RawSearchText.RegexCheck("[\u4e00-\u9fbb]") AndAlso Not String.IsNullOrEmpty(RawSearchText) AndAlso
@@ -202,14 +198,14 @@
             Function(Result As SearchEntry(Of WikiEntry), Source As ResourcePlatforms) As IEnumerable(Of String)
                 '从各个可能的来源提取候选
                 Dim Candidates As New List(Of String)
-                If Result.Item.CurseForgeSlug IsNot Nothing AndAlso Source = ResourcePlatforms.CurseForge Then
-                    Candidates.Add(Result.Item.CurseForgeSlug.Replace("-", " ").Replace("/", " "))
+                If Result.Item.Slugs.ContainsKey(Source) Then
+                    Candidates.Add(Result.Item.Slugs(Source).
+                                   Replace("-", " ").Replace("/", " "))
                 End If
-                If Result.Item.ModrinthSlug IsNot Nothing AndAlso Source = ResourcePlatforms.Modrinth Then
-                    Candidates.Add(Result.Item.ModrinthSlug.Replace("-", " ").Replace("/", " "))
+                If Result.Item.ChineseName IsNot Nothing Then
+                    Candidates.Add(Result.Item.ChineseName.
+                                   AfterLast(" (").TrimEnd(") ").BeforeFirst(" - ").Replace("-", " ").Replace("/", " ").Replace(":", " ").Replace("(", " ").Replace(")", ""))
                 End If
-                Candidates.Add(Result.Item.ChineseName.AfterLast(" (").TrimEnd(") ").BeforeFirst(" - ").
-                                    Replace("-", " ").Replace("/", " ").Replace(":", " ").Replace("(", " ").Replace(")", ""))
                 '分词、清洗、去重
                 Candidates = Candidates.
                     SelectMany(Function(c) c.Split(" ")).
@@ -219,6 +215,7 @@
                         If w.Length <= 1 Then Return False '单字或空白
                         If {"the", "of", "mod", "and", "forge", "fabric", "for", "quilt", "neoforge"}.Contains(w) Then Return False '常见词
                         If Val(w) > 0 Then Return False '数字
+                        If Not w.IsAsciiOnly Then Return False '非纯英文
                         Return True
                     End Function).Distinct.ToList
                 '如果一个词可以由其他词拼成，则去掉这个词（例如将 ender io enderio 的 enderio 剔除，只保留 ender io）
@@ -227,17 +224,26 @@
                 Candidates = Candidates.Where(Function(w) Not Candidates.Any(Function(c) c.Length < w.Length AndAlso w.StartsWith(c) AndAlso CanForm(w.Substring(c.Length)))).ToList()
                 Return Candidates
             End Function
+            Dim GetSearchEntries =
+            Iterator Function(Source As ResourcePlatforms)
+                For Each Entry In WikiEntry.All.Value
+                    If Not Entry.Slugs.ContainsKey(Source) Then Continue For
+                    If Entry.ChineseName IsNot Nothing Then
+                        Yield New SearchEntry(Of WikiEntry) With {.Item = Entry, .SearchSource = New List(Of SearchSource) From {
+                            New SearchSource(StrConv(Entry.ChineseName.BeforeFirst(" ("), VbStrConv.SimplifiedChinese).Split("/"c, True), 1), '部分 Mod 有别名
+                            New SearchSource(StrConv(Entry.ChineseName.AfterFirst(" ("), VbStrConv.SimplifiedChinese) & Entry.Slugs(Source), 0.5)
+                        }}
+                    Else
+                        Yield New SearchEntry(Of WikiEntry) With {.Item = Entry, .SearchSource = New List(Of SearchSource) From {
+                            New SearchSource(Entry.Slugs(Source), 0.5)
+                        }}
+                    End If
+                Next
+            End Function
             'CurseForge
-            If Request.Sources.HasFlag(ResourcePlatforms.CurseForge) Then
+            If Request.Sources.HasFlagF(ResourcePlatforms.CurseForge) Then
                 '数据库搜索
-                Static CurseForgeSearchEntries As List(Of SearchEntry(Of WikiEntry)) =
-                WikiEntry.All.Where(Function(Entry) Entry.CurseForgeSlug IsNot Nothing).Select(
-                Function(Entry) New SearchEntry(Of WikiEntry) With {
-                    .Item = Entry,
-                    .SearchSource = New List(Of SearchSource) From {
-                        New SearchSource(Entry.ChineseName.BeforeFirst(" (").Split("/"c, True), 1), '部分 Mod 有别名
-                        New SearchSource(Entry.ChineseName.AfterFirst(" (") & Entry.CurseForgeSlug, 0.5)}
-                }).ToList
+                Static CurseForgeSearchEntries As List(Of SearchEntry(Of WikiEntry)) = GetSearchEntries(ResourcePlatforms.CurseForge).ToList()
                 Dim CurseForgeSearchResults = Search(CurseForgeSearchEntries, RawSearchText, 100, 0.25)
                 If CurseForgeSearchResults.Any Then
                     '选取目标（CurseForge 要求每个词都必须匹配上，所以只能选择一个 Mod 进行搜索）
@@ -252,16 +258,9 @@
                 End If
             End If
             'Modrinth
-            If Request.Sources.HasFlag(ResourcePlatforms.Modrinth) Then
+            If Request.Sources.HasFlagF(ResourcePlatforms.Modrinth) Then
                 '数据库搜索
-                Static ModrinthSearchEntries As List(Of SearchEntry(Of WikiEntry)) =
-                WikiEntry.All.Where(Function(Entry) Entry.ModrinthSlug IsNot Nothing).Select(
-                Function(Entry) New SearchEntry(Of WikiEntry) With {
-                    .Item = Entry,
-                    .SearchSource = New List(Of SearchSource) From {
-                        New SearchSource(Entry.ChineseName.BeforeFirst(" (").Split("/"c, True), 1), '部分 Mod 有别名
-                        New SearchSource(Entry.ChineseName.AfterFirst(" (") & Entry.ModrinthSlug, 0.5)}
-                }).ToList
+                Static ModrinthSearchEntries As List(Of SearchEntry(Of WikiEntry)) = GetSearchEntries(ResourcePlatforms.Modrinth).ToList()
                 Dim ModrinthSearchResults = Search(ModrinthSearchEntries, RawSearchText, 100, 0.25)
                 If ModrinthSearchResults.Any Then
                     '分词
@@ -276,7 +275,7 @@
                     ModrinthAltSearchText = WordWeights.MaxBy(Function(w) w.Value).Key
                     Logger.Warn($"中文搜索关键词（Modrinth）：{ModrinthAltSearchText}")
                     '直接请求工程
-                    ModrinthSlugs = ModrinthSearchResults.Take(100).Select(Function(r) r.Item.ModrinthSlug).ToList
+                    ModrinthSlugs = ModrinthSearchResults.Take(100).Select(Function(r) r.Item.Slugs(ResourcePlatforms.Modrinth)).ToList
                 End If
             End If
             '结束
@@ -290,20 +289,21 @@
 
         Dim RealResults As New List(Of ResourceProject)
 NextPage:
-        Dim RawResults As New ConcurrentList(Of ResourceProject)
+        Dim RawResults As New List(Of ResourceProject)
 
 #Region "从 CurseForge 和 Modrinth 获取结果列表，存储于 RawResults"
 
         Dim WorkThreads As New List(Of Thread)
-        Dim Errors As New ConcurrentList(Of (Ex As Exception, Source As ResourcePlatforms))
+        Dim Errors As New ConcurrentBag(Of (Ex As Exception, Source As ResourcePlatforms))
 
         '在 1.14-，部分老 Mod 没有设置支持的加载器，因此添加 Forge 筛选就会出现遗漏
         '所以，在发起请求时不筛选加载器，然后在返回的结果中自行筛除不是 Forge 的 Mod
         Dim IgnoreModLoaderFilter = Request.ModLoaders = ModLoaders.Forge AndAlso McVersion.VersionToDrop(Request.GameVersion) < 140
+        Dim SearchResults As New ConcurrentBag(Of ResourceProject)
         Try
 
             'CurseForge 搜索
-            If Request.Sources.HasFlag(ResourcePlatforms.CurseForge) AndAlso
+            If Request.Sources.HasFlagF(ResourcePlatforms.CurseForge) AndAlso
                Not (Storage.CurseForgeTotal > -1 AndAlso Storage.CurseForgeTotal <= Storage.CurseForgeOffset) AndAlso '剩余的未显示的搜索结果不足
                (Not IsChineseSearch OrElse (IsChineseSearch AndAlso Not String.IsNullOrEmpty(CurseForgeAltSearchText))) Then '如果是中文搜索，就只在有对应搜索关键词的时候才继续
                 WorkThreads.Add(RunInNewThread(
@@ -317,11 +317,11 @@ NextPage:
                         For Each JsonEntry As JObject In RequestResult("data")
                             Dim Project As New ResourceProject(JsonEntry)
                             If Request.Type = ResourceTypes.ResourcePack AndAlso Project.Tags.Contains("数据包") Then Continue For 'CurseForge 将一些数据包分类成了资源包
-                            If Request.Type <> ResourceTypes.Any AndAlso Not Project.Types.HasFlag(Request.Type) Then Continue For '过滤分区不匹配的搜索结果（#8265）
+                            If Request.Type <> ResourceTypes.Any AndAlso Not Project.Types.HasFlagF(Request.Type) Then Continue For '过滤分区不匹配的搜索结果（#8265）
                             ProjectList.Add(Project)
                         Next
                         '更新结果
-                        ProjectList.ForEach(Sub(p) RawResults.Add(p))
+                        ProjectList.ForEach(Sub(p) SearchResults.Add(p))
                         Storage.CurseForgeOffset += RequestResult("data").Count
                         Storage.CurseForgeTotal = RequestResult("pagination")("totalCount").ToObject(Of Integer)
                         Logger.Info($"从 CurseForge 搜索到了 {ProjectList.Count} 个工程（总计已获取 {Storage.CurseForgeOffset} 个，共 {Storage.CurseForgeTotal} 个）")
@@ -335,7 +335,7 @@ NextPage:
             End If
 
             'Modrinth 搜索
-            If Request.Sources.HasFlag(ResourcePlatforms.Modrinth) AndAlso
+            If Request.Sources.HasFlagF(ResourcePlatforms.Modrinth) AndAlso
                Not (Storage.ModrinthTotal > -1 AndAlso Storage.ModrinthTotal <= Storage.ModrinthOffset) AndAlso '剩余的未显示的搜索结果不足
                (Not IsChineseSearch OrElse (IsChineseSearch AndAlso Not String.IsNullOrEmpty(ModrinthAltSearchText))) Then '如果是中文搜索，就只在有对应搜索关键词的时候才继续
                 WorkThreads.Add(RunInNewThread(
@@ -349,7 +349,7 @@ NextPage:
                             ProjectList.Add(New ResourceProject(JsonEntry))
                         Next
                         '更新结果
-                        ProjectList.ForEach(Sub(p) RawResults.Add(p))
+                        ProjectList.ForEach(Sub(p) SearchResults.Add(p))
                         Storage.ModrinthOffset += RequestResult("hits").Count
                         Storage.ModrinthTotal = RequestResult("total_hits").ToObject(Of Integer)
                         Logger.Info($"从 Modrinth 搜索到了 {ProjectList.Count} 个工程（总计已获取 {Storage.ModrinthOffset} 个，共 {Storage.ModrinthTotal} 个）")
@@ -363,7 +363,7 @@ NextPage:
             End If
 
             'Modrinth 直接获取工程
-            If Request.Sources.HasFlag(ResourcePlatforms.Modrinth) AndAlso
+            If Request.Sources.HasFlagF(ResourcePlatforms.Modrinth) AndAlso
                Not (Storage.ModrinthTotal > -1 AndAlso Storage.ModrinthTotal <= Storage.ModrinthOffset) AndAlso '剩余的未显示的搜索结果不足
                ModrinthSlugs.Any Then '有直接获取的 Slug
                 WorkThreads.Add(RunInNewThread(
@@ -375,7 +375,7 @@ NextPage:
                         For Each JsonEntry As JObject In DlModRequest(ModrinthUrl)
                             Dim Project As New ResourceProject(JsonEntry)
                             '应用筛选
-                            If Request.Type <> ResourceTypes.Any AndAlso Not Project.Types.HasFlag(Request.Type) Then Continue For
+                            If Request.Type <> ResourceTypes.Any AndAlso Not Project.Types.HasFlagF(Request.Type) Then Continue For
                             If Not String.IsNullOrEmpty(Request.Tag) AndAlso
                                 Not JsonEntry("categories").Any(Function(c) c.ToString = Request.Tag.AfterLast("/")) Then Continue For 'Project.Tags 已经转换成中文了，只能从 json 判
                             If Request.ModLoaders <> ModLoaders.None AndAlso Not IgnoreModLoaderFilter AndAlso
@@ -384,8 +384,17 @@ NextPage:
                                 Not Project.UnsafeGameVersions.Any(Function(d) d = Request.GameVersion) Then Continue For
                             ProjectList.Add(Project)
                         Next
+                        If ProjectList.Any AndAlso Request.ModLoaders <> ModLoaders.None AndAlso Not IgnoreModLoaderFilter AndAlso
+                                Not String.IsNullOrEmpty(Request.GameVersion) Then
+                            Dim ProjectIds = ProjectList.Select(Function(p) p.Id).Join(""",""project_id:")
+                            Dim Loaders = Request.ModLoaders.Flags.Select(Function(f) f.ToString.Lower).Join(""",""categories:")
+                            Dim FilterUrl = $"https://api.modrinth.com/v2/search?limit={ProjectList.Count}&facets=" &
+                                $"[[""project_id:{ProjectIds}""],[""categories:{Loaders}""],[""versions:{Request.GameVersion}""]]"
+                            Dim MatchedIds = DlModRequest(FilterUrl)("hits").Select(Function(h) h("project_id").ToString).ToList
+                            ProjectList.KeepIf(Function(p) MatchedIds.Contains(p.Id))
+                        End If
                         '更新结果
-                        ProjectList.ForEach(Sub(p) RawResults.Add(p))
+                        ProjectList.ForEach(Sub(p) SearchResults.Add(p))
                         Logger.Info($"从 Modrinth 直接获取到了 {ProjectList.Count} 个工程")
                         ModrinthSlugs.Clear() '防止重试/加载下一页时重复获取
                     Catch ex As Exception
@@ -399,12 +408,13 @@ NextPage:
             '等待线程结束
             For Each Thread In WorkThreads
                 Thread.Join()
-                If Task.IsInterrupted Then Return '会自动触发 Finally 以清理线程
+                If Task.IsCanceled Then Return '会自动触发 Finally 以清理线程
             Next
+            RawResults = New List(Of ResourceProject)(SearchResults)
 
             '仅保留兼容 Forge 的 Mod，或老版本中没有标注任何 Mod Loader 的 Mod
             If IgnoreModLoaderFilter Then
-                RawResults.KeepIf(Function(p) p.ModLoaders = ModLoaders.None OrElse p.ModLoaders.HasFlag(ModLoaders.Forge))
+                RawResults.KeepIf(Function(p) p.ModLoaders = ModLoaders.None OrElse p.ModLoaders.HasFlagF(ModLoaders.Forge))
             End If
 
             '确保存在结果
@@ -509,7 +519,7 @@ NextPage:
             Next
         End If
         '根据排序分得出结果并添加
-        If Task.IsInterrupted Then Throw New ThreadInterruptedException '#8246
+        If Task.IsCanceled Then Throw New OperationCanceledException '#8246
         Storage.Results.AddRange(
             Scores.OrderByDescending(Function(s) s.Value).Select(Function(r) r.Key))
 

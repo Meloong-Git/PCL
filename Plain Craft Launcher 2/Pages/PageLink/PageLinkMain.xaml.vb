@@ -1,5 +1,8 @@
-﻿Imports System.Globalization
+Imports System.Collections.ObjectModel
+Imports System.Globalization
 Imports System.Net.Sockets
+Imports System.Reflection
+Imports PCL
 
 Public Class PageLinkMain
     Private Const INVITE_CODE_VERSION As Integer = 2
@@ -70,7 +73,7 @@ Public Class PageLinkMain
     '由任意状态切换到 Waiting
     Private Sub SwitchToWaiting(OldState As LinkStates)
         '加载器与进程状态
-        LinkLoader.Interrupt()
+        LinkLoader.Cancel()
         SyncLock LinkLoader.LockState
             LinkLoader.State = LoadState.Waiting
         End SyncLock
@@ -92,7 +95,7 @@ Public Class PageLinkMain
     Private Sub Create_MouseLeftButtonUp() Handles PanSelectCreate.MouseLeftButtonUp
         '输入端口号
         Dim Port As String = MyMsgBoxInput("输入端口", $"在单人游戏的暂停菜单选择 {vbLQ}对局域网开放{vbRQ}，然后输入端口数字。{vbCrLf}甚至可以输入其他游戏的端口……嗯……",
-            ValidateRules:=New ObjectModel.Collection(Of Validate) From {New ValidateInteger(1024, 65535)},
+            ValidateRules:=New Collection(Of Validate) From {New ValidateInteger(1024, 65535)},
             HintText:="端口号")
         If Port Is Nothing Then Return
         '基础信息
@@ -223,7 +226,7 @@ Public Class PageLinkMain
     '由 Loading 状态切换到 Failed
     Private Sub SwitchToFailed(OldState As LinkStates)
         '加载器与进程状态
-        LinkLoader.Interrupt()
+        LinkLoader.Cancel()
         ProcessStop()
         'UI 更新
         UpdateProgressBar(1)
@@ -379,7 +382,7 @@ Public Class PageLinkMain
     ''' <summary>
     ''' EasyTier 所在的文件夹路径，以 \ 结尾。
     ''' </summary>
-    Private PathEasyTier As String = PathAppdata & "EasyTier\"
+    Private PathEasyTier As String = Paths.AppDataThenName & "EasyTier\"
     ''' <summary>
     ''' 当前是服务端还是客户端。
     ''' </summary>
@@ -444,11 +447,11 @@ Public Class PageLinkMain
         UpdateLoadingPage("正在获取 CPU 架构……", "获取 CPU 架构")
         Dim Architecture As String = GetType(String).Assembly.GetName().ProcessorArchitecture
         Select Case Architecture
-            Case Reflection.ProcessorArchitecture.X86
+            Case ProcessorArchitecture.X86
                 Architecture = "i686"
-            Case Reflection.ProcessorArchitecture.Amd64
+            Case ProcessorArchitecture.Amd64
                 Architecture = "x86_64"
-            Case Reflection.ProcessorArchitecture.Arm
+            Case ProcessorArchitecture.Arm
                 Architecture = "arm64"
             Case Else
                 Logger.Warn($"CPU 是不支持的 {Architecture} 架构，这可能会导致联机模块无法启动！")
@@ -470,7 +473,7 @@ Public Class PageLinkMain
             RequiredFiles.Add(New NetFile(
                 ServerConfig("Link")("Downloads").Select(Function(UrlEntry) UrlEntry.ToString.Replace("{arch}", Architecture)),
                 PathEasyTier & "EasyTier.zip",
-                New FileChecker(MinSize:=1024 * 1024 * 2)))
+                New FileChecker With {.MinSize = 1024 * 1024 * 2}))
         End If
         '开始下载
         UpdateLoadingPage("正在下载联机模块……", "下载联机模块")
@@ -484,13 +487,11 @@ Public Class PageLinkMain
         If FileUtils.Exists(PathEasyTier & "EasyTier.zip") Then
             '解压
             Dim ExtractPath As String = RequestTaskTempFolder()
-            FileUtils.ExtractToDirectory(PathEasyTier & "EasyTier.zip", ExtractPath,
-                progressHandler:=Sub(Percentage) Task.Progress = Percentage * 0.05)
-            DirectoryUtils.Copy(DirectoryUtils.GetDirectories(ExtractPath).First, PathEasyTier)
+            'FileUtils.ExtractToDirectory(PathEasyTier & "EasyTier.zip", ExtractPath,
+            '    progressHandler:=Sub(Percentage) Task.Progress = Percentage * 0.05)
+            DirectoryUtils.Copy(DirectoryUtils.EnumerateDirectories(ExtractPath, True).First, PathEasyTier)
             '重命名
-            FileUtils.Delete(PathEasyTier & "联机模块.exe")
             FileUtils.Move(PathEasyTier & "easytier-core.exe", PathEasyTier & "联机模块.exe")
-            FileUtils.Delete(PathEasyTier & "联机模块 CLI.exe")
             FileUtils.Move(PathEasyTier & "easytier-cli.exe", PathEasyTier & "联机模块 CLI.exe")
             '清理
             FileUtils.Delete(PathEasyTier & "EasyTier.zip")
@@ -522,7 +523,7 @@ Public Class PageLinkMain
         '获取启动参数
         Dim Arguments As String = ServerConfig("Link")("Argument")
         Arguments += $" --network-name={NetworkName} --network-secret={NetworkSecret} --listeners {ListenersPort} --rpc-portal {RPCPort} --private-mode true"
-        Dim HostName = If(IsServerSide, "Server-", "Client-") & Math.Abs(Identify.GetHashCode).ConvertRadix(36)
+        Dim HostName = If(IsServerSide, "Server-", "Client-") & Identify.GetStableHashCode().ConvertRadix(36).TrimStart("-"c).EnsureLength("0", 6)
         If IsServerSide Then
             Arguments += $" -i 10.114.114.114 --hostname={HostName} --tcp-whitelist={ServerPort} --udp-whitelist={ServerPort}"
         Else
@@ -583,8 +584,8 @@ Public Class PageLinkMain
                         Panic("无法连接到房主", $"可能的原因：{vbCrLf}- 你或者房主的网络环境不佳{vbCrLf}- 房主已关闭房间{vbCrLf}- 邀请码输错了")
                 End Select
             End If
-        Loop Until Task.IsInterrupted
-        If Task.IsInterrupted Then Throw New ThreadInterruptedException
+        Loop Until Task.IsCanceled
+        If Task.IsCanceled Then Throw New OperationCanceledException
         '等待连接稳定，最多 5s
         If IsServerSide Then Return
         UpdateLoadingPage("连接优化中……", "优化连接")
@@ -592,7 +593,7 @@ Public Class PageLinkMain
         For i = 1 To 50
             Dim Server = GetTargetPeer()
             If Server IsNot Nothing AndAlso Not Server.Relay AndAlso Server.Ping < 100 Then Return '结束
-            If Task.IsInterrupted Then Throw New ThreadInterruptedException
+            If Task.IsCanceled Then Throw New OperationCanceledException
             Thread.Sleep(100)
         Next
     End Sub
@@ -612,10 +613,10 @@ Public Class PageLinkMain
             Dim RawNodes As JObject
             Dim IsFallbackRawList As Boolean = False
             Try
-                RawNodes = GetJson(NetRequestByClient("https://uptime.easytier.cn/api/nodes?page=1&per_page=1000", RequireJson:=True))
+                RawNodes = NetRequestByClient("https://uptime.easytier.cn/api/nodes?page=1&per_page=1000", RequireJson:=True).DeserializeJson()
             Catch exx As Exception
                 Logger.Warn(exx, "从源站获取节点列表失败，将使用 CDN 缓存")
-                RawNodes = GetJson(NetRequestByClientRetry("https://easytier.meloong.com/?page=1&per_page=1000", RequireJson:=True))
+                RawNodes = NetRequestByClientRetry("https://easytier.meloong.com/?page=1&per_page=1000", RequireJson:=True).DeserializeJson()
                 IsFallbackRawList = True
             End Try
             '分析节点列表
@@ -654,7 +655,7 @@ ForcedPass:
                 If SelectedDiscoverNode Is Nothing Then
                     Logger.Warn($"未找到 ID {DiscoverNodeID} 的发现节点")
                     Panic("房间已过期", "请让房主重新创建房间！")
-                    Throw New ThreadInterruptedException
+                    Throw New OperationCanceledException
                 End If
             End If
             If SelectedDiscoverNode Is Nothing Then '使用回退发现节点
@@ -671,9 +672,8 @@ ForcedPass:
                 If RelayNodes.Count < RelayCount Then Throw New Exception($"可用的中继节点数量不足，需要 {RelayCount} 个，实际 {RelayNodes.Count} 个")
                 FinalPeers.AddRange(RelayNodes.Take(RelayCount).Select(Function(n) n("address").ToString()))
             End If
-        Catch ex As ThreadInterruptedException
-            Throw
         Catch ex As Exception
+            ex.ThrowIfCanceled()
             Logger.Error(ex, "获取节点列表失败，联机质量可能受到影响", LogBehavior.Toast)
             FinalPeers.AddRange(ServerConfig("Link")("Peers").Select(Function(p) p.ToString))
             If FinalDiscoverID <= 0 Then
@@ -771,23 +771,22 @@ ForcedPass:
         Logger.Info($"正在启动 EasyTier：{Arguments}")
         ProcessCore = New Process With {.StartInfo = Info}
         Dim LogLineHandler =
-        Function(sender As Object, e As DataReceivedEventArgs, Handle As AutoResetEvent)
+        Sub(sender As Object, e As DataReceivedEventArgs, Handle As AutoResetEvent)
             Try
                 If e.Data Is Nothing Then
                     Handle.[Set]()
-                    Return Nothing
+                    Return
                 End If
                 ProcessLogLine(e.Data)
             Catch unused As ObjectDisposedException
             Catch ex As Exception
                 Logger.Warn(ex, "读取 EasyTier 信息失败")
             End Try
-            Return Nothing
-        End Function
+        End Sub
         ProcessOutputHandle = New AutoResetEvent(False)
-        AddHandler ProcessCore.OutputDataReceived, Function(sender, e) LogLineHandler(sender, e, ProcessOutputHandle)
+        AddHandler ProcessCore.OutputDataReceived, Sub(sender, e) LogLineHandler(sender, e, ProcessOutputHandle)
         ProcessErrorHandle = New AutoResetEvent(False)
-        AddHandler ProcessCore.ErrorDataReceived, Function(sender, e) LogLineHandler(sender, e, ProcessErrorHandle)
+        AddHandler ProcessCore.ErrorDataReceived, Sub(sender, e) LogLineHandler(sender, e, ProcessErrorHandle)
         ProcessCore.Start()
         ProcessCore.BeginOutputReadLine()
         ProcessCore.BeginErrorReadLine()
@@ -872,7 +871,7 @@ ForcedPass:
             Double.TryParse(Info("lat_ms"), NumberStyles.Any, CultureInfo.InvariantCulture, Ping)
             Name = PeerName
             Relay = Info("cost").ToString.ContainsIgnoreCase("relay")
-            NATType = Info("nat_type").ToString.ToEnum(Of NATTypes)
+            NATType = EnumUtils.FromString(Of NATTypes)(Info("nat_type"))
         End Sub
         Public Overrides Function ToString() As String
             Return $"{Type} - {Name} - Ping {Ping:0.0}ms [中继? {Relay}] - NAT {NATType}"
@@ -914,12 +913,12 @@ ForcedPass:
     Private RefreshPeerLoader As New LoaderTask(Of Integer, List(Of Peer))("EasyTier CLI", AddressOf RefreshPeer)
     Private Sub RefreshPeer()
         Try
-            Dim CliResult = StartProcessAndGetOutput(PathEasyTier & "联机模块 CLI.exe", $"-o json -p 127.0.0.1:{RPCPort} peer", 2000, Encoding:=Encoding.UTF8, PrintLog:=False)
+            Dim CliResult = "" 'StartProcessAndGetOutput(PathEasyTier & "联机模块 CLI.exe", $"-o json -p 127.0.0.1:{RPCPort} peer", 2000, Encoding:=Encoding.UTF8, PrintLog:=False)
             '解析
             If Not CliResult.Contains("lat_ms") Then Throw New Exception("CLI 调用失败：" & vbCrLf & CliResult)
             If GetUuid() Mod If(ModeDebug, 23, 103) = 0 Then Logger.Info($"CLI 输出抽样：{vbCrLf}{CliResult}")
             Dim NewPeers As New List(Of Peer)
-            For Each Line As JObject In CType(GetJson(CliResult), JArray)
+            For Each Line As JObject In CType(CliResult.DeserializeJson(), JArray)
                 Try
                     Dim Peer = New Peer(Line)
                     If Peer.Type = Peer.Types.Self Then

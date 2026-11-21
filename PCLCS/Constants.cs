@@ -17,10 +17,12 @@ public enum ResourceTypes {
     DataPack = 16,
     /// <summary>服务端插件。</summary>
     Plugin = 32,
+    /// <summary>地图。</summary>
+    Map = 64,
     /// <summary>同时包含数据包以及 Mod。</summary>
     ModOrDataPack = Mod | DataPack,
     /// <summary>允许任意种类，或种类未知。</summary>
-    Any = Mod | ModPack | ResourcePack | Shader | DataPack | Plugin,
+    Any = Mod | ModPack | ResourcePack | Shader | DataPack | Plugin | Map,
 }
 
 /// <summary>
@@ -42,9 +44,8 @@ public enum ModLoaders {
     Forge = 1,
     LiteLoader = 2,
     Fabric = 4,
-    Quilt = 8,
     NeoForge = 16,
-    All = Forge | LiteLoader | Fabric | Quilt | NeoForge,
+    All = Forge | LiteLoader | Fabric | NeoForge,
 }
 
 /// <summary>
@@ -63,13 +64,21 @@ public static class Versions {
     /// <summary>
     /// 土豆码版本号。
     /// </summary>
-    public const char POTATO_VERSION = '1';
+    public const char PotatoVersion = '1';
     /// <summary>
     /// 版本管理中 Mod 信息缓存的版本号。
     /// </summary>
-    public const int LOCAL_MOD_CACHE_VERSION = 17;
+    public const int LocalModCacheVersion = 21;
     /// <summary>
     /// Minecraft 本地实例信息缓存的版本号。
     /// </summary>
-    public const int MCINSTANCE_CACHE_VERSION = 37;
+    public const int McInstanceCacheVersion = 39;
+    /// <summary>
+    /// Java 相关配置的版本号。
+    /// </summary>
+    public const int JavaConfigVersion = 1;
+    /// <summary>
+    /// Minecraft 安装清单的版本号。
+    /// </summary>
+    public const int McInstallManifestVersion = 1;
 }

@@ -1,4 +1,4 @@
-﻿Public Class MyComboBoxItem
+Public Class MyComboBoxItem
     Inherits ComboBoxItem
 
     '基础

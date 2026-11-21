@@ -1,4 +1,4 @@
-﻿Public Class PageLoginMsSkin
+Public Class PageLoginMsSkin
 
     Public Sub New()
         InitializeComponent()
@@ -32,7 +32,7 @@
     Private Sub ShowPanel(sender As Object, e As MouseEventArgs) Handles PanData.MouseEnter
         AniStart(AaOpacity(PanButtons, 1 - PanButtons.Opacity, 120), "PageLoginMsSkin Button")
     End Sub
-    Public Sub HidePanel() Handles PanData.MouseLeave
+    Public Sub HidePanel(sender As Object, e As EventArgs) Handles PanData.MouseLeave
         If BtnEdit.ContextMenu.IsOpen OrElse BtnSkin.ContextMenu.IsOpen OrElse PanData.IsMouseOver Then Return
         AniStart(AaOpacity(PanButtons, -PanButtons.Opacity, 120), "PageLoginMsSkin Button")
     End Sub
@@ -50,7 +50,7 @@
         Settings.Set("CacheMsV2Uuid", "")
         Settings.Set("CacheMsV2Name", "")
         Settings.Set("CacheMsV2Expires", 0L)
-        McLoginMsLoader.Interrupt()
+        McLoginMsLoader.Cancel()
         FrmLaunchLeft.RefreshPage(False, True)
     End Sub
 
@@ -91,27 +91,20 @@ Retry:
             If McLoginMsLoader.State = LoadState.Failed Then Throw New Exception("登录失败", McLoginMsLoader.Error)
             Dim AccessToken As String = Settings.Get(Of String)("CacheMsV2Access")
             Dim Uuid As String = Settings.Get(Of String)("CacheMsV2Uuid")
-            Dim Result As String = Nothing
-            ResilientUtils.Retry( 'MultipartFormDataContent 在一次请求后就会被 Dispose，所以不能直接 Retry（#8397）
-            Sub()
-                Result = NetRequestByClient("https://api.minecraftservices.com/minecraft/profile/skins", HttpMethod.Post,
-                    Content:=New Net.Http.MultipartFormDataContent From {
-                        {New Net.Http.StringContent(If(SkinInfo.IsSlim, "slim", "classic")), "variant"},
-                        {New Net.Http.ByteArrayContent(FileUtils.ReadAsBytes(SkinInfo.LocalFile)), "file", PathUtils.GetLastPart(SkinInfo.LocalFile)}
-                    },
-                    Headers:={{"Authorization", "Bearer " & AccessToken}, {"Accept", "*/*"}, {"User-Agent", "MojangSharp/0.1"}})
-            End Sub, 3)
+            Dim Result As String = NetRequestByClientRetry("https://api.minecraftservices.com/minecraft/profile/skins", HttpMethod.Post,
+                Content:=New Net.Http.MultipartFormDataContent From {
+                    {New Net.Http.StringContent(If(SkinInfo.IsSlim, "slim", "classic")), "variant"},
+                    {New Net.Http.ByteArrayContent(FileUtils.ReadAsBytes(SkinInfo.LocalFile)), "file", PathUtils.GetLastPart(SkinInfo.LocalFile)}
+                },
+                Headers:={{"Authorization", "Bearer " & AccessToken}, {"Accept", "*/*"}, {"User-Agent", "MojangSharp/0.1"}})
             If Result.Contains("request requires user authentication") Then
                 Hint("正在重新登录，将在登录后自动更改皮肤……")
                 McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
                 GoTo Retry
-            ElseIf Result.Contains("""error""") Then
-                Hint("更改皮肤失败：" & GetJson(Result)("error").ToString, HintType.Red)
-                Return
             End If
             '获取新皮肤地址
             Logger.Info($"皮肤修改返回值：{vbCrLf}{Result}")
-            Dim ResultJson As JObject = GetJson(Result)
+            Dim ResultJson As JObject = Result.DeserializeJson()
             If ResultJson.ContainsKey("errorMessage") Then Throw New Exception(ResultJson("errorMessage").ToString) '#5309
             For Each Skin As JObject In ResultJson("skins")
                 If Skin("state").ToString = "ACTIVE" Then
@@ -121,13 +114,26 @@ Retry:
             Next
             Throw New Exception("未知错误（" & Result & "）")
         Catch ex As Exception
-            If ex.IsBadNetwork Then
-                Hint("更改皮肤失败：连接皮肤服务器超时，请稍后再试，或使用 VPN 改善网络环境", HintType.Red)
-            ElseIf TypeOf ex Is HttpRequestCodeException AndAlso CType(ex, HttpRequestCodeException).StatusCode = HttpStatusCode.Unauthorized Then
-                Logger.Warn(ex, "更改皮肤时遭遇 401 错误")
-                Hint("正在重新登录，将在登录后自动更改皮肤……")
-                McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
-                GoTo Retry
+            If TypeOf ex Is HttpRequestCodeException Then
+                Dim requestException As HttpRequestCodeException = CType(ex, HttpRequestCodeException)
+                Select Case requestException.StatusCode
+                    Case HttpStatusCode.BadRequest
+                        Logger.Warn(ex, "更改皮肤时遭遇 400 错误")
+                        If requestException.Response?.Contains("""error""") Then
+                            Hint("更改皮肤失败：" & requestException.Response.DeserializeJson()("error").ToString, HintType.Red)
+                            Return
+                        ElseIf requestException.Response?.Contains("""errorMessage""") Then
+                            Hint("更改皮肤失败：" & requestException.Response.DeserializeJson()("errorMessage").ToString, HintType.Red)
+                            Return
+                        End If
+                    Case HttpStatusCode.Unauthorized
+                        Logger.Warn(ex, "更改皮肤时遭遇 401 错误")
+                        Hint("正在重新登录，将在登录后自动更改皮肤……")
+                        McLoginMsLoader.Start(GetLoginData(), IsForceRestart:=True)
+                        GoTo Retry
+                End Select
+            ElseIf ex.IsBadNetwork Then
+                Hint("更改皮肤失败：连接 Mojang 服务器超时，请稍后再试，或使用 VPN 改善网络环境", HintType.Red)
             Else
                 Logger.Error(ex, "更改皮肤失败", LogBehavior.Toast)
             End If
@@ -149,6 +155,24 @@ Retry:
     '修改披风
     Public Sub BtnSkinCape_Click(sender As Object, e As RoutedEventArgs)
         Skin.BtnSkinCape_Click()
+    End Sub
+
+    '刷新披风
+    Public Sub BtnSkinCapeRefresh_Click(sender As Object, e As RoutedEventArgs)
+        RunInThread(
+        Sub()
+            Try
+                Hint("正在刷新披风列表……")
+                If McLaunchLoader.State = LoadState.Loading Then
+                    McLoginMsLoader.WaitForExit()
+                Else
+                    McLoginMsLoader.WaitForExit(GetLoginData(), IsForceRestart:=True)
+                End If
+                Hint("已刷新披风列表！", HintType.Green)
+            Catch ex As Exception
+                Logger.Error(ex, "刷新披风列表失败", LogBehavior.Toast)
+            End Try
+        End Sub)
     End Sub
 
 #End Region

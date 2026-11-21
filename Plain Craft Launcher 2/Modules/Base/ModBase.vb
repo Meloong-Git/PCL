@@ -1,21 +1,17 @@
-Imports System.Globalization
 Imports System.Runtime.CompilerServices
-Imports System.Security.Cryptography
-Imports System.Threading.Tasks
 Imports System.Xaml
-Imports Newtonsoft.Json
 
 Public Module ModBase
 
 #Region "声明"
 
     '下列版本信息由更新器自动修改
-    Public Const VersionBaseName As String = "2.12.8.0" '显示用版本名
+    Public Const VersionBaseName As String = "2.99.0.1" '显示用版本名
     Public Const CommitHash As String = "" 'Commit Hash，由 GitHub Workflow 自动替换
 #If RELEASE Then
-    Public Const VersionCode As Integer = 400 '正式版
+    Public Const VersionCode As Integer = 415 '正式版
 #Else
-    Public Const VersionCode As Integer = 399 '快照版
+    Public Const VersionCode As Integer = 416 '快照版
 #End If
 
     '版本信息
@@ -41,13 +37,9 @@ Public Module ModBase
     ''' </summary>
     Public Handle As IntPtr
     ''' <summary>
-    ''' 程序的启动路径，以 \ 结尾。
-    ''' </summary>
-    Public PathExeFolder As String = AppDomain.CurrentDomain.SetupInformation.ApplicationBase
-    ''' <summary>
     ''' 包含程序名的完整路径。
     ''' </summary>
-    Public PathExe As String = PathExeFolder & AppDomain.CurrentDomain.SetupInformation.ApplicationName
+    Public PathExe As String = Paths.Base & AppDomain.CurrentDomain.SetupInformation.ApplicationName
     ''' <summary>
     ''' 程序内嵌图片文件夹路径，以 / 结尾。
     ''' </summary>
@@ -55,11 +47,7 @@ Public Module ModBase
     ''' <summary>
     ''' 程序的缓存文件夹路径，以 \ 结尾。
     ''' </summary>
-    Public PathTemp As String = If(Settings.Get(Of String)("SystemSystemCache") = "", Path.GetTempPath() & "PCL\", Settings.Get(Of String)("SystemSystemCache")).ToString.Replace("/", "\").TrimEnd("\") & "\"
-    ''' <summary>
-    ''' AppData 中的 PCL 文件夹路径，以 \ 结尾。
-    ''' </summary>
-    Public PathAppdata As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\PCL\"
+    Public PathTemp As String = PathUtils.AddSlashSuffix(If(Settings.Get(Of String)("SystemSystemCache") = "", Path.GetTempPath() & "PCL\", Settings.Get(Of String)("SystemSystemCache")).Replace("/", "\"))
     ''' <summary>
     ''' 当前程序的语言。
     ''' </summary>
@@ -81,17 +69,13 @@ Public Module ModBase
     ''' </summary>
     Public IsProgramEnding As Boolean = False
     ''' <summary>
-    ''' 是否为 32 位系统。
-    ''' </summary>
-    Public Is32BitSystem As Boolean = Not Environment.Is64BitOperatingSystem
-    ''' <summary>
     ''' 是否使用 GBK 编码。
     ''' </summary>
     Public IsGBKEncoding As Boolean = Encoding.Default.CodePage = 936
     ''' <summary>
     ''' 系统盘盘符，以 \ 结尾。例如 “C:\”。
     ''' </summary>
-    Public OsDrive As String = Environment.GetLogicalDrives().Where(Function(p) Directory.Exists(p)).First.Upper.First & ":\" '#3799
+    Public OsDrive As String = Environment.GetLogicalDrives().First(Function(p) Directory.Exists(p)) '#3799
 
     Public ReadOnly Property ModeDebug As Boolean
         Get
@@ -139,7 +123,7 @@ Public Module ModBase
         ''' <summary>
         ''' 图标按钮，刷新，0.85x
         ''' </summary>
-        Public Const IconButtonRefresh As String = "M875.52 148.48C783.36 56.32 655.36 0 512 0 291.84 0 107.52 138.24 30.72 332.8l122.88 46.08C204.8 230.4 348.16 128 512 128c107.52 0 199.68 40.96 271.36 112.64L640 384h384V0L875.52 148.48zM512 896c-107.52 0-199.68-40.96-271.36-112.64L384 640H0v384l148.48-148.48C240.64 967.68 368.64 1024 512 1024c220.16 0 404.48-138.24 481.28-332.8L870.4 645.12C819.2 793.6 675.84 896 512 896z"
+        Public Const IconButtonRefresh As String = "M512.0 838.3c-80.2 0-153.4-29.3-210.2-77.4l75.5-75.5c11.5-11.5 25.8-22.0 25.8-37.0a27.2 27.2 0 0 0-27.1-27.1H104.0c-27.1 0-27.1 23.9-27.1 27.1v271.9a27.1 27.1 0 0 0 27.1 27.1c15.0 0 27.8-16.6 42.5-31.2l77.9-77.9c76.6 67.7 177.1 108.9 287.4 108.9 221.7 0 404.5-166.0 431.2-380.6h-109.8c-25.9 154.2-159.7 271.9-321.3 271.9zM919.9 76.6c-15.0 0-27.8 16.6-42.5 31.3L799.5 185.8c-76.5-67.7-177.1-108.9-287.4-108.9-221.8 0-404.5 166.1-431.3 380.6H190.6c25.9-154.2 159.7-271.9 321.4-271.9 80.2 0 153.4 29.3 210.1 77.4l-75.5 75.5c-11.6 11.5-25.8 22.0-25.8 37.1a27.2 27.2 0 0 0 27.1 27.1h271.9c27.1 0 27.1-23.9 27.1-27.1V103.8a27.1 27.1 0 0 0-27.1-27.1z"
         ''' <summary>
         ''' 图标按钮，软盘，1x
         ''' </summary>
@@ -153,9 +137,17 @@ Public Module ModBase
         ''' </summary>
         Public Const IconButtonList As String = "M384 128h640v128H384zM160 192m-96 0a96 96 0 1 0 192 0 96 96 0 1 0-192 0ZM384 448h640v128H384zM160 512m-96 0a96 96 0 1 0 192 0 96 96 0 1 0-192 0ZM384 768h640v128H384zM160 832m-96 0a96 96 0 1 0 192 0 96 96 0 1 0-192 0Z"
         ''' <summary>
-        ''' 图标按钮，文件夹，1.15x
+        ''' 图标按钮，文件夹，1.1x
         ''' </summary>
         Public Const IconButtonOpen As String = "M889.018182 418.909091H884.363636V316.509091a93.090909 93.090909 0 0 0-99.607272-89.832727h-302.545455l-93.090909-76.334546A46.545455 46.545455 0 0 0 358.865455 139.636364H146.152727A93.090909 93.090909 0 0 0 46.545455 229.469091V837.818182a46.545455 46.545455 0 0 0 46.545454 46.545454 46.545455 46.545455 0 0 0 16.756364-3.258181 109.381818 109.381818 0 0 0 25.134545 3.258181h586.472727a85.178182 85.178182 0 0 0 87.04-63.301818l163.374546-302.545454a46.545455 46.545455 0 0 0 5.585454-21.876364A82.385455 82.385455 0 0 0 889.018182 418.909091z m-744.727273-186.181818h198.283636l93.09091 76.334545a46.545455 46.545455 0 0 0 29.323636 10.705455h319.301818a12.101818 12.101818 0 0 1 6.516364 0V418.909091H302.545455a85.178182 85.178182 0 0 0-87.04 63.301818L139.636364 622.778182V232.727273a19.549091 19.549091 0 0 1 6.516363 0z m578.094546 552.029091a27.461818 27.461818 0 0 0-2.792728 6.516363H154.530909l147.083636-272.290909a27.461818 27.461818 0 0 0 2.792728-6.981818h565.061818z"
+        ''' <summary>
+        ''' 图标按钮，上箭头，0.95x
+        ''' </summary>
+        Public Const IconButtonArrowUp As String = "M554 333V853h-85V333l-228 228-60-60L512 170l331 331-60 60L554 333z"
+        ''' <summary>
+        ''' 图标按钮，下箭头，0.95x
+        ''' </summary>
+        Public Const IconButtonArrowDown As String = "M554 691V171h-85V691L241 463l-60 60L512 854l331-331-60-60L554 691z"
         ''' <summary>
         ''' 图标按钮，名片，1.1x
         ''' </summary>
@@ -436,7 +428,7 @@ Public Module ModBase
         Loading
         Finished
         Failed
-        Interrupted
+        Canceled
     End Enum
 
     ''' <summary>
@@ -473,57 +465,7 @@ Public Module ModBase
 
 #Region "文件"
 
-    '=============================
-    '  注册表
-    '=============================
-
-    ''' <summary>
-    ''' 读取注册表键。如果失败则返回默认值。
-    ''' </summary>
-    Public Function ReadReg(Key As String, Optional DefaultValue As String = "") As String
-        Try
-            Return If(My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, False)?.GetValue(Key), DefaultValue)
-        Catch ex As Exception
-            Logger.Error(ex, $"读取注册表出错：{Key}", LogBehavior.Toast)
-            Return DefaultValue
-        End Try
-    End Function
-    ''' <summary>
-    ''' 写入注册表键。
-    ''' </summary>
-    Public Sub WriteReg(Key As String, Value As String, Optional ThrowException As Boolean = False)
-        Try
-            Dim SubKey As Microsoft.Win32.RegistryKey = My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, True)
-            If SubKey Is Nothing Then SubKey = My.Computer.Registry.CurrentUser.CreateSubKey("Software\" & RegFolder) '如果不存在就创建  
-            SubKey.SetValue(Key, Value)
-        Catch ex As Exception
-            Logger.Warn(ex, $"写入注册表出错：{Key}", If(ThrowException, LogBehavior.Toast, LogBehavior.ToastIfDebug))
-            If ThrowException Then Throw
-        End Try
-    End Sub
-    ''' <summary>
-    ''' 是否存在某个注册表键。
-    ''' </summary>
-    Public Function HasReg(Key As String) As Boolean
-        Return ReadReg(Key, Nothing) IsNot Nothing
-    End Function
-    ''' <summary>
-    ''' 删除注册表键。
-    ''' </summary>
-    Public Sub DeleteReg(Key As String, Optional ThrowException As Boolean = False)
-        Try
-            Dim SubKey As Microsoft.Win32.RegistryKey = My.Computer.Registry.CurrentUser.OpenSubKey("Software\" & RegFolder, True)
-            If SubKey?.GetValue(Key) Is Nothing Then Return
-            SubKey.DeleteValue(Key)
-        Catch ex As Exception
-            Logger.Warn(ex, $"删除注册表出错：{Key}", If(ThrowException, LogBehavior.Toast, LogBehavior.ToastIfDebug))
-            If ThrowException Then Throw
-        End Try
-    End Sub
-
-    '=============================
-    '  ini
-    '=============================
+    'ini
 
     Private ReadOnly IniCache As New ConcurrentDictionary(Of String, ConcurrentDictionary(Of String, String))
     ''' <summary>
@@ -531,7 +473,7 @@ Public Module ModBase
     ''' </summary>
     ''' <param name="FileName">文件完整路径或简写文件名。简写将会使用“ApplicationName\文件名.ini”作为路径。</param>
     Public Sub IniClearCache(FileName As String)
-        If Not FileName.Contains(":\") Then FileName = $"{PathExeFolder}PCL\{FileName}.ini"
+        If Not FileName.Contains(":\") Then FileName = $"{Paths.Base}PCL\{FileName}.ini"
         IniCache.Remove(FileName)
     End Sub
     ''' <summary>
@@ -542,7 +484,7 @@ Public Module ModBase
     Private Function IniGetContent(FileName As String) As ConcurrentDictionary(Of String, String)
         Try
             '还原文件路径
-            If Not FileName.Contains(":\") Then FileName = $"{PathExeFolder}PCL\{FileName}.ini"
+            If Not FileName.Contains(":\") Then FileName = $"{Paths.Base}PCL\{FileName}.ini"
             '检索缓存
             Dim Cache As ConcurrentDictionary(Of String, String) = Nothing
             If IniCache.TryGetValue(FileName, Cache) Then Return Cache
@@ -616,16 +558,17 @@ Public Module ModBase
                 FileContent.Append(Pair.Value)
                 FileContent.Append(vbCrLf)
             Next
-            If Not FileName.Contains(":\") Then FileName = $"{PathExeFolder}PCL\{FileName}.ini"
+            If Not FileName.Contains(":\") Then FileName = $"{Paths.Base}PCL\{FileName}.ini"
             '处理相对路径
-            FileName = If(FileName.Contains(":\"), FileName, PathExeFolder & FileName)
+            FileName = If(FileName.Contains(":\"), FileName, Paths.Base & FileName)
             FileUtils.Write(FileName, FileContent.ToString)
         Catch ex As Exception
             Logger.Error(ex, $"写入文件失败（{FileName} → {Key}:{Value}）", LogBehavior.Toast)
         End Try
     End Sub
 
-    '文件校验
+    '权限检查
+
     ''' <summary>
     ''' 检查是否拥有某一文件夹的 I/O 权限。如果文件夹不存在，会返回 False。
     ''' </summary>
@@ -633,7 +576,7 @@ Public Module ModBase
         Try
             If String.IsNullOrEmpty(Folder) Then Return False
             Folder = PathUtils.AddSlashSuffix(Folder)
-            If Folder.EndsWithF(":\System Volume Information\") OrElse Folder.EndsWithF(":\$RECYCLE.BIN\") Then Return False
+            If Folder.EndsWithF(":\System Volume Information\", True) OrElse Folder.EndsWithF(":\$RECYCLE.BIN\", True) Then Return False
             If Not DirectoryUtils.Exists(Folder) Then Return False
             Dim TestFilePath As String = $"{Folder}CheckPermission{GetUuid()}.txt"
             FileUtils.Write(TestFilePath, "临时文件，用于检测该文件夹的权限是否正常。")
@@ -650,172 +593,18 @@ Public Module ModBase
     Public Sub CheckPermissionWithException(Folder As String)
         If String.IsNullOrWhiteSpace(Folder) Then Throw New ArgumentNullException("文件夹名不能为空！")
         Folder = PathUtils.AddSlashSuffix(Folder)
-        If Folder.EndsWithF(":\System Volume Information\") OrElse Folder.EndsWithF(":\$RECYCLE.BIN\") Then Throw New UnauthorizedAccessException("没有对系统文件夹的权限！")
+        If Folder.EndsWithF(":\System Volume Information\", True) OrElse Folder.EndsWithF(":\$RECYCLE.BIN\", True) Then Throw New UnauthorizedAccessException("没有对系统文件夹的权限！")
         If Not DirectoryUtils.Exists(Folder) Then Throw New DirectoryNotFoundException("文件夹不存在！")
         Dim TestFilePath As String = $"{Folder}CheckPermission{GetUuid()}.txt"
         FileUtils.Write(TestFilePath, "临时文件，用于检测该文件夹的权限是否正常。")
         FileUtils.Delete(TestFilePath)
     End Sub
 
-    ''' <summary>
-    ''' 文件的校验规则。
-    ''' </summary>
-    Public Class FileChecker
-        ''' <summary>
-        ''' 文件的准确大小。
-        ''' 不检查则为 -1。
-        ''' </summary>
-        Public ActualSize As Long = -1
-        ''' <summary>
-        ''' 文件的最小大小。
-        ''' 不检查则为 -1。
-        ''' </summary>
-        Public MinSize As Long = -1
-        ''' <summary>
-        ''' 文件的 MD5、SHA1 或 SHA256。会根据输入字符串的长度自动判断种类。
-        ''' 不检查则为 Nothing。
-        ''' </summary>
-        Public Hash As String = Nothing
-        ''' <summary>
-        ''' 是否可以使用已经存在的文件。
-        ''' </summary>
-        Public CanUseExistsFile As Boolean = True
-        ''' <summary>
-        ''' 是否要求为 JSON 文件。
-        ''' 即，开头结尾必须为 {} 或 []。
-        ''' </summary>
-        Public IsJson As Boolean = False
-        Public Sub New(Optional MinSize As Long = -1, Optional ActualSize As Long = -1, Optional Hash As String = Nothing, Optional CanUseExistsFile As Boolean = True, Optional IsJson As Boolean = False)
-            Me.ActualSize = ActualSize
-            Me.MinSize = MinSize
-            Me.Hash = Hash
-            Me.CanUseExistsFile = CanUseExistsFile
-            Me.IsJson = IsJson
-        End Sub
-        ''' <summary>
-        ''' 检查文件。若成功则返回 Nothing，失败则返回错误的描述文本，描述文本不以句号结尾。不会抛出错误。
-        ''' </summary>
-        Public Function Check(LocalPath As String) As String
-            Try
-                Dim Info = FileUtils.GetInfo(LocalPath)
-                If Not Info.Exists Then Return "文件不存在：" & LocalPath
-                Dim FileSize As Long = Info.Length
-                If ActualSize >= 0 AndAlso ActualSize <> FileSize Then
-                    Return $"文件大小应为 {ActualSize} B，实际为 {FileSize} B" &
-                        If(FileSize < 2000, "，内容为：" & FileUtils.ReadAsString(LocalPath), "")
-                End If
-                If MinSize >= 0 AndAlso MinSize > FileSize Then
-                    Return $"文件大小应大于 {MinSize} B，实际为 {FileSize} B" &
-                        If(FileSize < 2000, "，内容为：" & FileUtils.ReadAsString(LocalPath), "")
-                End If
-                If Not String.IsNullOrEmpty(Hash) Then
-                    If Hash.Length < 35 Then 'MD5
-                        Dim md5 As String = HashUtils.ComputeFromFile(LocalPath, HashUtils.HashMethod.Md5)
-                        If Hash.Lower <> md5 Then Return "文件 MD5 应为 " & Hash & "，实际为 " & md5
-                    ElseIf Hash.Length = 64 Then 'SHA256
-                        Dim sha256 As String = HashUtils.ComputeFromFile(LocalPath, HashUtils.HashMethod.Sha256)
-                        If Hash.Lower <> sha256 Then Return "文件 SHA256 应为 " & Hash & "，实际为 " & sha256
-                    Else 'SHA1 (40)
-                        Dim sha1 As String = HashUtils.ComputeFromFile(LocalPath, HashUtils.HashMethod.Sha1)
-                        If Hash.Lower <> sha1 Then Return "文件 SHA1 应为 " & Hash & "，实际为 " & sha1
-                    End If
-                End If
-                If IsJson Then
-                    Dim Content As String = FileUtils.ReadAsString(LocalPath)
-                    If Content = "" Then Throw New Exception("读取到的文件为空")
-                    Try
-                        GetJson(Content)
-                    Catch ex As Exception
-                        Throw New Exception("不是有效的 json 文件", ex)
-                    End Try
-                End If
-                Return Nothing
-            Catch ex As Exception
-                Logger.Warn(ex, "检查文件出错")
-                Return ex.GetDisplay(False)
-            End Try
-        End Function
-    End Class
-
 #End Region
 
 #Region "文本"
     Public vbLQ As Char = Convert.ToChar(8220)
     Public vbRQ As Char = Convert.ToChar(8221)
-
-    ''' <summary>
-    ''' 将对象转换为枚举类型，支持数字或原文两种格式，若为空字符串或 Nothing 则返回 0。
-    ''' 若转换失败会抛出异常。
-    ''' </summary>
-    <Extension> Public Function ToEnum(Of T As Structure)(Value As Object) As T
-        If IsNumeric(Value) Then
-            Return CType(CInt(Value), Object)
-        ElseIf String.IsNullOrEmpty(Value?.ToString) Then
-            Return CType(0, Object)
-        Else
-            Return [Enum].Parse(GetType(T), Value.ToString(), True)
-        End If
-    End Function
-    ''' <summary>
-    ''' 将文件大小转化为适合的文本形式，如“1.28 M”。
-    ''' </summary>
-    ''' <param name="FileSize">以字节为单位的大小表示。</param>
-    Public Function FormatFileSize(FileSize As Long) As String
-        Dim IsNegative = FileSize < 0
-        If IsNegative Then FileSize *= -1
-        If FileSize < 1000 Then
-            'B 级
-            Return If(IsNegative, "-", "") & FileSize & " B"
-        ElseIf FileSize < 1024 * 1000 Then
-            'K 级
-            Dim RoundResult As String = Math.Round(FileSize / 1024)
-            Return If(IsNegative, "-", "") & Math.Round(FileSize / 1024, CInt((3 - RoundResult.Length).Clamp(0, 2))) & " K"
-        ElseIf FileSize < 1024 * 1024 * 1000 Then
-            'M 级
-            Dim RoundResult As String = Math.Round(FileSize / 1024 / 1024)
-            Return If(IsNegative, "-", "") & Math.Round(FileSize / 1024 / 1024, CInt((3 - RoundResult.Length).Clamp(0, 2))) & " M"
-        Else
-            'G 级
-            Dim RoundResult As String = Math.Round(FileSize / 1024 / 1024 / 1024)
-            Return If(IsNegative, "-", "") & Math.Round(FileSize / 1024 / 1024 / 1024, CInt((3 - RoundResult.Length).Clamp(0, 2))) & " G"
-        End If
-    End Function
-
-    ''' <summary>
-    ''' 获取 JSON 对象。
-    ''' </summary>
-    Public Function GetJson(Data As String) As JToken
-        Try
-            Return JsonConvert.DeserializeObject(Data, New JsonSerializerSettings With {.DateTimeZoneHandling = DateTimeZoneHandling.Local})
-        Catch ex As Exception
-            Dim Length As Integer = If(Data, "").Length
-            Throw New Exception("格式化 JSON 失败：" & If(Length > 2000, Data.Substring(0, 500) & $"...(全长 {Length} 个字符)..." & Right(Data, 500), Data), ex)
-        End Try
-    End Function
-
-    ''' <summary>
-    ''' 获取字符串哈希值。
-    ''' </summary>
-    Public Function GetHash(Str As String) As ULong
-        Dim Result As ULong = 5381
-        For Each v In Str
-            Result = (Result << 5) Xor Result Xor CType(AscW(v), ULong)
-        Next
-        Return Result Xor &HA98F501BC684032FUL
-    End Function
-    ''' <summary>
-    ''' 获取字符串 MD5。
-    ''' </summary>
-    Public Function GetStringMD5(Str As String) As String
-        Using h = MD5Cng.Create()
-            Dim hashedDataBytes = h.ComputeHash(Encoding.UTF8.GetBytes(Str))
-            Dim tmp As New StringBuilder(hashedDataBytes.Length * 2)
-            For Each i As Byte In hashedDataBytes
-                tmp.Append(i.ToString("x2"))
-            Next
-            Return tmp.ToString()
-        End Using
-    End Function
 
     ''' <summary>
     ''' 不会报错的 Val。
@@ -982,7 +771,7 @@ Public Module ModBase
             TokenSource.Cancel()
             Throw New TimeoutException($"任务超时（{TimeoutMs} ms）")
         End If
-        Return TargetTask.GetAwaiter().GetResult()
+        Return TargetTask.Run()
     End Function
     ''' <summary>
     ''' 为 Task 设置超时，在超时时抛出 TimeoutException。
@@ -993,35 +782,29 @@ Public Module ModBase
             TokenSource.Cancel()
             Throw New TimeoutException($"任务超时（{TimeoutMs} ms）")
         End If
-        TargetTask.GetAwaiter().GetResult()
+        TargetTask.Run()
     End Sub
 
     ''' <summary>
     ''' 可用于临时存放文件的，不含任何特殊字符的文件夹路径，以“\”结尾。
     ''' </summary>
-    Public PathPure As String = GetPureASCIIDir()
-    Private Function GetPureASCIIDir() As String
-        If (PathExeFolder & "PCL").IsAsciiOnly() Then
-            Return PathExeFolder & "PCL\"
-        ElseIf PathAppdata.IsAsciiOnly() Then
-            Return PathAppdata
+    Public PathPure As New Lazy(Of String)(
+    Function()
+        If Paths.Base.IsAsciiOnly() Then
+            Return Paths.Base & "PCL\"
+        ElseIf Paths.AppDataThenName.IsAsciiOnly() Then
+            Return Paths.AppDataThenName
         ElseIf PathTemp.IsAsciiOnly() Then
             Return PathTemp
         Else
             Return OsDrive & "ProgramData\PCL\"
         End If
-    End Function
+    End Function)
 
     ''' <summary>
     ''' 指示接取到这个异常的函数进行重试。
     ''' </summary>
     Public Class RestartException
-        Inherits Exception
-    End Class
-    ''' <summary>
-    ''' 指示用户手动取消了操作，或用户已知晓操作被取消的原因。
-    ''' </summary>
-    Public Class CancelledException
         Inherits Exception
     End Class
 
@@ -1033,19 +816,6 @@ Public Module ModBase
         Dim NewProcess = StartProcess(New ProcessStartInfo(PathExe) With {.Verb = "runas", .Arguments = Argument})
         NewProcess.WaitForExit()
         Return NewProcess.ExitCode
-    End Function
-
-    ''' <summary>
-    ''' 判断对象是否为某个泛型类型的实例。
-    ''' </summary>
-    <Extension> Public Function IsInstanceOfGenericType(genericType As Type, obj As Object) As Boolean
-        If obj Is Nothing Then Return False
-        Dim t = obj.GetType()
-        While t IsNot Nothing
-            If t.IsGenericType AndAlso t.GetGenericTypeDefinition() Is genericType Then Return True
-            t = t.BaseType
-        End While
-        Return False
     End Function
 
     Private Uuid As Integer = 1
@@ -1069,83 +839,16 @@ Public Module ModBase
         Return Stopwatch.GetTimestamp() \ (Stopwatch.Frequency \ 1000L)
     End Function
     ''' <summary>
-    ''' 将时间间隔转换为类似“5 分 10 秒前”的易于阅读的形式。
-    ''' </summary>
-    Public Function GetTimeSpanString(Span As TimeSpan, IsShortForm As Boolean) As String
-        Dim EndFix = If(Span.TotalMilliseconds > 0, "后", "前")
-        If Span.TotalMilliseconds < 0 Then Span = -Span
-        Dim TotalMonthes = Math.Floor(Span.Days / 30)
-        Dim Result As String
-        If IsShortForm Then
-            If TotalMonthes >= 12 Then
-                '1+ 年，“3 年”
-                Result = Math.Floor(TotalMonthes / 12) & " 年"
-            ElseIf TotalMonthes >= 2 Then
-                '2~11 月，“5 个月”
-                Result = TotalMonthes & " 个月"
-            ElseIf Span.TotalDays >= 2 Then
-                '2 天 ~ 2 月，“23 天”
-                Result = Span.Days & " 天"
-            ElseIf Span.TotalHours >= 1 Then
-                '1 小时 ~ 2 天，“15 小时”
-                Result = Span.Hours & " 小时"
-            ElseIf Span.TotalMinutes >= 1 Then
-                '1 分钟 ~ 1 小时，“49 分钟”
-                Result = Span.Minutes & " 分钟"
-            ElseIf Span.TotalSeconds >= 1 Then
-                '1 秒 ~ 1 分钟，“23 秒”
-                Result = Span.Seconds & " 秒"
-            Else
-                '不到 1 秒
-                Result = "1 秒"
-            End If
-        Else
-            If TotalMonthes >= 61 Then
-                '5+ 年，“5 年”
-                Result = Math.Floor(TotalMonthes / 12) & " 年"
-            ElseIf TotalMonthes >= 12 Then
-                '12~60 月，“1 年 2 个月”
-                Result = Math.Floor(TotalMonthes / 12) & " 年" & If((TotalMonthes Mod 12) > 0, " " & (TotalMonthes Mod 12) & " 个月", "")
-            ElseIf TotalMonthes >= 4 Then
-                '4~11 月，“5 个月”
-                Result = TotalMonthes & " 个月"
-            ElseIf TotalMonthes >= 1 Then
-                '1~4 月，“2 个月 13 天”
-                Result = TotalMonthes & " 月" & If((Span.Days Mod 30) > 0, " " & (Span.Days Mod 30) & " 天", "")
-            ElseIf Span.TotalDays >= 4 Then
-                '4~30 天，“23 天”
-                Result = Span.Days & " 天"
-            ElseIf Span.TotalDays >= 1 Then
-                '1~3 天，“2 天 20 小时”
-                Result = Span.Days & " 天" & If(Span.Hours > 0, " " & Span.Hours & " 小时", "")
-            ElseIf Span.TotalHours >= 10 Then
-                '10 小时 ~ 1 天，“15 小时”
-                Result = Span.Hours & " 小时"
-            ElseIf Span.TotalHours >= 1 Then
-                '1~10 小时，“1 小时 20 分钟”
-                Result = Span.Hours & " 小时" & If(Span.Minutes > 0, " " & Span.Minutes & " 分钟", "")
-            ElseIf Span.TotalMinutes >= 10 Then
-                '10 分钟 ~ 1 小时，“49 分钟”
-                Result = Span.Minutes & " 分钟"
-            ElseIf Span.TotalMinutes >= 1 Then
-                '1~10 分钟，“9 分 23 秒”
-                Result = Span.Minutes & " 分" & If(Span.Seconds > 0, " " & Span.Seconds & " 秒", "")
-            ElseIf Span.TotalSeconds >= 1 Then
-                '1 秒 ~ 1 分钟，“23 秒”
-                Result = Span.Seconds & " 秒"
-            Else
-                '不到 1 秒
-                Result = "1 秒"
-            End If
-        End If
-        Result += EndFix
-        Return Result
-    End Function
-    ''' <summary>
     ''' 获取十进制 Unix 时间戳。
     ''' </summary>
     Public Function GetUnixTimestampUtc() As Long
         Return (Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000
+    End Function
+    ''' <summary>
+    ''' 获取十进制 Unix 时间戳。
+    ''' </summary>
+    Public Function ToUnixTimestampUtc(Time As Date) As Long
+        Return (Time.ToUniversalTime().Ticks - 621355968000000000) / 10000000
     End Function
     ''' <summary>
     ''' 时间戳转化为日期。
@@ -1189,41 +892,6 @@ Public Module ModBase
         Logger.Info($"启动进程：{StartInfo.FileName} {StartInfo.Arguments}")
         Return Process.Start(StartInfo)
     End Function
-    ''' <summary>
-    ''' 静默运行文件并返回输出流字符串。执行失败会抛出异常。
-    ''' </summary>
-    ''' <param name="FileName">文件名。可以为“notepad”等缩写。</param>
-    ''' <param name="Arguments">运行参数。</param>
-    ''' <param name="Timeout">等待该程序结束的最长时间（毫秒）。超时会抛出错误。</param>
-    Public Function StartProcessAndGetOutput(FileName As String, Optional Arguments As String = "", Optional Timeout As Integer = 1000000,
-        Optional WorkingDirectory As String = Nothing, Optional Encoding As Encoding = Nothing, Optional PrintLog As Boolean = True) As String
-        Dim Info = New ProcessStartInfo With {
-            .Arguments = Arguments,
-            .FileName = PathUtils.ToShortPath(FileName),
-            .UseShellExecute = False,
-            .CreateNoWindow = True,
-            .RedirectStandardError = True,
-            .RedirectStandardOutput = True,
-            .WorkingDirectory = PathUtils.ToShortPath(If(WorkingDirectory, PathExeFolder.TrimEnd("\"c))),
-            .StandardErrorEncoding = Encoding,
-            .StandardOutputEncoding = Encoding
-        }
-        If WorkingDirectory IsNot Nothing Then
-            If Info.EnvironmentVariables.ContainsKey("appdata") Then
-                Info.EnvironmentVariables("appdata") = WorkingDirectory
-            Else
-                Info.EnvironmentVariables.Add("appdata", WorkingDirectory)
-            End If
-        End If
-        If PrintLog Then Logger.Info($"执行命令并等待返回结果：{FileName} {Arguments}")
-        Using Program As New Process With {.StartInfo = Info}
-            Program.Start()
-            Dim Result As String = Program.StandardOutput.ReadToEnd & Program.StandardError.ReadToEnd
-            Program.WaitForExit(Timeout)
-            If Not Program.HasExited Then Program.Kill()
-            Return Result
-        End Using
-    End Function
 
     ''' <summary>
     ''' 在新的工作线程中执行代码。
@@ -1233,8 +901,6 @@ Public Module ModBase
         Sub()
             Try
                 Action()
-            Catch ex As ThreadInterruptedException
-                Logger.Info($"{Name}：线程已中止")
             Catch ex As Exception
                 Logger.Error(ex, $"{Name}：线程执行失败")
             End Try
@@ -1365,9 +1031,9 @@ Public Module ModBase
         RunInThread(
         Sub()
             Try
-                ResilientUtils.Retry(
+                Retrier.Attempt(delay:=Function(Attempt) TimeSpan.FromMilliseconds(200), maxAttempts:=4, isRetryAllowed:=Function(ex) True, action:=
                 Sub()
-                    RunInUi(
+                    RunInUiWait(
                     Sub()
                         My.Computer.Clipboard.Clear()
                         If Not String.IsNullOrEmpty(Text) Then My.Computer.Clipboard.SetText(Text)
@@ -1399,12 +1065,17 @@ Public Module ModBase
     ''' 将程序中的资源释放到文件。
     ''' </summary>
     Public Sub ExtractResources(FilePath As String, ResourceName As String)
-        Logger.Info($"将资源写入到文件：{ResourceName} → {FilePath}")
         Dim Resource = My.Resources.ResourceManager.GetObject(ResourceName)
         If TypeOf Resource Is Byte() Then
-            FileUtils.Write(FilePath, DirectCast(Resource, Byte()))
+            Dim Bytes = DirectCast(Resource, Byte())
+            If FileUtils.Exists(FilePath) AndAlso CryptographyUtils.ComputeFileHash(FilePath) = CryptographyUtils.ComputeHash(Bytes) Then Return
+            Logger.Info($"将资源写入到文件：{ResourceName} → {FilePath}")
+            FileUtils.Write(FilePath, Bytes)
         ElseIf TypeOf Resource Is String Then
-            FileUtils.Write(FilePath, DirectCast(Resource, String))
+            Dim Content = DirectCast(Resource, String)
+            If FileUtils.Exists(FilePath) AndAlso FileUtils.ReadAsString(FilePath) = Content Then Return
+            Logger.Info($"将资源写入到文件：{ResourceName} → {FilePath}")
+            FileUtils.Write(FilePath, Content)
         Else
             Throw New Exception($"资源 {ResourceName} 的类型不支持：{Resource.GetType.Name}")
         End If
@@ -1495,20 +1166,10 @@ Public Module ModBase
     ''' <summary>
     ''' 控件是否受到 TextTrimming 属性影响，导致内容被截取。
     ''' </summary>
-    <Extension> Public Function IsTextTrimmed(Control As TextBlock) As Boolean
-        Control.Measure(New Size(Double.MaxValue, Double.MaxValue))
-        Return Control.DesiredSize.Width > Control.ActualWidth
-    End Function
-
-    ''' <summary>
-    ''' 获取文本在被渲染后的宽度。
-    ''' </summary>
-    Public Function MeasureStringWidth(text As String, Optional fontSize As Double = 14, Optional fontFamily As FontFamily = Nothing) As Double
-        If fontFamily Is Nothing Then fontFamily = New FontFamily("微软雅黑")
-        Dim formattedText = New FormattedText(
-            text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, New Typeface(fontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
-            fontSize, Brushes.Black, New NumberSubstitution(), TextFormattingMode.Display, New DpiScale(1, 1).PixelsPerDip)
-        Return formattedText.Width
+    <Extension> Public Function IsTextTrimmed(TextBlock As TextBlock) As Boolean
+        Dim typeface As New Typeface(TextBlock.FontFamily, TextBlock.FontStyle, TextBlock.FontWeight, TextBlock.FontStretch)
+        Dim formattedText As New FormattedText(TextBlock.Text, Thread.CurrentThread.CurrentCulture, TextBlock.FlowDirection, typeface, TextBlock.FontSize, TextBlock.Foreground, DPI)
+        Return formattedText.Width > TextBlock.ActualWidth
     End Function
 
     ''' <summary>

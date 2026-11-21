@@ -1,4 +1,4 @@
-﻿Public Class MyTextBox
+Public Class MyTextBox
     Inherits TextBox
     Implements ISettingControl
 

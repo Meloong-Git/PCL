@@ -1,4 +1,4 @@
-﻿Public Class PageDownloadLeft
+Public Class PageDownloadLeft
     Implements IRefreshable
 
 #Region "页面切换"
@@ -7,6 +7,16 @@
     ''' 当前页面的编号。
     ''' </summary>
     Public PageID As FormMain.PageSubType = FormMain.PageSubType.DownloadInstall
+
+    '隐藏 MC 下载
+    Public Sub New()
+        InitializeComponent()
+        If Not RestrictMcDownload Then Return
+        ItemInstall.Visibility = Visibility.Collapsed
+        LabResource.Visibility = Visibility.Collapsed
+        PageID = FormMain.PageSubType.DownloadMod
+        ItemMod.Checked = True
+    End Sub
 
     ''' <summary>
     ''' 勾选事件改变页面。
@@ -82,7 +92,7 @@
 #End Region
 
     '强制刷新
-    Public Sub Refresh(sender As Object, e As EventArgs) '由边栏按钮匿名调用
+    Public Sub Refresh_Click(sender As Object, e As EventArgs) '由边栏按钮匿名调用
         Refresh(Val(sender.Tag))
     End Sub
     Public Sub Refresh() Implements IRefreshable.Refresh

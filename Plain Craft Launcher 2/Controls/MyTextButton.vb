@@ -1,4 +1,4 @@
-﻿Public Class MyTextButton
+Public Class MyTextButton
     Inherits Label
 
     Public Event Click(sender As Object, e As EventArgs)

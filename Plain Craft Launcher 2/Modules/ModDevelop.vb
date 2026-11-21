@@ -1,4 +1,4 @@
-﻿Public Class ModDevelop
+Public Class ModDevelop
 
     Public Shared Sub Start()
     End Sub

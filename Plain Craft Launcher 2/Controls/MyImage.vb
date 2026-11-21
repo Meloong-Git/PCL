@@ -1,4 +1,4 @@
-﻿Public Class MyImage
+Public Class MyImage
     Inherits Image
 
 #Region "公开属性"
@@ -90,7 +90,7 @@
             Catch ex As Exception
                 Logger.Warn(ex, $"加载图片失败（{value}）")
                 Try
-                    If value.StartsWithF(PathTemp) Then FileUtils.Delete(value)
+                    If value.StartsWithF(PathTemp, True) Then FileUtils.Delete(value)
                 Catch
                 End Try
             End Try
@@ -112,7 +112,7 @@
         End If
         '从缓存加载网络图片
         Dim EnableCache As Boolean = Me.EnableCache
-        Dim TempPath As String = $"{PathTemp}MyImage\{GetHash(Source)}.png{If(EnableCache, "", GetUuid())}" '不启用缓存时在末尾加上随机字符串，避免冲突
+        Dim TempPath As String = $"{PathTemp}MyImage\{Source.GetStableHashCode()}.png{If(EnableCache, "", GetUuid())}" '不启用缓存时在末尾加上随机字符串，避免冲突
         Dim TempFile = FileUtils.GetInfo(TempPath)
         If EnableCache AndAlso TempFile.Exists Then
             ActualSource = TempPath '显示缓存的图片

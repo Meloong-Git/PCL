@@ -1,9 +1,12 @@
-﻿Public Class Settings
+Imports System.Security.Cryptography
+
+Public Class Settings
+
     Public Shared ReadOnly Entries As Dictionary(Of String, Setting) = (New List(Of Setting) From {
         New Setting("Identify", "", Source:=Sources.Registry),
         New Setting("WindowHeight", 550),
         New Setting("WindowWidth", 900),
-        New Setting("AprilDoneYear", 0, Source:=Sources.Registry),
+        New Setting("AprilYear", 0, Source:=Sources.Registry, Encrypted:=True),
         New Setting("Potatoes", "", Source:=Sources.Registry, Encrypted:=True),
         New Setting("HintDownloadThread", False, Source:=Sources.Registry),
         New Setting("HintNotice", 0, Source:=Sources.Registry),
@@ -117,7 +120,6 @@
         New Setting("ToolDownloadVersion", 1, Source:=Sources.Registry),
         New Setting("ToolDownloadTranslate", 0, Source:=Sources.Registry),
         New Setting("ToolDownloadTranslateV2", 1, Source:=Sources.Registry),
-        New Setting("ToolDownloadIgnoreQuilt", True, Source:=Sources.Registry),
         New Setting("ToolDownloadCert", False, Source:=Sources.Registry, OnChanged:=AddressOf ModNet.ShouldValidateSslCertificateOnLogin),
         New Setting("ToolDownloadMod", 2, Source:=Sources.Registry),
         New Setting("ToolModLocalNameStyle", 0, Source:=Sources.Registry),
@@ -156,6 +158,7 @@
         New Setting("UiHiddenPageOther", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
         New Setting("UiHiddenFunctionSelect", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
         New Setting("UiHiddenFunctionModUpdate", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
+        New Setting("UiHiddenFunctionInstanceModify", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
         New Setting("UiHiddenFunctionHidden", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
         New Setting("UiHiddenSetupLaunch", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
         New Setting("UiHiddenSetupUi", False, OnChanged:=AddressOf PageSetupUI.HiddenRefresh),
@@ -170,7 +173,6 @@
         New Setting("VersionAdvanceGame", "", Source:=Sources.Instance),
         New Setting("VersionAdvanceAssets", 0, Source:=Sources.Instance),
         New Setting("VersionAdvanceAssetsV2", False, Source:=Sources.Instance),
-        New Setting("VersionAdvanceJava", False, Source:=Sources.Instance),
         New Setting("VersionAdvanceRun", "", Source:=Sources.Instance),
         New Setting("VersionAdvanceRunWait", True, Source:=Sources.Instance),
         New Setting("VersionAdvanceDisableJLW", False, Source:=Sources.Instance),
@@ -185,6 +187,8 @@
         New Setting("VersionArgumentIndie", -1, Source:=Sources.Instance),
         New Setting("VersionArgumentIndieV2", False, Source:=Sources.Instance),
         New Setting("VersionArgumentJavaSelect", "使用全局设置", Source:=Sources.Instance),
+        New Setting("VersionArgumentJavaV2", 0, Source:=Sources.Instance),
+        New Setting("VersionArgumentJavaRange", "", Source:=Sources.Instance),
         New Setting("VersionServerEnter", "", Source:=Sources.Instance),
         New Setting("VersionServerLogin", 0, Source:=Sources.Instance, OnChanged:=AddressOf PageInstanceSetup.OnVersionServerLoginChanged),
         New Setting("VersionServerNide", "", Source:=Sources.Instance),
@@ -244,11 +248,11 @@
         ''' </summary>
         Public Sub Save(Optional Instance As McInstance = Nothing)
             Dim Value As String = GetCache(Instance)
-            Logger.Trace($"保存设置：{Key} = {Value}{If(Instance Is Nothing, "", $"（实例：{Instance?.PathVersion}）")}")
+            Logger.Trace($"保存设置：{Key} {If(Encrypted, "", "= " & Value)}{If(Instance Is Nothing, "", $"（实例：{Instance?.PathVersion}）")}")
             If Encrypted Then
                 Try
                     If Value Is Nothing Then Value = ""
-                    Value = SecretEncrypt(Value, "PCL" & Identify)
+                    Value = DesEncrypt(Value, "PCL" & Identify)
                 Catch ex As Exception
                     Logger.Warn(ex, $"加密设置失败：{Key}")
                 End Try
@@ -257,7 +261,11 @@
                 Case Sources.Normal
                     WriteIni("Setup", Key, Value)
                 Case Sources.Registry
-                    WriteReg(Key, Value)
+                    Try
+                        RegistryUtils.Write($"HKEY_CURRENT_USER\Software\{RegFolder}", Key, Value)
+                    Catch ex As Exception
+                        Logger.Warn(ex, $"写入注册表失败（{Key} → {Value}）", LogBehavior.Toast)
+                    End Try
                 Case Sources.Instance
                     If Instance Is Nothing Then Throw New Exception($"保存版本独立设置 {Key} 时未提供目标版本")
                     WriteIni(Instance.PathVersion & "PCL\Setup.ini", Key, Value)
@@ -318,12 +326,12 @@
         '正常读取
         Try
             Dim GotValue As String = Nothing '先用 String 储存，避免类型转换
-            Dim DefaultValue As String = If(Entry.Encrypted, SecretEncrypt(Entry.DefaultValue, "PCL" & Identify), Entry.DefaultValue)
+            Dim DefaultValue As String = If(Entry.Encrypted, DesEncrypt(Entry.DefaultValue, "PCL" & Identify), Entry.DefaultValue)
             Select Case Entry.Source
                 Case Sources.Normal
                     GotValue = ReadIni("Setup", Key, DefaultValue)
                 Case Sources.Registry
-                    GotValue = ReadReg(Key, DefaultValue)
+                    GotValue = RegistryUtils.TryRead($"HKEY_CURRENT_USER\Software\{RegFolder}", Key, DefaultValue)
                 Case Sources.Instance
                     If Instance Is Nothing Then
                         Throw New Exception($"读取版本设置 {Key} 时未提供目标版本")
@@ -336,7 +344,7 @@
                     GotValue = Entry.DefaultValue
                 Else
                     Try
-                        GotValue = SecretDecrypt(GotValue, "PCL" & Identify)
+                        GotValue = DesDecrypt(GotValue, "PCL" & Identify)
                     Catch ex As Exception
                         Logger.Warn(ex, $"解密设置失败：{Key}")
                         GotValue = Entry.DefaultValue
@@ -382,7 +390,11 @@
                 Case Sources.Normal
                     DeleteIniKey("Setup", Key)
                 Case Sources.Registry
-                    DeleteReg(Key)
+                    Try
+                        RegistryUtils.Delete($"HKEY_CURRENT_USER\Software\{RegFolder}", Key)
+                    Catch ex As Exception
+                        Logger.Warn(ex, $"删除注册表失败（{Key}）", LogBehavior.Toast)
+                    End Try
                 Case Sources.Instance
                     If Instance Is Nothing Then Throw New Exception($"重置版本设置 {Key} 时未提供目标版本")
                     DeleteIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
@@ -410,11 +422,58 @@
             Case Sources.Normal
                 Return HasIniKey("Setup", Key)
             Case Sources.Registry
-                Return HasReg(Key)
+                Try
+                    Return RegistryUtils.Has($"HKEY_CURRENT_USER\Software\{RegFolder}", Key)
+                Catch ex As Exception
+                    Logger.Warn(ex, $"判断注册表 {Key} 是否存在时出错")
+                    Return False
+                End Try
             Case Else 'Source.Instance
                 If Instance Is Nothing Then Throw New Exception($"判断版本设置 {Key} 是否存在时未提供目标版本")
                 Return HasIniKey(Instance.PathVersion & "PCL\Setup.ini", Key)
         End Select
     End Function
+
+#Region "DES 加密"
+
+    Private Shared ReadOnly desInitialVector As Byte() = Encoding.UTF8.GetBytes("95168702")
+
+    ''' <summary>
+    ''' 使用 DES 对称加密算法加密字符串。
+    ''' </summary>
+    Private Shared Function DesEncrypt(sourceString As String, Optional key As String = Nothing) As String
+        key = If(key Is Nothing, "@;$ Abv2", key.GetStableHashCode().ToString().EnsureLength("X"c, 8).Substring(0, 8))
+        Dim btKey As Byte() = Encoding.UTF8.GetBytes(key)
+        Using des As New DESCryptoServiceProvider()
+            Using ms As New MemoryStream()
+                Using cs As New CryptoStream(ms, des.CreateEncryptor(btKey, desInitialVector), CryptoStreamMode.Write)
+                    Dim inData As Byte() = Encoding.UTF8.GetBytes(sourceString)
+                    cs.Write(inData, 0, inData.Length)
+                    cs.FlushFinalBlock()
+                    Return Convert.ToBase64String(ms.ToArray())
+                End Using
+            End Using
+        End Using
+    End Function
+
+    ''' <summary>
+    ''' 使用 DES 对称加密算法解密字符串。
+    ''' </summary>
+    Private Shared Function DesDecrypt(encryptedString As String, Optional key As String = Nothing) As String
+        key = If(key Is Nothing, "@;$ Abv2", key.GetStableHashCode().ToString().EnsureLength("X"c, 8).Substring(0, 8))
+        Dim btKey As Byte() = Encoding.UTF8.GetBytes(key)
+        Using des As New DESCryptoServiceProvider()
+            Using ms As New MemoryStream()
+                Using cs As New CryptoStream(ms, des.CreateDecryptor(btKey, desInitialVector), CryptoStreamMode.Write)
+                    Dim inData As Byte() = Convert.FromBase64String(encryptedString)
+                    cs.Write(inData, 0, inData.Length)
+                    cs.FlushFinalBlock()
+                    Return Encoding.UTF8.GetString(ms.ToArray())
+                End Using
+            End Using
+        End Using
+    End Function
+
+#End Region
 
 End Class

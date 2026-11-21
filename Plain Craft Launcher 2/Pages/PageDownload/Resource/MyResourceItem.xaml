@@ -1,4 +1,4 @@
-﻿<Grid x:Class="MyResourceItem"
+<Grid x:Class="MyResourceItem"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:PCL"
@@ -41,10 +41,9 @@
     <TextBlock x:Name="LabInfo" Grid.Row="2" Grid.Column="4" VerticalAlignment="Bottom" Margin="0,0,3,0.5"
                TextTrimming="CharacterEllipsis" FontSize="12" Foreground="{StaticResource ColorBrushGray3}"
                IsHitTestVisible="True" SnapsToDevicePixels="False" UseLayoutRounding="False"
-               ToolTipService.InitialShowDelay="100" ToolTipService.BetweenShowDelay="100" 
-               ToolTipService.Placement="Relative" ToolTipService.PlacementRectangle="-16,-10,500,10000">
+               ToolTipService.InitialShowDelay="100">
         <TextBlock.ToolTip>
-            <ToolTip x:Name="ToolTipInfo" Style="{StaticResource ExtendTextToolTip}" />
+            <ToolTip x:Name="ToolTipInfo" />
         </TextBlock.ToolTip>
     </TextBlock>
     <!-- 下边栏 -->

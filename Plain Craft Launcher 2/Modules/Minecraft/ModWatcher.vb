@@ -1,4 +1,4 @@
-﻿Public Module ModWatcher
+Public Module ModWatcher
 
     '对全体的监视
     Public McWatcherList As New List(Of Watcher)
@@ -8,7 +8,8 @@
         Dim IsRunning As Boolean = False
         Dim TriggerLauncherShutdown As Boolean = True
         For Each Watcher In McWatcherList
-            If Watcher.State = Watcher.MinecraftState.Loading OrElse Watcher.State = Watcher.MinecraftState.Running Then
+            If Watcher.State = Watcher.MinecraftState.Loading OrElse Watcher.State = Watcher.MinecraftState.Running OrElse
+               (Watcher.State = Watcher.MinecraftState.Crashed AndAlso Not Watcher.GameProcess.HasExited) Then
                 IsRunning = True
                 Exit For
             ElseIf Watcher.State = Watcher.MinecraftState.Crashed OrElse Watcher.State = Watcher.MinecraftState.Canceled Then
@@ -91,7 +92,9 @@
             RunInNewThread(
             Sub()
                 Try
-                    Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Crashed OrElse State = MinecraftState.Canceled OrElse Loader.State = LoadState.Interrupted
+                    Do Until State = MinecraftState.Ended OrElse State = MinecraftState.Canceled OrElse
+                             (Loader.State = LoadState.Canceled AndAlso State <> MinecraftState.Crashed) OrElse
+                             (State = MinecraftState.Crashed AndAlso GameProcess.HasExited)
                         TimerWindow()
                         TimerLog()
                         '设置窗口标题
@@ -103,6 +106,7 @@
                             Thread.Sleep(64)
                         Next
                     Loop
+                    If State = MinecraftState.Crashed Then WatcherStateChanged()
                     WatcherLog("Minecraft 日志监控已退出")
                 Catch ex As Exception
                     Logger.Error(ex, "Minecraft 日志监控主循环出错")
@@ -162,11 +166,11 @@
                     'Else
                     If State = MinecraftState.Loading Then
                         '窗口未出现
-                        WatcherLog("Minecraft 尚未加载完成，可能已崩溃")
+                        WatcherLog("Minecraft 尚未加载完成，可能已崩溃", LogLevel.Error)
                         Crashed()
                     ElseIf GameProcess.ExitCode <> 0 AndAlso State = MinecraftState.Running AndAlso Instance.ReleaseTime.Year >= 2012 Then
                         '返回值不为 0 且未结束
-                        WatcherLog("Minecraft 返回值异常，可能已崩溃")
+                        WatcherLog("Minecraft 返回值异常，可能已崩溃", LogLevel.Error)
                         Crashed()
                     ElseIf State <> MinecraftState.Crashed Then
                         '正常关闭
@@ -177,7 +181,7 @@
                 Logger.Error(ex, "输出 Minecraft 日志失败")
             End Try
         End Sub
-        Public LatestLog As New Queue(Of String)
+        Public LatestLog As New ConcurrentQueue(Of String)
         Private Sub GameLog(Text As String)
             '预处理
             If Text Is Nothing Then Return
@@ -185,7 +189,7 @@
             'If Text.Contains("�����") Then Hint("检测到错误的日志编码：" & Text)
             '加入预存储
             LatestLog.Enqueue(Text)
-            If LatestLog.Count >= 501 Then LatestLog.Dequeue()
+            If LatestLog.Count >= 501 Then LatestLog.TryDequeue(Nothing)
             Logger.Trace(Text)
             '进度处理
             If LogProgress < 1 Then
@@ -215,15 +219,15 @@
                 ElseIf Text.Contains("Crash report saved to") OrElse Text.Contains("This crash report has been saved to:") Then
                     ' Text.Contains("Minecraft ran into a problem! Report saved to:") Then
                     'Minecraft 崩溃，忽略 VanillaFix
-                    WatcherLog("识别为崩溃的 Log：" & Text)
+                    WatcherLog("识别为崩溃的 Log：" & Text, LogLevel.Error)
                     Crashed()
                 ElseIf Text.Contains("Could not save crash report to") Then
                     'Minecraft 崩溃，无法保存崩溃日志
-                    WatcherLog("识别为崩溃的 Log：" & Text)
+                    WatcherLog("识别为崩溃的 Log：" & Text, LogLevel.Error)
                     Crashed()
                 ElseIf Text.Contains("/ERROR]: Unable to launch") OrElse Text.Contains("An exception was thrown, the game will display an error screen and halt.") Then
                     'Forge 崩溃
-                    WatcherLog("识别为崩溃的 Log：" & Text)
+                    WatcherLog("识别为崩溃的 Log：" & Text, LogLevel.Error)
                     Crashed()
                     'ElseIf Text.Contains("Shutdown failure!") Then
                     '    'Minecraft 强行崩溃，由于点 X 强行关闭也会触发这句话，所以不可用
@@ -231,8 +235,8 @@
                 End If
             End If
         End Sub
-        Private Sub WatcherLog(Text As String)
-            McLaunchLog("[" & PID & "] " & Text)
+        Private Sub WatcherLog(Text As String, Optional Level As LogLevel = LogLevel.Info)
+            McLaunchLog("[" & PID & "] " & Text, Level)
         End Sub
 
         '进度更新
@@ -314,14 +318,17 @@
                     Dim str As New StringBuilder(512)
                     GetClassName(hwnd, str, str.Capacity)
                     Dim ClassName As String = str.ToString
-                    If Not (ClassName = "GLFW30" OrElse ClassName = "LWJGL" OrElse ClassName = "SunAwtFrame") Then Return
+                    If Not (ClassName = "GLFW30" OrElse ClassName = "SDL_app" OrElse ClassName = "LWJGL" OrElse ClassName = "SunAwtFrame") Then Return
+                    'SDL 会先创建隐藏窗口，待初始化完成后才显示（#9073）
+                    If ClassName = "SDL_app" AndAlso Not IsWindowVisible(hwnd) Then Return
                     '获取窗口标题名
                     str = New StringBuilder(512)
                     GetWindowText(hwnd, str, str.Capacity)
                     Dim WindowText As String = str.ToString
                     '有的 Mod 可以修改窗口标题，所以不能检测是否为 Minecraft 打头，这并不准确
-                    '部分版本会搞个 GLFW message window 出来所以得反选
-                    If Not (WindowText.StartsWithF("FML") OrElse (WindowText <> "PopupMessageWindow") AndAlso Not WindowText.StartsWithF("GLFW")) Then Return
+                    '部分版本会搞个 GLFW message window，高版本还有个 Hidden Utility Window，都要反选
+                    If String.IsNullOrWhiteSpace(WindowText) OrElse WindowText = "SDL_app" OrElse WindowText = "PopupMessageWindow" OrElse
+                       WindowText.StartsWithF("GLFW") OrElse WindowText.EndsWithF("Hidden Utility Window") Then Return
                     '获取窗口关联的进程
                     Dim ProcessId As Integer
                     GetWindowThreadProcessId(hwnd, ProcessId)
@@ -342,6 +349,7 @@
         Private Declare Function GetWindowText Lib "user32" Alias "GetWindowTextA" (hWnd As Integer, str As StringBuilder, maxCount As Integer) As Integer
         Private Declare Function SetWindowText Lib "user32" Alias "SetWindowTextA" (hWnd As Integer, str As String) As Boolean
         Private Declare Function ShowWindow Lib "user32" (hWnd As IntPtr, cmdWindow As UInteger) As Boolean
+        Private Declare Function IsWindowVisible Lib "user32" (hWnd As IntPtr) As Boolean
         Private Declare Function GetWindowThreadProcessId Lib "user32" (hWnd As IntPtr, ByRef lpdwProcessId As Integer) As Integer
 
         '崩溃处理
@@ -349,7 +357,7 @@
             If State = MinecraftState.Crashed OrElse State = MinecraftState.Ended Then Return
             State = MinecraftState.Crashed
             '崩溃分析
-            WatcherLog("Minecraft 已崩溃，将在 2 秒后开始崩溃分析")
+            WatcherLog("Minecraft 已崩溃，将在 2 秒后开始崩溃分析", LogLevel.Error)
             Hint("检测到 Minecraft 出现错误，错误分析已开始……", HintType.Red)
             FeedbackInfo()
             RunInNewThread(
@@ -362,7 +370,7 @@
                     Analyzer.Prepare()
                     Analyzer.Analyze()
                     Analyzer.Output(False, New List(Of String) From
-                        {Instance.PathVersion & Instance.Name & ".json", PathExeFolder & "PCL\Log1.txt", PathExeFolder & "PCL\LatestLaunch.bat"})
+                        {Instance.PathVersion & Instance.Name & ".json", Paths.Base & "PCL\Log1.txt", Paths.Base & "PCL\LatestLaunch.bat"})
                 Catch ex As Exception
                     Logger.Error(ex, "崩溃分析失败")
                 End Try

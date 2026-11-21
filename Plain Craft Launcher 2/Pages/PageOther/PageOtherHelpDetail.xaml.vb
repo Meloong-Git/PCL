@@ -1,4 +1,4 @@
-﻿Public Class PageOtherHelpDetail
+Public Class PageOtherHelpDetail
     Implements IRefreshable
     Public Entry As HelpEntry
 
@@ -18,7 +18,7 @@
         If Content = "" Then Throw New Exception("帮助 xaml 文件为空")
         Try
             '修改时应同时修改 PageLaunchRight.LoadContent
-            Content = ArgumentReplace(Content, AddressOf EscapeUtils.XmlEscape)
+            Content = ArgumentReplace(Content, AddressOf StringUtils.XmlEscape)
             Do While Content.Contains("xmlns")
                 Content = Content.RegexReplace("xmlns[^""']*(""|')[^""']*(""|')", "").Replace("xmlns", "") '禁止声明命名空间
             Loop

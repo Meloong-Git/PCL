@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Threading
+Imports System.Windows.Threading
 
 Public Class PageLaunchRight
     Implements IRefreshable, IDispatcherUnhandledException
@@ -35,7 +35,7 @@ Public Class PageLaunchRight
             Case 1
                 '加载本地文件
                 Logger.Info("主页自定义数据来源：本地文件")
-                Content = FileUtils.TryReadAsString(PathExeFolder & "PCL\Custom.xaml")
+                Content = FileUtils.TryReadAsString(Paths.Base & "PCL\Custom.xaml")
             Case 2
                 '联网下载
                 Url = Settings.Get(Of String)("UiCustomNet")
@@ -49,7 +49,7 @@ Public Class PageLaunchRight
                                 <TextBlock Margin=""25,38,23,15"" FontSize=""13.5"" IsHitTestVisible=""False"" Text=""{hint}"" TextWrapping=""Wrap"" Foreground=""{DynamicResource ColorBrush1}"" />
                                 <local:MyIconButton Height=""22"" Width=""22"" Margin=""9"" VerticalAlignment=""Top"" HorizontalAlignment=""Right"" 
                                     EventType=""刷新主页"" EventData=""/""
-                                    Logo=""M875.52 148.48C783.36 56.32 655.36 0 512 0 291.84 0 107.52 138.24 30.72 332.8l122.88 46.08C204.8 230.4 348.16 128 512 128c107.52 0 199.68 40.96 271.36 112.64L640 384h384V0L875.52 148.48zM512 896c-107.52 0-199.68-40.96-271.36-112.64L384 640H0v384l148.48-148.48C240.64 967.68 368.64 1024 512 1024c220.16 0 404.48-138.24 481.28-332.8L870.4 645.12C819.2 793.6 675.84 896 512 896z"" />
+                                    Logo=""M512.0 838.3c-80.2 0-153.4-29.3-210.2-77.4l75.5-75.5c11.5-11.5 25.8-22.0 25.8-37.0a27.2 27.2 0 0 0-27.1-27.1H104.0c-27.1 0-27.1 23.9-27.1 27.1v271.9a27.1 27.1 0 0 0 27.1 27.1c15.0 0 27.8-16.6 42.5-31.2l77.9-77.9c76.6 67.7 177.1 108.9 287.4 108.9 221.7 0 404.5-166.0 431.2-380.6h-109.8c-25.9 154.2-159.7 271.9-321.3 271.9zM919.9 76.6c-15.0 0-27.8 16.6-42.5 31.3L799.5 185.8c-76.5-67.7-177.1-108.9-287.4-108.9-221.8 0-404.5 166.1-431.3 380.6H190.6c25.9-154.2 159.7-271.9 321.4-271.9 80.2 0 153.4 29.3 210.1 77.4l-75.5 75.5c-11.6 11.5-25.8 22.0-25.8 37.1a27.2 27.2 0 0 0 27.1 27.1h271.9c27.1 0 27.1-23.9 27.1-27.1V103.8a27.1 27.1 0 0 0-27.1-27.1z"" />
                             </local:MyCard>"
                     Case 1
                         Logger.Info("主页预设：回声洞")
@@ -58,7 +58,7 @@ Public Class PageLaunchRight
                                 <TextBlock Margin=""25,38,23,15"" FontSize=""13.5"" IsHitTestVisible=""False"" Text=""{cave}"" TextWrapping=""Wrap"" Foreground=""{DynamicResource ColorBrush1}"" />
                                 <local:MyIconButton Height=""22"" Width=""22"" Margin=""9"" VerticalAlignment=""Top"" HorizontalAlignment=""Right"" 
                                     EventType=""刷新主页"" EventData=""/""
-                                    Logo=""M875.52 148.48C783.36 56.32 655.36 0 512 0 291.84 0 107.52 138.24 30.72 332.8l122.88 46.08C204.8 230.4 348.16 128 512 128c107.52 0 199.68 40.96 271.36 112.64L640 384h384V0L875.52 148.48zM512 896c-107.52 0-199.68-40.96-271.36-112.64L384 640H0v384l148.48-148.48C240.64 967.68 368.64 1024 512 1024c220.16 0 404.48-138.24 481.28-332.8L870.4 645.12C819.2 793.6 675.84 896 512 896z"" />
+                                    Logo=""M512.0 838.3c-80.2 0-153.4-29.3-210.2-77.4l75.5-75.5c11.5-11.5 25.8-22.0 25.8-37.0a27.2 27.2 0 0 0-27.1-27.1H104.0c-27.1 0-27.1 23.9-27.1 27.1v271.9a27.1 27.1 0 0 0 27.1 27.1c15.0 0 27.8-16.6 42.5-31.2l77.9-77.9c76.6 67.7 177.1 108.9 287.4 108.9 221.7 0 404.5-166.0 431.2-380.6h-109.8c-25.9 154.2-159.7 271.9-321.3 271.9zM919.9 76.6c-15.0 0-27.8 16.6-42.5 31.3L799.5 185.8c-76.5-67.7-177.1-108.9-287.4-108.9-221.8 0-404.5 166.1-431.3 380.6H190.6c25.9-154.2 159.7-271.9 321.4-271.9 80.2 0 153.4 29.3 210.1 77.4l-75.5 75.5c-11.6 11.5-25.8 22.0-25.8 37.1a27.2 27.2 0 0 0 27.1 27.1h271.9c27.1 0 27.1-23.9 27.1-27.1V103.8a27.1 27.1 0 0 0-27.1-27.1z"" />
                             </local:MyCard>"
                     Case 2
                         Logger.Info("主页预设：Minecraft 新闻")
@@ -89,7 +89,7 @@ Public Class PageLaunchRight
                         Url = "https://files.mcimirror.top/PCL"
                     Case 11
                         Logger.Info("主页预设：杂志主页")
-                        Url = "http://118.195.192.193:26995/d/magazine-homepage-pcl/Custom.xaml"
+                        Url = "https://gh-proxy.com/https://github.com/Neclyon/Magazine-Homepage-PCL/raw/main/output/Custom.xaml"
                     Case 12
                         Logger.Info("主页预设：PCL GitHub 仪表盘")
                         Url = "https://ddf.pcl-community.top/Custom.xaml"
@@ -101,14 +101,40 @@ Public Class PageLaunchRight
                         Url = "https://pcl.wyc-w.top/index.xaml"
                     Case 15
                         Logger.Info("主页预设：Minecraft 芝士站")
-                        Url = "https://www.xxag.top/mkss"
+                        Url = "https://mkss-services.awaeric.xyz"
                     Case 16
                         Logger.Info("主页预设：整合包推荐引擎")
                         Url = "https://qawsedrftgyhujiko.fun/pcl2/Custom.xaml"
+                    Case 17
+                        Logger.Info("主页预设：Bangumi 番剧主页")
+                        Url = "https://bangumi.p.kaphia.top"
+                    Case 18
+                        Logger.Info("主页预设：Bilibili 热门")
+                        Url = "https://bilibili.p.kaphia.top"
+                    Case 19
+                        Logger.Info("主页预设：Music 云音乐热门")
+                        Url = "https://cloudmusic.p.kaphia.top"
+                    Case 20
+                        Logger.Info("主页预设：模组推荐")
+                        Url = "https://pcl.xn--9iq209asnop94b.top/download/ModPage.xaml"
+                    Case 21
+                        Logger.Info("主页预设：每日游戏推荐")
+                        Url = "https://pcl.xn--9iq209asnop94b.top/download/GamePage.xaml"
+                    Case 22
+                        Logger.Info("主页预设：Wallpaper 每日壁纸")
+                        Url = "https://wallpaper.p.kaphia.top"
+                    Case 23
+                        Logger.Info("主页预设：Weather 天气预报")
+                        Url = "https://weather-p.kaphia.top/{variable:PCLDailyWeatherPage:choose}.xaml"
+                    Case 24
+                        Logger.Info("主页预设：新一代狗屁王大杂烩主页")
+                        Url = "https://end.g-fish.dpdns.org/Custom.xaml"
                 End Select
         End Select
         '联网下载
         If Not String.IsNullOrWhiteSpace(Url) Then
+            '替换自定义变量与设置
+            Url = ArgumentReplace(Url, AddressOf WebUtility.HtmlEncode)
             If Url = Settings.Get(Of String)("CacheSavedPageUrl") AndAlso FileUtils.Exists(PathTemp & "Cache\Custom.xaml") Then
                 '缓存可用
                 Logger.Info("主页自定义数据来源：联网缓存文件")
@@ -136,8 +162,6 @@ Public Class PageLaunchRight
         Dim Address As String = Task.Input.Address '#3721 中连续触发两次导致内容变化
         Dim ShouldRefresh As Boolean = Task.Input.ShouldRefresh
         Try
-            '替换自定义变量与设置
-            Address = ArgumentReplace(Address, AddressOf WebUtility.HtmlEncode)
             '获取版本校验地址
             Dim VersionAddress As String
             If Address.Contains(".xaml") Then
@@ -170,7 +194,7 @@ Public Class PageLaunchRight
             Settings.Set("CacheSavedPageVersion", Version)
             FileUtils.Write(PathTemp & "Cache\Custom.xaml", FileContent)
             '若内容变更则要求刷新
-            If LoadedContentHash <> FileContent.GetHashCode() AndAlso ShouldRefresh Then Refresh()
+            If LoadedContentHash <> FileContent.GetStableHashCode() AndAlso ShouldRefresh Then Refresh()
         Catch ex As Exception
             Logger.Error(ex, $"下载主页失败（{Address}）", If(ModeDebug, LogBehavior.Alert, LogBehavior.Toast))
         End Try
@@ -196,7 +220,7 @@ Public Class PageLaunchRight
     ''' 清空主页缓存信息。
     ''' </summary>
     Private Sub ClearCache()
-        LoadedContentHash = -1
+        LoadedContentHash = Nothing
         OnlineLoader.Input = ("", True)
         Settings.Set("CacheSavedPageUrl", "")
         Settings.Set("CacheSavedPageVersion", "")
@@ -211,7 +235,7 @@ Public Class PageLaunchRight
         Try
             SyncLock LoadContentLock
                 '如果加载目标内容一致则不加载
-                Dim Hash = If(Content, "").GetHashCode()
+                Dim Hash = If(Content, "").GetStableHashCode()
                 If Hash = LoadedContentHash Then Return
                 LoadedContentHash = Hash
                 '实际加载内容
@@ -222,7 +246,7 @@ Public Class PageLaunchRight
                 End If
                 Dim LoadStartTime As Date = Date.Now
                 '修改时应同时修改 PageOtherHelpDetail.Init
-                Content = ArgumentReplace(Content, AddressOf EscapeUtils.XmlEscape)
+                Content = ArgumentReplace(Content, AddressOf StringUtils.XmlEscape)
                 Do While Content.Contains("xmlns")
                     Content = Content.RegexReplace("xmlns[^""']*(""|')[^""']*(""|')", "").Replace("xmlns", "") '禁止声明命名空间
                 Loop
@@ -261,7 +285,7 @@ Public Class PageLaunchRight
         OnLoadContentFailed(e.Exception)
     End Sub
 
-    Private LoadedContentHash As Integer = -1
+    Private LoadedContentHash As ULong? = Nothing
     Private LoadContentLock As New Object
 
 #End Region

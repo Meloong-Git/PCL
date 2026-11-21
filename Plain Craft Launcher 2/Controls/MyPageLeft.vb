@@ -1,4 +1,4 @@
-﻿Public Class MyPageLeft
+Public Class MyPageLeft
     Inherits Grid
     Private Uuid As Integer = GetUuid()
 

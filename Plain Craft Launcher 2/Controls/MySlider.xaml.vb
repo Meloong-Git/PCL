@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Shapes
+Imports System.Windows.Shapes
 
 Public Class MySlider
     Implements ISettingControl

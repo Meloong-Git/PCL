@@ -1,2 +1,2 @@
-﻿Public Class PageDownloadShader
+Public Class PageDownloadShader
 End Class

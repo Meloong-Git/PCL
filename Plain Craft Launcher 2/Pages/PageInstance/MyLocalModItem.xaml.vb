@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Forms
+Imports System.Windows.Forms
 
 Public Class MyLocalModItem
 
@@ -312,7 +312,7 @@ Public Class MyLocalModItem
             NewestName = NewestSegs.Join("-")
             Entry._Version = CurrentName '使用网络信息作为显示的版本号
         End If
-        Return $"当前版本：{CurrentName}（{GetTimeSpanString(Entry.ProjectVersion.ReleaseDate - Date.Now, False)}）{vbCrLf}最新版本：{NewestName}（{GetTimeSpanString(Entry.UpdateFile.ReleaseDate - Date.Now, False)}）"
+        Return $"当前版本：{CurrentName}（{StringUtils.FormatTimeSpan(Entry.ProjectVersion.ReleaseDate - Date.Now, False)}）{vbCrLf}最新版本：{NewestName}（{StringUtils.FormatTimeSpan(Entry.UpdateFile.ReleaseDate - Date.Now, False)}）"
     End Function
 
     '懒加载
@@ -335,7 +335,7 @@ Public Class MyLocalModItem
             BtnUpdate.Visibility = Visibility.Collapsed
         End If
         '标题与描述
-        Dim DescFileName As String = Entry.File.Name.BeforeLast(".")
+        Dim DescFileName As String = PathUtils.GetFileNameWithoutExtension(Entry.EnabledName)
         Dim NewDescription As String
         If Settings.Get(Of Integer)("ToolModLocalNameStyle") = 1 Then
             '标题显示文件名，详情显示译名

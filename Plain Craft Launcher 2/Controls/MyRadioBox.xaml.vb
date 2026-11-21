@@ -1,4 +1,4 @@
-﻿Imports System.Windows.Markup
+Imports System.Windows.Markup
 Imports System.Windows.Shapes
 
 <ContentProperty("Inlines")>
@@ -99,7 +99,6 @@ Public Class MyRadioBox
         End Try
     End Sub
     Private Sub SyncUI()
-        Cursor = If(Checked, Nothing, Cursors.Hand)
         If AniControlEnabled = 0 AndAlso IsLoaded Then '防止默认属性变更触发动画
             If Checked Then
                 '由无变有
@@ -198,9 +197,6 @@ Public Class MyRadioBox
     Private Const AnimationTimeOfMouseIn As Integer = 100 '鼠标指向动画长度
     Private Const AnimationTimeOfMouseOut As Integer = 200 '鼠标指向动画长度
     Private Const AnimationTimeOfCheck As Integer = 150 '勾选状态变更动画长度
-    Private Sub MyRadioBox_Loaded() Handles Me.Loaded
-        Cursor = If(Checked, Nothing, Cursors.Hand)
-    End Sub
     Private Sub Radiobox_IsEnabledChanged() Handles Me.IsEnabledChanged
         If Me.IsLoaded AndAlso AniControlEnabled = 0 Then '防止默认属性变更触发动画
             '有动画

@@ -1,4 +1,4 @@
-﻿Public Class PclLogger
+Public Class PclLogger
     Inherits FileLogger
 
     ''' <inheritdoc/>

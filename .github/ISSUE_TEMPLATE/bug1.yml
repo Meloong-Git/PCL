@@ -8,7 +8,7 @@ body:
     label: "检查项"
     description: "请逐个检查下列项目，并勾选确认。"
     options:
-    - label: "**我所启动的游戏不是整合包，且未安装任何 Mod。** 安装 Mod 后的游戏崩溃基本不是 PCL 的原因，请 **不要** 提交反馈。你可以在论坛或社区找人求助，但这里并不是你求助的地方。"
+    - label: "**我所启动的游戏不是整合包，且未安装任何 Mod。** 安装 Mod 后的崩溃基本不是 PCL 导致的，请 **不要** 提交反馈。你可以前往 [PCL 汉医堂](https://qm.qq.com/q/JJTzwEAmcw) 等民间 QQ 群求助，但这里不是求助的地方……"
       required: false
     - label: "**我已尝试使用 HMCL 启动，HMCL 没有出现问题。** 如果 HMCL 也无法启动就不是 PCL 导致的问题，请 **不要** 提交反馈。[下载 HMCL](https://hmcl.huangyuhui.net/download)"
       required: true

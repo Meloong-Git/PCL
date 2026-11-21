@@ -1,4 +1,4 @@
-﻿Imports NAudio.Wave
+Imports NAudio.Wave
 
 Public Module ModMusic
 
@@ -23,8 +23,8 @@ Public Module ModMusic
             '初始化全部可用音乐列表
             If MusicAllList Is Nothing Then
                 MusicAllList = New List(Of String)
-                DirectoryUtils.Create(PathExeFolder & "PCL\Musics\")
-                For Each File In DirectoryUtils.GetFiles(PathExeFolder & "PCL\Musics\")
+                DirectoryUtils.Create(Paths.Base & "PCL\Musics\")
+                For Each File In DirectoryUtils.EnumerateFiles(Paths.Base & "PCL\Musics\", True)
                     '文件夹可能会被加入 .ini 文件夹配置文件、一些乱七八糟的 .jpg 文件啥的
                     If {"ini", "jpg", "txt", "cfg", "lrc", "db", "png"}.Contains(PathUtils.GetExtension(File)) Then Continue For
                     MusicAllList.Add(File)
@@ -99,7 +99,6 @@ Public Module ModMusic
                         End If
                     End If
                     FrmMain.BtnExtraMusic.ToolTip = ToolTipText
-                    ToolTipService.SetVerticalOffset(FrmMain.BtnExtraMusic, If(ToolTipText.Contains(vbLf), 10, 16))
                 End If
                 If FrmSetupUI IsNot Nothing Then FrmSetupUI.MusicRefreshUI()
 
@@ -321,7 +320,7 @@ Public Module ModMusic
                 Hint("由于音频设备变更，音乐播放功能在重启 PCL 后才能恢复！", HintType.Red)
                 Thread.Sleep(1000000000)
             End If
-            If Not (MusicCurrent.EndsWithF(".wav", True) OrElse MusicCurrent.EndsWithF(".mp3", True) OrElse MusicCurrent.EndsWithF(".flac", True)) OrElse
+            If Not ({"wav", "mp3", "flac"}.Contains(PathUtils.GetExtension(MusicCurrent))) OrElse
                 ex.Message.Contains("0xC00D36C4") Then '#5096：不支持给定的 URL 的字节流类型。 (异常来自 HRESULT:0xC00D36C4)
                 Hint("播放音乐失败（" & PathUtils.GetLastPart(MusicCurrent) & "）：PCL 可能不支持此音乐格式，请将格式转换为 .wav、.mp3 或 .flac 后再试", HintType.Red)
             Else

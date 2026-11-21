@@ -1,4 +1,4 @@
-﻿Public Class MyDropShadow
+Public Class MyDropShadow
     Inherits Decorator
 
     ''' <summary>

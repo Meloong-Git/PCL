@@ -1,4 +1,4 @@
-﻿Public Class MyScrollBar
+Public Class MyScrollBar
     Inherits Primitives.ScrollBar
 
     '基础

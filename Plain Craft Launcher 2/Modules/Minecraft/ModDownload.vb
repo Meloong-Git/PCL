@@ -1,4 +1,4 @@
-﻿Public Module ModDownload
+Public Module ModDownload
 
 #Region "DlClient* | Minecraft 客户端"
 
@@ -20,7 +20,7 @@
             Throw New Exception("底层版本 " & Instance.Name & " 中无 jar 文件下载信息")
         End If
         '检查文件
-        Dim Checker As New FileChecker(MinSize:=1024, ActualSize:=If(Instance.JsonObject("downloads")("client")("size"), -1), Hash:=Instance.JsonObject("downloads")("client")("sha1"))
+        Dim Checker As New FileChecker With {.MinSize = 1024, .ActualSize = If(Instance.JsonObject("downloads")("client")("size"), -1), .Hash = Instance.JsonObject("downloads")("client")("sha1")}
         If ReturnNothingOnFileUseable AndAlso Checker.Check(Instance.PathVersion & Instance.Name & ".jar") Is Nothing Then Return Nothing '通过校验
         '返回下载信息
         Dim JarUrl As String = Instance.JsonObject("downloads")("client")("url")
@@ -44,14 +44,14 @@
         If IndexUrl = "" Then
             Return Nothing
         Else
-            Return New NetFile(DlSourceLauncherOrMetaGet(IndexUrl), IndexAddress, New FileChecker(CanUseExistsFile:=False, IsJson:=True))
+            Return New NetFile(DlSourceLauncherOrMetaGet(IndexUrl), IndexAddress, New FileChecker With {.IsJson = True})
         End If
     End Function
 
     ''' <summary>
     ''' 构造补全某 Minecraft 版本的所有文件的加载器列表。失败会抛出异常。
     ''' </summary>
-    Public Function DlClientFix(Instance As McInstance, CheckAssetsHash As Boolean, AssetsIndexBehaviour As AssetsIndexExistsBehaviour) As List(Of LoaderBase)
+    Public Function DlClientFix(Instance As McInstance, CheckAssetsHash As Boolean, DownloadAssetIndexInBackground As Boolean) As List(Of LoaderBase)
         Dim Loaders As New List(Of LoaderBase)
 
 #Region "下载支持库文件"
@@ -65,10 +65,12 @@
 
 #Region "下载资源文件"
         If ShouldIgnoreFileCheck(Instance) Then
-            Logger.Info("已跳过所有 Assets 检查")
+            Logger.Warn("设置要求跳过所有 Assets 检查，文件可能不是最新的", LogBehavior.None)
         Else
             Dim LoadersAssets As New List(Of LoaderBase)
             '获取资源文件索引地址
+            Dim TempAddressMain As String = Nothing
+            Dim RealAddressMain As String = Nothing
             LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))("分析资源文件索引地址",
             Sub(Task As LoaderTask(Of String, List(Of NetFile)))
                 Try
@@ -76,9 +78,26 @@
                     If IndexFile Is Nothing Then
                         Task.Output = New List(Of NetFile)
                         Logger.Warn($"未找到版本 {Instance.Name} 的合适的资源索引下载地址，游戏 assets 可能缺失")
-                    ElseIf AssetsIndexBehaviour <> AssetsIndexExistsBehaviour.AlwaysDownload AndAlso IndexFile.Check.Check(IndexFile.LocalPath) Is Nothing Then
-                        Task.Output = New List(Of NetFile)
+                        Return
+                    End If
+                    Dim IndexBackgroundFile = PathTemp & "Cache\" & IndexFile.LocalName & "_background"
+                    If FileUtils.Exists(IndexBackgroundFile) AndAlso
+                       FileUtils.GetInfo(IndexBackgroundFile).LastWriteTime.Date > FileUtils.GetInfo(IndexFile.LocalPath).LastWriteTime.Date Then
+                        Logger.Info($"发现后台更新的资源索引缓存文件：{IndexBackgroundFile}")
+                        FileUtils.Move(IndexBackgroundFile, IndexFile.LocalPath)
+                    End If
+                    If DownloadAssetIndexInBackground Then
+                        '允许后台更新索引
+                        If IndexFile.Check.Check(IndexFile.LocalPath) Is Nothing Then
+                            Task.Output = New List(Of NetFile)
+                        Else
+                            Task.Output = New List(Of NetFile) From {IndexFile}
+                        End If
                     Else
+                        '强制要求重新下载
+                        RealAddressMain = IndexFile.LocalPath
+                        TempAddressMain = PathTemp & "Cache\" & IndexFile.LocalName
+                        IndexFile.LocalPath = TempAddressMain
                         Task.Output = New List(Of NetFile) From {IndexFile}
                     End If
                 Catch ex As Exception
@@ -87,65 +106,51 @@
             End Sub) With {.ProgressWeight = 0.5, .Show = False})
             '下载资源文件索引
             LoadersAssets.Add(New LoaderDownload("下载资源文件索引", New List(Of NetFile)) With {.ProgressWeight = 2})
-            '要求独立更新索引
-            If AssetsIndexBehaviour = AssetsIndexExistsBehaviour.DownloadInBackground Then
-                Dim LoadersAssetsUpdate As New List(Of LoaderBase)
-                Dim TempAddress As String = Nothing
-                Dim RealAddress As String = Nothing
-                LoadersAssetsUpdate.Add(New LoaderTask(Of String, List(Of NetFile))("后台分析资源文件索引地址",
-                Sub(Task As LoaderTask(Of String, List(Of NetFile)))
-                    Dim BackAssetsFile As NetFile = DlClientAssetIndexGet(Instance)
-                    If BackAssetsFile Is Nothing Then
-                        Logger.Warn($"未找到版本 {Instance.Name} 的合适的资源索引下载地址，游戏 assets 可能缺失")
-                        Task.Interrupt()
-                        Throw New ThreadInterruptedException
-                    End If
-                    RealAddress = BackAssetsFile.LocalPath
-                    TempAddress = PathTemp & "Cache\" & BackAssetsFile.LocalName
-                    BackAssetsFile.LocalPath = TempAddress
-                    Task.Output = New List(Of NetFile) From {BackAssetsFile}
-                    '检查是否需要更新：每天只更新一次
-                    If FileUtils.Exists(RealAddress) AndAlso Math.Abs((FileUtils.GetInfo(RealAddress).LastWriteTime.Date - Now.Date).TotalDays) < 1 Then
-                        Logger.Info("无需更新资源文件索引，取消")
-                        Task.Interrupt()
-                    End If
-                End Sub))
-                LoadersAssetsUpdate.Add(New LoaderDownload("后台下载资源文件索引", New List(Of NetFile)))
-                LoadersAssetsUpdate.Add(New LoaderTask(Of List(Of NetFile), String)("后台复制资源文件索引",
-                Sub(Task As LoaderTask(Of List(Of NetFile), String))
-                    FileUtils.Copy(TempAddress, RealAddress)
-                    McLaunchLog("后台更新资源文件索引成功：" & TempAddress)
-                End Sub))
-                Dim Updater As New LoaderCombo(Of String)("后台更新资源文件索引", LoadersAssetsUpdate)
-                Logger.Info("开始后台检查资源文件索引")
-                Updater.Start()
-            End If
             '获取资源文件地址
             LoadersAssets.Add(New LoaderTask(Of String, List(Of NetFile))("获取资源文件列表",
-                Sub(Task) Task.Output = McAssetsFixList(Instance, CheckAssetsHash, Task)) With {.ProgressWeight = 0.01})
+            Sub(Task)
+                If TempAddressMain IsNot Nothing Then FileUtils.Move(TempAddressMain, RealAddressMain)
+                Task.Output = McAssetsFixList(Instance, CheckAssetsHash, Task)
+            End Sub) With {.ProgressWeight = 0.01})
             '下载资源文件
             LoadersAssets.Add(New LoaderDownload("下载资源文件", New List(Of NetFile)) With {.ProgressWeight = 25})
             '构造加载器
             Loaders.Add(New LoaderCombo(Of String)("下载资源文件（主加载器）", LoadersAssets) With {.Block = False, .Show = False, .ProgressWeight = 27})
+
+            '后台独立更新索引
+            If DownloadAssetIndexInBackground Then
+                Dim RealAddressBg As String = Nothing
+                Dim TempAddressBg As String = Nothing
+                Dim LoadersAssetsUpdate As New List(Of LoaderBase)
+                LoadersAssetsUpdate.Add(New LoaderTask(Of String, List(Of NetFile))("后台分析资源文件索引地址",
+                Sub(Task As LoaderTask(Of String, List(Of NetFile)))
+                    Dim IndexFile As NetFile = DlClientAssetIndexGet(Instance)
+                    If IndexFile Is Nothing Then
+                        Logger.Warn($"未找到版本 {Instance.Name} 的合适的资源索引下载地址，游戏 assets 可能缺失")
+                        Task.Cancel()
+                        Throw New OperationCanceledException
+                    End If
+                    RealAddressBg = IndexFile.LocalPath
+                    TempAddressBg = PathTemp & "Cache\" & IndexFile.LocalName & "_background"
+                    IndexFile.LocalPath = TempAddressBg
+                    Task.Output = New List(Of NetFile) From {IndexFile}
+                    '检查是否需要更新：每天只更新一次
+                    Dim LastUpdate As Date = FileUtils.GetInfo(RealAddressBg).LastWriteTime.Date
+                    If FileUtils.Exists(RealAddressBg) AndAlso Math.Abs((LastUpdate - Now.Date).TotalDays) < 1 Then
+                        Logger.Info($"无需更新资源文件索引，上次更新于 {LastUpdate}")
+                        Task.Cancel()
+                    End If
+                End Sub))
+                LoadersAssetsUpdate.Add(New LoaderDownload("后台下载资源文件索引", New List(Of NetFile)))
+                Dim Updater As New LoaderCombo(Of String)("后台更新资源文件索引", LoadersAssetsUpdate)
+                Logger.Info("开始后台检查资源文件索引")
+                Updater.Start()
+            End If
         End If
 #End Region
 
         Return Loaders
     End Function
-    Public Enum AssetsIndexExistsBehaviour
-        ''' <summary>
-        ''' 如果文件存在，则不进行下载。
-        ''' </summary>
-        DontDownload
-        ''' <summary>
-        ''' 如果文件存在，则启动新的下载加载器进行独立的更新。
-        ''' </summary>
-        DownloadInBackground
-        ''' <summary>
-        ''' 如果文件存在，也同样进行下载。
-        ''' </summary>
-        AlwaysDownload
-    End Enum
 
 #End Region
 
@@ -158,8 +163,7 @@
     Public Property AllDrops As List(Of Integer)
         Get
             If _AllDrops Is Nothing Then
-                _AllDrops = Settings.Get(Of String)("CacheDrops").ToString.
-                    Split(",", True).Select(Function(d) CInt(Val(d))).ToList()
+                _AllDrops = Settings.Get(Of String)("CacheDrops").ToString.Split(",", True).Select(Function(d) CInt(Val(d))).ToList()
             End If
             Return If(_AllDrops.Any, _AllDrops, Nothing) '不要将 _AllDrops 再设为 Nothing，以防止反复获取设置尝试初始化
         End Get
@@ -227,7 +231,7 @@
     Public DlClientListMojangLoader As New LoaderTask(Of String, DlClientListResult)("DlClientList Mojang", AddressOf DlClientListMojangMain)
     Private Sub DlClientListMojangMain(Loader As LoaderTask(Of String, DlClientListResult))
         Dim StartTime As Long = GetTimeMs()
-        Dim Json As JObject = GetJson(NetRequestByClientRetry("https://launchermeta.mojang.com/mc/game/version_manifest.json", RequireJson:=True))
+        Dim Json As JObject = NetRequestByClientRetry("https://launchermeta.mojang.com/mc/game/version_manifest.json", RequireJson:=True).DeserializeJson()
         Try
             Dim Versions As JArray = Json("versions")
             If Versions.Count < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Json.ToString & "）")
@@ -237,8 +241,6 @@
                 DlPreferMojang = DeltaTime < 4000
                 Logger.Info($"Mojang 官方源加载耗时：{DeltaTime}ms，{If(DlPreferMojang, "可优先使用官方源", "不优先使用官方源")}")
             End If
-            '添加 PCL 特供项
-            If FileUtils.Exists(PathTemp & "Cache\download.json") Then Versions.Merge(GetJson(FileUtils.ReadAsString(PathTemp & "Cache\download.json")))
             '返回
             Loader.Output = New DlClientListResult With {.IsOfficial = True, .SourceName = "Mojang 官方源", .Value = Json}
             'MC 更新提示
@@ -269,12 +271,12 @@
     ''' </summary>
     Public DlClientListBmclapiLoader As New LoaderTask(Of String, DlClientListResult)("DlClientList Bmclapi", AddressOf DlClientListBmclapiMain)
     Private Sub DlClientListBmclapiMain(Loader As LoaderTask(Of String, DlClientListResult))
-        Dim Json As JObject = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/mc/game/version_manifest.json", RequireJson:=True))
+        Dim Json As JObject = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/mc/game/version_manifest.json", RequireJson:=True).DeserializeJson()
         Try
             Dim Versions As JArray = Json("versions")
             If Versions.Count < 200 Then Throw New Exception("获取到的版本列表长度不足（" & Json.ToString & "）")
             '添加 PCL 特供项
-            If FileUtils.Exists(PathTemp & "Cache\download.json") Then Versions.Merge(GetJson(FileUtils.ReadAsString(PathTemp & "Cache\download.json")))
+            If FileUtils.Exists(PathTemp & "Cache\download.json") Then Versions.Merge(FileUtils.ReadAsJson(PathTemp & "Cache\download.json"))
             '检查是否有要求的版本（#5195）
             If Not String.IsNullOrEmpty(Loader.Input) Then
                 Dim Id = Loader.Input
@@ -308,7 +310,7 @@
                     DlClientListLoader.WaitForExit(Id, IsForceRestart:=True)
                 Case LoadState.Loading
                     DlClientListLoader.WaitForExit(Id)
-                Case LoadState.Failed, LoadState.Interrupted, LoadState.Waiting
+                Case LoadState.Failed, LoadState.Canceled, LoadState.Waiting
                     DlClientListLoader.WaitForExit(Id, IsForceRestart:=True)
             End Select
             '重新查找版本
@@ -433,7 +435,7 @@
                     .FileName = If(Name(i).ContainsIgnoreCase("pre"), "preview_", "") & "OptiFine_" & Name(i).Replace(" ", "_") & ".jar",
                     .RequiredForgeVersion = Forge(i).Replace("Forge ", "").Replace("#", "")}
                 If Entry.RequiredForgeVersion.Contains("N/A") Then Entry.RequiredForgeVersion = Nothing
-                Entry.InstanceName = Entry.Inherit & "-OptiFine_" & Name(i).ToString.Replace(" ", "_").Replace(Entry.Inherit & "_", "")
+                Entry.InstanceName = Entry.Inherit & "-OptiFine_" & Name(i).AfterFirst(" ").Replace(" ", "_")
                 Versions.Add(Entry)
             Next
             Loader.Output = New DlOptiFineListResult With {.IsOfficial = True, .SourceName = "OptiFine 官方源", .Value = Versions}
@@ -447,7 +449,7 @@
     ''' </summary>
     Public DlOptiFineListBmclapiLoader As New LoaderTask(Of Integer, DlOptiFineListResult)("DlOptiFineList Bmclapi", AddressOf DlOptiFineListBmclapiMain)
     Private Sub DlOptiFineListBmclapiMain(Loader As LoaderTask(Of Integer, DlOptiFineListResult))
-        Dim Json As JArray = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/optifine/versionList", RequireJson:=True))
+        Dim Json As JArray = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/optifine/versionList", RequireJson:=True).DeserializeJson()
         Try
             Dim Versions As New List(Of DlOptiFineListEntry)
             For Each Token As JObject In Json
@@ -531,8 +533,8 @@
     ''' </summary>
     Public DlForgeListBmclapiLoader As New LoaderTask(Of Integer, DlForgeListResult)("DlForgeList Bmclapi", AddressOf DlForgeListBmclapiMain)
     Private Sub DlForgeListBmclapiMain(Loader As LoaderTask(Of Integer, DlForgeListResult))
-        Dim Result As JArray = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/forge/minecraft",
-                                                       Encoding:=Encoding.Default, RequireJson:=True))
+        Dim Result As JArray = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/forge/minecraft",
+                                                       Encoding:=Encoding.Default, RequireJson:=True).DeserializeJson()
         Dim Names As List(Of String) = Result.Select(Function(v) v.ToString).ToList
         If Names.Count < 10 Then Throw New Exception("获取到的版本数量不足")
         Loader.Output = New DlForgeListResult With {.IsOfficial = False, .SourceName = "BMCLAPI", .Value = Names}
@@ -576,7 +578,7 @@
             If Version <> other.Version Then
                 Return Version.CompareTo(other.Version)
             Else
-                Return CompareVersion(VersionName, other.VersionName)
+                Return McUtils.CompareVersion(VersionName, other.VersionName)
             End If
         End Function
     End Class
@@ -738,8 +740,8 @@
     ''' Forge 版本列表，BMCLAPI。
     ''' </summary>
     Public Sub DlForgeVersionBmclapiMain(Loader As LoaderTask(Of String, List(Of DlForgeVersionEntry)))
-        Dim Json As JArray = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/forge/minecraft/" &
-            Loader.Input.Replace("-", "_"), RequireJson:=True)) '兼容 Forge 1.7.10-pre4，#4057
+        Dim Json As JArray = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/forge/minecraft/" &
+            Loader.Input.Replace("-", "_"), RequireJson:=True).DeserializeJson() '兼容 Forge 1.7.10-pre4，#4057
         Dim Versions As New List(Of DlForgeVersionEntry)
         Try
             Dim Recommended As String = McDownloadForgeRecommendedGet(Loader.Input)
@@ -1026,7 +1028,7 @@
     ''' </summary>
     Public DlLiteLoaderListOfficialLoader As New LoaderTask(Of Integer, DlLiteLoaderListResult)("DlLiteLoaderList Official", AddressOf DlLiteLoaderListOfficialMain)
     Private Sub DlLiteLoaderListOfficialMain(Loader As LoaderTask(Of Integer, DlLiteLoaderListResult))
-        Dim Result As JObject = GetJson(NetRequestByClientRetry("https://dl.liteloader.com/versions/versions.json", RequireJson:=True))
+        Dim Result As JObject = NetRequestByClientRetry("https://dl.liteloader.com/versions/versions.json", RequireJson:=True).DeserializeJson()
         Try
             Dim Json As JObject = Result("versions")
             Dim Versions As New List(Of DlLiteLoaderListEntry)
@@ -1054,7 +1056,7 @@
     ''' </summary>
     Public DlLiteLoaderListBmclapiLoader As New LoaderTask(Of Integer, DlLiteLoaderListResult)("DlLiteLoaderList Bmclapi", AddressOf DlLiteLoaderListBmclapiMain)
     Private Sub DlLiteLoaderListBmclapiMain(Loader As LoaderTask(Of Integer, DlLiteLoaderListResult))
-        Dim Result As JObject = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/maven/com/mumfrey/liteloader/versions.json", RequireJson:=True))
+        Dim Result As JObject = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/maven/com/mumfrey/liteloader/versions.json", RequireJson:=True).DeserializeJson()
         Try
             Dim Json As JObject = Result("versions")
             Dim Versions As New List(Of DlLiteLoaderListEntry)
@@ -1125,7 +1127,7 @@
     ''' </summary>
     Public DlFabricListOfficialLoader As New LoaderTask(Of Integer, DlFabricListResult)("DlFabricList Official", AddressOf DlFabricListOfficialMain)
     Private Sub DlFabricListOfficialMain(Loader As LoaderTask(Of Integer, DlFabricListResult))
-        Dim Result As JObject = GetJson(NetRequestByClientRetry("https://meta.fabricmc.net/v2/versions", RequireJson:=True))
+        Dim Result As JObject = NetRequestByClientRetry("https://meta.fabricmc.net/v2/versions", RequireJson:=True).DeserializeJson()
         Try
             Dim Output = New DlFabricListResult With {.IsOfficial = True, .SourceName = "Fabric 官方源", .Value = Result}
             If Output.Value("game") Is Nothing OrElse Output.Value("loader") Is Nothing OrElse Output.Value("installer") Is Nothing Then Throw New Exception("获取到的列表缺乏必要项")
@@ -1140,7 +1142,7 @@
     ''' </summary>
     Public DlFabricListBmclapiLoader As New LoaderTask(Of Integer, DlFabricListResult)("DlFabricList Bmclapi", AddressOf DlFabricListBmclapiMain)
     Private Sub DlFabricListBmclapiMain(Loader As LoaderTask(Of Integer, DlFabricListResult))
-        Dim Result As JObject = GetJson(NetRequestByClientRetry("https://bmclapi2.bangbang93.com/fabric-meta/v2/versions", RequireJson:=True))
+        Dim Result As JObject = NetRequestByClientRetry("https://bmclapi2.bangbang93.com/fabric-meta/v2/versions", RequireJson:=True).DeserializeJson()
         Try
             Dim Output = New DlFabricListResult With {.IsOfficial = False, .SourceName = "BMCLAPI", .Value = Result}
             If Output.Value("game") Is Nothing OrElse Output.Value("loader") Is Nothing OrElse Output.Value("installer") Is Nothing Then Throw New Exception("获取到的列表缺乏必要项")
@@ -1194,15 +1196,15 @@
             Urls.Add((Url, If(Url.Contains("modrinth"), 20, 10)))
             Urls.Add((Url, 30))
         End If
-        Dim Exs As String = ""
+        Dim Errors As New List(Of Exception)
         For Each Source In Urls
             Try
-                Return GetJson(NetRequestByClient(Source.Url, Method, Content, ContentType, Timeout:=Source.Timeout * 1000, Encoding:=Encoding.UTF8, RequireJson:=True))
+                Return NetRequestByClient(Source.Url, Method, Content, ContentType, Timeout:=Source.Timeout * 1000, Encoding:=Encoding.UTF8, RequireJson:=True).DeserializeJson()
             Catch ex As Exception
-                Exs += ex.Message + vbCrLf
+                Errors.Add(ex)
             End Try
         Next
-        Throw New Exception(Exs)
+        Throw New AggregateException(Errors)
     End Function
 
 #End Region
@@ -1328,7 +1330,7 @@
                 If SubLoader.Key.State = LoadState.Finished Then
                     '检查加载器成功
                     MainLoader.Output = SubLoader.Key.Output
-                    DlSourceLoaderInterrupt(LoaderList)
+                    DlSourceLoaderCancel(LoaderList)
                     Return
                 ElseIf BeforeLoadersAllFailed Then
                     '此前的加载器全部失败，直接启动后续加载器
@@ -1360,7 +1362,7 @@
                         End If
                     Next
                     If ErrorInfo Is Nothing Then ErrorInfo = New TimeoutException("下载源连接超时")
-                    DlSourceLoaderInterrupt(LoaderList)
+                    DlSourceLoaderCancel(LoaderList)
                     Throw ErrorInfo
                 End If
                 Exit For
@@ -1369,15 +1371,15 @@
             Thread.Sleep(10)
             WaitCycle += 1
             '检查父加载器中断
-            If MainLoader.IsInterrupted Then
-                DlSourceLoaderInterrupt(LoaderList)
+            If MainLoader.IsCanceled Then
+                DlSourceLoaderCancel(LoaderList)
                 Return
             End If
         Loop
     End Sub
-    Private Sub DlSourceLoaderInterrupt(Of InputType, OutputType)(LoaderList As List(Of KeyValuePair(Of LoaderTask(Of InputType, OutputType), Integer)))
+    Private Sub DlSourceLoaderCancel(Of InputType, OutputType)(LoaderList As List(Of KeyValuePair(Of LoaderTask(Of InputType, OutputType), Integer)))
         For Each Loader In LoaderList
-            If Loader.Key.State = LoadState.Loading Then Loader.Key.Interrupt()
+            If Loader.Key.State = LoadState.Loading Then Loader.Key.Cancel()
         Next
     End Sub
 

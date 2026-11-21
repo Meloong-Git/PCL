@@ -1,4 +1,4 @@
-﻿Public Class PageInstanceMod
+Public Class PageInstanceMod
     Implements IRefreshable
 
 #Region "初始化"
@@ -112,28 +112,16 @@
         '图标按钮
         Dim BtnOpen As New MyIconButton With {.LogoScale = 1.05, .Logo = Logo.IconButtonOpen, .Tag = sender}
         BtnOpen.ToolTip = "打开文件位置"
-        ToolTipService.SetPlacement(BtnOpen, Primitives.PlacementMode.Center)
-        ToolTipService.SetVerticalOffset(BtnOpen, 30)
-        ToolTipService.SetHorizontalOffset(BtnOpen, 2)
         AddHandler BtnOpen.Click, AddressOf Open_Click
         Dim BtnCont As New MyIconButton With {.LogoScale = 1, .Logo = Logo.IconButtonInfo, .Tag = sender}
         BtnCont.ToolTip = "详情"
-        ToolTipService.SetPlacement(BtnCont, Primitives.PlacementMode.Center)
-        ToolTipService.SetVerticalOffset(BtnCont, 30)
-        ToolTipService.SetHorizontalOffset(BtnCont, 2)
         AddHandler BtnCont.Click, AddressOf Info_Click
         AddHandler sender.MouseRightButtonUp, AddressOf Info_Click
         Dim BtnDelete As New MyIconButton With {.LogoScale = 1, .Logo = Logo.IconButtonDelete, .Tag = sender}
         BtnDelete.ToolTip = "删除"
-        ToolTipService.SetPlacement(BtnDelete, Primitives.PlacementMode.Center)
-        ToolTipService.SetVerticalOffset(BtnDelete, 30)
-        ToolTipService.SetHorizontalOffset(BtnDelete, 2)
         AddHandler BtnDelete.Click, AddressOf Delete_Click
         Dim BtnED As New MyIconButton With {.LogoScale = 1, .Logo = If(sender.Entry.IsEnabled, Logo.IconButtonStop, Logo.IconButtonCheck), .Tag = sender}
         BtnED.ToolTip = If(sender.Entry.IsEnabled, "禁用", "启用")
-        ToolTipService.SetPlacement(BtnED, Primitives.PlacementMode.Center)
-        ToolTipService.SetVerticalOffset(BtnED, 30)
-        ToolTipService.SetHorizontalOffset(BtnED, 2)
         AddHandler BtnED.Click, AddressOf ED_Click
         sender.Buttons = {BtnCont, BtnOpen, BtnED, BtnDelete}
     End Sub
@@ -296,7 +284,7 @@
     ''' 返回输入的文件是否为一个 Mod 文件，仅用于判断拖拽行为。
     ''' </summary>
     Public Shared Function InstallMods(FilePathList As IEnumerable(Of String)) As Boolean
-        Dim Extension As String = FilePathList.First.AfterLast(".").Lower
+        Dim Extension As String = PathUtils.GetExtension(FilePathList.First)
         '检查文件扩展名
         If Not {"jar", "litemod", "disabled", "old"}.Any(Function(t) t = Extension) Then Return False
         Logger.Info("文件为 jar/litemod 格式，尝试作为 Mod 安装")
@@ -319,12 +307,15 @@
 Install:
             Try
                 For Each ModFile In FilePathList
-                    Dim NewFileName = PathUtils.GetLastPart(ModFile).Replace(".disabled", "").Replace(".old", "")
+                    Dim NewFileName = (New LocalResourceFile(ModFile)).EnabledName
                     If Not NewFileName.Contains(".") Then NewFileName += ".jar" '#4227
-                    FileUtils.Copy(ModFile, Instance.PathIndie & "mods\" & NewFileName)
+                    NewFileName = Instance.PathIndie & "mods\" & NewFileName
+                    If PathUtils.IsSame(ModFile, NewFileName) Then Continue For '防止安装相同文件导致文件被删除
+                    FileUtils.Delete(NewFileName, True)
+                    FileUtils.Copy(ModFile, NewFileName)
                 Next
                 If FilePathList.IsSingle Then
-                    Hint($"已安装 {PathUtils.GetLastPart(FilePathList.First).Replace(".disabled", "").Replace(".old", "")}！", HintType.Green)
+                    Hint($"已安装 {(New LocalResourceFile(FilePathList.First)).EnabledName}！", HintType.Green)
                 Else
                     Hint($"已安装 {FilePathList.Count} 个 Mod！", HintType.Green)
                 End If
@@ -483,7 +474,7 @@ Install:
                 If FileUtils.Exists(NewPath) Then
                     If FileUtils.Exists(ModEntity.File.FullName) Then
                         '同时存在两个名称的 Mod
-                        If HashUtils.ComputeFromFile(ModEntity.File.FullName, HashUtils.HashMethod.Md5) <> HashUtils.ComputeFromFile(NewPath, HashUtils.HashMethod.Md5) Then
+                        If CryptographyUtils.ComputeFileHash(ModEntity.File.FullName) <> CryptographyUtils.ComputeFileHash(NewPath) Then
                             MyMsgBox($"目前同时存在启用和禁用的两个 Mod 文件：{vbCrLf} - {PathUtils.GetLastPart(NewPath)}{vbCrLf} - {ModEntity.File.Name}{vbCrLf}{vbCrLf}注意，这两个文件的内容并不相同。{vbCrLf}在手动删除或重命名其中一个文件后，才能继续操作。", "存在文件冲突")
                             Continue For
                         End If
@@ -493,7 +484,6 @@ Install:
                         Continue For
                     End If
                 End If
-                FileUtils.Delete(NewPath)
                 FileUtils.Move(ModEntity.File.FullName, NewPath)
             Catch ex As FileNotFoundException
                 Logger.Error(ex, $"未找到需要重命名的 Mod（{If(ModEntity.File.FullName, "null")}）")
@@ -563,8 +553,8 @@ Install:
                 Dim File As ResourceVersion = Entry.UpdateFile
                 If Not File.DownloadAvailable Then Continue For
                 '确认更新后的文件名
-                Dim CurrentReplaceName = Entry.ProjectVersion.FileName.Replace(".jar", "").Replace(".old", "").Replace(".disabled", "")
-                Dim NewestReplaceName = Entry.UpdateFile.FileName.Replace(".jar", "").Replace(".old", "").Replace(".disabled", "")
+                Dim CurrentReplaceName = PathUtils.GetFileNameWithoutExtension(Entry.ProjectVersion.FileName)
+                Dim NewestReplaceName = PathUtils.GetFileNameWithoutExtension(Entry.UpdateFile.FileName)
                 Dim CurrentSegs = CurrentReplaceName.Split("-"c).ToList()
                 Dim NewestSegs = NewestReplaceName.Split("-"c).ToList()
                 Dim Shortened As Boolean = False
@@ -607,10 +597,6 @@ Install:
                         End If
                     Next
                     For Each Entry As KeyValuePair(Of String, String) In FileCopyList
-                        If FileUtils.Exists(Entry.Value) Then
-                            FileUtils.Delete(Entry.Value, True)
-                            Logger.Warn($"更新后的 Mod 文件已存在，将会把它放入回收站：{Entry.Value}")
-                        End If
                         If DirectoryUtils.Exists(PathUtils.RemoveLastPart(Entry.Value)) Then
                             FileUtils.Move(Entry.Key, Entry.Value)
                             FinishedFileNames.Add(PathUtils.GetLastPart(Entry.Value))
@@ -640,7 +626,7 @@ Install:
                         End Select
                     Case LoadState.Failed
                         Hint("Mod 更新失败：" & Loader.Error.GetDisplay(False), HintType.Red)
-                    Case LoadState.Interrupted
+                    Case LoadState.Canceled
                         Hint("Mod 更新已中止！", HintType.Blue)
                     Case Else
                         Return
@@ -660,7 +646,7 @@ Install:
                 End Sub, "Clean Mod Update Cache", ThreadPriority.BelowNormal)
             End Sub
             '启动加载器
-            Logger.Info($"开始更新 {ModList.Count} 个 Mod：{PathMods}")
+            Logger.Info($"开始更新 {ModList.Count} 个 Mod：{ModList.Select(Function(m) m.File.Name).Join("，")}")
             UpdatingInstanceModFolders.Add(PathMods)
             Loader.Start()
             LoaderTaskbarAdd(Loader)
@@ -723,18 +709,10 @@ Install:
             End If
             '显示结果提示
             If Not IsSuccessful Then Return
-            If IsShiftPressed Then
-                If ModList.IsSingle Then
-                    Hint($"已彻底删除 {ModList.Single.File.Name}！", HintType.Green)
-                Else
-                    Hint($"已彻底删除 {ModList.Count} 个文件！", HintType.Green)
-                End If
+            If ModList.IsSingle Then
+                Hint($"已删除 {ModList.Single.File.Name}！", HintType.Green)
             Else
-                If ModList.IsSingle Then
-                    Hint($"已将 {ModList.Single.File.Name} 删除到回收站！", HintType.Green)
-                Else
-                    Hint($"已将 {ModList.Count} 个文件删除到回收站！", HintType.Green)
-                End If
+                Hint($"已删除 {ModList.Count} 个文件！", HintType.Green)
             End If
         Catch ex As OperationCanceledException
             Logger.Warn(ex, "删除 Mod 被主动取消")
@@ -769,7 +747,7 @@ Install:
                 '获取信息
                 Dim ContentLines As New List(Of String)
                 If ModEntry.Description IsNot Nothing Then ContentLines.Add(ModEntry.Description & vbCrLf)
-                ContentLines.Add("文件：" & ModEntry.File.Name & "（" & FormatFileSize(ModEntry.File.Length) & "）")
+                ContentLines.Add("文件：" & ModEntry.File.Name & "（" & StringUtils.FormatByteSize(ModEntry.File.Length) & "）")
                 If ModEntry.Version IsNot Nothing Then ContentLines.Add("版本：" & ModEntry.Version)
                 Dim DebugInfo As New List(Of String)
                 If DebugInfo.Any Then

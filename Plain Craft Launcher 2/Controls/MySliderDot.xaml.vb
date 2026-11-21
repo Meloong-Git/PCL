@@ -1,4 +1,4 @@
-﻿Public Class MySliderDot
+Public Class MySliderDot
 
     '基础
 

@@ -1,4 +1,4 @@
-﻿Public Class PageLoginMs
+Public Class PageLoginMs
 
     ''' <summary>
     ''' 刷新页面显示的所有信息。
@@ -9,7 +9,7 @@
         ComboAccounts.Items.Clear()
         ComboAccounts.Items.Add(New MyComboBoxItem With {.Content = "添加新账号"})
         Try
-            Dim MsJson As JObject = GetJson(Settings.Get(Of String)("LoginMsJson"))
+            Dim MsJson As JObject = Settings.Get(Of String)("LoginMsJson").DeserializeJson()
             For Each Account In MsJson
                 Dim Item As MyListItem = CType(FindResource("ComboBoxItemTemplateWithDelete"), DataTemplate).LoadContent()
                 Item.Tag = Account.Value.ToString
@@ -18,7 +18,7 @@
                 ComboAccounts.Items.Add(Item)
             Next
         Catch ex As Exception
-            Logger.Error(ex, $"微软登录信息出错，登录信息已被重置（{Settings.Get(Of String)("LoginMsJson")}）", LogBehavior.Toast)
+            Logger.Error(ex, $"微软登录信息出错，登录信息已被重置", LogBehavior.Toast)
             Settings.Set("LoginMsJson", "{}")
         End Try
         '如果不保留输入，刷新列表后自动选择第一项
@@ -78,17 +78,15 @@
                 Loop
                 If McLoginMsLoader.State = LoadState.Finished Then
                     RunInUi(Sub() FrmLaunchLeft.RefreshPage(False, True))
-                ElseIf McLoginMsLoader.State = LoadState.Interrupted Then
-                    Throw New ThreadInterruptedException
+                ElseIf McLoginMsLoader.State = LoadState.Canceled Then
+                    Throw New OperationCanceledException
                 ElseIf McLoginMsLoader.Error Is Nothing Then
                     Throw New Exception("未知错误！")
                 Else
                     Throw New Exception(McLoginMsLoader.Error.Message, McLoginMsLoader.Error)
                 End If
-            Catch ex As ThreadInterruptedException
-                Hint("已取消登录！")
             Catch ex As Exception
-                If ex.Message = "$$" Then
+                If ex.IsCanceled Then
                 ElseIf ex.Message.StartsWithF("$") Then
                     Hint(ex.Message.TrimStart("$"), HintType.Red)
                 ElseIf TypeOf ex Is Security.Authentication.AuthenticationException AndAlso ex.Message.Contains("SSL/TLS") Then

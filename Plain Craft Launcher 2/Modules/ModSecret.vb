@@ -1,6 +1,4 @@
-﻿'由于包含加解密等安全信息，本文件中的部分代码已被删除
-
-Imports System.Security.Cryptography
+'由于包含加解密等安全信息，本文件中的部分代码已被删除
 
 Friend Module ModSecret
 
@@ -17,6 +15,7 @@ Friend Module ModSecret
 
 #Region "网络鉴权"
 
+    Public Const RestrictMcDownload As Boolean = True
     Friend Function SecretCdnSign(UrlWithMark As String) As String
         If Not UrlWithMark.EndsWithF("{CDN}") Then Return UrlWithMark
         Return UrlWithMark.Replace("{CDN}", "").Replace(" ", "%20")
@@ -35,53 +34,8 @@ Friend Module ModSecret
             End If
         End If
         If Not SimulateBrowserHeaders Then Req.Headers.Add("Referer", $"http://{VersionCode}.open.pcl2.server/")
-        If Url.Contains("api.curseforge.com") Then Req.Headers.Add("x-api-key", CurseForgeAPIKey)
+        If Url.Contains("api.curseforge.com") OrElse Url.Contains("forgecdn.net") Then Req.Headers.Add("x-api-key", CurseForgeAPIKey)
     End Sub
-
-#End Region
-
-#Region "字符串加解密"
-
-    ''' <summary>
-    ''' 获取八位密钥。
-    ''' </summary>
-    Private Function SecretKeyGet(Key As String) As String
-        Return "00000000"
-    End Function
-    ''' <summary>
-    ''' 加密字符串。
-    ''' </summary>
-    Friend Function SecretEncrypt(SourceString As String, Optional Key As String = "") As String
-        Key = SecretKeyGet(Key)
-        Dim btKey As Byte() = Encoding.UTF8.GetBytes(Key)
-        Dim btIV As Byte() = Encoding.UTF8.GetBytes("87160295")
-        Dim des As New DESCryptoServiceProvider
-        Using MS As New MemoryStream
-            Dim inData As Byte() = Encoding.UTF8.GetBytes(SourceString)
-            Using cs As New CryptoStream(MS, des.CreateEncryptor(btKey, btIV), CryptoStreamMode.Write)
-                cs.Write(inData, 0, inData.Length)
-                cs.FlushFinalBlock()
-                Return Convert.ToBase64String(MS.ToArray())
-            End Using
-        End Using
-    End Function
-    ''' <summary>
-    ''' 解密字符串。
-    ''' </summary>
-    Friend Function SecretDecrypt(SourceString As String, Optional Key As String = "") As String
-        Key = SecretKeyGet(Key)
-        Dim btKey As Byte() = Encoding.UTF8.GetBytes(Key)
-        Dim btIV As Byte() = Encoding.UTF8.GetBytes("87160295")
-        Dim des As New DESCryptoServiceProvider
-        Using MS As New MemoryStream
-            Dim inData As Byte() = Convert.FromBase64String(SourceString)
-            Using cs As New CryptoStream(MS, des.CreateDecryptor(btKey, btIV), CryptoStreamMode.Write)
-                cs.Write(inData, 0, inData.Length)
-                cs.FlushFinalBlock()
-                Return Encoding.UTF8.GetString(MS.ToArray())
-            End Using
-        End Using
-    End Function
 
 #End Region
 
