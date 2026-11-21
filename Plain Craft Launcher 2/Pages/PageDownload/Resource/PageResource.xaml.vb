@@ -123,7 +123,8 @@ Public Class PageResource
         Dim GameVersion As String = If(TextSearchVersion.Text = "全部 (也可自行输入)", Nothing,
             If(TextSearchVersion.Text.Contains(".") OrElse TextSearchVersion.Text.Contains("w"), TextSearchVersion.Text, Nothing))
         With Request
-            .SearchText = TextSearchName.Text
+            .SearchText = TextSearchName.Text.Trim
+            If .SearchText.RegexCheck("\|.*[\u4e00-\u9fbb]") Then .SearchText = .SearchText.BeforeFirst("|").Trim
             .GameVersion = GameVersion
             .Tag = ComboSearchTag.SelectedItem.Tag
             .ModLoaders = If(PageType = ResourceTypes.Mod, Val(ComboSearchLoader.SelectedItem.Tag), ModLoaders.None)
