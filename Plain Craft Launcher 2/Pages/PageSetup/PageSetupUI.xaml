@@ -24,19 +24,19 @@
                             </Grid.RowDefinitions>
                             <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="不透明度" Margin="0,0,20,0" />
                             <local:MySlider local:SettingService.Key="UiLauncherTransparent" 
-                                            MaxValue="600" ValueByKey="10" Grid.ColumnSpan="5" x:Name="SliderLauncherTransparent" Grid.Column="1" />
+                                            MaxValue="600" ValueByKey="1" Grid.ColumnSpan="5" x:Name="SliderLauncherTransparent" Grid.Column="1" />
                             <TextBlock Grid.Row="1" VerticalAlignment="Center" Name="LabLauncherHue" Visibility="Collapsed" HorizontalAlignment="Left" Text="色调" Margin="0,10,20,0" />
                             <local:MySlider local:SettingService.Key="UiLauncherHue" 
-                                            Grid.Row="1" Grid.Column="1" x:Name="SliderLauncherHue" Visibility="Collapsed" MaxValue="360" ValueByKey="10" Margin="0,10,0,0" />
+                                            Grid.Row="1" Grid.Column="1" x:Name="SliderLauncherHue" Visibility="Collapsed" MaxValue="360" ValueByKey="1" Margin="0,10,0,0" />
                             <TextBlock Grid.Row="2" VerticalAlignment="Center" Name="LabLauncherDelta" Visibility="Collapsed" HorizontalAlignment="Left" Text="色调渐变" Margin="0,10,20,0" />
                             <local:MySlider local:SettingService.Key="UiLauncherDelta" 
-                                            Grid.Row="2" Grid.Column="1" x:Name="SliderLauncherDelta" Visibility="Collapsed" MaxValue="180" ValueByKey="5" Margin="0,10,0,0" />
+                                            Grid.Row="2" Grid.Column="1" x:Name="SliderLauncherDelta" Visibility="Collapsed" MaxValue="180" ValueByKey="1" Margin="0,10,0,0" />
                             <TextBlock Grid.Row="1" Grid.Column="3" VerticalAlignment="Center" Name="LabLauncherSat" Visibility="Collapsed" HorizontalAlignment="Left" Text="饱和度" Margin="0,10,20,0" />
                             <local:MySlider local:SettingService.Key="UiLauncherSat" 
-                                            Grid.Row="1" Grid.Column="4" x:Name="SliderLauncherSat" Visibility="Collapsed" MaxValue="100" ValueByKey="5" Margin="0,10,0,0" />
+                                            Grid.Row="1" Grid.Column="4" x:Name="SliderLauncherSat" Visibility="Collapsed" MaxValue="100" ValueByKey="1" Margin="0,10,0,0" />
                             <TextBlock Grid.Row="2" Grid.Column="3" VerticalAlignment="Center" Name="LabLauncherLight" Visibility="Collapsed" HorizontalAlignment="Left" Text="亮度" Margin="0,10,20,0" />
                             <local:MySlider local:SettingService.Key="UiLauncherLight" 
-                                            Grid.Row="2" Grid.Column="4" x:Name="SliderLauncherLight" Visibility="Collapsed" MaxValue="40" ValueByKey="5" Margin="0,10,0,0" />
+                                            Grid.Row="2" Grid.Column="4" x:Name="SliderLauncherLight" Visibility="Collapsed" MaxValue="40" ValueByKey="1" Margin="0,10,0,0" />
                         </Grid>
                         <Grid x:Name="PanLauncherTheme" Height="90" Margin="0,0,0,7">
                             <Grid.ColumnDefinitions>
@@ -131,7 +131,7 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="不透明度" Margin="0,0,25,0" />
-                        <local:MySlider local:SettingService.Key="UiBackgroundOpacity" x:Name="SliderBackgroundOpacity" MaxValue="1000" ValueByKey="10" Grid.Column="1" />
+                        <local:MySlider local:SettingService.Key="UiBackgroundOpacity" x:Name="SliderBackgroundOpacity" MaxValue="1000" ValueByKey="1" Grid.Column="1" />
                     </Grid>
                     <Grid x:Name="PanBackgroundBlur" Height="22" Margin="0,0,0,10" Visibility="Collapsed">
                         <Grid.ColumnDefinitions>
@@ -163,7 +163,7 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left" Text="音量" Margin="0,0,25,0" />
-                        <local:MySlider x:Name="SliderMusicVolume" local:SettingService.Key="UiMusicVolume" MaxValue="1000" ValueByKey="10" Grid.Column="1" />
+                        <local:MySlider x:Name="SliderMusicVolume" local:SettingService.Key="UiMusicVolume" MaxValue="1000" ValueByKey="1" Grid.Column="1" />
                     </Grid>
                     <StackPanel x:Name="PanMusicDetail" Visibility="Collapsed" Margin="-1,0,0,3">
                         <local:MyCheckBox Text="随机播放" Margin="0,0,0,5" Height="22" x:Name="CheckMusicRandom" local:SettingService.Key="UiMusicRandom" />
