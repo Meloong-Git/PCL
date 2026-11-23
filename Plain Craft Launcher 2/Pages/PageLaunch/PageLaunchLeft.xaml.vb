@@ -121,7 +121,7 @@ Public Class PageLaunchLeft
     ''' 切换至启动中页面。
     ''' </summary>
     Public Sub PageChangeToLaunching()
-        '修改登陆方式
+        '修改登录方式
         Select Case Settings.Get(Of McLoginType)("LoginType")
             Case McLoginType.Legacy
                 LabLaunchingMethod.Text = "离线登录"
