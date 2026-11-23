@@ -101,6 +101,8 @@ End Module
 Public Class CustomEvent
     Inherits DependencyObject
 
+    Private Shared OpeningHelpUrls As New ConcurrentDictionary(Of String, Boolean)
+
 #Region "属性与触发"
 
     Public Property Type As EventType
@@ -195,6 +197,8 @@ Public Class CustomEvent
                     RunInThread(Sub() OpenWebsite(Arg))
 
                 Case EventType.打开文件, EventType.打开帮助, EventType.执行命令
+                    '同一帮助地址同时只处理一次
+                    If Type = EventType.打开帮助 AndAlso Not OpeningHelpUrls.TryAdd(Arg0, True) Then Return
                     RunInThread(
                     Sub()
                         Try
@@ -216,6 +220,8 @@ Public Class CustomEvent
                             End If
                         Catch ex As Exception
                             Logger.Error(ex, "执行打开类自定义事件失败", LogBehavior.Alert)
+                        Finally
+                            If Type = EventType.打开帮助 Then OpeningHelpUrls.TryRemove(Arg0, Nothing)
                         End Try
                     End Sub)
 
