@@ -384,15 +384,6 @@ NextPage:
                                 Not Project.UnsafeGameVersions.Any(Function(d) d = Request.GameVersion) Then Continue For
                             ProjectList.Add(Project)
                         Next
-                        If ProjectList.Any AndAlso Request.ModLoaders <> ModLoaders.None AndAlso Not IgnoreModLoaderFilter AndAlso
-                                Not String.IsNullOrEmpty(Request.GameVersion) Then
-                            Dim ProjectIds = ProjectList.Select(Function(p) p.Id).Join(""",""project_id:")
-                            Dim Loaders = Request.ModLoaders.Flags.Select(Function(f) f.ToString.Lower).Join(""",""categories:")
-                            Dim FilterUrl = $"https://api.modrinth.com/v2/search?limit={ProjectList.Count}&facets=" &
-                                $"[[""project_id:{ProjectIds}""],[""categories:{Loaders}""],[""versions:{Request.GameVersion}""]]"
-                            Dim MatchedIds = DlModRequest(FilterUrl)("hits").Select(Function(h) h("project_id").ToString).ToList
-                            ProjectList.KeepIf(Function(p) MatchedIds.Contains(p.Id))
-                        End If
                         '更新结果
                         ProjectList.ForEach(Sub(p) SearchResults.Add(p))
                         Logger.Info($"从 Modrinth 直接获取到了 {ProjectList.Count} 个工程")
@@ -411,6 +402,9 @@ NextPage:
                 If Task.IsCanceled Then Return '会自动触发 Finally 以清理线程
             Next
             RawResults = New List(Of ResourceProject)(SearchResults)
+
+            ResourceProject.ApplyLoadersOfVersion(RawResults, Request.GameVersion)
+            If Task.IsCanceled Then Return
 
             '仅保留兼容 Forge 的 Mod，或老版本中没有标注任何 Mod Loader 的 Mod
             If IgnoreModLoaderFilter Then

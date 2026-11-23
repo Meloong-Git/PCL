@@ -75,6 +75,14 @@ Public Class ResourceProject
     ''' 若非从 Modrinth 获取则为 Nothing。
     ''' </summary>
     Public ReadOnly UnsafeGameVersions As List(Of String)
+    ''' <summary>
+    ''' 指定 MC 版本实际支持的 Mod 加载器。仅用于展示，不会被缓存。
+    ''' </summary>
+    Public LoadersOfVersion As ModLoaders = ModLoaders.None
+    ''' <summary>
+    ''' 各 MC 版本实际支持的 Mod 加载器，仅 CurseForge 有效。
+    ''' </summary>
+    Private ReadOnly LoadersPerVersion As New Dictionary(Of String, ModLoaders)
 
     '数据库信息
 
@@ -190,6 +198,12 @@ Public Class ResourceProject
                 For Each File In If(Data("latestFilesIndexes"), New JArray) '这俩玩意儿包含的文件不一样，见 #3599
                     If Not McVersion.IsStandardFormat(File("gameVersion")) Then Continue For
                     Files.Add(New KeyValuePair(Of Integer, List(Of String))(File("fileId"), {File("gameVersion").ToString}.ToList))
+                    '部分早期上传的文件没有标注加载器
+                    If File("modLoader") IsNot Nothing Then
+                        Dim FileVersion As String = File("gameVersion").ToString
+                        LoadersPerVersion(FileVersion) = LoadersPerVersion.GetOrDefault(FileVersion) Or
+                            Resource.FromCurseForgeModLoaderType(File("modLoader").ToObject(Of Integer))
+                    End If
                 Next
                 CurseForgeFileIds = Files.Select(Function(f) f.Key).Distinct.ToList
                 Drops = Files.SelectMany(Function(f) f.Value).
@@ -501,7 +515,7 @@ Public Class ResourceProject
         End If
         '获取 Mod 加载器描述
         Dim ModLoaderDescriptionFull As String, ModLoaderDescriptionPart As String
-        Dim ModLoadersForDesc = ModLoaders.Flags().ToList()
+        Dim ModLoadersForDesc = LoadersOfVersion.Flags().ToList()
         Select Case ModLoadersForDesc.Count
             Case 0
                 If ModLoadersForDesc.IsSingle Then
@@ -565,6 +579,35 @@ Public Class ResourceProject
                 If(DownloadCount > 100000, Math.Floor(DownloadCount / 10000) & " 万", DownloadCount))
             Return NewItem
         End Function) With {.Height = 64}
+    End Function
+    Public Shared Sub ApplyLoadersOfVersion(Projects As IEnumerable(Of ResourceProject), GameVersion As String)
+        If String.IsNullOrEmpty(GameVersion) Then Return
+        For Each Project In Projects
+            If Project.Platform = ResourcePlatforms.CurseForge Then Project.LoadersOfVersion = Project.GetCurseForgeLoadersForVersion(GameVersion)
+        Next
+        Dim ModrinthProjects = Projects.Where(Function(p) p.Platform = ResourcePlatforms.Modrinth).ToList
+        If Not ModrinthProjects.Any() Then Return
+        Try
+            Dim Versions As JArray = DlModRequest($"https://api.modrinth.com/v2/versions?project_ids=[""{ModrinthProjects.Select(Function(p) p.Id).Join(""",""")}""]&game_versions=[""{GameVersion}""]&include_changelog=false")
+            For Each Version As JObject In Versions
+                Dim Project = ModrinthProjects.FirstOrDefault(Function(p) p.Id = Version("project_id").ToString)
+                If Project Is Nothing Then Continue For
+                For Each RawLoader In Version("loaders")
+                    For Each Loader In EnumUtils.GetAllFlags(Of ModLoaders)()
+                        If RawLoader.ToString.Lower = Loader.ToString.Lower Then Project.LoadersOfVersion = Project.LoadersOfVersion Or Loader
+                    Next
+                Next
+            Next
+        Catch ex As Exception
+            Logger.Warn(ex, $"获取工程在 {GameVersion} 下支持的加载器失败")
+        End Try
+        For Each Project In ModrinthProjects '没有标注加载器时，退回未筛选的加载器
+            If Project.LoadersOfVersion = ModLoaders.None Then Project.LoadersOfVersion = Project.ModLoaders
+        Next
+    End Sub
+    Private Function GetCurseForgeLoadersForVersion(GameVersion As String) As ModLoaders
+        Dim Result = LoadersPerVersion.GetOrDefault(GameVersion)
+        Return If(Result = ModLoaders.None, ModLoaders, Result)
     End Function
     Public Sub ApplyLogoToMyImage(Img As MyImage)
         If String.IsNullOrEmpty(LogoUrl) Then
