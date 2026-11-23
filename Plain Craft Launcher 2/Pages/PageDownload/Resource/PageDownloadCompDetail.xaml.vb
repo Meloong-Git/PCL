@@ -155,14 +155,21 @@ GroupDone:
         '更新筛选结果（文件列表 UI 化）
         UpdateFilterResult()
     End Sub
+    Private Shared Sub AddToCard(Dict As Dictionary(Of String, HashSet(Of ResourceVersion)), Card As String, Version As ResourceVersion)
+        Dim Seen As HashSet(Of ResourceVersion) = Nothing
+        If Not Dict.TryGetValue(Card, Seen) Then
+            Seen = New HashSet(Of ResourceVersion)
+            Dict.Add(Card, Seen)
+        End If
+        Seen.Add(Version)
+    End Sub
     Private Sub UpdateFilterResult()
         Dim Results = GetResults()
 
         Dim TargetCardName As String = If(TargetVersion <> "" OrElse TargetLoaders <> ModLoaders.None,
             $"{If(TargetLoaders <> ModLoaders.None, TargetLoaders.ToString + " ", "")}{TargetVersion}（所选版本）", "")
         '归类到卡片下
-        Dim Dict As New SortedDictionary(Of String, List(Of ResourceVersion))(New CardSorter(TargetCardName))
-        Dict.Add("其他", New List(Of ResourceVersion))
+        Dim DictRaw As New Dictionary(Of String, HashSet(Of ResourceVersion))
         For Each Version As ResourceVersion In Results
             For Each GameVersion In Version.GameVersions
                 '检查是否符合版本筛选器
@@ -180,25 +187,27 @@ GroupDone:
                 If Not Loaders.Any() Then Loaders.Add("") '保底加一个空的，确保它在一张卡片里
                 '实际添加
                 For Each Loader In Loaders
-                    Dim TargetCard As String = Loader & VerName
-                    If Not Dict.ContainsKey(TargetCard) Then Dict.Add(TargetCard, New List(Of ResourceVersion))
-                    If Not Dict(TargetCard).Contains(Version) Then Dict(TargetCard).Add(Version)
+                    AddToCard(DictRaw, Loader & VerName, Version)
                 Next
             Next
         Next
         '添加筛选的版本的卡片
         If TargetCardName <> "" AndAlso (VersionFilter Is Nothing OrElse GetGroupedVersionName(TargetVersion, GroupedDrop, GroupedOld).StartsWithF(VersionFilter)) Then
-            Dict.Add(TargetCardName, New List(Of ResourceVersion))
             For Each Version As ResourceVersion In Results
                 If Version.GameVersions.Contains(TargetVersion) AndAlso
                    (TargetLoaders = ModLoaders.None OrElse TargetLoaders.Flags.Intersect(Version.ModLoaders.Flags).Any) Then
                     '检查是否符合版本筛选器
                     If VersionFilter IsNot Nothing AndAlso
                         Not Version.GameVersions.Any(Function(v) GetGroupedVersionName(v, GroupedDrop, GroupedOld) = VersionFilter) Then Continue For
-                    If Not Dict(TargetCardName).Contains(Version) Then Dict(TargetCardName).Add(Version)
+                    AddToCard(DictRaw, TargetCardName, Version)
                 End If
             Next
         End If
+        Dim Dict As New SortedDictionary(Of String, List(Of ResourceVersion))(New CardSorter(TargetCardName))
+        Dict.Add("其他", New List(Of ResourceVersion))
+        For Each Pair In DictRaw
+            Dict.Add(Pair.Key, Pair.Value.ToList)
+        Next
         '转化为 UI
         Try
             PanResults.Children.Clear()
