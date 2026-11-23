@@ -77,7 +77,8 @@ Public Module ModLaunch
         If ModeDebug Then
             RunInUi(
             Sub()
-                FrmLaunchRight.LabLog.AppendText($"[{Date.Now:HH':'mm':'ss'.'fff}] {Text}{vbCrLf}")
+                Dim Control = FrmLaunchRight.LabLog
+                Control.AppendText(If(Control.Text = "", "", vbCrLf) & $"[{Date.Now:HH':'mm':'ss'.'fff}] {Text}") '#9495
             End Sub)
         End If
         Logger.Log(Text, Level)
