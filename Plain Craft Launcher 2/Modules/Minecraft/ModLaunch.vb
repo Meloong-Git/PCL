@@ -929,7 +929,7 @@ Retry:
                Response.ContainsIgnoreCase("expired") Then '#8611
                 Return ("Relogin", "")
             ElseIf Response.Contains("Account security interrupt") Then
-                MyMsgBox("该账号由于安全问题无法登陆，请前往微软账户页获取更多信息。", "登录失败", "我知道了", IsWarn:=True)
+                MyMsgBox("该账号由于安全问题无法登录，请前往微软账户页获取更多信息。", "登录失败", "我知道了", IsWarn:=True)
                 Throw New OperationCanceledException
             ElseIf Response.Contains("service abuse") Then
                 MyMsgBox("非常抱歉，该账号已被微软封禁，无法登录。", "登录失败", "我知道了", IsWarn:=True)
