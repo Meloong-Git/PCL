@@ -240,6 +240,11 @@ NextInner:
         If McInstanceSelected Is Nothing Then Throw New Exception("未选择 Minecraft 版本！")
         McInstanceSelected.Load()
         If McInstanceSelected.State = McInstance.McInstanceState.Error Then Throw New Exception("Minecraft 存在问题：" & McInstanceSelected.Info)
+        Try
+            ModLwjgl3ify.Prepare(McInstanceSelected)
+        Catch ex As Exception
+            Logger.Error(ex, "应用 lwjgl3ify 的启动配置失败，将按原版方式启动")
+        End Try
         '检查输入信息
         Dim CheckResult As String = ""
         RunInUiWait(Sub() CheckResult = McLoginAble(McLoginInput()))
@@ -1179,6 +1184,10 @@ Retry:
             McLaunchLog($"Java 版本设置类别：{Settings.Get(Of Integer)("VersionArgumentJavaV2", McInstanceSelected)}")
         End If
         McLaunchLog("选择的 Java：" & McLaunchJavaSelected.ToString)
+        If ModLwjgl3ify.IsActive(McInstanceSelected) AndAlso McLaunchJavaSelected.Version.Major < ModLwjgl3ify.RequiredJavaMajor Then
+            ModLwjgl3ify.Undo()
+            McLaunchLog($"lwjgl3ify 需要 Java {ModLwjgl3ify.RequiredJavaMajor} 或更高版本，本次的 Java 版本过低，将改用其自带的重启机制")
+        End If
     End Sub
 
 #End Region
@@ -1291,7 +1300,7 @@ NextInstance:
         '非 GBK 编码下命令行参数乱码的问题（JDK-8272352）
         Dim UseJLW As Boolean =
             Not Settings.Get(Of Boolean)("LaunchAdvanceDisableJLW") AndAlso Not Settings.Get(Of Boolean)("VersionAdvanceDisableJLW", McInstanceSelected) AndAlso
-            Not IsGBKEncoding '即使游戏文件夹名称不含非 ASCII 字符，但玩家名等也可能出现中文，因此依然需要 JLW（#8739）
+            Not IsGBKEncoding AndAlso Not ModLwjgl3ify.IsActive(McInstanceSelected) '即使游戏文件夹名称不含非 ASCII 字符，但玩家名等也可能出现中文，因此依然需要 JLW（#8739）
         If UseJLW AndAlso CustomArg.Contains("-javaagent") Then
             UseJLW = False
             McLaunchLog("由于使用了自定义 javaagent，已禁用 JLW，这可能导致游戏崩溃！", LogLevel.Warn)
@@ -1307,9 +1316,18 @@ NextInstance:
         'LUA
         Dim UseLUA As Boolean =
             Not Settings.Get(Of Boolean)("LaunchAdvanceDisableLUA") AndAlso Not Settings.Get(Of Boolean)("VersionAdvanceDisableLUA", McInstanceSelected) AndAlso
+            Not ModLwjgl3ify.IsActive(McInstanceSelected) AndAlso
             McLibListGet(McInstanceSelected, False).Select(Function(e) e.OriginalName).Contains("org.lwjgl:lwjgl:3.4.1")
         If UseLUA Then Args.Add($"-javaagent:""{LaunchUtils.ExtractPatch("Launch\LwjglUnsafeAgent.jar", PathPure.Value)}""")
         McLaunchLog("使用 LUA：" & UseLUA)
+
+        If ModLwjgl3ify.IsActive(McInstanceSelected) Then
+            Dim Lwjgl3ifyArgs As List(Of String) = ModLwjgl3ify.GetActiveJvmArguments()
+            If Lwjgl3ifyArgs IsNot Nothing AndAlso Lwjgl3ifyArgs.Count > 0 Then
+                Args.AddRange(Lwjgl3ifyArgs)
+                McLaunchLog($"已添加 lwjgl3ify {ModLwjgl3ify.ActiveVersion} 所需的 {Lwjgl3ifyArgs.Count} 项 JVM 参数")
+            End If
+        End If
 
 #Region "内存管理"
 
@@ -1373,7 +1391,7 @@ NextInstance:
         Args.Add("-Dlog4j2.formatMsgNoLookups=true")
 
         '编码（#4700、#5892、#5909、#6934、#8950、#9241）
-        Dim UseCompatEncoding = McLaunchJavaSelected.Version.Major >= 18
+        Dim UseCompatEncoding = McLaunchJavaSelected.Version.Major >= 18 AndAlso Not ModLwjgl3ify.IsActive(McInstanceSelected)
         Dim EncodingName = If(UseCompatEncoding,
                               McLaunchJavaSelected.NativeEncodingName, 'Java 18+ 会添加 COMPAT，因此 Java 会回退到 native.encoding
                               McLaunchJavaSelected.FileEncodingName) 'Java 17- 直接使用 file.encoding
@@ -1385,6 +1403,10 @@ NextInstance:
             McLaunchEncoding = FallbackEncoding
         End Try
         McLaunchLog($"使用编码：{McLaunchEncoding.WebName}")
+        If ModLwjgl3ify.IsActive(McInstanceSelected) Then
+            McLaunchEncoding = New UTF8Encoding(False)
+            McLaunchLog("lwjgl3ify 要求固定使用 UTF-8 编码")
+        End If
         Dim LaunchEncodingName = If(McLaunchEncoding.CodePage = 54936, "GBK", McLaunchEncoding.WebName)
         Dim StdoutArgName = If(McLaunchJavaSelected.Version.Major < 19, "sun.stdout.encoding", "stdout.encoding") '老版本 Java 应该设置 sun.std
         Dim StderrArgName = If(McLaunchJavaSelected.Version.Major < 19, "sun.stderr.encoding", "stderr.encoding")
