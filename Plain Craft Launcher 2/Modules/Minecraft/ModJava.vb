@@ -184,8 +184,11 @@ Public Module ModJava
             If RecommendedComponent = "" Then RecommendedComponent = Nothing
         End If
 
+        'lwjgl3ify 检测：它会替换掉 Forge 自己的 Java 版本限制，改为要求 Java 17+
+        Dim UseLwjgl3ify As Boolean = ModLwjgl3ify.IsEnabled(Instance)
+
         'OptiFine 检测
-        If Instance.Version.HasOptiFine AndAlso Instance.Version.Valid Then '不管非标准版本
+        If Instance.Version.HasOptiFine AndAlso Instance.Version.Valid AndAlso Not UseLwjgl3ify Then '不管非标准版本
             If Instance.Version.Vanilla.Major < 7 Then
                 '<1.7：至多 Java 8
                 AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
@@ -199,7 +202,7 @@ Public Module ModJava
         End If
 
         'Forge 检测（部分测试结果见 #8432）
-        If Instance.Version.ModLoaders.HasFlagF(ModLoaders.Forge) Then
+        If Instance.Version.ModLoaders.HasFlagF(ModLoaders.Forge) AndAlso Not UseLwjgl3ify Then
             If Instance.Version.Vanilla >= New Version(6, 0, 1) AndAlso Instance.Version.Vanilla <= New Version(7, 0, 2) Then
                 '1.6.1 - 1.7.2：必须 Java 7
                 AddConstraint(ValueRange(Of Version).ClosedOpen(New Version(7, 0), New Version(8, 0)))
@@ -258,9 +261,14 @@ Public Module ModJava
         End If
 
         'LiteLoader 检测
-        If Instance.Version.ModLoaders.HasFlagF(ModLoaders.LiteLoader) AndAlso Instance.Version.Valid Then '不管非标准版本
+        If Instance.Version.ModLoaders.HasFlagF(ModLoaders.LiteLoader) AndAlso Instance.Version.Valid AndAlso Not UseLwjgl3ify Then '不管非标准版本
             '最高 Java 8
             AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
+        End If
+
+        'lwjgl3ify 检测：需要 Java 17 及以上版本
+        If UseLwjgl3ify Then
+            AddConstraint(ValueRange(Of Version).AtLeast(New Version(ModLwjgl3ify.RequiredJavaMajor, 0)))
         End If
 
         '统一通行证检测

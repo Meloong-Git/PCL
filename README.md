@@ -11,6 +11,21 @@
 
 <br/>
 
+### lwjgl3ify 支持（本分支新增）
+
+本分支为 PCL 增加了对 [lwjgl3ify](https://github.com/GTNewHorizons/lwjgl3ify) 的原生支持：
+1.7.10 的 Forge 实例装上该 Mod 后，可以直接用 Java 17 及以上版本启动。
+
+- 自动识别 `mods` 文件夹中的 `lwjgl3ify-*.jar`，并读取它自带的启动元数据，因此启动配置与实际安装的 Mod 版本始终匹配；
+- 自动把 LWJGL2 支持库替换为 LWJGL3，追加 RetroFuturaBootstrap 前置支持库，并把主类换成 `MainStartOnFirstThread`；
+- 自动追加 `--add-opens`、`-Djava.system.class.loader` 等必需参数，并固定使用 UTF-8 编码；
+- Java 版本要求自动调整为 Java 17 及以上，不再强制使用 Java 8；
+- 如果没有使用 Java 17 及以上版本，则退回 lwjgl3ify 自带的重启机制（Relauncher）。
+
+> 使用前请记得安装 UniMixins；如果没有在 `mods` 文件夹中找到它，PCL 会给出提示。
+
+<br/>
+
 ### 相关资源
 - [PCL 下载](https://meloong.com/pcl)：下载可免费使用的正式版 PCL！
 - [PCL 功能投票](https://github.com/Meloong-Git/PCL/discussions/2)：来参加投票吧，开发者会优先处理票数较高的项目！
