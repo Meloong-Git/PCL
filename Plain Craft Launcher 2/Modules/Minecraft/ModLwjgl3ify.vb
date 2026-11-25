@@ -21,6 +21,7 @@ Public Module ModLwjgl3ify
     End Class
 
     Private ActiveInfo As Lwjgl3ifyInfo = Nothing
+    Private ActiveInstance As McInstance = Nothing
     Private LastPatchedInstance As String = Nothing
 
     Public ReadOnly Property ActiveVersion As String
@@ -88,17 +89,11 @@ Public Module ModLwjgl3ify
         Return ActiveInfo.JvmArguments
     End Function
 
-    Public Function Prepare(Instance As McInstance, TargetJava As Java) As Boolean
+    Public Function Prepare(Instance As McInstance) As Boolean
         ResetPatchedInstance(Instance)
         ActiveInfo = Nothing
+        ActiveInstance = Nothing
         If Not IsEnabled(Instance) Then Return False
-
-        Dim JavaMajor As Integer = If(TargetJava?.Version?.Major, 0)
-        If JavaMajor < RequiredJavaMajor Then
-            Logger.Info($"lwjgl3ify 需要使用 Java {RequiredJavaMajor} 或更高版本，本次选择的 Java {If(TargetJava, Nothing)} 版本过低，" &
-                        "将使用 lwjgl3ify 自带的重启机制")
-            Return False
-        End If
 
         Dim JarPath As String = GetModJar(Instance)
         Dim Profile As JObject = Nothing
@@ -132,6 +127,7 @@ Public Module ModLwjgl3ify
         Json("libraries") = Libraries
         Json("mainClass") = Profile("mainClass").ToString
         ActiveInfo = Info
+        ActiveInstance = Instance
         LastPatchedInstance = Instance.Name
         Logger.Info($"已为 {Instance.Name} 应用 lwjgl3ify {Info.Version} 的启动配置：支持库 {Libraries.Count} 项，主类 {Profile("mainClass")}")
 
@@ -159,6 +155,13 @@ Public Module ModLwjgl3ify
             Logger.Warn(ex, $"还原版本 JSON 缓存失败（{Instance.Name}）")
         End Try
         LastPatchedInstance = Nothing
+    End Sub
+
+    Public Sub Undo()
+        If ActiveInstance Is Nothing Then Return
+        ResetPatchedInstance(ActiveInstance)
+        ActiveInfo = Nothing
+        ActiveInstance = Nothing
     End Sub
 
     Private Function ReadProfile(JarPath As String) As JObject

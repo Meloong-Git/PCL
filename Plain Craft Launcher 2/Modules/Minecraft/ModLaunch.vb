@@ -240,6 +240,11 @@ NextInner:
         If McInstanceSelected Is Nothing Then Throw New Exception("未选择 Minecraft 版本！")
         McInstanceSelected.Load()
         If McInstanceSelected.State = McInstance.McInstanceState.Error Then Throw New Exception("Minecraft 存在问题：" & McInstanceSelected.Info)
+        Try
+            ModLwjgl3ify.Prepare(McInstanceSelected)
+        Catch ex As Exception
+            Logger.Error(ex, "应用 lwjgl3ify 的启动配置失败，将按原版方式启动")
+        End Try
         '检查输入信息
         Dim CheckResult As String = ""
         RunInUiWait(Sub() CheckResult = McLoginAble(McLoginInput()))
@@ -1179,12 +1184,9 @@ Retry:
             McLaunchLog($"Java 版本设置类别：{Settings.Get(Of Integer)("VersionArgumentJavaV2", McInstanceSelected)}")
         End If
         McLaunchLog("选择的 Java：" & McLaunchJavaSelected.ToString)
-        If ModLwjgl3ify.IsEnabled(McInstanceSelected) Then
-            If ModLwjgl3ify.Prepare(McInstanceSelected, McLaunchJavaSelected) Then
-                McLaunchLog($"已应用 lwjgl3ify {ModLwjgl3ify.ActiveVersion} 的启动配置（LWJGL3 + Java {McLaunchJavaSelected.Version.Major}）")
-            Else
-                McLaunchLog("未应用 lwjgl3ify 的启动配置，将按原版方式启动")
-            End If
+        If ModLwjgl3ify.IsActive(McInstanceSelected) AndAlso McLaunchJavaSelected.Version.Major < ModLwjgl3ify.RequiredJavaMajor Then
+            ModLwjgl3ify.Undo()
+            McLaunchLog($"lwjgl3ify 需要 Java {ModLwjgl3ify.RequiredJavaMajor} 或更高版本，本次的 Java 版本过低，将改用其自带的重启机制")
         End If
     End Sub
 
