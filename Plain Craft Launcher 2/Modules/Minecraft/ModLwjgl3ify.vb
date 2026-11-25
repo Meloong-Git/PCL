@@ -213,7 +213,6 @@ Public Module ModLwjgl3ify
             Dim Argument As String = Token.ToString.Trim
             If Argument = "" Then Continue For
             If Argument = "-cp" OrElse Argument = "${classpath}" OrElse Argument.StartsWithF("-Djava.library.path=") Then Continue For
-            If Result.Contains(Argument) Then Continue For
             Result.Add(Argument)
         Next
         Return Result
