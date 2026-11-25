@@ -72,7 +72,7 @@ Public Module ModLwjgl3ify
         Try
             Dim TargetVersion As McVersion = Instance.Version
             If TargetVersion Is Nothing OrElse Not TargetVersion.Valid Then Return False
-            If TargetVersion.Vanilla <> New Version(1, 7, 10) Then Return False
+            If TargetVersion.Vanilla <> New Version(7, 0, 10) Then Return False
             If Not TargetVersion.ModLoaders.HasFlagF(ModLoaders.Forge) Then Return False
             Return GetModJar(Instance) IsNot Nothing
         Catch ex As Exception
