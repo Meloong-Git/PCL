@@ -29,8 +29,6 @@ Public Module ModLwjgl3ify
         End Get
     End Property
 
-#Region "检测"
-
     Private Class ModJarCacheEntry
         Public Stamp As Date
         Public JarPath As String
@@ -89,10 +87,6 @@ Public Module ModLwjgl3ify
         If ActiveInfo Is Nothing OrElse ActiveInfo.JvmArguments Is Nothing Then Return New List(Of String)
         Return ActiveInfo.JvmArguments
     End Function
-
-#End Region
-
-#Region "应用"
 
     Public Function Prepare(Instance As McInstance, TargetJava As Java) As Boolean
         ResetPatchedInstance(Instance)
@@ -343,7 +337,5 @@ Public Module ModLwjgl3ify
             Return True
         End Try
     End Function
-
-#End Region
 
 End Module
