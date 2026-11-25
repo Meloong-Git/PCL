@@ -184,7 +184,6 @@ Public Module ModJava
             If RecommendedComponent = "" Then RecommendedComponent = Nothing
         End If
 
-        'lwjgl3ify 检测：它会替换掉 Forge 自己的 Java 版本限制，改为要求 Java 17+
         Dim UseLwjgl3ify As Boolean = ModLwjgl3ify.IsEnabled(Instance)
 
         'OptiFine 检测
@@ -266,7 +265,6 @@ Public Module ModJava
             AddConstraint(ValueRange(Of Version).LessThan(New Version(9, 0)))
         End If
 
-        'lwjgl3ify 检测：需要 Java 17 及以上版本
         If UseLwjgl3ify Then
             AddConstraint(ValueRange(Of Version).AtLeast(New Version(ModLwjgl3ify.RequiredJavaMajor, 0)))
         End If

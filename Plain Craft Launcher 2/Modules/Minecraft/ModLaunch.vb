@@ -1179,7 +1179,6 @@ Retry:
             McLaunchLog($"Java 版本设置类别：{Settings.Get(Of Integer)("VersionArgumentJavaV2", McInstanceSelected)}")
         End If
         McLaunchLog("选择的 Java：" & McLaunchJavaSelected.ToString)
-        'Lwjgl3ify 兼容：按本次实际选择的 Java 决定是否替换为 LWJGL3 的启动配置
         If ModLwjgl3ify.IsEnabled(McInstanceSelected) Then
             If ModLwjgl3ify.Prepare(McInstanceSelected, McLaunchJavaSelected) Then
                 McLaunchLog($"已应用 lwjgl3ify {ModLwjgl3ify.ActiveVersion} 的启动配置（LWJGL3 + Java {McLaunchJavaSelected.Version.Major}）")
@@ -1297,7 +1296,6 @@ NextInstance:
 
         'JLW
         '非 GBK 编码下命令行参数乱码的问题（JDK-8272352）
-        'lwjgl3ify 要求固定使用 UTF-8 编码，并且会替换系统类加载器，与 JLW 的 javaagent 冲突，因此必须禁用
         Dim UseJLW As Boolean =
             Not Settings.Get(Of Boolean)("LaunchAdvanceDisableJLW") AndAlso Not Settings.Get(Of Boolean)("VersionAdvanceDisableJLW", McInstanceSelected) AndAlso
             Not IsGBKEncoding AndAlso Not ModLwjgl3ify.IsActive(McInstanceSelected) '即使游戏文件夹名称不含非 ASCII 字符，但玩家名等也可能出现中文，因此依然需要 JLW（#8739）
@@ -1321,8 +1319,6 @@ NextInstance:
         If UseLUA Then Args.Add($"-javaagent:""{LaunchUtils.ExtractPatch("Launch\LwjglUnsafeAgent.jar", PathPure.Value)}""")
         McLaunchLog("使用 LUA：" & UseLUA)
 
-        'Lwjgl3ify
-        '这些参数（--add-opens 等）由 lwjgl3ify 的启动元数据提供，缺少它们游戏无法在 Java 9+ 中启动
         If ModLwjgl3ify.IsActive(McInstanceSelected) Then
             Dim Lwjgl3ifyArgs As List(Of String) = ModLwjgl3ify.GetActiveJvmArguments()
             If Lwjgl3ifyArgs IsNot Nothing AndAlso Lwjgl3ifyArgs.Count > 0 Then
@@ -1406,7 +1402,6 @@ NextInstance:
         End Try
         McLaunchLog($"使用编码：{McLaunchEncoding.WebName}")
         If ModLwjgl3ify.IsActive(McInstanceSelected) Then
-            'lwjgl3ify 要求 file.encoding=UTF-8，使用 COMPAT 会导致游戏无法启动
             McLaunchEncoding = New UTF8Encoding(False)
             McLaunchLog("lwjgl3ify 要求固定使用 UTF-8 编码")
         End If
