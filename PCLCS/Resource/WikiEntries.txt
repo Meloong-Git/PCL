@@ -12670,7 +12670,7 @@ centered-crosshair@
 realm-rpg-creep-crop
 fexcraft-common-library
 
-x-autofish@x+-autofish|自动钓鱼XPlus版 (XPlus AutoFish)
+x-autofish@x-plus-autofish|自动钓鱼XPlus版 (XPlus AutoFish)
 befixment@bewitchment-rei
 more-magic@
 cheat-command
